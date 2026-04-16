@@ -1,0 +1,51 @@
+{
+  "metier": [
+    "juridique"
+  ],
+  "category": "critique",
+  "params": {
+    "position_lecture": {
+      "label": "Position de lecture",
+      "type": "enum",
+      "required": false,
+      "default": "client",
+      "help": "Cadre la lecture selon la partie que tu representes.",
+      "values": [
+        "client",
+        "fournisseur",
+        "utilisateur"
+      ]
+    },
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "flash",
+        "standard",
+        "complet"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "position_lecture",
+      "niveau_detail"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#8A4B4B",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

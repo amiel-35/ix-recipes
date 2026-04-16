@@ -1,0 +1,70 @@
+{
+  "metier": [
+    "juridique"
+  ],
+  "category": "critique",
+  "params": {
+    "type_contrat": {
+      "label": "Type de contrat",
+      "type": "enum",
+      "required": false,
+      "default": "auto",
+      "help": "Type de contrat a analyser. Auto = detection depuis le document.",
+      "values": [
+        "auto",
+        "saas",
+        "prestation",
+        "licence",
+        "partenariat",
+        "achat",
+        "nda"
+      ]
+    },
+    "position": {
+      "label": "Notre position",
+      "type": "enum",
+      "required": true,
+      "default": "client",
+      "help": "Cote du contrat que tu representes.",
+      "values": [
+        "client",
+        "fournisseur",
+        "licenceur",
+        "licencie",
+        "partenaire"
+      ]
+    },
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "flash",
+        "standard",
+        "complet"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "position",
+      "type_contrat",
+      "niveau_detail"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 32000
+  },
+  "color": "#7A3B3B",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

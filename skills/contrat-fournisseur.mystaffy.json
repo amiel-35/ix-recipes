@@ -1,0 +1,53 @@
+{
+  "metier": [
+    "juridique"
+  ],
+  "category": "critique",
+  "params": {
+    "type_fournisseur": {
+      "label": "Type de fournisseur",
+      "type": "enum",
+      "required": false,
+      "default": "prestation",
+      "help": "Permet de cadrer les clauses a surveiller en priorite.",
+      "values": [
+        "prestation",
+        "logiciel",
+        "maintenance",
+        "outsourcing",
+        "autre"
+      ]
+    },
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "flash",
+        "standard",
+        "complet"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "type_fournisseur",
+      "niveau_detail"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#8A5A3B",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

@@ -1,0 +1,53 @@
+{
+  "metier": [
+    "juridique"
+  ],
+  "category": "production",
+  "params": {
+    "contexte_nda": {
+      "label": "Contexte NDA",
+      "type": "enum",
+      "required": false,
+      "default": "partenariat",
+      "help": "Permet d'adapter le NDA au contexte principal.",
+      "values": [
+        "prestataire",
+        "partenariat",
+        "salarie",
+        "ma",
+        "autre"
+      ]
+    },
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "court",
+        "standard",
+        "complet"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "contexte_nda",
+      "niveau_detail"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#6C4A78",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

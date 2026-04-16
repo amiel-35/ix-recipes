@@ -1,0 +1,54 @@
+{
+  "metier": [
+    "juridique"
+  ],
+  "category": "internal",
+  "params": {
+    "contexte_org": {
+      "label": "Contexte organisation",
+      "type": "enum",
+      "required": false,
+      "default": "auto",
+      "help": "Calibre le niveau d'exigence de la checklist.",
+      "values": [
+        "auto",
+        "startup",
+        "pme",
+        "grand_groupe",
+        "sante",
+        "public"
+      ]
+    },
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "rapide",
+        "standard",
+        "approfondi"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "contexte_org",
+      "niveau_detail"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 24000
+  },
+  "color": "#1A202C",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": false,
+  "visibility": "internal"
+}

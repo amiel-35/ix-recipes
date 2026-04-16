@@ -1,0 +1,46 @@
+{
+  "metier": [
+    "finance"
+  ],
+  "category": "research",
+  "params": {
+    "niveau_granularite": {
+      "label": "Niveau de granularite",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "help": "Cadre la profondeur de l'analyse selon le niveau de detail disponible.",
+      "values": [
+        "flash",
+        "standard",
+        "detaille"
+      ]
+    },
+    "inclure_hypotheses": {
+      "label": "Inclure hypotheses",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "niveau_granularite",
+      "inclure_hypotheses"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#2E5B88",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

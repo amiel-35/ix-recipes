@@ -1,0 +1,70 @@
+{
+  "metier": [
+    "analyste_data",
+    "fondateur_ceo"
+  ],
+  "category": "production",
+  "params": {
+    "destinataire": {
+      "label": "Destinataire principal",
+      "type": "enum",
+      "required": false,
+      "default": "direction",
+      "values": [
+        "direction",
+        "equipe",
+        "investisseurs",
+        "client"
+      ]
+    },
+    "domaine": {
+      "label": "Domaine metier",
+      "type": "enum",
+      "required": false,
+      "default": "auto",
+      "help": "Cadre la selection des KPIs types.",
+      "values": [
+        "auto",
+        "saas",
+        "ecommerce",
+        "service",
+        "rh",
+        "marketing",
+        "support"
+      ]
+    },
+    "nb_kpis_max": {
+      "label": "Nombre max de KPIs",
+      "type": "enum",
+      "required": false,
+      "default": "10",
+      "values": [
+        "5",
+        "10",
+        "15",
+        "20"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "destinataire",
+      "domaine",
+      "nb_kpis_max"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 14000
+  },
+  "color": "#234E52",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

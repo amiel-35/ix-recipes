@@ -1,0 +1,55 @@
+{
+  "metier": [
+    "it_projet",
+    "fondateur_ceo",
+    "analyste_data"
+  ],
+  "category": "research",
+  "params": {
+    "niveau_profondeur": {
+      "label": "Niveau de profondeur",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "help": "Cadre le niveau de detail de l'analyse.",
+      "values": [
+        "flash",
+        "standard",
+        "deep"
+      ]
+    },
+    "focus_metrique": {
+      "label": "Focus metrique",
+      "type": "enum",
+      "required": false,
+      "default": "panorama",
+      "help": "Permet de privilegier un angle principal.",
+      "values": [
+        "panorama",
+        "unit-economics",
+        "croissance",
+        "retention"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "niveau_profondeur",
+      "focus_metrique"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": false,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 14000
+  },
+  "color": "#2F6B5F",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

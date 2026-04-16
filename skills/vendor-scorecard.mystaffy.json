@@ -1,0 +1,68 @@
+{
+  "metier": [
+    "achats"
+  ],
+  "category": "decision",
+  "params": {
+    "type_achat": {
+      "label": "Type d'achat",
+      "type": "enum",
+      "required": false,
+      "default": "logiciel",
+      "values": [
+        "logiciel",
+        "prestation",
+        "fourniture",
+        "multi_lots",
+        "autre"
+      ]
+    },
+    "nb_criteres_max": {
+      "label": "Nombre max de criteres",
+      "type": "enum",
+      "required": false,
+      "default": "8",
+      "values": [
+        "5",
+        "8",
+        "10",
+        "12"
+      ]
+    },
+    "inclure_risque_conformite": {
+      "label": "Inclure risque et conformite",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "priorites_achat": {
+      "label": "Priorites achat",
+      "type": "text",
+      "required": false,
+      "help": "Priorites ou contraintes a refleter dans la ponderation proposee."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "type_achat",
+      "nb_criteres_max",
+      "inclure_risque_conformite"
+    ],
+    "advanced_fields": [
+      "priorites_achat"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 5,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#3B7F8C",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

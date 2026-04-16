@@ -1,0 +1,54 @@
+{
+  "metier": [
+    "juridique"
+  ],
+  "category": "production",
+  "params": {
+    "contexte_reglementaire": {
+      "label": "Contexte reglementaire",
+      "type": "enum",
+      "required": false,
+      "default": "general",
+      "help": "Permet de cadrer la checklist selon le contexte principal.",
+      "values": [
+        "general",
+        "travail",
+        "contractuel",
+        "sectoriel",
+        "multi_domaines",
+        "rgpd"
+      ]
+    },
+    "niveau_priorisation": {
+      "label": "Niveau de priorisation",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "essentiel",
+        "standard",
+        "approfondi"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "contexte_reglementaire",
+      "niveau_priorisation"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#6E4B7A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

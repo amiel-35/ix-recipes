@@ -1,0 +1,66 @@
+{
+  "metier": [
+    "achats"
+  ],
+  "category": "decision",
+  "params": {
+    "mode_scoring": {
+      "label": "Mode de scoring",
+      "type": "enum",
+      "required": false,
+      "default": "pondere",
+      "help": "Definit la profondeur du scoring comparatif.",
+      "values": [
+        "pondere",
+        "semi_pondere",
+        "qualitatif"
+      ]
+    },
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "flash",
+        "standard",
+        "complet"
+      ]
+    },
+    "inclure_tableau": {
+      "label": "Inclure tableau comparatif",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "grille_criteres": {
+      "label": "Grille de criteres",
+      "type": "text",
+      "required": false,
+      "help": "Liste des criteres et ponderations si l'utilisateur veut imposer sa propre grille."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "mode_scoring",
+      "niveau_detail",
+      "inclure_tableau"
+    ],
+    "advanced_fields": [
+      "grille_criteres"
+    ]
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 8,
+    "max_estimated_tokens": 22000
+  },
+  "color": "#2F7A6B",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

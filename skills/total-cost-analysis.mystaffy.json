@@ -1,0 +1,66 @@
+{
+  "metier": [
+    "achats"
+  ],
+  "category": "research",
+  "params": {
+    "horizon_analyse": {
+      "label": "Horizon d'analyse",
+      "type": "enum",
+      "required": false,
+      "default": "36_mois",
+      "values": [
+        "12_mois",
+        "24_mois",
+        "36_mois",
+        "60_mois"
+      ]
+    },
+    "devise": {
+      "label": "Devise",
+      "type": "enum",
+      "required": false,
+      "default": "EUR",
+      "values": [
+        "EUR",
+        "USD",
+        "GBP"
+      ]
+    },
+    "inclure_comparatif": {
+      "label": "Inclure comparatif",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "hypotheses_couts": {
+      "label": "Hypotheses de couts",
+      "type": "text",
+      "required": false,
+      "help": "Volumes, hypotheses d'usage, ressources internes ou contraintes contractuelles a prendre en compte."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "horizon_analyse",
+      "devise",
+      "inclure_comparatif"
+    ],
+    "advanced_fields": [
+      "hypotheses_couts"
+    ]
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 20000
+  },
+  "color": "#A56A2A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

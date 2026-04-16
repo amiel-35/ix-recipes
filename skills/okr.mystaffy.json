@@ -1,0 +1,63 @@
+{
+  "metier": [
+    "it_projet",
+    "fondateur_ceo"
+  ],
+  "category": "production",
+  "params": {
+    "horizon": {
+      "label": "Horizon temporel",
+      "type": "enum",
+      "required": false,
+      "default": "trimestre",
+      "help": "Periode cible pour les Key Results.",
+      "values": [
+        "mois",
+        "trimestre",
+        "semestre",
+        "annee"
+      ]
+    },
+    "nb_kr_max": {
+      "label": "Nombre max de KRs",
+      "type": "enum",
+      "required": false,
+      "default": "3",
+      "help": "Limite le nombre de Key Results par Objective.",
+      "values": [
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    "inclure_stretch": {
+      "label": "Inclure cible stretch",
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "help": "Proposer une cible ambitieuse au-dela de la cible nominale."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "horizon",
+      "nb_kr_max",
+      "inclure_stretch"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 10000
+  },
+  "color": "#744210",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

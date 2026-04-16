@@ -1,0 +1,52 @@
+{
+  "metier": [
+    "finance"
+  ],
+  "category": "production",
+  "params": {
+    "audience": {
+      "label": "Audience",
+      "type": "enum",
+      "required": false,
+      "default": "direction",
+      "help": "Permet de calibrer le ton et le niveau de detail de la narrative.",
+      "values": [
+        "direction",
+        "board",
+        "codir",
+        "managerial"
+      ]
+    },
+    "longueur": {
+      "label": "Longueur",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "flash",
+        "standard",
+        "detaillee"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "audience",
+      "longueur"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#355C7D",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

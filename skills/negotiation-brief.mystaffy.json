@@ -1,0 +1,67 @@
+{
+  "metier": [
+    "achats"
+  ],
+  "category": "production",
+  "params": {
+    "contexte_relation": {
+      "label": "Contexte relation fournisseur",
+      "type": "enum",
+      "required": false,
+      "default": "renouvellement",
+      "values": [
+        "premier_achat",
+        "renouvellement",
+        "mise_en_concurrence",
+        "incident_qualite",
+        "relation_strategique"
+      ]
+    },
+    "pression_temps": {
+      "label": "Pression temps",
+      "type": "enum",
+      "required": false,
+      "default": "moyenne",
+      "values": [
+        "faible",
+        "moyenne",
+        "forte"
+      ]
+    },
+    "inclure_batna": {
+      "label": "Inclure BATNA",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "contraintes_negociation": {
+      "label": "Contraintes de negociation",
+      "type": "text",
+      "required": false,
+      "help": "Contraintes commerciales, politiques, calendaires ou contractuelles a respecter."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "contexte_relation",
+      "pression_temps",
+      "inclure_batna"
+    ],
+    "advanced_fields": [
+      "contraintes_negociation"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 18000
+  },
+  "color": "#B56C2C",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

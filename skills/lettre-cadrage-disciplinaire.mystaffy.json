@@ -1,0 +1,63 @@
+{
+  "metier": [
+    "rh",
+    "juridique"
+  ],
+  "category": "production",
+  "params": {
+    "type_sanction": {
+      "label": "Type de sanction envisagee",
+      "type": "enum",
+      "required": true,
+      "values": [
+        "rappel_ordre",
+        "avertissement",
+        "mise_en_demeure",
+        "mise_a_pied",
+        "autre"
+      ]
+    },
+    "recidive": {
+      "label": "Recidive",
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "help": "Le collaborateur a-t-il deja fait l'objet d'un avertissement pour des faits similaires ?"
+    },
+    "convention_collective": {
+      "label": "Convention collective applicable",
+      "type": "string",
+      "required": false,
+      "placeholder": "Ex : Syntec, Metallurgie, Commerce de gros"
+    },
+    "faits": {
+      "label": "Faits reproches",
+      "type": "text",
+      "required": true,
+      "help": "Decrire les faits avec dates, lieux, temoins et consequences observees. Sans faits precis, le courrier ne sera pas produit."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "type_sanction",
+      "recidive",
+      "faits"
+    ],
+    "advanced_fields": [
+      "convention_collective"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 3,
+    "max_estimated_tokens": 4000
+  },
+  "color": "#b91c1c",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

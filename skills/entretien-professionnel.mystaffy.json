@@ -1,0 +1,68 @@
+{
+  "metier": [
+    "rh"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction"
+  ],
+  "category": "production",
+  "params": {
+    "anciennete": {
+      "label": "Anciennete du collaborateur",
+      "type": "enum",
+      "required": false,
+      "values": [
+        "moins_2_ans",
+        "2_4_ans",
+        "4_6_ans",
+        "plus_6_ans"
+      ],
+      "help": "Determine les obligations legales applicables (bilan a 6 ans)."
+    },
+    "effectif_entreprise": {
+      "label": "Effectif de l'entreprise",
+      "type": "enum",
+      "required": false,
+      "values": [
+        "moins_50",
+        "50_et_plus"
+      ],
+      "help": "L'abondement correctif CPF s'applique aux entreprises de 50+ salaries."
+    },
+    "historique_formation": {
+      "label": "Historique de formation",
+      "type": "text",
+      "required": false,
+      "help": "Formations suivies depuis le dernier entretien professionnel."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "anciennete",
+      "effectif_entreprise"
+    ],
+    "advanced_fields": [
+      "historique_formation"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 6000
+  },
+  "color": "#7c3aed",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

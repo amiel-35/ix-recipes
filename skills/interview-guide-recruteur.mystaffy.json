@@ -1,0 +1,90 @@
+{
+  "metier": [
+    "rh",
+    "fondateur_ceo",
+    "it_projet"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction",
+    "transverse_anti_biais"
+  ],
+  "category": "production",
+  "params": {
+    "role_title": {
+      "label": "Titre du poste",
+      "type": "string",
+      "required": true,
+      "placeholder": "Ex : Product Manager senior, Comptable confirme"
+    },
+    "level": {
+      "label": "Niveau",
+      "type": "enum",
+      "required": true,
+      "values": [
+        "junior",
+        "confirme",
+        "senior",
+        "direction"
+      ],
+      "help": "Calibre la profondeur des questions et le scoring."
+    },
+    "round_focus": {
+      "label": "Focus du round",
+      "type": "enum",
+      "required": false,
+      "values": [
+        "technique",
+        "comportemental",
+        "leadership",
+        "collaboration",
+        "culture_fit",
+        "mise_en_situation"
+      ],
+      "help": "Dimension principale evaluee dans ce round."
+    },
+    "competencies": {
+      "label": "Competences a evaluer",
+      "type": "text",
+      "required": false,
+      "placeholder": "Ex : negociation, pilotage P&L, architecture systeme",
+      "help": "Liste des competences cibles pour ce round. Si vide, deduites de la fiche de poste."
+    },
+    "fiche_poste_file": {
+      "label": "Fiche de poste",
+      "type": "file",
+      "required": false,
+      "help": "Fiche de poste ou round_brief produit par le loop planner."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "role_title",
+      "level",
+      "fiche_poste_file"
+    ],
+    "advanced_fields": [
+      "round_focus",
+      "competencies"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": false,
+    "max_input_artifacts": 3,
+    "max_estimated_tokens": 6000
+  },
+  "color": "#10b981",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

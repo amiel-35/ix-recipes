@@ -1,0 +1,88 @@
+{
+  "metier": [
+    "rh",
+    "fondateur_ceo",
+    "it_projet"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction",
+    "transverse_anti_biais",
+    "transverse_debrief"
+  ],
+  "category": "pipeline",
+  "params": {
+    "role_title": {
+      "label": "Titre du poste",
+      "type": "string",
+      "required": true,
+      "placeholder": "Ex : Senior Software Engineer, DAF"
+    },
+    "level": {
+      "label": "Niveau",
+      "type": "enum",
+      "required": true,
+      "values": [
+        "junior",
+        "confirme",
+        "senior",
+        "direction"
+      ],
+      "help": "Determine le nombre et la profondeur des rounds."
+    },
+    "department": {
+      "label": "Departement / equipe",
+      "type": "string",
+      "required": false,
+      "placeholder": "Ex : Equipe plateforme, Direction financiere"
+    },
+    "urgency": {
+      "label": "Urgence du recrutement",
+      "type": "enum",
+      "required": false,
+      "values": [
+        "standard",
+        "urgent",
+        "critique"
+      ],
+      "default": "standard",
+      "help": "Un recrutement urgent peut comprimer le nombre de rounds."
+    },
+    "fiche_poste_file": {
+      "label": "Fiche de poste",
+      "type": "file",
+      "required": false,
+      "help": "Fortement recommande. Produite par la competence fiche-poste ou fournie manuellement."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "role_title",
+      "level",
+      "fiche_poste_file"
+    ],
+    "advanced_fields": [
+      "department",
+      "urgency"
+    ]
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 5,
+    "max_estimated_tokens": 8000
+  },
+  "color": "#f59e0b",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

@@ -1,0 +1,76 @@
+{
+  "metier": [
+    "rh"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction"
+  ],
+  "category": "production",
+  "params": {
+    "seniorite_poste": {
+      "label": "Seniorite du poste",
+      "type": "enum",
+      "required": false,
+      "default": "intermediaire",
+      "values": [
+        "junior",
+        "intermediaire",
+        "senior",
+        "management"
+      ]
+    },
+    "mode_travail": {
+      "label": "Mode de travail",
+      "type": "enum",
+      "required": false,
+      "default": "hybride",
+      "values": [
+        "presentiel",
+        "hybride",
+        "remote"
+      ]
+    },
+    "inclure_checkpoints": {
+      "label": "Inclure checkpoints",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "contexte_equipe": {
+      "label": "Contexte equipe",
+      "type": "text",
+      "required": false,
+      "help": "Elements utiles sur l'equipe, les interlocuteurs cles et les contraintes d'integration."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "seniorite_poste",
+      "mode_travail",
+      "inclure_checkpoints"
+    ],
+    "advanced_fields": [
+      "contexte_equipe"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 5,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#B8745A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

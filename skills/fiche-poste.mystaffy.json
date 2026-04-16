@@ -1,0 +1,79 @@
+{
+  "metier": [
+    "rh",
+    "fondateur_ceo",
+    "it_projet"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction"
+  ],
+  "category": "production",
+  "params": {
+    "role_title": {
+      "label": "Titre du poste",
+      "type": "string",
+      "required": true,
+      "placeholder": "Ex : Responsable commercial grands comptes"
+    },
+    "level": {
+      "label": "Niveau",
+      "type": "enum",
+      "required": false,
+      "values": [
+        "junior",
+        "confirme",
+        "senior",
+        "direction"
+      ],
+      "help": "Niveau d'experience attendu pour le poste."
+    },
+    "department": {
+      "label": "Departement / equipe",
+      "type": "string",
+      "required": false,
+      "placeholder": "Ex : Direction commerciale, Equipe plateforme"
+    },
+    "context": {
+      "label": "Contexte du recrutement",
+      "type": "text",
+      "required": false,
+      "help": "Creation de poste, remplacement, reorganisation, croissance..."
+    },
+    "job_description_file": {
+      "label": "Document source (brief, ancien JD...)",
+      "type": "file",
+      "required": false
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "role_title",
+      "level",
+      "department"
+    ],
+    "advanced_fields": [
+      "context",
+      "job_description_file"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": false,
+    "max_input_artifacts": 3,
+    "max_estimated_tokens": 4000
+  },
+  "color": "#6366f1",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

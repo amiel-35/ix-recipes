@@ -1,0 +1,75 @@
+{
+  "metier": [
+    "rh"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction"
+  ],
+  "category": "production",
+  "params": {
+    "horizon_objectifs": {
+      "label": "Horizon des objectifs",
+      "type": "enum",
+      "required": false,
+      "default": "12_mois",
+      "values": [
+        "6_mois",
+        "12_mois",
+        "18_mois"
+      ]
+    },
+    "ton_entretien": {
+      "label": "Ton de l'entretien",
+      "type": "enum",
+      "required": false,
+      "default": "professionnel_bienveillant",
+      "values": [
+        "professionnel_bienveillant",
+        "direct",
+        "developpement"
+      ]
+    },
+    "inclure_plan_developpement": {
+      "label": "Inclure plan de developpement",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "elements_bilan": {
+      "label": "Elements de bilan",
+      "type": "text",
+      "required": false,
+      "help": "Points marquants de l'annee, realisations, tensions ou attentes a integrer dans la preparation."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "horizon_objectifs",
+      "ton_entretien",
+      "inclure_plan_developpement"
+    ],
+    "advanced_fields": [
+      "elements_bilan"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 5,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#9A5C7B",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

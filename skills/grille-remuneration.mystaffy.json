@@ -1,0 +1,65 @@
+{
+  "metier": [
+    "rh",
+    "fondateur_ceo"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction"
+  ],
+  "category": "production",
+  "params": {
+    "familles": {
+      "label": "Familles de postes a couvrir",
+      "type": "text",
+      "required": true,
+      "placeholder": "Ex : tech, commercial, finance ou toutes"
+    },
+    "composantes": {
+      "label": "Composantes de remuneration",
+      "type": "multiselect",
+      "required": false,
+      "default": "fixe",
+      "values": [
+        "fixe",
+        "variable",
+        "avantages",
+        "equity_interessement"
+      ]
+    },
+    "contexte_marche": {
+      "label": "Donnees de marche disponibles",
+      "type": "text",
+      "required": false,
+      "help": "Sources disponibles : enquetes salariales, benchmarks, grille existante, convention collective."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "familles",
+      "composantes"
+    ],
+    "advanced_fields": [
+      "contexte_marche"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 5,
+    "max_estimated_tokens": 10000
+  },
+  "color": "#059669",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

@@ -1,0 +1,85 @@
+{
+  "metier": [
+    "rh"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction"
+  ],
+  "category": "production",
+  "params": {
+    "motif_depart": {
+      "label": "Motif du depart",
+      "type": "enum",
+      "required": false,
+      "values": [
+        "demission",
+        "licenciement",
+        "rupture_conventionnelle",
+        "fin_cdd",
+        "fin_periode_essai",
+        "retraite",
+        "non_precise"
+      ],
+      "default": "non_precise"
+    },
+    "delai_avant_depart": {
+      "label": "Delai avant depart",
+      "type": "enum",
+      "required": false,
+      "values": [
+        "moins_2_semaines",
+        "1_mois",
+        "2_mois",
+        "3_mois_plus"
+      ],
+      "help": "Determine l'ambition du plan de passation."
+    },
+    "criticite_poste": {
+      "label": "Criticite du poste",
+      "type": "enum",
+      "required": false,
+      "values": [
+        "standard",
+        "cle",
+        "critique"
+      ],
+      "default": "standard"
+    },
+    "contexte": {
+      "label": "Contexte",
+      "type": "text",
+      "required": false,
+      "help": "Projets en cours, acces critiques, clients a informer."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "motif_depart",
+      "delai_avant_depart",
+      "criticite_poste"
+    ],
+    "advanced_fields": [
+      "contexte"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 5,
+    "max_estimated_tokens": 6000
+  },
+  "color": "#6b7280",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

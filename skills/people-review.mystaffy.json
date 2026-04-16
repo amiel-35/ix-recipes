@@ -1,0 +1,75 @@
+{
+  "metier": [
+    "rh",
+    "fondateur_ceo"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction"
+  ],
+  "category": "decision",
+  "params": {
+    "perimetre": {
+      "label": "Perimetre de la revue",
+      "type": "enum",
+      "required": true,
+      "values": [
+        "equipe",
+        "departement",
+        "organisation"
+      ]
+    },
+    "inclure_succession": {
+      "label": "Inclure plans de succession",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "niveau_confidentialite": {
+      "label": "Niveau de confidentialite",
+      "type": "enum",
+      "required": false,
+      "default": "anonymise",
+      "values": [
+        "anonymise",
+        "nominatif"
+      ],
+      "help": "Anonymise : pas de noms dans la synthese. Nominatif : noms visibles (validation commanditaire requise)."
+    },
+    "contexte": {
+      "label": "Contexte",
+      "type": "text",
+      "required": false,
+      "help": "Objectif de la revue, enjeux specifiques, reorganisation en cours."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "perimetre",
+      "inclure_succession",
+      "niveau_confidentialite"
+    ],
+    "advanced_fields": [
+      "contexte"
+    ]
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 10,
+    "max_estimated_tokens": 12000
+  },
+  "color": "#dc2626",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

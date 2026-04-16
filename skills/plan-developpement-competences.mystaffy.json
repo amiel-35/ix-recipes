@@ -1,0 +1,74 @@
+{
+  "metier": [
+    "rh"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction"
+  ],
+  "category": "production",
+  "params": {
+    "scope": {
+      "label": "Perimetre",
+      "type": "enum",
+      "required": false,
+      "default": "individuel",
+      "values": [
+        "individuel",
+        "equipe"
+      ]
+    },
+    "horizon": {
+      "label": "Horizon du plan",
+      "type": "enum",
+      "required": false,
+      "default": "12_mois",
+      "values": [
+        "6_mois",
+        "12_mois",
+        "24_mois"
+      ]
+    },
+    "inclure_budget": {
+      "label": "Inclure estimation budget",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "contexte": {
+      "label": "Contexte",
+      "type": "text",
+      "required": false,
+      "help": "Elements utiles : bilan recent, changement de poste, reorganisation, objectifs strategiques."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "scope",
+      "horizon",
+      "inclure_budget"
+    ],
+    "advanced_fields": [
+      "contexte"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 5,
+    "max_estimated_tokens": 8000
+  },
+  "color": "#2563eb",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

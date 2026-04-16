@@ -1,0 +1,49 @@
+{
+  "metier": [
+    "fondateur_ceo"
+  ],
+  "category": "decision",
+  "params": {
+    "modele_prix": {
+      "label": "Modele de prix",
+      "type": "enum",
+      "required": false,
+      "default": "auto",
+      "help": "Permet de pousser une famille de pricing si besoin.",
+      "values": [
+        "auto",
+        "freemium",
+        "tiers",
+        "usage",
+        "enterprise"
+      ]
+    },
+    "inclure_tests": {
+      "label": "Inclure tests",
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "help": "Ajouter des validations ou experiments de pricing."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "modele_prix",
+      "inclure_tests"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 14000
+  },
+  "color": "#8C6A43",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

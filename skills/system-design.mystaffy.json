@@ -1,0 +1,68 @@
+{
+  "metier": [
+    "it_projet"
+  ],
+  "category": "production",
+  "params": {
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "high_level",
+        "standard",
+        "deep_dive"
+      ]
+    },
+    "inclure_mermaid": {
+      "label": "Inclure diagrammes Mermaid",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "focus": {
+      "label": "Focus",
+      "type": "enum",
+      "required": false,
+      "default": "complet",
+      "help": "Limiter l'analyse a un aspect precis si besoin.",
+      "values": [
+        "complet",
+        "api",
+        "data_model",
+        "scale",
+        "securite"
+      ]
+    },
+    "contraintes_stack": {
+      "label": "Contraintes de stack",
+      "type": "text",
+      "required": false,
+      "help": "Technologies existantes, contraintes d'equipe ou de budget."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "niveau_detail",
+      "inclure_mermaid",
+      "focus"
+    ],
+    "advanced_fields": [
+      "contraintes_stack"
+    ]
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 24000
+  },
+  "color": "#3D5A80",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

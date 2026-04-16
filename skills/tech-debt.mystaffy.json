@@ -1,0 +1,59 @@
+{
+  "metier": [
+    "it_projet"
+  ],
+  "category": "critique",
+  "params": {
+    "perimetre": {
+      "label": "Perimetre",
+      "type": "text",
+      "required": false,
+      "help": "Composant, service ou couche a auditer. Si absent, perimetre global infere."
+    },
+    "mode": {
+      "label": "Mode",
+      "type": "enum",
+      "required": false,
+      "default": "audit",
+      "help": "Audit = identifier et prioriser. Plan = produire un plan de remediation phase.",
+      "values": [
+        "audit",
+        "plan",
+        "audit_et_plan"
+      ]
+    },
+    "horizon_remediation": {
+      "label": "Horizon de remediation",
+      "type": "enum",
+      "required": false,
+      "default": "trimestre",
+      "help": "Fenetre temporelle pour le plan de remediation.",
+      "values": [
+        "sprint",
+        "trimestre",
+        "semestre"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "mode",
+      "perimetre",
+      "horizon_remediation"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 8,
+    "max_estimated_tokens": 20000
+  },
+  "color": "#8A6A2F",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

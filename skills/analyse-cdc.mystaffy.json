@@ -1,0 +1,55 @@
+{
+  "metier": [
+    "commercial",
+    "it_projet",
+    "fondateur_ceo"
+  ],
+  "category": "critique",
+  "params": {
+    "profil_repondant": {
+      "label": "Profil repondant",
+      "type": "enum",
+      "required": false,
+      "default": "auto",
+      "help": "Cadre l'angle d'analyse selon le profil de celui qui repond.",
+      "values": [
+        "auto",
+        "prestataire",
+        "editeur",
+        "freelance",
+        "equipe_interne"
+      ]
+    },
+    "niveau_analyse": {
+      "label": "Niveau d'analyse",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "rapide",
+        "standard",
+        "approfondi"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "profil_repondant",
+      "niveau_analyse"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 28000
+  },
+  "color": "#44337A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

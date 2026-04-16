@@ -1,0 +1,47 @@
+{
+  "metier": [
+    "finance"
+  ],
+  "category": "decision",
+  "params": {
+    "horizon_analyse": {
+      "label": "Horizon d'analyse",
+      "type": "enum",
+      "required": false,
+      "default": "36_mois",
+      "help": "Permet de cadrer la profondeur de l'analyse economique.",
+      "values": [
+        "12_mois",
+        "24_mois",
+        "36_mois",
+        "60_mois"
+      ]
+    },
+    "inclure_options": {
+      "label": "Inclure options considerees",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "horizon_analyse",
+      "inclure_options"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#3B6B4E",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

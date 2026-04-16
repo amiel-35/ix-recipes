@@ -1,0 +1,41 @@
+{
+  "metier": [
+    "it_projet",
+    "fondateur_ceo"
+  ],
+  "category": "research",
+  "params": {
+    "cadre_analyse": {
+      "label": "Cadre d'analyse",
+      "type": "enum",
+      "required": false,
+      "help": "Permet de privilegier un cadre de lecture.",
+      "default": "mixte",
+      "values": [
+        "mixte",
+        "five-forces",
+        "positionnement",
+        "benchmark-produit"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "cadre_analyse"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": false,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 14000
+  },
+  "color": "#3F6C7A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

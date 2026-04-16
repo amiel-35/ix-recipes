@@ -1,0 +1,41 @@
+{
+  "metier": [
+    "it_projet",
+    "fondateur_ceo",
+    "analyste_data"
+  ],
+  "category": "research",
+  "params": {
+    "methode_principale": {
+      "label": "Methode principale",
+      "type": "enum",
+      "required": false,
+      "default": "mixte",
+      "help": "Permet de privilegier un angle de calcul.",
+      "values": [
+        "mixte",
+        "top-down",
+        "bottom-up"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "methode_principale"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": false,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 14000
+  },
+  "color": "#476A8A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

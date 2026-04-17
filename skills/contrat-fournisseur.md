@@ -1,11 +1,11 @@
 ---
 id: contrat-fournisseur
-label: Analyse contrat fournisseur
-version: 1.0.1
-description_fr: Analyser un contrat fournisseur du point de vue acheteur — conditions
+label: Contrat fournisseur
+version: 1.1.0
+description_fr: Analyser ou rédiger un contrat fournisseur du point de vue acheteur — conditions
   déséquilibrées, clauses à renégocier, risques contractuels. Ne remplace pas une
   revue juridique.
-description_en: Analyze a supplier contract from the buyer's perspective — unbalanced conditions, clauses to renegotiate, contractual risks. Does not replace a legal review.
+description_en: Analyze or draft a supplier contract from the buyer's perspective — unbalanced conditions, clauses to renegotiate, contractual risks. Does not replace a legal review.
 icon: ⊠
 domain: legal
 category: critique

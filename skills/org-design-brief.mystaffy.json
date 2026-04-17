@@ -1,0 +1,65 @@
+{
+  "metier": [
+    "rh"
+  ],
+  "category": "production",
+  "params": {
+    "portee_reorganisation": {
+      "label": "Portee de la reorganisation",
+      "type": "enum",
+      "required": false,
+      "default": "equipe",
+      "values": [
+        "equipe",
+        "departement",
+        "multi_equipes"
+      ]
+    },
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "flash",
+        "standard",
+        "complet"
+      ]
+    },
+    "inclure_communication": {
+      "label": "Inclure communication interne",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "contraintes_reorg": {
+      "label": "Contraintes de reorganisation",
+      "type": "text",
+      "required": false,
+      "help": "Contraintes de timing, effectifs, gouvernance ou perimetre a prendre en compte."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "portee_reorganisation",
+      "niveau_detail",
+      "inclure_communication"
+    ],
+    "advanced_fields": [
+      "contraintes_reorg"
+    ]
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 18000
+  },
+  "color": "#A46A52",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

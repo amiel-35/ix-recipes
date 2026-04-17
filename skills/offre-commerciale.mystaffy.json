@@ -1,0 +1,74 @@
+{
+  "metier": [
+    "commercial",
+    "it_projet",
+    "fondateur_ceo"
+  ],
+  "category": "production",
+  "params": {
+    "destinataire": {
+      "label": "Destinataire",
+      "type": "enum",
+      "required": false,
+      "default": "client",
+      "values": [
+        "client",
+        "acheteur",
+        "direction_achat",
+        "jury",
+        "partenaire"
+      ]
+    },
+    "type_offre": {
+      "label": "Type d'offre",
+      "type": "enum",
+      "required": false,
+      "default": "reponse_cdc",
+      "values": [
+        "reponse_cdc",
+        "proposition_commerciale",
+        "offre_cadrage",
+        "offre_lots_options"
+      ]
+    },
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "court",
+        "standard",
+        "detaille"
+      ]
+    },
+    "inclure_chiffrage": {
+      "label": "Inclure chiffrage",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "destinataire",
+      "type_offre",
+      "niveau_detail",
+      "inclure_chiffrage"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 8,
+    "max_estimated_tokens": 22000
+  },
+  "color": "#8A5A2B",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

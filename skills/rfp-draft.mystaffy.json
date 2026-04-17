@@ -1,0 +1,68 @@
+{
+  "metier": [
+    "achats"
+  ],
+  "category": "production",
+  "params": {
+    "type_achat": {
+      "label": "Type d'achat",
+      "type": "enum",
+      "required": false,
+      "default": "logiciel",
+      "help": "Cadre le document selon la nature principale de l'achat.",
+      "values": [
+        "logiciel",
+        "prestation",
+        "fourniture",
+        "service_manage",
+        "autre"
+      ]
+    },
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "values": [
+        "court",
+        "standard",
+        "complet"
+      ]
+    },
+    "inclure_criteres_evaluation": {
+      "label": "Inclure criteres d'evaluation",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "contraintes_complementaires": {
+      "label": "Contraintes complementaires",
+      "type": "text",
+      "required": false,
+      "help": "Contraintes metier, budgetaires, techniques ou contractuelles a prendre en compte."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "type_achat",
+      "niveau_detail",
+      "inclure_criteres_evaluation"
+    ],
+    "advanced_fields": [
+      "contraintes_complementaires"
+    ]
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 22000
+  },
+  "color": "#2E5B88",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

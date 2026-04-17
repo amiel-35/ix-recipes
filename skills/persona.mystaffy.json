@@ -1,0 +1,48 @@
+{
+  "metier": [
+    "it_projet"
+  ],
+  "category": "production",
+  "params": {
+    "nb_personas": {
+      "label": "Nombre de personas",
+      "type": "enum",
+      "required": false,
+      "default": "3",
+      "help": "Nombre de personas a produire.",
+      "values": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    "marquer_hypotheses": {
+      "label": "Marquer les hypotheses",
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "help": "Distinguer explicitement donnees validees et hypotheses."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "nb_personas",
+      "marquer_hypotheses"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#744210",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

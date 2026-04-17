@@ -4,7 +4,7 @@ label: OKR
 version: 1.0.2
 description_fr: 'Transformer un objectif flou en OKR structure : Objective inspirant
   et Key Results mesurables.'
-description_en: Transform a vague objective into a structured OKR: inspiring Objective and measurable Key Results.
+description_en: 'Transform a vague objective into a structured OKR: inspiring Objective and measurable Key Results.'
 icon: ◉
 domain: ops
 category: production

@@ -4,7 +4,7 @@ label: Code Review
 version: 1.0.2
 description_fr: 'Reviewer du code sur 4 dimensions : securite, performance, correction
   et maintenabilite.'
-description_en: Review code across 4 dimensions: security, performance, correctness, and maintainability.
+description_en: 'Review code across 4 dimensions: security, performance, correctness, and maintainability.'
 icon: ⌥
 domain: ops
 category: critique

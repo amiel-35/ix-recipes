@@ -4,7 +4,7 @@ label: Feature Spec
 version: 1.0.1
 description_fr: 'Produire une spec fonctionnelle complete : user stories, exigences
   MoSCoW, criteres d''acceptation et metriques de succes.'
-description_en: Produce a complete functional spec: user stories, MoSCoW requirements, acceptance criteria, and success metrics.
+description_en: 'Produce a complete functional spec: user stories, MoSCoW requirements, acceptance criteria, and success metrics.'
 icon: ◧
 domain: ops
 category: production

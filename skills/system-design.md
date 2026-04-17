@@ -4,7 +4,7 @@ label: System Design
 version: 1.0.2
 description_fr: 'Concevoir un systeme ou une architecture technique : composants,
   flux de donnees, API, stockage et trade-offs.'
-description_en: Design a system or technical architecture: components, data flows, APIs, storage, and trade-offs.
+description_en: 'Design a system or technical architecture: components, data flows, APIs, storage, and trade-offs.'
 icon: ⬡
 domain: ops
 category: production

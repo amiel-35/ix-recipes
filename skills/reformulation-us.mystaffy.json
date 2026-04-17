@@ -1,0 +1,42 @@
+{
+  "metier": [
+    "it_projet"
+  ],
+  "category": "production",
+  "params": {
+    "inclure_criteres_acceptation": {
+      "label": "Inclure criteres d'acceptation",
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "help": "Produire les criteres Given/When/Then pour chaque US."
+    },
+    "signaler_decoupage": {
+      "label": "Signaler decoupages recommandes",
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "help": "Identifier les US trop larges et proposer un decoupage."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "inclure_criteres_acceptation",
+      "signaler_decoupage"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 14000
+  },
+  "color": "#2B4C7E",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

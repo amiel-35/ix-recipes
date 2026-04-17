@@ -1,0 +1,58 @@
+{
+  "metier": [
+    "it_projet"
+  ],
+  "category": "critique",
+  "params": {
+    "dimensions": {
+      "label": "Dimensions",
+      "type": "multiselect",
+      "required": false,
+      "help": "Dimensions a couvrir. Si vide, toutes les dimensions sont couvertes.",
+      "values": [
+        "securite",
+        "performance",
+        "correction",
+        "maintenabilite"
+      ]
+    },
+    "langage": {
+      "label": "Langage",
+      "type": "string",
+      "required": false,
+      "help": "Langage ou framework pour affiner l'analyse. Ex: Python, TypeScript, Vue 3."
+    },
+    "focus": {
+      "label": "Focus",
+      "type": "enum",
+      "required": false,
+      "default": "complet",
+      "help": "Profondeur de la review.",
+      "values": [
+        "critique_uniquement",
+        "complet"
+      ]
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "dimensions",
+      "langage",
+      "focus"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": false,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 20000
+  },
+  "color": "#2F4F4F",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

@@ -1,0 +1,53 @@
+{
+  "metier": [
+    "it_projet"
+  ],
+  "category": "production",
+  "params": {
+    "niveau_detail": {
+      "label": "Niveau de detail",
+      "type": "enum",
+      "required": false,
+      "default": "standard",
+      "help": "Profondeur du PRD produit.",
+      "values": [
+        "lean",
+        "standard",
+        "complet"
+      ]
+    },
+    "inclure_metriques": {
+      "label": "Inclure metriques de succes",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    "inclure_hypotheses": {
+      "label": "Inclure hypotheses et risques",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "niveau_detail",
+      "inclure_metriques",
+      "inclure_hypotheses"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 8,
+    "max_estimated_tokens": 24000
+  },
+  "color": "#1A3A5C",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

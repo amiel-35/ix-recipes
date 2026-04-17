@@ -1,0 +1,68 @@
+{
+  "metier": [
+    "it_projet"
+  ],
+  "category": "production",
+  "params": {
+    "type_page": {
+      "label": "Type de page",
+      "type": "enum",
+      "required": false,
+      "default": "standalone",
+      "help": "Aide a cadrer la structure du mockup.",
+      "values": [
+        "standalone",
+        "dashboard",
+        "admin",
+        "marketing"
+      ]
+    },
+    "niveau_fidelite": {
+      "label": "Niveau de fidelite",
+      "type": "enum",
+      "required": false,
+      "default": "reference",
+      "help": "Choisit entre interpretation libre et proximite avec la reference.",
+      "values": [
+        "reference",
+        "reinterpretation"
+      ]
+    },
+    "dark_mode": {
+      "label": "Dark mode",
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "help": "Activer seulement si cela sert le sujet."
+    },
+    "consignes_visuelles": {
+      "label": "Consignes visuelles",
+      "type": "text",
+      "required": false,
+      "help": "Orientations visuelles, references ou details d'ambiance."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "type_page",
+      "niveau_fidelite",
+      "dark_mode"
+    ],
+    "advanced_fields": [
+      "consignes_visuelles"
+    ]
+  },
+  "execution": {
+    "supports_async": true,
+    "supports_review_gate": true,
+    "max_input_artifacts": 8,
+    "max_estimated_tokens": 22000
+  },
+  "color": "#8A5A3B",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "html",
+  "enabled": true,
+  "visibility": "public"
+}

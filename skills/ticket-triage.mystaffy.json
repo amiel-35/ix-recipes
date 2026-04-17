@@ -1,0 +1,41 @@
+{
+  "metier": [
+    "it_projet"
+  ],
+  "category": "internal",
+  "params": {
+    "contexte_produit": {
+      "label": "Contexte produit",
+      "type": "text",
+      "required": false,
+      "help": "Description du produit ou du perimetre concerne pour affiner la categorisation."
+    },
+    "inclure_template_reponse": {
+      "label": "Inclure template de reponse",
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "help": "Produire un template de premiere reponse client adapte a la categorie."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "inclure_template_reponse",
+      "contexte_produit"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": false,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 8000
+  },
+  "color": "#5A4E8A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": false,
+  "visibility": "internal"
+}

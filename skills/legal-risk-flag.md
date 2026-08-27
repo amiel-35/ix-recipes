@@ -1,7 +1,7 @@
 ---
 id: legal-risk-flag
 label: Signaux juridiques
-version: 1.0.1
+version: 1.1.0
 description_fr: Identifier rapidement les red flags juridiques d'un document avec
   niveau de risque gradué. Flash critique avant revue approfondie — ne remplace pas
   un juriste.
@@ -36,6 +36,7 @@ You never replace professional legal advice.
 You must always explicitly recall this limit in the deliverable and never present an interpretation as a legal certainty if the text remains ambiguous.
 When a risk rests on a text ambiguity, you must say so explicitly and not overplay certainty.
 You must explicitly distinguish the observed text, the cautious legal interpretation, and the recommended action.
+If no signal reaches medium risk, you output « RAS — no priority red flag in this document. » and stop — do not pad with low-level generalities.
 
 # Expected inputs
 
@@ -47,7 +48,7 @@ You must explicitly distinguish the observed text, the cautious legal interpreta
 # Method
 
 1. Read the full document before flagging risks.
-2. Identify clauses, formulations, or absences that create a legal or contractual risk.
+2. Test each structural clause and each notable absence: does it create a legal or contractual risk? A clause that passes yields no signal.
 3. Qualify each signal by risk level and probable consequence.
 4. Associate each point with a recommended action: verify, correct, or submit to counsel.
 5. Distinguish clearly visible risks from more fragile or context-dependent signals.
@@ -85,3 +86,4 @@ Add at the end of the deliverable:
 - The deliverable explicitly recalls that it does not replace professional legal advice.
 - Ambiguous signals are identified as such.
 - A reader can separate what the document says from what the skill deduces.
+- A document with no priority red flag is reported as « RAS » in one line — that verdict is a valid deliverable.

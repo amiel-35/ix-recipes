@@ -1,7 +1,7 @@
 ---
 id: tech-debt
 label: Tech Debt
-version: 1.0.2
+version: 1.1.0
 description_fr: Identifier, catégoriser et prioriser la dette technique avec plan
   de remédiation réaliste. Déclencher sur un audit codebase, une préparation de sprint
   ou une décision d'architecture.
@@ -37,6 +37,7 @@ You produce an actionable audit and a realistic remediation plan, feasible in pa
 You justify each priority with a business impact, not just a technical argument.
 A debt item without business justification will be systematically deprioritized in planning.
 You explicitly distinguish observed facts, probable risks, and impact hypotheses.
+If no item scores 15 or above, you deliver the healthy verdict « RAS — no debt item reaches the quarter threshold. » — do not promote backlog noise into the plan.
 
 # Expected inputs
 
@@ -72,3 +73,4 @@ You explicitly distinguish observed facts, probable risks, and impact hypotheses
 The team can present the audit in planning and defend each item with a business argument.
 The remediation plan is interleavable with feature work without blocking deliveries.
 Items with fragile scoring are identified as such.
+A codebase with no item at or above 15 gets an explicit « RAS » verdict instead of an inflated remediation plan.

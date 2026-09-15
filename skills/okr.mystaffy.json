@@ -5,45 +5,36 @@
   ],
   "category": "production",
   "params": {
+    "mode": {
+      "label": "Mode",
+      "type": "enum",
+      "required": false,
+      "default": "auto",
+      "help": "Gabarit = relire des lignes d'O/KR deja ecrites, verdict ligne par ligne. Materiau = partir d'un brief flou et produire de quoi discuter, jamais un OKR fini. Auto = deduit de l'entree.",
+      "values": [
+        "auto",
+        "gabarit",
+        "materiau"
+      ]
+    },
     "horizon": {
       "label": "Horizon temporel",
       "type": "enum",
       "required": false,
       "default": "trimestre",
-      "help": "Periode cible pour les Key Results.",
+      "help": "Periode cible pour les echeances des resultats cles.",
       "values": [
         "mois",
         "trimestre",
         "semestre",
         "annee"
       ]
-    },
-    "nb_kr_max": {
-      "label": "Nombre max de KRs",
-      "type": "enum",
-      "required": false,
-      "default": "3",
-      "help": "Limite le nombre de Key Results par Objective.",
-      "values": [
-        "2",
-        "3",
-        "4",
-        "5"
-      ]
-    },
-    "inclure_stretch": {
-      "label": "Inclure cible stretch",
-      "type": "boolean",
-      "required": false,
-      "default": false,
-      "help": "Proposer une cible ambitieuse au-dela de la cible nominale."
     }
   },
   "ui": {
     "simple_fields": [
-      "horizon",
-      "nb_kr_max",
-      "inclure_stretch"
+      "mode",
+      "horizon"
     ],
     "advanced_fields": []
   },

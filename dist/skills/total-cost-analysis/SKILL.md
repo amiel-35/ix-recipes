@@ -1,6 +1,6 @@
 ---
 name: total-cost-analysis
-description: "Structure a TCO with direct costs, hidden costs, hypotheses, and risks over a given horizon. Factual foundation for a purchase or investment decision."
+description: "Structures a TCO, direct costs, hidden costs, hypotheses, risks, over a given horizon, distinguishing confirmed, estimated, and unquantified costs. Triggers on \"calculate the total cost of ownership\", \"beyond the sticker price, what's the real cost over three years\", \"compare TCO between these two offers\". Does not build the qualitative vendor scoring grid (use `vendor-scorecard`) nor the tender document itself (use `rfp-draft`)."
 ---
 # Role
 

@@ -1,10 +1,9 @@
 ---
 id: ticket-triage
 label: Ticket Triage
-version: 1.0.2
-description_fr: Categoriser, prioriser P1-P4 et router un ticket support entrant avec
-  les informations necessaires pour la prise en charge.
-description_en: Categorize, prioritize P1–P4, and route an incoming support ticket with the information needed for immediate handling.
+version: 1.1.0
+description_fr: Catégorise, priorise P1 à P4 et route un ticket support entrant, avec les informations nécessaires à une prise en charge immédiate. Déclenche sur "triage ce ticket", "quelle priorité pour ce bug remonté par le client", "catégorise et route ce ticket support". En cas de doute, escalade toujours vers le haut. Ne fait pas de rétrospective sur un incident déjà clos (utiliser `retrospective`) — traite un ticket entrant unique.
+description_en: Categorizes, prioritizes P1 through P4, and routes an incoming support ticket, with the information needed for immediate handling. Triggers on "triage this ticket", "what priority for this bug the client reported", "categorize and route this support ticket". When in doubt, always escalates upward. Does not run a retrospective on a closed incident (use `retrospective`), it handles one incoming ticket.
 icon: ⋱
 domain: ops
 category: internal

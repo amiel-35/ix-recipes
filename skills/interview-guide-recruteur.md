@@ -1,11 +1,9 @@
 ---
 id: interview-guide-recruteur
 label: Interview Guide Recruteur
-version: 1.1.0
-description_fr: Prepare un guide d'entretien cote recruteur ou manager avec questions
-  STAR, annotations recruteur, mises en situation, grille de scoring ponderee 1-4,
-  red flags gradues et fiche de synthese Go/No-go.
-description_en: Prepare a full recruiter-side interview guide with STAR questions, recruiter annotations, scenarios, weighted 1-4 scoring grid, graduated red flags, and a Go/No-go debrief sheet.
+version: 1.2.0
+description_fr: Prépare le guide d'entretien recruteur pour UN round — questions STAR, annotations recruteur, mises en situation, grille de scoring 1-4, red flags gradués, fiche Go/No-go. Déclenche quand l'utilisateur doit mener un entretien précis et outillé. Déclenche sur "prépare le guide d'entretien pour ce poste", "questions STAR pour l'entretien technique", "grille de scoring pour cet entretien", "quels red flags surveiller en entretien". Ne conçoit pas la boucle complète de recrutement — voir `interview-loop-planner`, qui produit les briefs alimentant ce guide round par round.
+description_en: Prepares the recruiter-side interview guide for ONE round — STAR questions, recruiter annotations, scenarios, 1-4 scoring grid, graduated red flags, Go/No-go debrief sheet. Triggers when the user must run a specific, well-equipped interview. Triggers on "prepare the interview guide for this role", "STAR questions for the technical round", "scoring grid for this interview", "what red flags to watch for in this interview". Does not design the full recruitment loop — see `interview-loop-planner`, which produces the briefs feeding this guide round by round.
 icon: clipboard-check
 domain: rh
 category: production

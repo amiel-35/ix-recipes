@@ -1,11 +1,9 @@
 ---
 id: contract-review
 label: Contract Review
-version: 1.0.2
-description_fr: Analyser un contrat clause par clause — déviations par rapport aux
-  positions standard, redlines prioritaires, points à négocier. Ne remplace pas un
-  conseil juridique.
-description_en: Analyze a contract clause by clause — deviations from standard positions, priority redlines, points to negotiate. Does not replace legal advice.
+version: 1.1.0
+description_fr: Analyse un contrat clause par clause — déviations par rapport aux positions standard, classification GREEN/YELLOW/RED, redlines prioritaires avec position de repli. Déclenche sur "relis ce contrat clause par clause", "quelles clauses sont à risque ici", "prépare les redlines avant signature", "où dévie-t-on des positions standard", "quel est le risque global de ce contrat". Ne fait pas un flash rapide tous documents — voir `legal-risk-flag` — ni une analyse dédiée aux CGV/CGU — voir `cgv-checker` — ni ciblée achat fournisseur — voir `contrat-fournisseur` — et ne remplace pas un conseil juridique.
+description_en: Analyzes a contract clause by clause — deviations from standard positions, GREEN/YELLOW/RED classification, priority redlines with fallback language. Triggers on "review this contract clause by clause", "which clauses are risky here", "draft the redlines before we sign", "where do we deviate from standard positions", "what's the overall risk on this contract". Not a quick flash across any document — see `legal-risk-flag` — nor a GTC/ToS-specific read — see `cgv-checker` — nor buyer-side procurement focused — see `contrat-fournisseur` — and does not replace legal advice.
 icon: ⊟
 domain: legal
 category: critique

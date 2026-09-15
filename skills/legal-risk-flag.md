@@ -1,11 +1,9 @@
 ---
 id: legal-risk-flag
 label: Signaux juridiques
-version: 1.1.0
-description_fr: Identifier rapidement les red flags juridiques d'un document avec
-  niveau de risque gradué. Flash critique avant revue approfondie — ne remplace pas
-  un juriste.
-description_en: Quickly identify legal red flags in a document with graduated risk level. Critical flash before a deep review — does not replace a lawyer.
+version: 1.2.0
+description_fr: Repère en un flash rapide les red flags juridiques d'un document — contrat, correspondance, tout texte — avec niveau de risque gradué (haut/moyen/bas) et action recommandée. Déclenche sur "y a-t-il un red flag dans ce document", "scan rapide de ce contrat avant la réunion", "quel est le niveau de risque ici", "flash juridique avant de creuser", "à vérifier en urgence avant de signer". Ne produit pas une analyse exhaustive clause par clause avec redlines — voir `contract-review` — et ne remplace pas un juriste.
+description_en: Scans a legal or contractual document — contract, correspondence, any text — for priority red flags in one quick pass, with a graduated risk level (high/medium/low) and a recommended action. Triggers on "any red flags in this document", "quick scan of this contract before the meeting", "what's the risk level here", "legal flash before we dig deeper", "anything urgent to check before we sign". Not an exhaustive clause-by-clause redline review — see `contract-review` — and does not replace a lawyer.
 icon: ⚑
 domain: legal
 category: critique

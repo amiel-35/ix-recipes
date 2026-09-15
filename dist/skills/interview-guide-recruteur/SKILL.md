@@ -1,6 +1,6 @@
 ---
 name: interview-guide-recruteur
-description: "Prepare a full recruiter-side interview guide with STAR questions, recruiter annotations, scenarios, weighted 1-4 scoring grid, graduated red flags, and a Go/No-go debrief sheet."
+description: "Prepares the recruiter-side interview guide for ONE round \u2014 STAR questions, recruiter annotations, scenarios, 1-4 scoring grid, graduated red flags, Go/No-go debrief sheet. Triggers when the user must run a specific, well-equipped interview. Triggers on \"prepare the interview guide for this role\", \"STAR questions for the technical round\", \"scoring grid for this interview\", \"what red flags to watch for in this interview\". Does not design the full recruitment loop \u2014 see `interview-loop-planner`, which produces the briefs feeding this guide round by round."
 ---
 # Role
 

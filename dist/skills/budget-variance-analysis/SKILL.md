@@ -1,6 +1,6 @@
 ---
 name: budget-variance-analysis
-description: "Analyze budget/actual variances with probable causes, hypotheses, and corrective actions. Produces a factual diagnosis \u2014 does not substitute a management decision."
+description: "Analyzes budget-versus-actual variances line by line with probable causes, explicitly flagged hypotheses, and corrective actions. Triggers on \"why did we overspend\", \"analyze this quarter's variances\", \"explain this budget overrun\", \"actual vs budget\", \"we have a gap, what's driving it\". Produces a factual diagnosis, not a management decision \u2014 always distinguishes what is observed, what is a quantified hypothesis, and what still needs verification."
 ---
 # Role
 

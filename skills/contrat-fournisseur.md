@@ -1,11 +1,9 @@
 ---
 id: contrat-fournisseur
 label: Contrat fournisseur
-version: 1.1.0
-description_fr: Analyser ou rédiger un contrat fournisseur du point de vue acheteur — conditions
-  déséquilibrées, clauses à renégocier, risques contractuels. Ne remplace pas une
-  revue juridique.
-description_en: Analyze or draft a supplier contract from the buyer's perspective — unbalanced conditions, clauses to renegotiate, contractual risks. Does not replace a legal review.
+version: 1.2.0
+description_fr: Analyse ou rédige un contrat fournisseur du point de vue acheteur — SLA, pénalités, résiliation, exclusivité, prix, renouvellement — avec points de renégociation classés par impact. Déclenche sur "ce contrat fournisseur est-il équilibré côté acheteur", "quelles clauses renégocier avec ce prestataire", "check ce contrat de service avant signature", "rédige un contrat fournisseur pour ce sous-traitant", "quels risques dans ce SLA". Ne fait pas une analyse générique clause par clause tous partis — voir `contract-review` — et ne remplace pas une revue juridique.
+description_en: Analyzes or drafts a supplier contract from the buyer's side — SLA, penalties, termination, exclusivity, price, renewal — with renegotiation points ranked by impact. Triggers on "is this supplier contract balanced for us as the buyer", "what should we renegotiate with this vendor", "check this service agreement before we sign", "draft a supplier contract for this vendor", "what are the risks in this SLA". Not a generic clause-by-clause review for any party — see `contract-review` — and does not replace a legal review.
 icon: ⊠
 domain: legal
 category: critique

@@ -1,6 +1,6 @@
 ---
 name: cgv-checker
-description: "Identify unbalanced or sensitive clauses in GTC/ToS by reading position. Orients a deeper review without replacing a lawyer."
+description: "Surfaces unbalanced, unusual, or sensitive clauses in GTC/ToS from a given reading position (client, supplier, user). Triggers on \"are these ToS balanced\", \"review these terms from the client's side\", \"any unfair clauses in these terms of service\", \"check these ToS before we publish them\", \"what should we renegotiate in this supplier's GTC\". Not a full clause-by-clause contract review with redlines \u2014 see `contract-review` \u2014 nor a quick flash across any legal document \u2014 see `legal-risk-flag` \u2014 and does not replace a lawyer."
 ---
 # Role
 

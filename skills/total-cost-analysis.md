@@ -1,10 +1,9 @@
 ---
 id: total-cost-analysis
 label: Analyse cout total (TCO)
-version: 1.0.1
-description_fr: Structurer un TCO avec coûts directs, coûts cachés, hypothèses et
-  risques sur un horizon donné. Socle factuel pour une décision d'achat ou d'investissement.
-description_en: Structure a TCO with direct costs, hidden costs, hypotheses, and risks over a given horizon. Factual foundation for a purchase or investment decision.
+version: 1.1.0
+description_fr: Structure un TCO — coûts directs, coûts cachés, hypothèses, risques — sur un horizon donné, en distinguant coûts confirmés, estimés et non chiffrés. Déclenche sur "calcule le coût total de possession", "au-delà du prix affiché, quel est le vrai coût sur trois ans", "compare le TCO entre ces deux offres". Ne construit pas la grille de notation qualitative des fournisseurs (utiliser `vendor-scorecard`) ni le document d'appel d'offres (utiliser `rfp-draft`).
+description_en: Structures a TCO, direct costs, hidden costs, hypotheses, risks, over a given horizon, distinguishing confirmed, estimated, and unquantified costs. Triggers on "calculate the total cost of ownership", "beyond the sticker price, what's the real cost over three years", "compare TCO between these two offers". Does not build the qualitative vendor scoring grid (use `vendor-scorecard`) nor the tender document itself (use `rfp-draft`).
 icon: ∑
 domain: ops
 category: research

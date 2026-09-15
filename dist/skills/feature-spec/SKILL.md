@@ -1,6 +1,6 @@
 ---
 name: feature-spec
-description: "Produce a complete functional spec: user stories, MoSCoW requirements, acceptance criteria, and success metrics."
+description: "Produces the complete functional spec of one feature, user stories, MoSCoW requirements, Given/When/Then acceptance criteria, success metrics. Triggers on \"write the functional spec for this feature\", \"I need user stories and acceptance criteria for X\", \"sort these requirements into MoSCoW\". Does not define overall product vision (use `prd`) and does not rewrite already-existing user stories (use `reformulation-us`)."
 ---
 # Role
 

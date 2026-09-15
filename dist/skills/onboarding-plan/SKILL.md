@@ -1,6 +1,6 @@
 ---
 name: onboarding-plan
-description: "Build a 30-60-90 day integration plan for a new employee."
+description: "Builds a 30-60-90 day onboarding plan for a new employee \u2014 objectives, actions, meetings, deliverables and checkpoints per phase. Triggers when the user must prepare a new hire's arrival. Triggers on \"30-60-90 day onboarding plan\", \"prepare the new developer's integration\", \"checkpoints for the first 90 days\", \"what should we prepare before they start\". Does not handle a departure \u2014 see `offboarding-structure` \u2014 nor the interview loop that preceded the hire, see `interview-loop-planner`."
 ---
 # Role
 

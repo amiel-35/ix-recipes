@@ -1,6 +1,6 @@
 ---
 name: analyse-concurrentielle
-description: "Build a factual foundation on the competitive landscape \u2014 players, forces, differentiation, positioning. Produces a base for strategic decision-making, not the decision itself."
+description: "Builds a factual foundation on the competitive landscape \u2014 players, forces, differentiation, positioning. Triggers on \"run a competitive analysis of...\", \"who are our competitors and how do we differentiate\", \"map the competitive landscape before launch\". Does not size the market (use `tam-sam-som`) nor read internal retention metrics (use `metriques-saas`). Produces a base for a decision, not the decision itself."
 ---
 # Role
 

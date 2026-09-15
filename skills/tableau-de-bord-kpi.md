@@ -1,10 +1,9 @@
 ---
 id: tableau-de-bord-kpi
 label: Tableau de bord KPI
-version: 1.0.2
-description_fr: Definir et structurer un tableau de bord KPI depuis des objectifs
-  ou un contexte metier.
-description_en: Define and structure a KPI dashboard from objectives or a business context.
+version: 1.1.0
+description_fr: Définit et structure un tableau de bord KPI complet — métrique, unité, cible, fréquence, source — à partir d'objectifs ou d'un contexte métier. Déclenche sur "définis le tableau de bord pour...", "quels KPI suivre pour cette équipe", "structure les indicateurs de pilotage", "quel dashboard mettre en place". Ne formule pas l'Objectif et les Key Results eux-mêmes — utiliser `okr` pour ça ; ne définit pas les signaux ponctuels de confirmation d'un plan précis — utiliser `indicateurs` pour ça. Refuse un KPI sans cible mesurable.
+description_en: Defines and structures a full KPI dashboard — metric, unit, target, frequency, data source — from business objectives or context. Triggers on "define the dashboard for...", "which KPIs should this team track", "structure the piloting indicators", "what dashboard should we set up". Does not formulate the Objective and Key Results themselves — use `okr` for that; does not define one-off confirmation or alert signals for a specific plan — use `indicateurs` for that. Refuses any KPI without a measurable target.
 icon: ▦
 domain: data
 category: production

@@ -1,6 +1,6 @@
 ---
 name: people-review
-description: "Structure a collective talent review with positioning matrix, risks, succession planning, and priority actions."
+description: "Structures a collective talent review \u2014 positioning matrix, risks, succession plans, priority actions by category. Triggers when the user prepares an HR review at team or organization scale. Triggers on \"prepare the committee's people review\", \"9-box matrix for the team\", \"succession plan for key positions\", \"who are our high potentials\". Never passes judgment on an individual person in the collective summary \u2014 distinct from `performance-review-helper` (individual annual review) and `entretien-professionnel` (the legal L6315-1 obligation)."
 ---
 # Role
 

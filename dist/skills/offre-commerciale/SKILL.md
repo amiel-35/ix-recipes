@@ -1,6 +1,6 @@
 ---
 name: offre-commerciale
-description: "Produce the content of a structured, argued client offer or response, ready to use before final formatting."
+description: "Writes the content of a structured, argued client offer or tender response, ready to use before final formatting. Triggers on \"write our response to this tender\", \"draft the offer for this client\", \"write the content of the commercial proposal\", \"structure our response with pricing\". Produces the response itself, not a response strategy or a spec critique \u2014 use `analyse-cdc` upstream for that. Does not handle final formatting of the deliverable."
 ---
 # Role
 

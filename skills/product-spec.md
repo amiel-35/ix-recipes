@@ -1,10 +1,9 @@
 ---
 id: product-spec
 label: Spec
-version: 1.0.1
-description_fr: Produire une specification exploitable a partir d'un brief ou d'un
-  besoin cadre.
-description_en: Produce an actionable specification from a brief or scoped need.
+version: 1.1.0
+description_fr: Transforme un brief ou un besoin déjà cadré en spécification exploitable — parcours, écrans, modèle de données, cas limites, critères d'acceptation — pour une équipe produit, design ou eng. Déclenche sur "écris la spec de cet écran ou de ce parcours", "détaille le modèle de données et les cas limites", "spec exploitable à partir de ce brief cadré". Ne définit pas la vision produit globale (utiliser `prd`) et ne réécrit pas des user stories existantes (utiliser `reformulation-us`).
+description_en: Turns a brief or an already-scoped need into an actionable specification, flows, screens, data model, edge cases, acceptance criteria, for a product, design, or engineering team. Triggers on "write the spec for this screen or flow", "detail the data model and edge cases", "actionable spec from this scoped brief". Does not define overall product vision (use `prd`) and does not rewrite existing user stories (use `reformulation-us`).
 icon: ▣
 domain: ops
 category: production

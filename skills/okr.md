@@ -1,24 +1,9 @@
 ---
 id: okr
 label: OKR
-version: 2.0.0
-description_fr: >-
-  Vérifie des lignes d'Objectif/Résultat clé déjà écrites, ou fait émerger
-  un matériau à discuter depuis un brief flou. Déclenche dès qu'il est question d'un
-  objectif, d'un résultat clé, d'un KR, d'un OKR, d'une cible trimestrielle ou annuelle,
-  de la différence outcome/output, d'une baseline manquante, d'un plan d'action à mesurer
-  — même si le mot OKR n'est pas prononcé. Repère les tâches déguisées en KR, les OKR
-  sandbagged (toujours atteints) et aspirationnels (jamais atteignables), et refuse
-  d'inventer une baseline absente. Ne rend jamais un OKR fini tout seul : l'Objectif
-  est donné ou choisi par la personne, les KR se discutent.
-description_en: >-
-  Reviews Objective/Key Result lines already written, or surfaces material
-  to discuss from a vague brief. Triggers whenever an objective, a key result, a KR,
-  an OKR, a quarterly or annual target, the outcome/output distinction, a missing baseline,
-  or an action plan to be measured comes up — even if the word OKR is never said. Spots
-  tasks disguised as KRs, sandbagged OKRs (always reached) and aspirational ones (never
-  reachable), and refuses to invent a missing baseline. Never hands back a finished OKR
-  on its own: the Objective is given or chosen by the person, Key Results are discussed.
+version: 2.1.0
+description_fr: Vérifie des lignes d'Objectif/Résultat clé déjà écrites, ou fait émerger un matériau à discuter depuis un brief flou. Déclenche dès qu'il est question d'un objectif, d'un résultat clé, d'un KR, d'un OKR, d'une cible trimestrielle ou annuelle, de la différence outcome/output, d'une baseline manquante, d'un plan d'action à mesurer — même si le mot OKR n'est pas prononcé. Déclenche sur "relis nos OKR du trimestre", "ce KR est-il un vrai résultat ou une tâche déguisée", "aide-moi à formuler des résultats clés mesurables", "on n'a pas de baseline sur cet objectif". Repère les tâches déguisées en KR, les OKR sandbagged (toujours atteints) et aspirationnels (jamais atteignables), et refuse d'inventer une baseline absente. Ne rend jamais un OKR fini tout seul — l'Objectif est donné ou choisi par la personne, les KR se discutent.
+description_en: Reviews Objective/Key Result lines already written, or surfaces material to discuss from a vague brief. Triggers whenever an objective, a key result, a KR, an OKR, a quarterly or annual target, the outcome/output distinction, a missing baseline, or an action plan to be measured comes up — even if the word OKR is never said. Triggers on "review our OKRs for the quarter", "is this KR a real outcome or a disguised task", "help me phrase measurable key results", "we have no baseline for this objective". Spots tasks disguised as KRs, sandbagged OKRs (always reached) and aspirational ones (never reachable), and refuses to invent a missing baseline. Never hands back a finished OKR on its own — the Objective is given or chosen by the person, Key Results are discussed.
 icon: ◉
 domain: ops
 category: production

@@ -1,6 +1,6 @@
 ---
 name: mockup
-description: "Produce a standalone and presentable HTML mockup from a brief, spec, or visual references. A visual production deliverable \u2014 not a functional prototype."
+description: "Produces a standalone, presentable HTML mockup from a brief, spec, or visual references, a visual production deliverable, not a functional prototype. Triggers on \"make me an HTML mockup of this screen\", \"what could this look like visually\", \"mockup to show in the meeting\". Does not produce functional logic or a detailed spec (use `product-spec`), just the interface to look at and discuss."
 ---
 # Role
 

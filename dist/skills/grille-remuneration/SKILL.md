@@ -1,6 +1,6 @@
 ---
 name: grille-remuneration
-description: "Structure a compensation grid by family and level with ranges, positioning criteria, and governance rules."
+description: "Structures a compensation grid by job family and level \u2014 salary ranges, positioning criteria, governance rules. Triggers when the user must frame or rebuild a compensation policy. Triggers on \"build a salary grid by level\", \"structure our compensation ranges\", \"what criteria position this salary\", \"compensation grid by job family\". Never invents market figures without a source \u2014 structures the grid and flags data still to integrate. Does not handle an individual contract's clauses, see `contrat-emploi`."
 ---
 # Role
 

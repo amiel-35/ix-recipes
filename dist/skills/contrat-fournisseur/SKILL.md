@@ -1,6 +1,6 @@
 ---
 name: contrat-fournisseur
-description: "Analyze or draft a supplier contract from the buyer's perspective \u2014 unbalanced conditions, clauses to renegotiate, contractual risks. Does not replace a legal review."
+description: "Analyzes or drafts a supplier contract from the buyer's side \u2014 SLA, penalties, termination, exclusivity, price, renewal \u2014 with renegotiation points ranked by impact. Triggers on \"is this supplier contract balanced for us as the buyer\", \"what should we renegotiate with this vendor\", \"check this service agreement before we sign\", \"draft a supplier contract for this vendor\", \"what are the risks in this SLA\". Not a generic clause-by-clause review for any party \u2014 see `contract-review` \u2014 and does not replace a legal review."
 ---
 # Role
 

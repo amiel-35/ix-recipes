@@ -1,10 +1,9 @@
 ---
 id: prd
 label: PRD
-version: 1.0.1
-description_fr: Produire un Product Requirements Document complet depuis un brief
-  ou une feature spec.
-description_en: Produce a complete Product Requirements Document from a brief or feature spec.
+version: 1.1.0
+description_fr: Produit un Product Requirements Document complet — problème, vision, utilisateurs cibles, périmètre inclus/exclu, exigences, métriques de succès — le quoi et le pourquoi, jamais le comment. Déclenche sur "prépare le PRD pour ce produit", "j'ai besoin d'un document de vision produit avant que l'équipe eng s'y mette", "cadre le scope avant le développement". Ne produit pas de backlog de user stories (utiliser `feature-spec`) ni de spec d'écrans ou de flows (utiliser `product-spec`).
+description_en: Produces a complete Product Requirements Document, problem, vision, target users, scope in and out, requirements, success metrics, the what and the why, never the how. Triggers on "prepare the PRD for this product", "I need a product vision document before engineering starts", "define scope before development". Does not produce a backlog of user stories (use `feature-spec`) nor a spec of screens or flows (use `product-spec`).
 icon: ▣
 domain: ops
 category: production

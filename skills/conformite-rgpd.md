@@ -1,10 +1,9 @@
 ---
 id: conformite-rgpd
 label: Conformite RGPD
-version: 1.0.2
-description_fr: Produire une checklist de conformite RGPD depuis une spec ou un document
-  technique.
-description_en: Produce a GDPR compliance checklist from a spec or technical document.
+version: 1.1.0
+description_fr: Produit une checklist de conformité RGPD à partir d'une spec technique ou d'une description de traitement de données personnelles — bases légales, DPIA, DPO, transferts hors UE. Déclenche sur "cette feature est-elle conforme RGPD", "check RGPD sur cette spec", "quelles obligations RGPD pour ce traitement", "faut-il une DPIA ici", "checklist RGPD avant la mise en prod". Ne couvre pas la conformité légale, contractuelle et sectorielle générale — voir `compliance-checklist` — et ne remplace pas un DPO ou un juriste.
+description_en: Produces a GDPR compliance checklist from a technical spec or a description of personal-data processing — legal bases, DPIA, DPO, transfers outside the EU. Triggers on "is this feature GDPR compliant", "run a GDPR check on this spec", "what GDPR obligations apply to this processing", "do we need a DPIA for this", "GDPR checklist before we ship". Does not cover broader legal, contractual, or sector compliance — see `compliance-checklist` — and does not replace a DPO or lawyer.
 icon: ⊘
 domain: legal
 category: internal

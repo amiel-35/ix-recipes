@@ -1,11 +1,9 @@
 ---
 id: analyse-concurrentielle
 label: Analyse Concurrentielle
-version: 1.0.2
-description_fr: Construire un socle factuel sur le paysage concurrentiel — acteurs,
-  forces, différenciation, positionnement. Produit une base pour une décision stratégique,
-  pas la décision elle-même.
-description_en: Build a factual foundation on the competitive landscape — players, forces, differentiation, positioning. Produces a base for strategic decision-making, not the decision itself.
+version: 1.1.0
+description_fr: Construit un socle factuel sur le paysage concurrentiel — acteurs, forces, différenciation, positionnement. Déclenche sur "fais l'analyse concurrentielle de...", "qui sont nos concurrents et comment on se différencie", "cartographie le paysage concurrentiel avant le lancement". Ne chiffre pas la taille du marché (utiliser `tam-sam-som`) ni ne lit les métriques internes de rétention (utiliser `metriques-saas`). Produit une base pour une décision, pas la décision elle-même.
+description_en: Builds a factual foundation on the competitive landscape — players, forces, differentiation, positioning. Triggers on "run a competitive analysis of...", "who are our competitors and how do we differentiate", "map the competitive landscape before launch". Does not size the market (use `tam-sam-som`) nor read internal retention metrics (use `metriques-saas`). Produces a base for a decision, not the decision itself.
 icon: ◭
 domain: ops
 category: research

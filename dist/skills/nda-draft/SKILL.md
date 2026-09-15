@@ -1,6 +1,6 @@
 ---
 name: nda-draft
-description: "Generate a NDA draft adapted to the context before legal validation."
+description: "Drafts an NDA adapted to the context \u2014 parties, purpose, duration, territory \u2014 calibrated to the relationship type (contractor, partnership, employee, M&A discussion). Triggers on \"draft an NDA for this partnership\", \"prepare a confidentiality agreement for this contractor\", \"I need an NDA before this M&A discussion\", \"generate a confidentiality clause for this contract\", \"draft an NDA before we share our data\". Does not analyze an existing contract \u2014 see `contract-review` or `contrat-fournisseur` \u2014 and does not produce a document ready to sign without legal validation."
 ---
 # Role
 

@@ -1,11 +1,9 @@
 ---
 id: budget-variance-analysis
 label: Analyse des ecarts budgetaires
-version: 1.0.1
-description_fr: Analyser des écarts budget/réel avec causes probables, hypothèses
-  et actions correctrices. Produit un diagnostic factuel — ne substitue pas une décision
-  de gestion.
-description_en: Analyze budget/actual variances with probable causes, hypotheses, and corrective actions. Produces a factual diagnosis — does not substitute a management decision.
+version: 1.1.0
+description_fr: Analyse des écarts budget/réel ligne par ligne avec causes probables, hypothèses explicitement marquées et actions correctrices. Déclenche sur "pourquoi on a dépassé le budget", "analyse les écarts de ce trimestre", "explique ce dépassement de charges", "budget vs réalisé", "on a un écart, à quoi c'est dû". Produit un diagnostic factuel, pas une décision de gestion — distingue toujours ce qui est observé, ce qui est une hypothèse chiffrée, et ce qui reste à vérifier.
+description_en: Analyzes budget-versus-actual variances line by line with probable causes, explicitly flagged hypotheses, and corrective actions. Triggers on "why did we overspend", "analyze this quarter's variances", "explain this budget overrun", "actual vs budget", "we have a gap, what's driving it". Produces a factual diagnosis, not a management decision — always distinguishes what is observed, what is a quantified hypothesis, and what still needs verification.
 icon: △
 domain: finance
 category: research

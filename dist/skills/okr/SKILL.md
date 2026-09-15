@@ -1,6 +1,6 @@
 ---
 name: okr
-description: "Reviews Objective/Key Result lines already written, or surfaces material to discuss from a vague brief. Triggers whenever an objective, a key result, a KR, an OKR, a quarterly or annual target, the outcome/output distinction, a missing baseline, or an action plan to be measured comes up \u2014 even if the word OKR is never said. Spots tasks disguised as KRs, sandbagged OKRs (always reached) and aspirational ones (never reachable), and refuses to invent a missing baseline. Never hands back a finished OKR on its own: the Objective is given or chosen by the person, Key Results are discussed."
+description: "Reviews Objective/Key Result lines already written, or surfaces material to discuss from a vague brief. Triggers whenever an objective, a key result, a KR, an OKR, a quarterly or annual target, the outcome/output distinction, a missing baseline, or an action plan to be measured comes up \u2014 even if the word OKR is never said. Triggers on \"review our OKRs for the quarter\", \"is this KR a real outcome or a disguised task\", \"help me phrase measurable key results\", \"we have no baseline for this objective\". Spots tasks disguised as KRs, sandbagged OKRs (always reached) and aspirational ones (never reachable), and refuses to invent a missing baseline. Never hands back a finished OKR on its own \u2014 the Objective is given or chosen by the person, Key Results are discussed."
 ---
 # OKR
 

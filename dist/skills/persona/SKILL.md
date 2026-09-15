@@ -1,6 +1,6 @@
 ---
 name: persona
-description: "Produce structured user personas from research data or a product brief."
+description: "Produces structured user personas from research data, interviews, or a product brief, distinguishing what is observed from what is assumed. Triggers on \"create the personas for this product\", \"turn these interviews into user profiles\", \"who are our typical users\". Does not map a journey (use `journey-map` downstream) and never exceeds four profiles per deliverable."
 ---
 # Role
 

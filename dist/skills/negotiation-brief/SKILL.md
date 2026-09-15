@@ -1,6 +1,6 @@
 ---
 name: negotiation-brief
-description: "Prepare a structured procurement negotiation position \u2014 objectives, levers, BATNA, owned limits. Trigger before any high-stakes supplier meeting."
+description: "Prepares a procurement negotiation position before the meeting \u2014 objective, useful facts, levers, possible concessions, BATNA, opening position, target and an owned red line. Triggers on \"prep my negotiation with this supplier\", \"what leverage do we have with this vendor\", \"how far can we push on this renewal\", \"what's our BATNA on this contract\". Invents no figure or margin without flagging it as a hypothesis. Does not analyze the contract's clauses, see `contrat-fournisseur` \u2014 and does not compare several quotes against each other, see `offer-comparison`."
 ---
 # Role
 

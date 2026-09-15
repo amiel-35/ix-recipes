@@ -1,6 +1,6 @@
 ---
 name: journey-map
-description: "Produce a user journey map with stages, emotions, friction points, and opportunities."
+description: "Produces a user journey map, stages, actions, emotions, friction points, and opportunities, from the user's point of view, not the system's. Triggers on \"map the user journey for this scenario\", \"where are the friction points in this flow\", \"walk through the journey from signup to purchase\". Does not build the user profiles themselves (use `persona` first) and is not a technical flow diagram."
 ---
 # Role
 

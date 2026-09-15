@@ -1,9 +1,9 @@
 ---
 id: nda-draft
 label: Redaction NDA
-version: 1.0.0
-description_fr: Generer un projet de NDA adapte au contexte avant validation juridique.
-description_en: Generate a NDA draft adapted to the context before legal validation.
+version: 1.1.0
+description_fr: Génère un projet de NDA adapté au contexte — parties, objet, durée, territoire — et calibré au type de relation (prestataire, partenariat, salarié, discussion M&A). Déclenche sur "rédige un NDA pour ce partenariat", "prépare un accord de confidentialité pour ce prestataire", "j'ai besoin d'un NDA avant cette discussion M&A", "génère une clause de confidentialité pour ce contrat", "draft un NDA avant de partager nos données". N'analyse pas un contrat existant — voir `contract-review` ou `contrat-fournisseur` — et ne produit pas un document prêt à signer sans validation juridique.
+description_en: Drafts an NDA adapted to the context — parties, purpose, duration, territory — calibrated to the relationship type (contractor, partnership, employee, M&A discussion). Triggers on "draft an NDA for this partnership", "prepare a confidentiality agreement for this contractor", "I need an NDA before this M&A discussion", "generate a confidentiality clause for this contract", "draft an NDA before we share our data". Does not analyze an existing contract — see `contract-review` or `contrat-fournisseur` — and does not produce a document ready to sign without legal validation.
 icon: ✦
 domain: legal
 category: production

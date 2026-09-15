@@ -1,10 +1,9 @@
 ---
 id: vendor-scorecard
 label: Grille fournisseur
-version: 1.0.1
-description_fr: Construire une grille d'évaluation fournisseur réutilisable avec critères
-  pondérés. Produit l'outil de scoring, pas la décision finale.
-description_en: Build a reusable vendor evaluation grid with weighted criteria. Produces the scoring tool, not the final decision.
+version: 1.1.0
+description_fr: Construit une grille d'évaluation fournisseur réutilisable — critères pondérés, échelle de notation, espace de commentaire qualitatif — l'outil de scoring, pas la décision finale. Déclenche sur "construis la grille de notation fournisseurs", "comment on va scorer ces offres reçues", "grille pondérée pour comparer les prestataires". Ne rédige pas le cahier des charges envoyé aux fournisseurs (utiliser `rfp-draft`) ni le chiffrage complet du coût (utiliser `total-cost-analysis`).
+description_en: Builds a reusable vendor evaluation grid, weighted criteria, scoring scale, space for qualitative comments, the scoring tool, not the final decision. Triggers on "build the vendor scoring grid", "how do we score these received offers", "weighted grid to compare suppliers". Does not draft the tender document sent to suppliers (use `rfp-draft`) nor the full cost breakdown (use `total-cost-analysis`).
 icon: ▦
 domain: ops
 category: decision

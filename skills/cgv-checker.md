@@ -1,10 +1,9 @@
 ---
 id: cgv-checker
 label: Analyse CGV / CGU
-version: 1.1.0
-description_fr: Identifier les clauses déséquilibrées ou sensibles dans des CGV/CGU
-  selon la position de lecture. Oriente une revue approfondie sans remplacer un juriste.
-description_en: Identify unbalanced or sensitive clauses in GTC/ToS by reading position. Orients a deeper review without replacing a lawyer.
+version: 1.2.0
+description_fr: Repère les clauses déséquilibrées, inhabituelles ou sensibles d'un CGV ou CGU selon une position de lecture donnée (client, fournisseur, utilisateur). Déclenche sur "ces CGU sont-elles équilibrées", "relis ces CGV côté client", "y a-t-il des clauses abusives dans ces conditions générales", "check ces CGU avant publication", "quels points négocier sur ces CGV fournisseur". Ne fait pas une revue clause par clause avec redlines — voir `contract-review` — ni un flash rapide tous documents — voir `legal-risk-flag` — et ne remplace pas un juriste.
+description_en: Surfaces unbalanced, unusual, or sensitive clauses in GTC/ToS from a given reading position (client, supplier, user). Triggers on "are these ToS balanced", "review these terms from the client's side", "any unfair clauses in these terms of service", "check these ToS before we publish them", "what should we renegotiate in this supplier's GTC". Not a full clause-by-clause contract review with redlines — see `contract-review` — nor a quick flash across any legal document — see `legal-risk-flag` — and does not replace a lawyer.
 icon: ⊞
 domain: legal
 category: critique

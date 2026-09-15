@@ -1,11 +1,9 @@
 ---
 id: mockup
 label: Mockup
-version: 1.0.2
-description_fr: Produire un mockup HTML autonome et présentable depuis un brief, une
-  spec ou des références visuelles. Livrable de production visuelle — pas un prototype
-  fonctionnel.
-description_en: Produce a standalone and presentable HTML mockup from a brief, spec, or visual references. A visual production deliverable — not a functional prototype.
+version: 1.1.0
+description_fr: Produit un mockup HTML autonome et présentable depuis un brief, une spec ou des références visuelles — un livrable de production visuelle, pas un prototype fonctionnel. Déclenche sur "fais-moi une maquette HTML de cet écran", "à quoi ça pourrait ressembler visuellement", "mockup pour présenter l'idée en réunion". Ne produit ni logique fonctionnelle ni spec détaillée (utiliser `product-spec`) — juste l'interface à regarder et discuter.
+description_en: Produces a standalone, presentable HTML mockup from a brief, spec, or visual references, a visual production deliverable, not a functional prototype. Triggers on "make me an HTML mockup of this screen", "what could this look like visually", "mockup to show in the meeting". Does not produce functional logic or a detailed spec (use `product-spec`), just the interface to look at and discuss.
 icon: ▤
 domain: ops
 category: production

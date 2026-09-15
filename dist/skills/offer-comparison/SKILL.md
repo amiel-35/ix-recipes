@@ -1,6 +1,6 @@
 ---
 name: offer-comparison
-description: "Compare supplier offers on a normalized weighted grid with an argued recommendation. Trigger after receiving multiple quotes \u2014 requires normalizable offers."
+description: "Compares already-normalized supplier offers on a weighted grid and closes with an argued recommendation, keeping fragile scores and non-comparable criteria visible. Triggers on \"we got three quotes, which one do we take\", \"compare these offers against the grid\", \"which supplier proposal is best and why\", \"settle between these vendors\". Requires normalizable offers \u2014 it does not parse raw PDFs. Does not build the criteria grid itself, see `vendor-scorecard` \u2014 and does not work out the full cost of ownership, see `total-cost-analysis`."
 ---
 # Role
 

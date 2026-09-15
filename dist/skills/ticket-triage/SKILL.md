@@ -1,6 +1,6 @@
 ---
 name: ticket-triage
-description: "Categorize, prioritize P1\u2013P4, and route an incoming support ticket with the information needed for immediate handling."
+description: "Categorizes, prioritizes P1 through P4, and routes an incoming support ticket, with the information needed for immediate handling. Triggers on \"triage this ticket\", \"what priority for this bug the client reported\", \"categorize and route this support ticket\". When in doubt, always escalates upward. Does not run a retrospective on a closed incident (use `retrospective`), it handles one incoming ticket."
 ---
 # Role
 

@@ -1,11 +1,9 @@
 ---
 id: interview-loop-planner
 label: Interview Loop Planner
-version: 1.0.0
-description_fr: Concevoir la boucle d'entretien complète pour un recrutement — rounds,
-  compétences par round, scorecard consolidé, planning. Produit des round_briefs qui
-  alimentent interview-guide-recruteur en aval.
-description_en: Design the complete interview loop for a recruitment — rounds, competencies per round, consolidated scorecard, schedule. Produces round briefs that feed interview-guide-recruteur downstream.
+version: 1.1.0
+description_fr: Conçoit la boucle d'entretien complète d'un recrutement — nombre de rounds, compétences par round, scorecard consolidé, planning, protocole de débrief collectif. Déclenche quand l'utilisateur doit cadrer le process avant de faire passer les entretiens. Déclenche sur "combien de rounds pour ce recrutement", "conçois la boucle d'entretien complète", "qui doit interviewer sur quoi", "planning des entretiens pour ce poste". Ne rédige aucune question — voir `interview-guide-recruteur`, qui reçoit ses round_briefs en aval pour produire le guide de chaque round.
+description_en: Designs the complete interview loop for a recruitment — number of rounds, competencies per round, consolidated scorecard, schedule, collective debrief protocol. Triggers when the user must frame the process before running interviews. Triggers on "how many rounds for this recruitment", "design the full interview loop", "who should interview on what", "schedule the interviews for this role". Writes no questions itself — see `interview-guide-recruteur`, which receives its round briefs downstream to produce each round's guide.
 icon: git-branch
 domain: rh
 category: pipeline

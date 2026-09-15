@@ -1,6 +1,6 @@
 ---
 name: vendor-scorecard
-description: "Build a reusable vendor evaluation grid with weighted criteria. Produces the scoring tool, not the final decision."
+description: "Builds a reusable vendor evaluation grid, weighted criteria, scoring scale, space for qualitative comments, the scoring tool, not the final decision. Triggers on \"build the vendor scoring grid\", \"how do we score these received offers\", \"weighted grid to compare suppliers\". Does not draft the tender document sent to suppliers (use `rfp-draft`) nor the full cost breakdown (use `total-cost-analysis`)."
 ---
 # Role
 

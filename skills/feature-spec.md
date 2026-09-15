@@ -1,10 +1,9 @@
 ---
 id: feature-spec
 label: Feature Spec
-version: 1.0.1
-description_fr: 'Produire une spec fonctionnelle complete : user stories, exigences
-  MoSCoW, criteres d''acceptation et metriques de succes.'
-description_en: 'Produce a complete functional spec: user stories, MoSCoW requirements, acceptance criteria, and success metrics.'
+version: 1.1.0
+description_fr: Produit la spec fonctionnelle complète d'une feature — user stories, exigences MoSCoW, critères d'acceptation Given/When/Then, métriques de succès. Déclenche sur "écris la spec fonctionnelle de cette feature", "il me faut les user stories et critères d'acceptation pour X", "priorise ces exigences en MoSCoW". Ne définit pas la vision produit globale (utiliser `prd`) et ne réécrit pas des US déjà existantes (utiliser `reformulation-us`).
+description_en: Produces the complete functional spec of one feature, user stories, MoSCoW requirements, Given/When/Then acceptance criteria, success metrics. Triggers on "write the functional spec for this feature", "I need user stories and acceptance criteria for X", "sort these requirements into MoSCoW". Does not define overall product vision (use `prd`) and does not rewrite already-existing user stories (use `reformulation-us`).
 icon: ◧
 domain: ops
 category: production

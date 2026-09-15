@@ -1,10 +1,9 @@
 ---
 id: people-review
 label: People review
-version: 1.0.0
-description_fr: Structurer une revue de talents collective avec matrice de positionnement,
-  risques, succession et actions prioritaires.
-description_en: Structure a collective talent review with positioning matrix, risks, succession planning, and priority actions.
+version: 1.1.0
+description_fr: Structure une revue de talents collective — matrice de positionnement, risques, plans de succession, actions prioritaires par catégorie. Déclenche quand l'utilisateur prépare une revue RH à l'échelle d'une équipe ou d'une organisation. Déclenche sur "prépare la people review du comité", "matrice 9-box pour l'équipe", "plan de succession sur les postes clés", "qui sont nos hauts potentiels". Ne porte jamais de jugement sur une personne individuelle dans la synthèse collective — distinct de `performance-review-helper` (entretien annuel individuel) et `entretien-professionnel` (obligation légale L6315-1).
+description_en: Structures a collective talent review — positioning matrix, risks, succession plans, priority actions by category. Triggers when the user prepares an HR review at team or organization scale. Triggers on "prepare the committee's people review", "9-box matrix for the team", "succession plan for key positions", "who are our high potentials". Never passes judgment on an individual person in the collective summary — distinct from `performance-review-helper` (individual annual review) and `entretien-professionnel` (the legal L6315-1 obligation).
 icon: 👥
 domain: rh
 category: decision

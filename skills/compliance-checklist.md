@@ -1,11 +1,9 @@
 ---
 id: compliance-checklist
 label: Checklist conformite
-version: 1.0.1
-description_fr: Générer une checklist de conformité légale, contractuelle et réglementaire
-  — RGPD, droit du travail, sectoriel. Déclencher avant tout lancement produit ou
-  contractualisation.
-description_en: Generate a compliance checklist — GDPR, labor law, sector-specific. Trigger before any product launch or contractualization.
+version: 1.1.0
+description_fr: Génère une checklist de conformité multi-domaines à partir d'un projet ou d'un contexte — obligations légales, contractuelles, réglementaires et sectorielles, chacune avec sa priorité et son statut de vérification. Déclenche sur "de quoi doit-on se mettre en conformité avant ce lancement", "checklist conformité pour ce nouveau service", "quelles obligations réglementaires sur ce projet", "qu'est-ce qu'il faut valider avec le juridique avant de contractualiser". Ne traite pas le seul RGPD ni les DPIA, voir `conformite-rgpd` — ne relit pas un contrat, voir `contract-review` — et ne remplace pas un conseil professionnel.
+description_en: Generates a multi-domain compliance checklist from a project or a context — legal, contractual, regulatory and sector obligations, each with a priority and a verification status. Triggers on "what do we need to be compliant on before this launch", "compliance checklist for this new service", "which regulatory obligations apply to this project", "what must legal sign off before we contract". Does not cover GDPR and DPIAs alone, see `conformite-rgpd` — does not review a contract, see `contract-review` — and does not replace professional advice.
 icon: ☑
 domain: legal
 category: production

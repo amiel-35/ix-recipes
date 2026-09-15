@@ -1,11 +1,9 @@
 ---
 id: tam-sam-som
 label: TAM SAM SOM
-version: 1.0.2
-description_fr: Estimer TAM, SAM et SOM avec méthodes top-down et bottom-up, hypothèses
-  explicites et limites de fiabilité. Socle factuel pour une discussion business ou
-  investisseur.
-description_en: Estimate TAM, SAM, and SOM with top-down and bottom-up methods, explicit hypotheses, and reliability limits. Factual foundation for a business or investor discussion.
+version: 1.1.0
+description_fr: Estime TAM, SAM et SOM avec méthodes top-down et bottom-up, hypothèses explicites et limites de fiabilité assumées. Déclenche sur "quelle est la taille du marché adressable", "calcule le TAM SAM SOM avant le pitch investisseur", "sizing du marché pour ce segment". Ne compare pas aux concurrents (utiliser `analyse-concurrentielle`) et ne lit pas les métriques internes de rétention (utiliser `metriques-saas`) — un socle factuel de sizing, pas la stratégie.
+description_en: Estimates TAM, SAM, and SOM with top-down and bottom-up methods, explicit hypotheses, and owned reliability limits. Triggers on "what's the size of the addressable market", "calculate TAM SAM SOM before the investor pitch", "size the market for this segment". Does not compare against competitors (use `analyse-concurrentielle`) and does not read internal retention metrics (use `metriques-saas`), a factual sizing base, not the strategy.
 icon: ◎
 domain: ops
 category: research

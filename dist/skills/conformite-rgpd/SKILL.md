@@ -1,6 +1,6 @@
 ---
 name: conformite-rgpd
-description: "Produce a GDPR compliance checklist from a spec or technical document."
+description: "Produces a GDPR compliance checklist from a technical spec or a description of personal-data processing \u2014 legal bases, DPIA, DPO, transfers outside the EU. Triggers on \"is this feature GDPR compliant\", \"run a GDPR check on this spec\", \"what GDPR obligations apply to this processing\", \"do we need a DPIA for this\", \"GDPR checklist before we ship\". Does not cover broader legal, contractual, or sector compliance \u2014 see `compliance-checklist` \u2014 and does not replace a DPO or lawyer."
 ---
 # Role
 

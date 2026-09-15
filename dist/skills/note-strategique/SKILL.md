@@ -1,6 +1,6 @@
 ---
 name: note-strategique
-description: "Produce a structured and argued strategic note from a brief or context elements."
+description: "Produces a structured, argued strategic note that opens with the conclusion and makes trade-offs visible, for a decision-maker reader. Triggers on \"prepare a note for the steering committee on this\", \"write an argued strategic note on X\", \"I need a written case to decide between these options\". Does not clarify a still-vague need (use `cadrage`) and does not build an operational brief (use `brief`)."
 ---
 # Role
 

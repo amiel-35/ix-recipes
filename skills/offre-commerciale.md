@@ -1,10 +1,9 @@
 ---
 id: offre-commerciale
 label: Offre commerciale
-version: 1.0.0
-description_fr: Produire le contenu d'une offre ou d'une reponse client structuree,
-  argumentee et exploitable avant mise en forme finale.
-description_en: Produce the content of a structured, argued client offer or response, ready to use before final formatting.
+version: 1.1.0
+description_fr: Rédige le contenu d'une offre ou d'une réponse client structurée et argumentée, prête à intégrer avant mise en forme finale. Déclenche sur "rédige notre réponse à cet appel d'offres", "prépare l'offre pour ce client", "écris le contenu de la proposition commerciale", "structure notre réponse avec le chiffrage". Produit la réponse elle-même, pas une stratégie de réponse ni un audit du CDC — utiliser `analyse-cdc` en amont pour ça. Ne fait pas la mise en forme finale du livrable.
+description_en: Writes the content of a structured, argued client offer or tender response, ready to use before final formatting. Triggers on "write our response to this tender", "draft the offer for this client", "write the content of the commercial proposal", "structure our response with pricing". Produces the response itself, not a response strategy or a spec critique — use `analyse-cdc` upstream for that. Does not handle final formatting of the deliverable.
 icon: ▣
 domain: sales
 category: production

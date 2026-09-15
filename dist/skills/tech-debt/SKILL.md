@@ -1,6 +1,6 @@
 ---
 name: tech-debt
-description: "Identify, categorize, and prioritize technical debt with a realistic remediation plan. Trigger on a codebase audit, sprint preparation, or architecture decision."
+description: "Inventories technical debt, scores it on impact, risk and effort, and produces a remediation plan interleavable with feature work, every item justified by a business impact rather than a purely technical one. Triggers on \"run a tech debt audit on this project\", \"what should we refactor first\", \"what debt is this codebase carrying\", \"what debt goes into the next sprint\". Concludes \"RAS\" when no item reaches the threshold, rather than promoting backlog noise. Does not review a diff or a PR, see `code-review`."
 ---
 # Role
 

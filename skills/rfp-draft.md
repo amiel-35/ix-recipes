@@ -1,9 +1,9 @@
 ---
 id: rfp-draft
 label: Redaction d'appel d'offres
-version: 1.0.1
-description_fr: Generer un appel d'offres structure depuis un brief achat ou metier.
-description_en: Generate a structured request for proposal from a procurement or business brief.
+version: 1.1.0
+description_fr: Génère un appel d'offres structuré — contexte, périmètre, exigences obligatoires et souhaitées, critères d'évaluation, conditions de réponse — depuis un brief achat ou métier. Déclenche sur "rédige l'appel d'offres pour...", "prépare le cahier des charges à envoyer aux fournisseurs", "structure ce besoin en RFP". Ne construit pas la grille de notation des offres reçues (utiliser `vendor-scorecard`) ni le chiffrage du coût total (utiliser `total-cost-analysis`).
+description_en: Generates a structured request for proposal, context, scope, mandatory and desirable requirements, evaluation criteria, response conditions, from a procurement or business brief. Triggers on "draft the RFP for...", "prepare the spec to send to suppliers", "structure this need into an RFP". Does not build the scoring grid for received offers (use `vendor-scorecard`) nor the full cost breakdown (use `total-cost-analysis`).
 icon: ▤
 domain: ops
 category: production

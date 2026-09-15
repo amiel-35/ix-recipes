@@ -1,6 +1,6 @@
 ---
 name: strategie-prix
-description: "Formulate a pricing strategy with perceived value, segmentation, scenarios, and explicit trade-offs. Trigger on product launches, repositioning, or competitive pressure."
+description: "Formulates a pricing recommendation linking perceived value, segmentation and candidate pricing models, with explicit trade-offs and owned critical assumptions. Triggers on \"how should we price this offer\", \"what pricing model for this product\", \"should we raise prices or not\", \"subscription or usage-based for this service\". Does not size the market, see `tam-sam-som` \u2014 does not write the offer sent to the client, see `offre-commerciale` \u2014 and does not work out a project's return on investment, see `business-case-draft`."
 ---
 # Role
 

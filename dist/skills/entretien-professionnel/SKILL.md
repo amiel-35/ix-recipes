@@ -1,6 +1,6 @@
 ---
 name: entretien-professionnel
-description: "Prepare a mandatory professional development interview (art. L6315-1) with framework, questions, and meeting record template."
+description: "Prepares the mandatory professional development interview (French labor code art. L6315-1) \u2014 4-axis framework, exploratory questions, signable meeting record. Triggers when the user must prepare this biennial legal obligation \u2014 career prospects, training rights, 6-year summary review. Triggers on \"prepare the professional development interview\", \"biennial obligation art. L6315-1\", \"6-year review\", \"corrective CPF top-up\", \"career development interview template\". Never evaluates performance \u2014 see `performance-review-helper` for the annual review, or `people-review` for collective talent review."
 ---
 # Role
 

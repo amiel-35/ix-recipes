@@ -1,11 +1,9 @@
 ---
 id: metriques-saas
 label: Metriques SaaS
-version: 1.0.2
-description_fr: Analyser les métriques clés d'un SaaS — CAC, LTV, NRR, churn — et
-  produire un diagnostic factuel de la santé du modèle économique. Ne recommande pas
-  d'action.
-description_en: Analyze key SaaS metrics — CAC, LTV, NRR, churn — and produce a factual diagnosis of business model health. Does not recommend actions.
+version: 1.1.0
+description_fr: Analyse les métriques clés d'un SaaS — CAC, LTV, NRR, churn — et produit un diagnostic factuel de la santé du modèle économique, formules et hypothèses à l'appui. Déclenche sur "analyse nos métriques SaaS", "calcule le NRR et le churn à partir de ces chiffres", "diagnostic de la santé du modèle avec ce reporting". Ne dimensionne pas le marché (utiliser `tam-sam-som`), ne compare pas aux concurrents (utiliser `analyse-concurrentielle`), et ne recommande aucune action.
+description_en: Analyzes key SaaS metrics, CAC, LTV, NRR, churn, and produces a factual diagnosis of business model health, formulas and hypotheses included. Triggers on "analyze our SaaS metrics", "calculate NRR and churn from these figures", "diagnose the health of the model from this reporting". Does not size the market (use `tam-sam-som`), does not compare against competitors (use `analyse-concurrentielle`), and recommends no action.
 icon: ◫
 domain: ops
 category: research

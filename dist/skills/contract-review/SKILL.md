@@ -1,6 +1,6 @@
 ---
 name: contract-review
-description: "Analyze a contract clause by clause \u2014 deviations from standard positions, priority redlines, points to negotiate. Does not replace legal advice."
+description: "Analyzes a contract clause by clause \u2014 deviations from standard positions, GREEN/YELLOW/RED classification, priority redlines with fallback language. Triggers on \"review this contract clause by clause\", \"which clauses are risky here\", \"draft the redlines before we sign\", \"where do we deviate from standard positions\", \"what's the overall risk on this contract\". Not a quick flash across any document \u2014 see `legal-risk-flag` \u2014 nor a GTC/ToS-specific read \u2014 see `cgv-checker` \u2014 nor buyer-side procurement focused \u2014 see `contrat-fournisseur` \u2014 and does not replace legal advice."
 ---
 # Role
 

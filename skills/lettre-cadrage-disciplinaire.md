@@ -1,10 +1,9 @@
 ---
 id: lettre-cadrage-disciplinaire
 label: Lettre de cadrage disciplinaire
-version: 1.0.0
-description_fr: Rediger un projet de courrier disciplinaire factuel et proportionnel,
-  a faire valider par un juriste avant envoi.
-description_en: Draft a factual and proportionate disciplinary framing letter to be validated by a lawyer before sending.
+version: 1.1.0
+description_fr: Rédige un projet de courrier disciplinaire (avertissement, mise en garde, blâme) à partir de faits datés et documentés, à faire valider par un juriste avant envoi. Déclenche quand l'utilisateur doit cadrer un comportement problématique par écrit. Déclenche sur "rédige un avertissement pour ce salarié", "courrier de mise en garde disciplinaire", "lettre de recadrage suite à cet incident", "formalise ce blâme". Refuse de produire la lettre si les faits restent vagues ("mauvaise volonté", "manque de motivation") — exige des faits observables et datés. Ne remplace jamais un avis juridique.
+description_en: Drafts a disciplinary letter (warning, formal notice, reprimand) from dated, documented facts, to be validated by a lawyer before sending. Triggers when the user must frame a problematic behavior in writing. Triggers on "draft a warning letter for this employee", "disciplinary formal notice", "framing letter after this incident", "formalize this reprimand". Refuses to produce the letter when facts stay vague ("bad attitude", "lack of motivation") — requires observable, dated facts. Never substitutes for legal advice.
 icon: ⚠️
 domain: rh
 category: production

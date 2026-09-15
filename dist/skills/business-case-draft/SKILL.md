@@ -1,6 +1,6 @@
 ---
 name: business-case-draft
-description: "Structure an investment decision with explicit costs, benefits, risks, and financial hypotheses. Requires numerical data \u2014 otherwise prefer note-strategique."
+description: "Structures an investment decision into a costed business case \u2014 costs, expected benefits, risks, explicit financial hypotheses. Triggers on \"draft the business case for...\", \"cost out this project\", \"is it worth investing in...\", \"justify this budget\", \"structure the investment file\". Requires numerical data, even if fragile; when none exists at all, points to `note-strategique` instead. Never presents an ROI as certain when the underlying assumptions are fragile."
 ---
 # Role
 

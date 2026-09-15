@@ -1,10 +1,9 @@
 ---
 id: grille-remuneration
 label: Grille de remuneration
-version: 1.0.0
-description_fr: Structurer une grille de remuneration par famille et niveau avec fourchettes,
-  criteres de positionnement et regles de gouvernance.
-description_en: Structure a compensation grid by family and level with ranges, positioning criteria, and governance rules.
+version: 1.1.0
+description_fr: Structure une grille de rémunération par famille de métier et niveau — fourchettes, critères de positionnement, règles de gouvernance. Déclenche quand l'utilisateur doit cadrer ou refondre une politique salariale. Déclenche sur "construis une grille de salaires par niveau", "structure nos fourchettes de rémunération", "quels critères pour positionner ce salaire", "grille salariale par famille de métier". N'invente jamais un chiffre de marché sans source — structure la grille et signale les données à intégrer. Ne traite pas les clauses d'un contrat individuel, voir `contrat-emploi`.
+description_en: Structures a compensation grid by job family and level — salary ranges, positioning criteria, governance rules. Triggers when the user must frame or rebuild a compensation policy. Triggers on "build a salary grid by level", "structure our compensation ranges", "what criteria position this salary", "compensation grid by job family". Never invents market figures without a source — structures the grid and flags data still to integrate. Does not handle an individual contract's clauses, see `contrat-emploi`.
 icon: 💰
 domain: rh
 category: production

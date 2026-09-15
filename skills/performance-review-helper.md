@@ -1,9 +1,9 @@
 ---
 id: performance-review-helper
 label: Aide a l'entretien annuel
-version: 1.1.0
-description_fr: Preparer un entretien annuel avec bilan structure et objectifs SMART.
-description_en: Prepare an annual review with structured assessment and SMART objectives.
+version: 1.2.0
+description_fr: Prépare l'entretien annuel individuel — bilan structuré (réussites, axes de tension) et objectifs SMART pour N+1. Déclenche quand l'utilisateur prépare l'évaluation de performance d'une personne. Déclenche sur "prépare l'entretien annuel de cette personne", "bilan de performance de l'année", "objectifs SMART pour l'an prochain", "trame pour l'évaluation annuelle". N'analyse jamais une grille déjà remplie et n'évalue pas les perspectives de carrière — voir `entretien-professionnel` (obligation légale) — ni la synthèse collective, voir `people-review`.
+description_en: Prepares the individual annual review — structured assessment (achievements, tension areas) and SMART objectives for next year. Triggers when the user prepares someone's performance evaluation. Triggers on "prepare this person's annual review", "performance assessment for the year", "SMART objectives for next year", "template for the annual evaluation". Never analyzes an already-completed grid and does not cover career prospects — see `entretien-professionnel` (the legal obligation) — nor the collective summary, see `people-review`.
 icon: ◉
 domain: rh
 category: production

@@ -1,11 +1,9 @@
 ---
 id: offer-comparison
 label: Comparaison d'offres
-version: 1.0.1
-description_fr: Comparer des offres fournisseurs sur grille pondérée normalisée avec
-  recommandation argumentée. Déclencher après réception de plusieurs devis — nécessite
-  des offres normalisables.
-description_en: Compare supplier offers on a normalized weighted grid with an argued recommendation. Trigger after receiving multiple quotes — requires normalizable offers.
+version: 1.1.0
+description_fr: Compare des offres fournisseurs déjà normalisées sur une grille pondérée et conclut par une recommandation argumentée, en laissant visibles les scores fragiles et les critères non comparables. Déclenche sur "on a reçu trois devis, lequel on prend", "compare ces offres sur la grille", "quelle proposition fournisseur est la meilleure et pourquoi", "départage ces prestataires". Nécessite des offres normalisables — ne parse pas des PDF bruts. Ne construit pas la grille de critères elle-même, voir `vendor-scorecard` — et ne chiffre pas le coût complet de possession, voir `total-cost-analysis`.
+description_en: Compares already-normalized supplier offers on a weighted grid and closes with an argued recommendation, keeping fragile scores and non-comparable criteria visible. Triggers on "we got three quotes, which one do we take", "compare these offers against the grid", "which supplier proposal is best and why", "settle between these vendors". Requires normalizable offers — it does not parse raw PDFs. Does not build the criteria grid itself, see `vendor-scorecard` — and does not work out the full cost of ownership, see `total-cost-analysis`.
 icon: ⇄
 domain: ops
 category: decision

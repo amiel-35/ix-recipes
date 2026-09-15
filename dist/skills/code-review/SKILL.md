@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: "Review code across 4 dimensions: security, performance, correctness, and maintainability."
+description: "Reviews code \u2014 diff, PR, files, or a pasted snippet \u2014 across four dimensions, security, performance, correctness, maintainability, with findings ranked critical vs suggestions and anchored to precise code references. Triggers on \"review this PR\", \"check this diff before merge\", \"any security or perf issues in this file\". Needs actual code, not an abstract design (use `system-design` for upstream architecture)."
 ---
 # Role
 

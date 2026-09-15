@@ -1,9 +1,9 @@
 ---
 id: onboarding-plan
 label: Plan d'onboarding
-version: 1.0.1
-description_fr: Construire un plan d'integration 30 60 90 jours pour un nouveau collaborateur.
-description_en: Build a 30-60-90 day integration plan for a new employee.
+version: 1.1.0
+description_fr: Construit un plan d'intégration 30-60-90 jours pour un nouveau collaborateur — objectifs, actions, réunions, livrables et points de contrôle par phase. Déclenche quand l'utilisateur doit préparer l'arrivée d'une recrue. Déclenche sur "plan d'onboarding 30-60-90 jours", "prépare l'intégration du nouveau développeur", "checkpoints pour les 90 premiers jours", "que doit-on préparer avant son arrivée". Ne traite pas un départ — voir `offboarding-structure` — et ne conçoit pas la boucle d'entretien qui a précédé le recrutement, voir `interview-loop-planner`.
+description_en: Builds a 30-60-90 day onboarding plan for a new employee — objectives, actions, meetings, deliverables and checkpoints per phase. Triggers when the user must prepare a new hire's arrival. Triggers on "30-60-90 day onboarding plan", "prepare the new developer's integration", "checkpoints for the first 90 days", "what should we prepare before they start". Does not handle a departure — see `offboarding-structure` — nor the interview loop that preceded the hire, see `interview-loop-planner`.
 icon: ◫
 domain: rh
 category: production

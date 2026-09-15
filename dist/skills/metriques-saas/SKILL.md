@@ -1,6 +1,6 @@
 ---
 name: metriques-saas
-description: "Analyze key SaaS metrics \u2014 CAC, LTV, NRR, churn \u2014 and produce a factual diagnosis of business model health. Does not recommend actions."
+description: "Analyzes key SaaS metrics, CAC, LTV, NRR, churn, and produces a factual diagnosis of business model health, formulas and hypotheses included. Triggers on \"analyze our SaaS metrics\", \"calculate NRR and churn from these figures\", \"diagnose the health of the model from this reporting\". Does not size the market (use `tam-sam-som`), does not compare against competitors (use `analyse-concurrentielle`), and recommends no action."
 ---
 # Role
 

@@ -1,10 +1,9 @@
 ---
 id: financial-narrative
 label: Narrative financiere
-version: 1.0.1
-description_fr: Transformer des chiffres financiers bruts en recit clair pour direction
-  ou board.
-description_en: Transform raw financial figures into a clear narrative for executive or board audience.
+version: 1.1.0
+description_fr: Transforme des chiffres financiers bruts (résultats, budget, trésorerie) en récit clair et hiérarchisé pour une direction ou un board. Déclenche sur "raconte ces chiffres au board", "prépare le narratif financier du comité", "transforme ce tableau de résultats en note pour la direction", "qu'est-ce qu'on retient de ces chiffres trimestriels". Se limite aux chiffres financiers pour une audience exécutive — pour des données quelconques et une audience produit ou métier, utiliser `data-storytelling` ; pour définir les indicateurs à suivre, utiliser `tableau-de-bord-kpi`.
+description_en: Transforms raw financial figures — results, budget, cash — into a clear, prioritized narrative for an executive or board audience. Triggers on "tell the board what these numbers mean", "draft the financial narrative for the committee", "turn this P&L into a note for leadership", "what should we take away from this quarter's figures". Limited to financial figures for an executive audience — for general data and a product or business audience use `data-storytelling`; to define which metrics to track use `tableau-de-bord-kpi`.
 icon: ◈
 domain: finance
 category: production

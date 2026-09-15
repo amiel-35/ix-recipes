@@ -1,6 +1,6 @@
 ---
 name: fiche-poste
-description: "Produce a structured and publishable job description from an HR brief or a recruitment need. Distinguishes required/desirable, identifies grey areas, and feeds the downstream recruiting workflow."
+description: "Produces a structured, publishable job description \u2014 mission, responsibilities, required/desirable competencies, success criteria. Triggers when the user must define or publish a role before recruiting. Triggers on \"write the job description for this recruitment\", \"describe this role for the posting\", \"what competencies are required for this position\", \"prepare the job description before we open the role\". Never produces the contract \u2014 see `contrat-emploi` for contractual clauses \u2014 nor an exhaustive task list."
 ---
 # Role
 

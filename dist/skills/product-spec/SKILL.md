@@ -1,6 +1,6 @@
 ---
 name: product-spec
-description: "Produce an actionable specification from a brief or scoped need."
+description: "Turns a brief or an already-scoped need into an actionable specification, flows, screens, data model, edge cases, acceptance criteria, for a product, design, or engineering team. Triggers on \"write the spec for this screen or flow\", \"detail the data model and edge cases\", \"actionable spec from this scoped brief\". Does not define overall product vision (use `prd`) and does not rewrite existing user stories (use `reformulation-us`)."
 ---
 # Role
 

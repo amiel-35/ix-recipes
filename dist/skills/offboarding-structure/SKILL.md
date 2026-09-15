@@ -1,6 +1,6 @@
 ---
 name: offboarding-structure
-description: "Structure an offboarding plan with knowledge handover, admin checklist, exit interview, and continuity risks."
+description: "Structures an offboarding plan \u2014 knowledge and project handover, administrative checklist, exit interview, continuity risks. Triggers when the user must organize an employee's departure. Triggers on \"prepare this employee's departure\", \"handover plan before they leave\", \"offboarding checklist\", \"what do we risk losing when this person leaves\". Does not handle a new hire's arrival \u2014 see `onboarding-plan` \u2014 and passes no judgment on the reasons for leaving."
 ---
 # Role
 

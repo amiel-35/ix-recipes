@@ -1,11 +1,9 @@
 ---
 id: analyse-cdc
 label: Analyse CDC
-version: 1.0.2
-description_fr: Analyser un CDC reçu du point de vue du répondant — exigences explicites/implicites,
-  zones floues, contradictions, questions bloquantes avant engagement. Ne produit
-  pas de plan de réponse.
-description_en: Analyze a received specification document from the respondent's perspective — explicit/implicit requirements, grey areas, contradictions, blocking questions before commitment. Does not produce a response plan.
+version: 1.1.0
+description_fr: Analyse un cahier des charges reçu du point de vue du répondant — exigences explicites et implicites, zones floues, contradictions, questions bloquantes avant tout engagement. Déclenche sur "analyse ce cahier des charges", "qu'est-ce qui est flou dans ce CDC", "avant de répondre à cet appel d'offres, qu'est-ce qu'on doit clarifier", "quelles sont les zones à risque de ce cahier des charges". Ne produit ni plan de réponse ni contenu client — utiliser `offre-commerciale` pour rédiger la réponse elle-même.
+description_en: Analyzes a received specification document from the respondent's side — explicit and implicit requirements, grey areas, contradictions, blocking questions before any commitment. Triggers on "analyze this spec document", "what's unclear in this RFP", "before we respond to this tender, what do we need to clarify", "what are the risk areas in this spec". Does not produce a response plan or client-facing content — use `offre-commerciale` to draft the actual response.
 icon: ⊕
 domain: sales
 category: critique

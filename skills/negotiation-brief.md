@@ -1,10 +1,9 @@
 ---
 id: negotiation-brief
 label: Brief de negociation
-version: 1.0.1
-description_fr: Préparer une position de négociation achat structurée — objectifs,
-  leviers, BATNA, limites assumées. Déclencher avant toute réunion fournisseur à enjeu.
-description_en: Prepare a structured procurement negotiation position — objectives, levers, BATNA, owned limits. Trigger before any high-stakes supplier meeting.
+version: 1.1.0
+description_fr: Prépare une position de négociation achat avant la réunion — objectif, faits utiles, leviers, concessions possibles, BATNA, position d'ouverture, cible et ligne rouge assumée. Déclenche sur "prépare ma négo avec ce fournisseur", "quels leviers j'ai face à ce prestataire", "jusqu'où je peux aller sur ce renouvellement", "quelle est notre BATNA sur ce contrat". N'invente aucun chiffre ou marge sans le marquer comme hypothèse. N'analyse pas les clauses du contrat, voir `contrat-fournisseur` — et ne compare pas plusieurs devis entre eux, voir `offer-comparison`.
+description_en: Prepares a procurement negotiation position before the meeting — objective, useful facts, levers, possible concessions, BATNA, opening position, target and an owned red line. Triggers on "prep my negotiation with this supplier", "what leverage do we have with this vendor", "how far can we push on this renewal", "what's our BATNA on this contract". Invents no figure or margin without flagging it as a hypothesis. Does not analyze the contract's clauses, see `contrat-fournisseur` — and does not compare several quotes against each other, see `offer-comparison`.
 icon: ⟐
 domain: ops
 category: production

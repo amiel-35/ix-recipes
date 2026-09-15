@@ -1,6 +1,6 @@
 ---
 name: system-design
-description: "Design a system or technical architecture: components, data flows, APIs, storage, and trade-offs."
+description: "Designs a system or technical architecture, components, data flows, API contracts, storage, with explicit trade-offs and owned scale hypotheses. Triggers on \"design the architecture for this system\", \"how should we split services for X\", \"design the API and data model before we code\". Does not review already-written code (use `code-review`), it works upstream, on the design itself."
 ---
 # Role
 

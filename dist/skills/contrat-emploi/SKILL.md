@@ -1,6 +1,6 @@
 ---
 name: contrat-emploi
-description: "Analyze or generate an employment contract, job offer, or HR amendment."
+description: "Analyzes or drafts an employment contract, job offer, or HR amendment, with watch points and the legal limit recalled. Triggers when the user has an HR contractual document to produce or check \u2014 permanent, fixed-term, freelance, amendment, disputed clause. Triggers on \"review this employment contract\", \"draft a job offer for this role\", \"prepare a mobility amendment\", \"is this non-compete clause valid\", \"check this fixed-term contract\". Never replaces lawyer review before signing \u2014 stays a draft to validate. Distinct from `fiche-poste`, which describes the role upstream of recruitment, not contractual clauses."
 ---
 # Role
 

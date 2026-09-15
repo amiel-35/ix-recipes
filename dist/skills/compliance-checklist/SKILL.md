@@ -1,6 +1,6 @@
 ---
 name: compliance-checklist
-description: "Generate a compliance checklist \u2014 GDPR, labor law, sector-specific. Trigger before any product launch or contractualization."
+description: "Generates a multi-domain compliance checklist from a project or a context \u2014 legal, contractual, regulatory and sector obligations, each with a priority and a verification status. Triggers on \"what do we need to be compliant on before this launch\", \"compliance checklist for this new service\", \"which regulatory obligations apply to this project\", \"what must legal sign off before we contract\". Does not cover GDPR and DPIAs alone, see `conformite-rgpd` \u2014 does not review a contract, see `contract-review` \u2014 and does not replace professional advice."
 ---
 # Role
 

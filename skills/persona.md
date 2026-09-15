@@ -1,10 +1,9 @@
 ---
 id: persona
 label: Persona
-version: 1.0.2
-description_fr: Produire des personas utilisateurs structures depuis des donnees de
-  recherche ou un brief produit.
-description_en: Produce structured user personas from research data or a product brief.
+version: 1.1.0
+description_fr: Produit des personas utilisateurs structurés depuis des données de recherche, interviews ou un brief produit, en distinguant ce qui est observé de ce qui est supposé. Déclenche sur "crée les personas pour ce produit", "à partir de ces interviews, fais-moi des profils utilisateurs", "qui sont nos utilisateurs types". Ne trace pas de parcours (utiliser `journey-map` en aval) et ne dépasse pas quatre profils par livrable.
+description_en: Produces structured user personas from research data, interviews, or a product brief, distinguishing what is observed from what is assumed. Triggers on "create the personas for this product", "turn these interviews into user profiles", "who are our typical users". Does not map a journey (use `journey-map` downstream) and never exceeds four profiles per deliverable.
 icon: ◉
 domain: ops
 category: production

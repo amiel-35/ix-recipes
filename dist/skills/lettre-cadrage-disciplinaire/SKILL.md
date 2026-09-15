@@ -1,6 +1,6 @@
 ---
 name: lettre-cadrage-disciplinaire
-description: "Draft a factual and proportionate disciplinary framing letter to be validated by a lawyer before sending."
+description: "Drafts a disciplinary letter (warning, formal notice, reprimand) from dated, documented facts, to be validated by a lawyer before sending. Triggers when the user must frame a problematic behavior in writing. Triggers on \"draft a warning letter for this employee\", \"disciplinary formal notice\", \"framing letter after this incident\", \"formalize this reprimand\". Refuses to produce the letter when facts stay vague (\"bad attitude\", \"lack of motivation\") \u2014 requires observable, dated facts. Never substitutes for legal advice."
 ---
 # Role
 

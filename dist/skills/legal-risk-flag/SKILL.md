@@ -1,6 +1,6 @@
 ---
 name: legal-risk-flag
-description: "Quickly identify legal red flags in a document with graduated risk level. Critical flash before a deep review \u2014 does not replace a lawyer."
+description: "Scans a legal or contractual document \u2014 contract, correspondence, any text \u2014 for priority red flags in one quick pass, with a graduated risk level (high/medium/low) and a recommended action. Triggers on \"any red flags in this document\", \"quick scan of this contract before the meeting\", \"what's the risk level here\", \"legal flash before we dig deeper\", \"anything urgent to check before we sign\". Not an exhaustive clause-by-clause redline review \u2014 see `contract-review` \u2014 and does not replace a lawyer."
 ---
 # Role
 

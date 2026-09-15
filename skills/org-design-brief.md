@@ -1,10 +1,9 @@
 ---
 id: org-design-brief
 label: Brief de reorganisation
-version: 1.0.1
-description_fr: Formaliser une cible organisationnelle avec diagnostic actuel, rationale,
-  risques humains et séquencement — avant toute annonce ou mise en œuvre d'une réorganisation.
-description_en: Formalize an organizational target with current diagnosis, rationale, human risks, and sequencing — before any announcement or implementation of a reorganization.
+version: 1.1.0
+description_fr: Formalise une cible organisationnelle — diagnostic actuel, rationale, risques humains, séquencement — avant toute annonce ou mise en œuvre d'une réorganisation. Déclenche quand l'utilisateur doit cadrer une reorg avant de l'annoncer. Déclenche sur "prépare le brief de réorganisation de l'équipe", "cible organisationnelle avant l'annonce", "cadre cette reorg avant qu'on en parle au comité", "formalise le nouvel organigramme cible". N'arbitre pas entre options organisationnelles concurrentes — voir `decision` — et ne remplace pas la revue de talents individuelle, voir `people-review`.
+description_en: Formalizes an organizational target — current diagnosis, rationale, human risks, sequencing — before any announcement or implementation of a reorganization. Triggers when the user must frame a reorg before announcing it. Triggers on "prepare the team's reorganization brief", "organizational target before the announcement", "frame this reorg before we bring it to the exec committee", "formalize the new target org chart". Does not arbitrate between competing organizational options — see `decision` — nor replace the individual talent review, see `people-review`.
 icon: ◇
 domain: rh
 category: production

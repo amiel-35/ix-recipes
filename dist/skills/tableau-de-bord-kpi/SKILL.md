@@ -1,6 +1,6 @@
 ---
 name: tableau-de-bord-kpi
-description: "Define and structure a KPI dashboard from objectives or a business context."
+description: "Defines and structures a full KPI dashboard \u2014 metric, unit, target, frequency, data source \u2014 from business objectives or context. Triggers on \"define the dashboard for...\", \"which KPIs should this team track\", \"structure the piloting indicators\", \"what dashboard should we set up\". Does not formulate the Objective and Key Results themselves \u2014 use `okr` for that; does not define one-off confirmation or alert signals for a specific plan \u2014 use `indicateurs` for that. Refuses any KPI without a measurable target."
 ---
 # Role
 

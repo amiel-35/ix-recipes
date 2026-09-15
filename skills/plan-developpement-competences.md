@@ -1,10 +1,9 @@
 ---
 id: plan-developpement-competences
 label: Plan de developpement des competences
-version: 1.0.0
-description_fr: Construire un plan de developpement individuel ou collectif avec actions,
-  calendrier, indicateurs et budget.
-description_en: Build an individual or collective development plan with actions, schedule, indicators, and budget.
+version: 1.1.0
+description_fr: Construit un plan de développement des compétences, individuel ou collectif — actions concrètes, calendrier trimestriel, indicateurs, budget et financement. Déclenche quand l'utilisateur doit transformer un écart de compétences identifié en actions. Déclenche sur "plan de développement des compétences pour cette personne", "quelles formations pour combler cet écart", "plan de montée en compétences de l'équipe", "budget formation pour l'année". Ne mène pas l'entretien qui identifie le besoin — voir `entretien-professionnel` ou `performance-review-helper` — il en exploite les conclusions.
+description_en: Builds an individual or collective competency development plan — concrete actions, quarterly schedule, progress indicators, budget and financing. Triggers when the user must turn an identified competency gap into actions. Triggers on "development plan for this person's competencies", "what training closes this gap", "team upskilling plan", "training budget for the year". Does not conduct the interview that identifies the need — see `entretien-professionnel` or `performance-review-helper` — it builds on their conclusions.
 icon: 📈
 domain: rh
 category: production

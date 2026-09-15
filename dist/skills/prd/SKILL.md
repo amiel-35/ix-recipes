@@ -1,6 +1,6 @@
 ---
 name: prd
-description: "Produce a complete Product Requirements Document from a brief or feature spec."
+description: "Produces a complete Product Requirements Document, problem, vision, target users, scope in and out, requirements, success metrics, the what and the why, never the how. Triggers on \"prepare the PRD for this product\", \"I need a product vision document before engineering starts\", \"define scope before development\". Does not produce a backlog of user stories (use `feature-spec`) nor a spec of screens or flows (use `product-spec`)."
 ---
 # Role
 

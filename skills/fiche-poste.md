@@ -1,11 +1,9 @@
 ---
 id: fiche-poste
 label: Fiche de poste
-version: 1.1.0
-description_fr: Produit une fiche de poste structuree et publiable a partir d'un brief
-  RH ou d'un besoin de recrutement. Distingue requis/souhaitable, identifie les zones
-  floues, et alimente le workflow de recrutement en aval.
-description_en: Produce a structured and publishable job description from an HR brief or a recruitment need. Distinguishes required/desirable, identifies grey areas, and feeds the downstream recruiting workflow.
+version: 1.2.0
+description_fr: Produit une fiche de poste structurée et publiable — mission, responsabilités, compétences requises/souhaitables, critères de succès. Déclenche quand l'utilisateur doit définir ou publier un rôle avant recrutement. Déclenche sur "rédige la fiche de poste pour ce recrutement", "décris ce rôle pour l'annonce", "quelles compétences requises pour ce poste", "prépare la fiche de poste avant de lancer le recrutement". Ne produit jamais le contrat — voir `contrat-emploi` pour les clauses contractuelles — ni une liste de tâches exhaustive.
+description_en: Produces a structured, publishable job description — mission, responsibilities, required/desirable competencies, success criteria. Triggers when the user must define or publish a role before recruiting. Triggers on "write the job description for this recruitment", "describe this role for the posting", "what competencies are required for this position", "prepare the job description before we open the role". Never produces the contract — see `contrat-emploi` for contractual clauses — nor an exhaustive task list.
 icon: file-text
 domain: rh
 category: production

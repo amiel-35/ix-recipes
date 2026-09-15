@@ -1,11 +1,9 @@
 ---
 id: business-case-draft
 label: Redaction business case
-version: 1.0.1
-description_fr: Structurer une décision d'investissement avec coûts, bénéfices, risques
-  et hypothèses financières explicites. Nécessite des données chiffrées — sinon préférer
-  note-strategique.
-description_en: Structure an investment decision with explicit costs, benefits, risks, and financial hypotheses. Requires numerical data — otherwise prefer note-strategique.
+version: 1.1.0
+description_fr: Structure une décision d'investissement en business case chiffré — coûts, bénéfices attendus, risques, hypothèses financières explicites. Déclenche sur "prépare le business case pour...", "chiffre ce projet", "ça vaut le coup d'investir dans...", "justifie ce budget", "structure le dossier d'investissement". Nécessite des données chiffrées, même fragiles ; si elles manquent totalement, oriente vers `note-strategique`. Ne présente jamais un ROI comme certain si les hypothèses sont fragiles.
+description_en: Structures an investment decision into a costed business case — costs, expected benefits, risks, explicit financial hypotheses. Triggers on "draft the business case for...", "cost out this project", "is it worth investing in...", "justify this budget", "structure the investment file". Requires numerical data, even if fragile; when none exists at all, points to `note-strategique` instead. Never presents an ROI as certain when the underlying assumptions are fragile.
 icon: ◆
 domain: finance
 category: decision

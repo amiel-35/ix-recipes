@@ -1,6 +1,6 @@
 ---
 name: performance-review-helper
-description: "Prepare an annual review with structured assessment and SMART objectives."
+description: "Prepares the individual annual review \u2014 structured assessment (achievements, tension areas) and SMART objectives for next year. Triggers when the user prepares someone's performance evaluation. Triggers on \"prepare this person's annual review\", \"performance assessment for the year\", \"SMART objectives for next year\", \"template for the annual evaluation\". Never analyzes an already-completed grid and does not cover career prospects \u2014 see `entretien-professionnel` (the legal obligation) \u2014 nor the collective summary, see `people-review`."
 ---
 # Role
 

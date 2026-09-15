@@ -1,10 +1,9 @@
 ---
 id: contrat-emploi
 label: Contrat emploi
-version: 1.0.2
-description_fr: Analyser ou generer un contrat de travail, offre d'embauche ou avenant
-  RH.
-description_en: Analyze or generate an employment contract, job offer, or HR amendment.
+version: 1.1.0
+description_fr: Analyse ou rédige un contrat de travail, une offre d'embauche ou un avenant RH, avec points de vigilance et limite légale rappelée. Déclenche quand l'utilisateur a un document contractuel RH à produire ou vérifier — CDI, CDD, freelance, avenant, clause litigieuse. Déclenche sur "relis ce contrat de travail", "rédige une offre d'embauche pour ce poste", "prépare un avenant de mobilité", "cette clause de non-concurrence est-elle valable", "vérifie ce CDD". Ne remplace jamais la relecture d'un juriste avant signature — reste un projet à valider. Distinct de `fiche-poste`, qui décrit le rôle en amont du recrutement, pas les clauses contractuelles.
+description_en: Analyzes or drafts an employment contract, job offer, or HR amendment, with watch points and the legal limit recalled. Triggers when the user has an HR contractual document to produce or check — permanent, fixed-term, freelance, amendment, disputed clause. Triggers on "review this employment contract", "draft a job offer for this role", "prepare a mobility amendment", "is this non-compete clause valid", "check this fixed-term contract". Never replaces lawyer review before signing — stays a draft to validate. Distinct from `fiche-poste`, which describes the role upstream of recruitment, not contractual clauses.
 icon: ⊟
 domain: rh
 category: production

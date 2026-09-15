@@ -1,10 +1,9 @@
 ---
 id: note-strategique
 label: Note strategique
-version: 1.0.1
-description_fr: Produire une note strategique structuree et argumentee depuis un brief
-  ou des elements de contexte.
-description_en: Produce a structured and argued strategic note from a brief or context elements.
+version: 1.1.0
+description_fr: Produit une note stratégique structurée et argumentée, qui commence par la conclusion et rend visibles les trade-offs, pour un destinataire décideur. Déclenche sur "prépare une note pour le CODIR sur ce sujet", "rédige une note stratégique argumentée sur X", "il me faut un document écrit pour trancher entre ces options". Ne clarifie pas un besoin encore flou (utiliser `cadrage`) et ne construit pas un brief opérationnel (utiliser `brief`).
+description_en: Produces a structured, argued strategic note that opens with the conclusion and makes trade-offs visible, for a decision-maker reader. Triggers on "prepare a note for the steering committee on this", "write an argued strategic note on X", "I need a written case to decide between these options". Does not clarify a still-vague need (use `cadrage`) and does not build an operational brief (use `brief`).
 icon: ◆
 domain: ops
 category: production

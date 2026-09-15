@@ -1,6 +1,6 @@
 ---
 name: rfp-draft
-description: "Generate a structured request for proposal from a procurement or business brief."
+description: "Generates a structured request for proposal, context, scope, mandatory and desirable requirements, evaluation criteria, response conditions, from a procurement or business brief. Triggers on \"draft the RFP for...\", \"prepare the spec to send to suppliers\", \"structure this need into an RFP\". Does not build the scoring grid for received offers (use `vendor-scorecard`) nor the full cost breakdown (use `total-cost-analysis`)."
 ---
 # Role
 

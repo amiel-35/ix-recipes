@@ -1,6 +1,6 @@
 ---
 name: analyse-cdc
-description: "Analyze a received specification document from the respondent's perspective \u2014 explicit/implicit requirements, grey areas, contradictions, blocking questions before commitment. Does not produce a response plan."
+description: "Analyzes a received specification document from the respondent's side \u2014 explicit and implicit requirements, grey areas, contradictions, blocking questions before any commitment. Triggers on \"analyze this spec document\", \"what's unclear in this RFP\", \"before we respond to this tender, what do we need to clarify\", \"what are the risk areas in this spec\". Does not produce a response plan or client-facing content \u2014 use `offre-commerciale` to draft the actual response."
 ---
 # Role
 

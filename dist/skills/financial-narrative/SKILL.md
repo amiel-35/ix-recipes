@@ -1,6 +1,6 @@
 ---
 name: financial-narrative
-description: "Transform raw financial figures into a clear narrative for executive or board audience."
+description: "Transforms raw financial figures \u2014 results, budget, cash \u2014 into a clear, prioritized narrative for an executive or board audience. Triggers on \"tell the board what these numbers mean\", \"draft the financial narrative for the committee\", \"turn this P&L into a note for leadership\", \"what should we take away from this quarter's figures\". Limited to financial figures for an executive audience \u2014 for general data and a product or business audience use `data-storytelling`; to define which metrics to track use `tableau-de-bord-kpi`."
 ---
 # Role
 

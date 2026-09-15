@@ -1,10 +1,9 @@
 ---
 id: code-review
 label: Code Review
-version: 1.1.0
-description_fr: 'Reviewer du code sur 4 dimensions : securite, performance, correction
-  et maintenabilite.'
-description_en: 'Review code across 4 dimensions: security, performance, correctness, and maintainability.'
+version: 1.2.0
+description_fr: Relit du code (diff, PR, fichiers ou extrait) sur quatre dimensions — sécurité, performance, correction, maintenabilité — avec constats classés critiques vs suggestions et référence de code précise. Déclenche sur "review ce PR", "relis ce diff avant merge", "y a-t-il des problèmes de sécu ou de perf dans ce fichier". Nécessite du code réel, pas une conception abstraite (utiliser `system-design` pour l'architecture en amont).
+description_en: Reviews code — diff, PR, files, or a pasted snippet — across four dimensions, security, performance, correctness, maintainability, with findings ranked critical vs suggestions and anchored to precise code references. Triggers on "review this PR", "check this diff before merge", "any security or perf issues in this file". Needs actual code, not an abstract design (use `system-design` for upstream architecture).
 icon: ⌥
 domain: ops
 category: critique

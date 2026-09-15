@@ -1,10 +1,9 @@
 ---
 id: offboarding-structure
 label: Offboarding structure
-version: 1.0.0
-description_fr: Structurer un plan d'offboarding avec passation, checklist admin,
-  entretien de sortie et risques de continuite.
-description_en: Structure an offboarding plan with knowledge handover, admin checklist, exit interview, and continuity risks.
+version: 1.1.0
+description_fr: Structure un plan d'offboarding — passation de connaissances et projets, checklist administrative, entretien de sortie, risques de continuité. Déclenche quand l'utilisateur doit organiser le départ d'un collaborateur. Déclenche sur "prépare le départ de ce collaborateur", "plan de passation avant son départ", "checklist offboarding", "que risque-t-on de perdre si cette personne part". Ne traite pas l'arrivée d'un nouveau collaborateur — voir `onboarding-plan` — et ne porte aucun jugement sur les raisons du départ.
+description_en: Structures an offboarding plan — knowledge and project handover, administrative checklist, exit interview, continuity risks. Triggers when the user must organize an employee's departure. Triggers on "prepare this employee's departure", "handover plan before they leave", "offboarding checklist", "what do we risk losing when this person leaves". Does not handle a new hire's arrival — see `onboarding-plan` — and passes no judgment on the reasons for leaving.
 icon: 🚪
 domain: rh
 category: production

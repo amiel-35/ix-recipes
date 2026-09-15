@@ -1,10 +1,9 @@
 ---
 id: entretien-professionnel
 label: Entretien professionnel
-version: 1.0.0
-description_fr: Preparer un entretien professionnel obligatoire (art. L6315-1) avec
-  trame, questions et gabarit de compte-rendu.
-description_en: Prepare a mandatory professional development interview (art. L6315-1) with framework, questions, and meeting record template.
+version: 1.1.0
+description_fr: Prépare l'entretien professionnel obligatoire (art. L6315-1) — trame en 4 axes, questions d'exploration, gabarit de compte-rendu signable. Déclenche quand l'utilisateur doit préparer cette obligation biennale — perspectives de carrière, formation, bilan à 6 ans. Déclenche sur "prépare l'entretien professionnel", "obligation tous les deux ans art. L6315-1", "bilan à 6 ans", "abondement correctif CPF", "trame entretien pro". N'évalue jamais la performance — voir `performance-review-helper` pour l'entretien annuel, ou `people-review` pour la revue collective de talents.
+description_en: Prepares the mandatory professional development interview (French labor code art. L6315-1) — 4-axis framework, exploratory questions, signable meeting record. Triggers when the user must prepare this biennial legal obligation — career prospects, training rights, 6-year summary review. Triggers on "prepare the professional development interview", "biennial obligation art. L6315-1", "6-year review", "corrective CPF top-up", "career development interview template". Never evaluates performance — see `performance-review-helper` for the annual review, or `people-review` for collective talent review.
 icon: ⚖️
 domain: rh
 category: production

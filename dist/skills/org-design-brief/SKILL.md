@@ -1,6 +1,6 @@
 ---
 name: org-design-brief
-description: "Formalize an organizational target with current diagnosis, rationale, human risks, and sequencing \u2014 before any announcement or implementation of a reorganization."
+description: "Formalizes an organizational target \u2014 current diagnosis, rationale, human risks, sequencing \u2014 before any announcement or implementation of a reorganization. Triggers when the user must frame a reorg before announcing it. Triggers on \"prepare the team's reorganization brief\", \"organizational target before the announcement\", \"frame this reorg before we bring it to the exec committee\", \"formalize the new target org chart\". Does not arbitrate between competing organizational options \u2014 see `decision` \u2014 nor replace the individual talent review, see `people-review`."
 ---
 # Role
 

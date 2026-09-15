@@ -1,11 +1,9 @@
 ---
 id: strategie-prix
 label: Strategie Prix
-version: 1.0.2
-description_fr: Formuler une stratégie de pricing avec valeur perçue, segmentation,
-  scénarios et trade-offs explicites. Déclencher sur lancement produit, repositionnement
-  ou pression concurrentielle.
-description_en: Formulate a pricing strategy with perceived value, segmentation, scenarios, and explicit trade-offs. Trigger on product launches, repositioning, or competitive pressure.
+version: 1.1.0
+description_fr: Formule une recommandation de pricing reliant valeur perçue, segmentation et modèles tarifaires possibles, avec trade-offs explicites et hypothèses critiques assumées. Déclenche sur "comment on price cette offre", "quel modèle tarifaire pour ce produit", "on augmente les prix ou pas", "abonnement ou à l'usage pour ce service". Ne dimensionne pas le marché, voir `tam-sam-som` — ne rédige pas l'offre envoyée au client, voir `offre-commerciale` — et ne chiffre pas le retour sur investissement d'un projet, voir `business-case-draft`.
+description_en: Formulates a pricing recommendation linking perceived value, segmentation and candidate pricing models, with explicit trade-offs and owned critical assumptions. Triggers on "how should we price this offer", "what pricing model for this product", "should we raise prices or not", "subscription or usage-based for this service". Does not size the market, see `tam-sam-som` — does not write the offer sent to the client, see `offre-commerciale` — and does not work out a project's return on investment, see `business-case-draft`.
 icon: ¤
 domain: fondateur
 category: decision

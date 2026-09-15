@@ -1,6 +1,6 @@
 ---
 name: interview-loop-planner
-description: "Design the complete interview loop for a recruitment \u2014 rounds, competencies per round, consolidated scorecard, schedule. Produces round briefs that feed interview-guide-recruteur downstream."
+description: "Designs the complete interview loop for a recruitment \u2014 number of rounds, competencies per round, consolidated scorecard, schedule, collective debrief protocol. Triggers when the user must frame the process before running interviews. Triggers on \"how many rounds for this recruitment\", \"design the full interview loop\", \"who should interview on what\", \"schedule the interviews for this role\". Writes no questions itself \u2014 see `interview-guide-recruteur`, which receives its round briefs downstream to produce each round's guide."
 ---
 # Role
 

@@ -1,6 +1,6 @@
 ---
 name: tam-sam-som
-description: "Estimate TAM, SAM, and SOM with top-down and bottom-up methods, explicit hypotheses, and reliability limits. Factual foundation for a business or investor discussion."
+description: "Estimates TAM, SAM, and SOM with top-down and bottom-up methods, explicit hypotheses, and owned reliability limits. Triggers on \"what's the size of the addressable market\", \"calculate TAM SAM SOM before the investor pitch\", \"size the market for this segment\". Does not compare against competitors (use `analyse-concurrentielle`) and does not read internal retention metrics (use `metriques-saas`), a factual sizing base, not the strategy."
 ---
 # Role
 

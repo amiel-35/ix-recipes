@@ -1,6 +1,6 @@
 ---
 name: plan-developpement-competences
-description: "Build an individual or collective development plan with actions, schedule, indicators, and budget."
+description: "Builds an individual or collective competency development plan \u2014 concrete actions, quarterly schedule, progress indicators, budget and financing. Triggers when the user must turn an identified competency gap into actions. Triggers on \"development plan for this person's competencies\", \"what training closes this gap\", \"team upskilling plan\", \"training budget for the year\". Does not conduct the interview that identifies the need \u2014 see `entretien-professionnel` or `performance-review-helper` \u2014 it builds on their conclusions."
 ---
 # Role
 

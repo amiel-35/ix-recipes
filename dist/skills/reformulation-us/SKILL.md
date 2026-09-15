@@ -1,6 +1,6 @@
 ---
 name: reformulation-us
-description: "Rewrite poorly-written existing user stories into clean and testable US with acceptance criteria."
+description: "Rewrites existing poorly-written user stories into clean, testable US with Given/When/Then acceptance criteria, staying faithful to the original intent. Triggers on \"rewrite these user stories\", \"these US are badly written, clean them up\", \"make this ticket testable with clear acceptance criteria\". Does not draft new US from a brief (use `feature-spec`) and flags US too vague to rewrite rather than reinventing them."
 ---
 # Role
 

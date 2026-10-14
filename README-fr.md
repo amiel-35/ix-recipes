@@ -1,171 +1,731 @@
-# ix-recipes
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="ix-recipes : recettes métier construites sur ix-skills" width="100%">
+</p>
 
-Recettes métier construites sur [ix-skills](https://github.com/amiel-35/ix-skills) : livrables RH, juridiques, financiers, achats, produit et tech, et workflows qui enchaînent les atomes d'ix-skills.
+<p align="center">
+  <a href="LICENSE"><img alt="Licence" src="https://img.shields.io/github/license/amiel-35/ix-recipes?color=7f9a96"></a>
+  <img alt="Version du plugin" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Famiel-35%2Fix-recipes%2Fmain%2Fdist%2F.claude-plugin%2Fplugin.json&query=%24.version&label=plugin&color=7fc8bd">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-D97757">
+  <img alt="Skills" src="https://img.shields.io/badge/skills-48-3d6b73">
+  <a href="https://github.com/amiel-35/ix-skills"><img alt="requires ix-skills" src="https://img.shields.io/badge/requires-ix--skills-7fc8bd"></a>
+  <img alt="Platforms" src="https://img.shields.io/badge/also-Codex%20%C2%B7%20GPT%20%C2%B7%20Gemini%20%C2%B7%20mystaffy-56707a">
+</p>
 
-*[English version](README.md)*
+<p align="center">
+  <a href="#démarrage-rapide"><b>Démarrage rapide</b></a> ·
+  <a href="#skills-disponibles"><b>Catalogue</b></a> ·
+  <a href="#workflows"><b>Workflows</b></a> ·
+  <a href="#contribuer"><b>Contribuer</b></a> ·
+  <a href="README.md"><b>English</b></a>
+</p>
+
+---
+
+<details>
+<summary><b>Sommaire</b></summary>
+
+- [À propos](#à-propos)
+- [Démarrage rapide](#démarrage-rapide)
+- [Convention de corpus — la sortie nulle](#convention-de-corpus--la-sortie-nulle)
+- [Skills disponibles](#skills-disponibles)
+- [Workflows](#workflows)
+- [Installation](#installation)
+- [Structure](#structure)
+- [Packager](#packager)
+- [Projets frères](#projets-frères)
+- [Contribuer](#contribuer)
+- [Crédits](#crédits)
+- [Licence](#licence)
+
+</details>
 
 ## À propos
 
-[ix-skills](https://github.com/amiel-35/ix-skills) fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
+Recettes métier construites sur [ix-skills](https://github.com/amiel-35/ix-skills) — portables sur Claude, GPT, Gemini, mystaffy.
 
-- **des skills métier** : ils reposent sur une connaissance de domaine qui peut être fausse ou périmée (droit du travail, RGPD, pratiques RH, formules financières, méthodes produit), ou ils produisent un artefact défini par une profession (PRD, NDA, fiche de poste, TCO) ;
-- **des workflows** : des enchaînements d'atomes ix-skills pour un travail récurrent. Le format est en cours de conception ; les deux premiers candidats sont listés plus bas.
+48 skills en 8 familles. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
 
-ix-recipes dépend d'ix-skills, jamais l'inverse : une recette peut renvoyer vers un atome ix-skills, un atome ix-skills ne renvoie jamais vers une recette.
+- **des skills métier** — ils reposent sur une connaissance de domaine qui peut être fausse ou périmée (droit du travail, RGPD, pratiques RH, formules financières, méthodes produit), ou produisent un artefact qu'une profession définit (PRD, NDA, fiche de poste, TCO) ;
+- **des workflows** — des enchaînements d'atomes ix-skills pour un travail récurrent (en conception, voir [Workflows](#workflows)).
 
-48 skills, déplacés depuis ix-skills le 2026-10-14 avec leur historique git.
+ix-recipes dépend d'ix-skills, jamais l'inverse : une recette peut renvoyer vers un atome, un atome ne renvoie jamais vers une recette. Les 48 skills viennent d'ix-skills, déplacés le 2026-10-14 avec leur historique git.
+
+---
 
 ## Démarrage rapide
+
+Installer les deux plugins dans Claude Code — ix-recipes s'appuie sur les atomes d'ix-skills :
 
 ```bash
 claude plugin marketplace add amiel-35/ix-recipes
 claude plugin install ix-recipes@ix-recipes
+claude plugin marketplace add amiel-35/ix-skills
+claude plugin install ix-skills@ix-skills
 ```
 
-Installer aussi [ix-skills](https://github.com/amiel-35/ix-skills) : les recettes et les workflows s'appuient sur ses atomes. Redémarrer Claude Code. Les skills sont préfixés (`/ix-recipes:contract-review`), et Claude les déclenche aussi depuis une demande ordinaire.
+Redémarrer Claude Code. Les skills sont namespacés (`contract-review` devient `/ix-recipes:contract-review`), et Claude les déclenche aussi depuis une demande ordinaire :
 
-> Transition : jusqu'à ix-skills 4.0.0, les mêmes skills sont aussi livrés dans ix-skills. Si les deux plugins sont installés, chacun de ces skills apparaît deux fois.
+- *« Passe ce contrat fournisseur en revue avant que je signe. »*
+- *« Prépare la fiche de poste pour un product manager senior. »*
+- *« Estime le TAM, SAM et SOM de ce marché. »*
 
-**Cowork** : « Ajouter depuis un dépôt » avec `amiel-35/ix-recipes`. **Codex CLI** : `bash scripts/install-codex.sh`.
+Autres plateformes (Cowork, Codex CLI, mystaffy, GPT, Gemini) : voir [Installation](#installation).
 
-## Convention du corpus : la sortie nulle
+---
 
-Un skill qui n'a rien à produire ouvre sa réponse par « RAS — » suivi de la raison, et s'arrête. Le jeton est littéral et identique dans ix-skills et ix-recipes, ce qui le rend cherchable et testable.
+## Convention de corpus — la sortie nulle
+
+Un skill qui n'a rien à produire ouvre sa réponse par « RAS — » suivi de la raison, et s'arrête. Le jeton est littéral et identique dans ix-skills et ix-recipes : c'est ce qui le rend greppable et testable.
+
+---
 
 ## Skills disponibles
 
-<details>
-<summary><b>👥 RH</b> — 13 skills</summary>
+Cliquer sur une famille pour la déplier.
 
-| Skill | Ce qu'il fait |
-|---|---|
-| `contrat-emploi` | Analyse ou rédige un contrat de travail, une offre d'embauche ou un avenant RH, avec points de vigilance et limite légale rappelée |
-| `entretien-professionnel` | Prépare l'entretien professionnel obligatoire (art. L6315-1) — trame en 4 axes, questions d'exploration, gabarit de compte-rendu signable |
-| `fiche-poste` | Produit une fiche de poste structurée et publiable — mission, responsabilités, compétences requises/souhaitables, critères de succès |
-| `grille-remuneration` | Structure une grille de rémunération par famille de métier et niveau — fourchettes, critères de positionnement, règles de gouvernance |
-| `interview-guide-recruteur` | Prépare le guide d'entretien recruteur pour UN round — questions STAR, annotations recruteur, mises en situation, grille de scoring 1-4, red flags gradués, fiche Go/No-go |
-| `interview-loop-planner` | Conçoit la boucle d'entretien complète d'un recrutement — nombre de rounds, compétences par round, scorecard consolidé, planning, protocole de débrief collectif |
-| `lettre-cadrage-disciplinaire` | Rédige un projet de courrier disciplinaire (avertissement, mise en garde, blâme) à partir de faits datés et documentés, à faire valider par un juriste avant envoi |
-| `offboarding-structure` | Structure un plan d'offboarding — passation de connaissances et projets, checklist administrative, entretien de sortie, risques de continuité |
-| `onboarding-plan` | Construit un plan d'intégration 30-60-90 jours pour un nouveau collaborateur — objectifs, actions, réunions, livrables et points de contrôle par phase |
-| `org-design-brief` | Formalise une cible organisationnelle — diagnostic actuel, rationale, risques humains, séquencement — avant toute annonce ou mise en œuvre d'une réorganisation |
-| `people-review` | Structure une revue de talents collective — matrice de positionnement, risques, plans de succession, actions prioritaires par catégorie |
-| `performance-review-helper` | Prépare l'entretien annuel individuel — bilan structuré (réussites, axes de tension) et objectifs SMART pour N+1 |
-| `plan-developpement-competences` | Construit un plan de développement des compétences, individuel ou collectif — actions concrètes, calendrier trimestriel, indicateurs, budget et financement |
+<details>
+<summary><b>👥 RH & People</b> — 13 skills</summary>
+
+Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, intégration, développement, évaluation, organisation et droit du travail. Le contexte droit du travail français est intégré là où c'est pertinent.
+
+---
+
+#### `fiche-poste` — Fiche de poste structurée
+
+**Ce qu'il fait :** Produit une fiche de poste structurée et publiable depuis un brief RH ou un besoin de recrutement. Distingue requis et souhaitable, identifie les zones floues, et produit un livrable qui alimente le workflow de recrutement en aval.
+
+**Quand l'utiliser :** Au lancement d'un processus de recrutement. Le livrable alimente `interview-loop-planner`.
+
+---
+
+#### `interview-loop-planner` — Conception du processus de recrutement complet
+
+**Ce qu'il fait :** Conçoit la boucle d'entretien complète pour un recrutement — nombre de rounds, compétences par round, scorecard consolidé et planning. Produit des round_briefs qui alimentent directement `interview-guide-recruteur`.
+
+**Quand l'utiliser :** Avant de démarrer les entretiens pour un recrutement significatif. Garantit que chaque round évalue des dimensions différentes.
+
+> Pipeline : `fiche-poste` → `interview-loop-planner` → `interview-guide-recruteur` (un par round).
+
+---
+
+#### `interview-guide-recruteur` — Guide d'entretien côté recruteur
+
+**Ce qu'il fait :** Produit un guide d'entretien complet pour recruteur ou manager — questions STAR structurées, annotations recruteur, mises en situation, grille de scoring pondérée 1–4, red flags gradués, et fiche de synthèse Go/No-go.
+
+**Quand l'utiliser :** Pour un round d'entretien spécifique. S'utilise idéalement en aval de `interview-loop-planner` qui définit les rounds et compétences.
+
+---
+
+#### `onboarding-plan` — Plan d'intégration 30-60-90 jours
+
+**Ce qu'il fait :** Construit un plan d'intégration structuré couvrant les 30, 60 et 90 premiers jours — objectifs, relations clés, livrables et critères de succès par phase.
+
+**Quand l'utiliser :** Avant l'arrivée d'un nouveau collaborateur, pour donner au manager et au collaborateur une feuille de route commune.
+
+---
+
+#### `entretien-professionnel` — Entretien professionnel obligatoire
+
+**Ce qu'il fait :** Prépare un entretien professionnel obligatoire (Code du Travail, art. L6315-1) — obligatoire tous les 2 ans pour tout salarié. Produit une trame, des questions et un gabarit de compte-rendu conformes aux exigences légales.
+
+**Ce qu'il ne fait pas :** Pas la même chose qu'un entretien annuel d'évaluation. C'est un entretien de développement professionnel obligatoire légalement, pas une évaluation de performance.
+
+**Quand l'utiliser :** Tous les 2 ans par salarié, ou après certains événements spécifiques (retour de congé maternité, longue maladie…) selon la loi française.
+
+---
+
+#### `performance-review-helper` — Préparation de l'entretien annuel
+
+**Ce qu'il fait :** Prépare un entretien annuel avec bilan structuré de l'année écoulée et objectifs SMART pour la suivante. Supporte la préparation du manager et l'auto-évaluation du collaborateur.
+
+**Ce qu'il ne fait pas :** Pas l'entretien professionnel obligatoire (`entretien-professionnel`). Celui-ci est sur la performance — résultats, objectifs, contexte de rémunération.
+
+**Quand l'utiliser :** En amont des campagnes d'entretiens annuels.
+
+---
+
+#### `people-review` — Revue talent collective
+
+**Ce qu'il fait :** Structure une revue de talents collective avec matrice de positionnement (performance × potentiel), plan de succession, évaluation des risques de rétention et départ, et actions prioritaires par profil.
+
+**Quand l'utiliser :** Revues talents annuelles ou bi-annuelles, avant un changement organisationnel, ou lors de la préparation d'un workforce plan.
+
+---
+
+#### `plan-developpement-competences` — Plan de développement des compétences
+
+**Ce qu'il fait :** Construit un plan de développement individuel ou collectif avec actions de formation, calendrier, indicateurs de succès et budget. Relie les lacunes identifiées à des parcours de développement concrets.
+
+**Quand l'utiliser :** Après un entretien annuel, une people review, ou un diagnostic de compétences.
+
+---
+
+#### `grille-remuneration` — Grille de rémunération
+
+**Ce qu'il fait :** Structure une grille de rémunération par famille de métier et niveau de séniorité — fourchettes salariales, critères de positionnement (équité interne, benchmarks marché) et règles de gouvernance (qui peut proposer quoi).
+
+**Quand l'utiliser :** Lors de la montée en échelle d'une équipe, pour avoir des décisions de rémunération cohérentes et défendables sur les recrutements et collaborateurs existants.
+
+---
+
+#### `contrat-emploi` — Contrat de travail
+
+**Ce qu'il fait :** Analyse ou rédige un contrat de travail, une offre d'embauche ou un avenant RH. Surface les clauses clés et les points d'attention. Produit un langage contractuel conforme.
+
+**Ce qu'il ne fait pas :** Ne fournit pas de conseil juridique. Nécessite une validation par un avocat en droit du travail avant utilisation.
+
+**Quand l'utiliser :** Rédaction d'un nouveau contrat, revue d'un contrat reçu, ou préparation d'un avenant (changement de poste, temps partiel…).
+
+---
+
+#### `lettre-cadrage-disciplinaire` — Lettre de cadrage disciplinaire
+
+**Ce qu'il fait :** Rédige un projet de courrier de cadrage disciplinaire factuel et proportionnel — documentant les faits observés, leur impact et le changement de comportement attendu. Calibré à la gravité de la situation.
+
+**Ce qu'il ne fait pas :** Ne produit pas une lettre de sanction formelle. Doit être validé par un avocat en droit du travail avant envoi.
+
+**Quand l'utiliser :** Quand un entretien documenté est nécessaire avant une procédure disciplinaire formelle, ou pour créer une trace écrite d'un problème comportemental.
+
+---
+
+#### `offboarding-structure` — Plan de départ avec continuité
+
+**Ce qu'il fait :** Structure un plan d'offboarding couvrant la passation de connaissances, la checklist administrative, le guide d'entretien de sortie et la cartographie des risques de continuité.
+
+**Quand l'utiliser :** Dès qu'un collaborateur donne sa démission. Plus tôt on commence, meilleur est le transfert de connaissances.
+
+---
+
+#### `org-design-brief` — Brief de réorganisation
+
+**Ce qu'il fait :** Formalise une cible organisationnelle avec diagnostic de l'état actuel, rationale du design, risques humains et séquencement — avant toute annonce ou mise en œuvre. Surface ce que la nouvelle structure résout, les nouveaux risques qu'elle crée, et comment phaser la transition.
+
+**Quand l'utiliser :** Avant d'annoncer une réorganisation. Utile aussi comme pré-travail avant d'impliquer l'équipe de direction dans le design.
 
 </details>
 
 <details>
-<summary><b>⚖️ Juridique</b> — 7 skills</summary>
+<summary><b>⚖️ Juridique & Contrats</b> — 7 skills</summary>
 
-| Skill | Ce qu'il fait |
-|---|---|
-| `cgv-checker` | Repère les clauses déséquilibrées, inhabituelles ou sensibles d'un CGV ou CGU selon une position de lecture donnée (client, fournisseur, utilisateur) |
-| `compliance-checklist` | Génère une checklist de conformité multi-domaines à partir d'un projet ou d'un contexte — obligations légales, contractuelles, réglementaires et sectorielles, chacune avec sa priorité et son statut de vérification |
-| `conformite-rgpd` | Produit une checklist de conformité RGPD à partir d'une spec technique ou d'une description de traitement de données personnelles — bases légales, DPIA, DPO, transferts hors UE |
-| `contract-review` | Analyse un contrat clause par clause — déviations par rapport aux positions standard, classification GREEN/YELLOW/RED, redlines prioritaires avec position de repli |
-| `contrat-fournisseur` | Analyse ou rédige un contrat fournisseur du point de vue acheteur — SLA, pénalités, résiliation, exclusivité, prix, renouvellement — avec points de renégociation classés par impact |
-| `legal-risk-flag` | Repère en un flash rapide les red flags juridiques d'un document — contrat, correspondance, tout texte — avec niveau de risque gradué (haut/moyen/bas) et action recommandée |
-| `nda-draft` | Génère un projet de NDA adapté au contexte — parties, objet, durée, territoire — et calibré au type de relation (prestataire, partenariat, salarié, discussion M&A) |
+Outils pré-juridiques — tous nécessitent une validation professionnelle avant utilisation. Ils orientent les revues, font surface les risques et produisent des projets. Aucun ne remplace un juriste.
+
+---
+
+#### `legal-risk-flag` — Scan rapide des signaux d'alerte
+
+**Ce qu'il fait :** Lit rapidement un document juridique ou contractuel et extrait les signaux de risque prioritaires avec des niveaux de sévérité gradués (haut / moyen / bas). Conçu pour la rapidité — une évaluation flash avant de décider si une revue approfondie est nécessaire.
+
+**Ce qu'il ne fait pas :** Ne réalise pas une analyse complète. Signale, ne conclut pas. Ne remplace jamais un juriste.
+
+**Quand l'utiliser :** Vous recevez un document et devez décider en quelques minutes s'il faut escalader à un juriste, ou sur quelles clauses concentrer la revue.
+
+> Utiliser `legal-risk-flag` en premier (scan rapide), puis `contract-review` pour l'analyse clause par clause complète.
+
+---
+
+#### `contract-review` — Revue clause par clause avec redlines
+
+**Ce qu'il fait :** Analyse un contrat clause par clause, identifie les déviations par rapport aux positions standard, produit des redlines prioritaires avec justification et langage alternatif proposé.
+
+**Ce qu'il ne fait pas :** Ne fournit pas de conseil juridique. Le livrable doit être revu par un professionnel qualifié avant utilisation ou négociation.
+
+**Quand l'utiliser :** Avant de signer un contrat significatif. Plus rapide qu'une revue complète par un juriste pour le premier passage — puis le juriste valide.
+
+---
+
+#### `cgv-checker` — Clauses déséquilibrées dans les CGV/CGU
+
+**Ce qu'il fait :** Identifie les clauses déséquilibrées, inhabituelles ou sensibles dans des conditions générales de vente ou d'utilisation, selon la position de lecture (acheteur, utilisateur, abonné).
+
+**Ce qu'il ne fait pas :** N'évalue pas la validité juridique complète des CGV. Ne remplace pas un conseil juridique.
+
+**Quand l'utiliser :** Avant d'accepter les CGV d'un fournisseur ou d'une plateforme significatifs, ou lors de la rédaction de ses propres CGV.
+
+> Différent de `contract-review` : `cgv-checker` est pour les CGV standard (contrats d'adhésion). `contract-review` est pour les contrats négociables avec clauses sur mesure.
+
+---
+
+#### `conformite-rgpd` — Checklist conformité RGPD
+
+**Ce qu'il fait :** Produit une checklist de conformité RGPD depuis une spécification technique, une description produit ou un document de traitement de données. Distingue traitements observés, traitements inférés, et obligations à confirmer.
+
+**Ce qu'il ne fait pas :** Ne remplace pas un DPO ou un professionnel juridique qualifié. Nécessite une validation experte avant utilisation opérationnelle.
+
+**Quand l'utiliser :** Avant de lancer un produit ou une feature traitant des données personnelles. Un auto-diagnostic structuré en premier passage avant la revue DPO.
+
+---
+
+#### `compliance-checklist` — Checklist de conformité légale
+
+**Ce qu'il fait :** Génère une checklist de conformité couvrant les obligations légales, contractuelles et réglementaires — RGPD, droit du travail, réglementation sectorielle — depuis un contexte projet ou un document.
+
+**Ce qu'il ne fait pas :** Ne remplace pas un conseil juridique ou réglementaire professionnel. Nécessite toujours une validation experte avant utilisation opérationnelle.
+
+**Quand l'utiliser :** Avant tout lancement produit, contractualisation, ou changement opérationnel à implications légales. Une pré-validation structurée pour orienter la conversation avec un juriste, pas la remplacer.
+
+---
+
+#### `nda-draft` — Projet de NDA adapté au contexte
+
+**Ce qu'il fait :** Génère un projet d'accord de confidentialité adapté au contexte — type de parties, sujet des échanges, durée. Produit un document prêt pour revue juridique, pas pour signature immédiate.
+
+**Ce qu'il ne fait pas :** Ne fournit pas de conseil juridique. Nécessite toujours une validation par un juriste avant signature.
+
+**Quand l'utiliser :** Vous avez besoin d'un point de départ pour une négociation NDA et ne voulez pas partir d'un template générique.
+
+---
+
+#### `contrat-fournisseur` — Contrat fournisseur côté acheteur
+
+**Ce qu'il fait :** Analyse **ou** rédige un contrat fournisseur ou prestataire depuis la perspective de l'acheteur. Surface les conditions déséquilibrées, les clauses à renégocier (SLA, responsabilité, résiliation, pénalités, exclusivité, renouvellement) et les risques contractuels. Peut aussi produire un premier projet quand aucun contrat n'existe encore.
+
+**Ce qu'il ne fait pas :** Ne remplace pas un conseil juridique. Nécessite une validation professionnelle avant utilisation.
+
+**Quand l'utiliser :** Avant de signer un contrat fournisseur, avant d'entrer en négociation, ou lors de la rédaction des conditions initiales d'une nouvelle relation fournisseur.
 
 </details>
 
 <details>
-<summary><b>💶 Finance et pricing</b> — 4 skills</summary>
+<summary><b>💶 Finance & Pricing</b> — 4 skills</summary>
 
-| Skill | Ce qu'il fait |
-|---|---|
-| `budget-variance-analysis` | Analyse des écarts budget/réel ligne par ligne avec causes probables, hypothèses explicitement marquées et actions correctrices |
-| `business-case-draft` | Structure une décision d'investissement en business case chiffré — coûts, bénéfices attendus, risques, hypothèses financières explicites |
-| `financial-narrative` | Transforme des chiffres financiers bruts (résultats, budget, trésorerie) en récit clair et hiérarchisé pour une direction ou un board |
-| `strategie-prix` | Formule une recommandation de pricing reliant valeur perçue, segmentation et modèles tarifaires possibles, avec trade-offs explicites et hypothèses critiques assumées |
+Chiffrer, expliquer et défendre une décision d'argent — écarts budgétaires, business case, narratif financier, prix. Les hypothèses financières sont toujours explicites.
 
-</details>
+---
 
-<details>
-<summary><b>🤝 Commercial et achats</b> — 6 skills</summary>
+#### `budget-variance-analysis` — Diagnostic budget vs réel
 
-| Skill | Ce qu'il fait |
-|---|---|
-| `analyse-cdc` | Analyse un cahier des charges reçu du point de vue du répondant — exigences explicites et implicites, zones floues, contradictions, questions bloquantes avant tout engagement |
-| `offre-commerciale` | Rédige le contenu d'une offre ou d'une réponse client structurée et argumentée, prête à intégrer avant mise en forme finale |
-| `negotiation-brief` | Prépare une position de négociation achat avant la réunion — objectif, faits utiles, leviers, concessions possibles, BATNA, position d'ouverture, cible et ligne rouge assumée |
-| `rfp-draft` | Génère un appel d'offres structuré — contexte, périmètre, exigences obligatoires et souhaitées, critères d'évaluation, conditions de réponse — depuis un brief achat ou métier |
-| `total-cost-analysis` | Structure un TCO — coûts directs, coûts cachés, hypothèses, risques — sur un horizon donné, en distinguant coûts confirmés, estimés et non chiffrés |
-| `vendor-scorecard` | Construit une grille d'évaluation fournisseur réutilisable — critères pondérés, échelle de notation, espace de commentaire qualitatif — l'outil de scoring, pas la décision finale |
+**Ce qu'il fait :** Analyse les écarts entre budget et réalisé. Identifie les variances significatives, les qualifie par nature (volume, prix, mix, timing, opérationnel), et produit des hypothèses correctives et des points de vigilance.
 
-</details>
+**Ce qu'il ne fait pas :** N'invente pas de causes ou de chiffres. Ne prend pas de décisions de gestion — produit un diagnostic factuel.
 
-<details>
-<summary><b>🧭 Produit et UX</b> — 8 skills</summary>
+**Quand l'utiliser :** Revue mensuelle ou trimestrielle, analyse P&L, ou quand il faut expliquer la performance à un board ou contrôleur.
 
-| Skill | Ce qu'il fait |
-|---|---|
-| `feature-spec` | Produit la spec fonctionnelle complète d'une feature — user stories, exigences MoSCoW, critères d'acceptation Given/When/Then, métriques de succès |
-| `journey-map` | Produit une carte de parcours utilisateur — étapes, actions, émotions, points de friction et opportunités — depuis le point de vue de l'utilisateur, pas du système |
-| `okr` | Vérifie des lignes d'Objectif/Résultat clé déjà écrites, ou fait émerger un matériau à discuter depuis un brief flou |
-| `persona` | Produit des personas utilisateurs structurés depuis des données de recherche, interviews ou un brief produit, en distinguant ce qui est observé de ce qui est supposé |
-| `prd` | Produit un Product Requirements Document complet — problème, vision, utilisateurs cibles, périmètre inclus/exclu, exigences, métriques de succès — le quoi et le pourquoi, jamais le comment |
-| `product-spec` | Transforme un brief ou un besoin déjà cadré en spécification exploitable — parcours, écrans, modèle de données, cas limites, critères d'acceptation — pour une équipe produit, design ou eng |
-| `reformulation-us` | Réécrit des user stories existantes mal formulées en US propres, testables, avec critères d'acceptation Given/When/Then, en respectant l'intention d'origine |
-| `tam-sam-som` | Estime TAM, SAM et SOM avec méthodes top-down et bottom-up, hypothèses explicites et limites de fiabilité assumées |
+---
 
-</details>
+#### `business-case-draft` — Structure de décision d'investissement
 
-<details>
-<summary><b>⚙️ Tech</b> — 5 skills</summary>
+**Ce qu'il fait :** Structure une décision d'investissement avec coûts explicites, bénéfices attendus, scénarios de risque et hypothèses financières. Distingue coûts certains et coûts estimés. Marque clairement ce qui est hypothèse vs fait. Si les données sont trop fragiles, le dit et suggère `note-strategique` comme alternative allégée.
 
-| Skill | Ce qu'il fait |
-|---|---|
-| `code-review` | Relit du code (diff, PR, fichiers ou extrait) sur quatre dimensions — sécurité, performance, correction, maintenabilité — avec constats classés critiques vs suggestions et référence de code précise |
-| `system-design` | Conçoit un système ou une architecture technique — composants, flux de données, contrats d'API, stockage — avec trade-offs explicites et hypothèses de scale assumées |
-| `tech-debt` | Inventorie la dette technique, la score sur impact, risque et effort, et produit un plan de remédiation entrelaçable avec les features, chaque item justifié par un impact métier et non seulement technique |
-| `ticket-triage` | Catégorise, priorise P1 à P4 et route un ticket support entrant, avec les informations nécessaires à une prise en charge immédiate |
-| `mockup` | Produit un mockup HTML autonome et présentable depuis un brief, une spec ou des références visuelles — un livrable de production visuelle, pas un prototype fonctionnel |
+**Ce qu'il ne fait pas :** N'invente pas de chiffres.
+
+**Quand l'utiliser :** Vous avez des chiffres et devez cadrer une décision achat/build/invest. Sans chiffres, utilisez `note-strategique`.
+
+---
+
+#### `financial-narrative` — Chiffres → histoire exécutive
+
+**Ce qu'il fait :** Transforme des données financières brutes (P&L, KPIs, reporting) en narrative claire et message-first pour un board ou dirigeant. Commence par les messages clés, contextualise les chiffres, relie les variations à des facteurs explicatifs.
+
+**Ce qu'il ne fait pas :** N'invente pas de chiffres ou de tendances. Ne reproduit pas les données brutes. Ne déforme pas les chiffres pour raconter une meilleure histoire.
+
+**Quand l'utiliser :** Présentations board, updates investisseurs, revues trimestrielles — chaque fois que des chiffres doivent être communiqués à une audience qui a besoin du "so what" avant le détail.
+
+---
+
+#### `strategie-prix` — Stratégie de prix avec trade-offs
+
+**Ce qu'il fait :** Formule une stratégie de pricing en liant valeur perçue, segmentation client et trade-offs business. Compare les modèles de prix (freemium, value-based, usage-based, tiered…) et produit une recommandation avec hypothèses explicites.
+
+**Ce qu'il ne fait pas :** Ne produit pas une grille tarifaire. Ne recommande pas un prix sans énoncer les hypothèses qui le sous-tendent.
+
+**Quand l'utiliser :** Lancement produit, repositionnement, ou pression concurrentielle sur les prix. Nécessite du contexte sur l'offre, les clients cibles et les benchmarks concurrentiels si disponibles.
 
 </details>
 
 <details>
-<summary><b>📊 Data et marché</b> — 3 skills</summary>
+<summary><b>🤝 Commercial & Achats</b> — 6 skills</summary>
 
-| Skill | Ce qu'il fait |
-|---|---|
-| `analyse-concurrentielle` | Construit un socle factuel sur le paysage concurrentiel — acteurs, forces, différenciation, positionnement |
-| `metriques-saas` | Analyse les métriques clés d'un SaaS — CAC, LTV, NRR, churn — et produit un diagnostic factuel de la santé du modèle économique, formules et hypothèses à l'appui |
-| `tableau-de-bord-kpi` | Définit et structure un tableau de bord KPI complet — métrique, unité, cible, fréquence, source — à partir d'objectifs ou d'un contexte métier |
+Les deux côtés d'une consultation : répondre à un cahier des charges et rédiger une offre, ou piloter un appel d'offres, comparer les coûts et noter les fournisseurs.
+
+---
+
+#### `analyse-cdc` — Analyse d'un cahier des charges
+
+**Ce qu'il fait :** Analyse un CDC reçu depuis la perspective du répondant. Surface les exigences explicites, implicites, les zones grises, les contradictions, et les questions bloquantes à poser avant tout engagement.
+
+**Ce qu'il ne fait pas :** Ne résume pas le CDC — il le critique. Ne produit pas de plan de réponse.
+
+**Quand l'utiliser :** Vous recevez un CDC, un appel d'offres ou un document d'exigences et devez comprendre ce qui est vraiment demandé avant de vous engager. Le livrable alimente une stratégie de réponse ou une réunion de clarification.
+
+---
+
+#### `offre-commerciale` — Contenu d'une offre client
+
+**Ce qu'il fait :** Produit le contenu structuré d'une offre client — compréhension du contexte, solution proposée, argument de valeur, logique de prix et prochaines étapes. Focus sur le contenu et l'argument, pas la mise en forme finale.
+
+**Ce qu'il ne fait pas :** Ne formate pas le document final (utilisez `deliver` pour ça). Ne négocie pas.
+
+**Quand l'utiliser :** En réponse à une demande entrante, après un call de découverte, ou quand une proposition doit être structurée avant d'être mise en deck ou document.
+
+---
+
+#### `negotiation-brief` — Position structurée avant une négociation
+
+**Ce qu'il fait :** Prépare une position de négociation complète — objectifs, non-négociables, points tradables, BATNA (meilleure alternative en cas d'absence d'accord) et logique de concession. Conçu pour la préparation, pas pour être remis à l'autre partie.
+
+**Ce qu'il ne fait pas :** Pas un script de négociation. Pas un template pour l'autre partie.
+
+**Quand l'utiliser :** Avant toute négociation achat à fort enjeu — fournisseur, prestataire, sous-traitant. Plus la position est claire en entrant, meilleur est le résultat.
+
+---
+
+#### `rfp-draft` — Appel d'offres
+
+**Ce qu'il fait :** Génère un appel d'offres structuré — contexte, périmètre, exigences, critères d'évaluation, livrables attendus et calendrier.
+
+**Quand l'utiliser :** Vous êtes l'acheteur et devez solliciter des offres structurées auprès de plusieurs fournisseurs. Le livrable alimente `offer-comparison` et `vendor-scorecard`.
+
+---
+
+#### `total-cost-analysis` — Coût total sur le cycle de vie (TCO)
+
+**Ce qu'il fait :** Structure une analyse TCO couvrant coûts directs, coûts cachés (implémentation, formation, intégration, migration, sortie) et risques financiers sur un horizon donné. Distingue coûts confirmés, estimés et risques non quantifiés.
+
+**Ce qu'il ne fait pas :** Ne regarde pas le prix affiché seul. N'invente pas de chiffres sans les marquer comme hypothèses.
+
+**Quand l'utiliser :** Avant tout achat ou décision fournisseur significatif où le prix visible ne capture pas l'impact économique réel. Complément essentiel de `offer-comparison` et `vendor-scorecard`.
+
+---
+
+#### `vendor-scorecard` — Grille d'évaluation fournisseur réutilisable
+
+**Ce qu'il fait :** Construit une grille de scoring fournisseur depuis un contexte achat — critères, pondérations, échelle de scoring, zones de commentaires qualitatifs. Produit l'**outil** de scoring, pas la décision.
+
+**Ce qu'il ne fait pas :** Ne score pas les fournisseurs (c'est `offer-comparison`). N'invente pas de pondérations sans les justifier.
+
+**Quand l'utiliser :** Avant le lancement d'une consultation, pour aligner les parties prenantes sur les critères d'évaluation. Réutilisable pour les consultations futures du même type.
+
+</details>
+
+<details>
+<summary><b>🧭 Produit & UX</b> — 8 skills</summary>
+
+Du besoin cadré au document que l'équipe produit attend — PRD, specs, user stories, personas, parcours, OKR, taille de marché. Le cadrage en amont (`cadrage`, `brief`, `analysis`) reste dans ix-skills.
+
+---
+
+#### `prd` — Product Requirements Document complet
+
+**Ce qu'il fait :** Produit un PRD complet — contexte, formulation du problème, objectifs, exigences fonctionnelles et non-fonctionnelles, périmètre exclu, métriques de succès et questions ouvertes.
+
+**Quand l'utiliser :** Vous avez besoin d'un document produit complet pour aligner l'équipe, communiquer avec l'ingénierie ou cadrer un investissement significatif.
+
+---
+
+#### `feature-spec` — Spécification fonctionnelle au niveau feature
+
+**Ce qu'il fait :** Produit une spec fonctionnelle complète pour une feature — user stories, exigences MoSCoW, critères d'acceptation, cas limites et métriques de succès.
+
+**Quand l'utiliser :** Une feature est validée et doit être spécifiée pour l'ingénierie. Plus granulaire qu'un PRD — opère au niveau d'une feature ou d'un epic.
+
+---
+
+#### `product-spec` — Spec actionnable allégée
+
+**Ce qu'il fait :** Produit une spec actionnable depuis un brief ou un besoin cadré. Plus légère qu'un PRD, plus structurée qu'un brief — une spec rapide sur laquelle les équipes peuvent agir.
+
+**Quand l'utiliser :** Vous avez besoin de quelque chose entre un brief et un PRD complet. Bien adapté aux petites features, MVPs ou contextes d'itération rapide.
+
+> Hiérarchie : `brief` → `prd` (le quoi et le pourquoi) → `product-spec` / `feature-spec` (le comment, de plus en plus détaillé).
+
+---
+
+#### `reformulation-us` — Réécriture de user stories mal rédigées
+
+**Ce qu'il fait :** Réécrit des user stories existantes vagues, centrées développeur ou non testables en user stories propres et testables avec structure correcte et critères d'acceptation explicites.
+
+**Quand l'utiliser :** En backlog refinement, quand des stories sont tirées dans un sprint sans être prêtes, ou après une phase de découverte où les stories ont été rédigées informellement.
+
+---
+
+#### `persona` — Personas utilisateurs structurés
+
+**Ce qu'il fait :** Produit des personas utilisateurs structurés depuis des données de recherche ou un brief produit — objectifs, frustrations, comportements, contexte et déclencheurs de décision. Conçu pour être actionnable, pas décoratif.
+
+**Quand l'utiliser :** Au début d'une initiative produit, ou quand l'équipe a des hypothèses divergentes sur pour qui elle construit.
+
+---
+
+#### `journey-map` — Parcours utilisateur avec frictions et opportunités
+
+**Ce qu'il fait :** Produit une carte de parcours utilisateur couvrant étapes, actions, émotions, points de friction et opportunités d'amélioration. Structurée depuis la perspective de l'utilisateur, pas des features du produit.
+
+**Quand l'utiliser :** Avant de redesigner une expérience, d'identifier où investir en UX, ou d'aligner une équipe transverse sur la façon dont les utilisateurs vivent réellement le produit.
+
+---
+
+#### `okr` — Relire des lignes d'O/KR, ou faire émerger un matériau à discuter
+
+**Ce qu'il fait :** Deux modes distincts. *Gabarit* : relit des lignes d'Objectif/Résultat clé déjà écrites, ligne par ligne — conformité à la formule (O = verbe d'action + quoi + impact recherché ; KR = verbe de mesure + quoi + de X à Y + échéance), tâche déguisée en KR, outcome ou output, baseline sourcée ou manquante, profil de calibrage (sandbagged / aspirationnel / stretch). *Matériau à discuter* : depuis un brief flou, produit des Objectifs candidats avec ce que chacun exclut, et des familles de résultats clés avec leurs pièges et leurs mécanismes de forçage.
+
+**Ce qu'il ne fait pas :** Ne rend jamais un OKR fini tout seul — l'Objectif est choisi par la personne, les KR se discutent. N'invente jamais une baseline manquante : un X absent se déclare « à chiffrer », jamais remplacé par un chiffre plausible. En mode gabarit, ne réécrit pas les lignes de l'auteur.
+
+**Quand l'utiliser :** Planning trimestriel, alignement stratégique, ou contre-check d'un OKR déjà rédigé. Le livrable alimente `tableau-de-bord-kpi` et `indicateurs`.
+
+---
+
+#### `tam-sam-som` — Sizing de marché avec méthode
+
+**Ce qu'il fait :** Estime le TAM, SAM et SOM via des méthodes top-down et bottom-up avec hypothèses explicites. Surface la méthode, les chiffres et le degré d'incertitude. Web search obligatoire en mode standard/deep.
+
+**Ce qu'il ne fait pas :** Ne produit pas de chiffres de mémoire sans le signaler. Un TAM/SAM/SOM sans hypothèses n'est pas un sizing, c'est une supposition.
+
+**Quand l'utiliser :** Préparation d'un pitch, validation d'une opportunité de marché, ou construction d'un business case.
+
+</details>
+
+<details>
+<summary><b>💻 Tech</b> — 5 skills</summary>
+
+Concevoir, relire et entretenir du logiciel — architecture, revue de code, dette technique, triage support, maquette HTML.
+
+---
+
+#### `system-design` — Conception d'architecture technique
+
+**Ce qu'il fait :** Conçoit un système ou une architecture technique — composants, flux de données, contrats API, stockage, décisions de scalabilité et trade-offs explicites. Documente ce qui a été décidé et pourquoi, y compris les options rejetées.
+
+**Quand l'utiliser :** Avant de construire un nouveau système, lors d'une refonte d'architecture existante, ou quand une équipe a besoin d'un blueprint technique partagé.
+
+---
+
+#### `code-review` — Revue de code sur 4 dimensions
+
+**Ce qu'il fait :** Revue du code sur sécurité, performance, correction et maintenabilité. Pour chaque finding : identifie le problème, explique l'impact, propose un correctif. Classe les constats en critiques vs suggestions — les deux sont remontés, aucun n'est masqué.
+
+**Quand l'utiliser :** Avant de merger une PR, lors d'un audit codebase, ou lors d'une prise en main d'un nouveau codebase.
+
+---
+
+#### `tech-debt` — Audit de dette technique avec plan de remédiation
+
+**Ce qu'il fait :** Identifie, catégorise (structurelle / qualité de code / dépendances / documentation / couverture de tests) et priorise la dette technique avec un plan de remédiation réaliste. Distingue les quick wins du travail structurel.
+
+**Quand l'utiliser :** Avant un sprint significatif, en planning ingénierie trimestriel, quand la vélocité a dégradé, ou avant une due diligence d'acquisition.
+
+> `code-review` évalue un changeset spécifique (une PR, un fichier). `tech-debt` audite les problèmes structurels accumulés sur l'ensemble du codebase.
+
+---
+
+#### `ticket-triage` — Catégorisation et routing de tickets support
+
+**Ce qu'il fait :** Catégorise un ticket support entrant, lui attribue une priorité P1–P4 basée sur l'impact et l'urgence, identifie les informations manquantes pour la prise en charge, et route vers l'équipe ou la file appropriée.
+
+**Quand l'utiliser :** Traitement de tickets support ou bugs entrants, particulièrement dans les contextes à fort volume où une priorisation cohérente est nécessaire.
+
+---
+
+#### `mockup` — Mockup HTML autonome
+
+**Ce qu'il fait :** Produit un mockup HTML autonome et présentable depuis un brief, une spec ou des références visuelles. Un livrable visuel pour l'alignement et le feedback.
+
+**Ce qu'il ne fait pas :** Pas un prototype fonctionnel. Pas du code prêt pour la production.
+
+**Quand l'utiliser :** Vous avez besoin de quelque chose de visuel pour présenter à des stakeholders, valider avec des utilisateurs ou communiquer un layout avant d'investir en design ou ingénierie.
+
+</details>
+
+<details>
+<summary><b>📊 Data & Marché</b> — 3 skills</summary>
+
+Lire un marché et un modèle économique avec des chiffres — concurrence, métriques SaaS, tableau de bord KPI.
+
+---
+
+#### `analyse-concurrentielle` — Paysage concurrentiel avec logique de différenciation
+
+**Ce qu'il fait :** Structure une analyse concurrentielle autour de la logique de différenciation — pas une liste de concurrents. Identifie les forces en présence, compare les acteurs sur un framework commun, surface les zones de différenciation et les risques de positionnement. Web search obligatoire en mode standard/deep.
+
+**Ce qu'il ne fait pas :** Ne produit pas une liste à puces de concurrents. Ne fait pas de recommandations stratégiques — utilisez `decision` pour ça.
+
+**Quand l'utiliser :** Avant une entrée marché, une décision de positionnement ou une narrative fundraising. Se combine avec `note-strategique` ou `decision` en aval.
+
+---
+
+#### `metriques-saas` — Santé du modèle économique SaaS
+
+**Ce qu'il fait :** Lit les métriques clés SaaS ensemble — CAC, LTV, NRR, churn, payback — et les interprète comme un système, pas en isolation. Surface les implications pour la santé du modèle, la soutenabilité de la croissance et les priorités de pilotage.
+
+**Ce qu'il ne fait pas :** Ne produit pas de benchmarks de mémoire en mode standard/deep. Ne recommande pas d'actions — produit un diagnostic.
+
+**Quand l'utiliser :** Préparation board, fundraising, revue opérationnelle, ou quand les tendances métriques sont contradictoires et qu'on veut comprendre ce qu'elles signifient ensemble.
+
+---
+
+#### `tableau-de-bord-kpi` — Structure d'un dashboard KPI
+
+**Ce qu'il fait :** Définit et structure un dashboard KPI depuis des objectifs business, OKRs ou un contexte métier. Distingue KPIs directement mesurables, KPIs estimables (avec hypothèses), et KPIs problématiques (source fiable manquante). Refuse les métriques de vanité.
+
+**Quand l'utiliser :** Après que les OKRs sont définis, ou quand un dispositif de pilotage doit être mis en place pour une équipe, un produit ou une BU.
 
 </details>
 
 <details>
 <summary><b>🔗 Futurs workflows</b> — 2 skills</summary>
 
-Encore des skills autonomes, à réécrire en enchaînements d'atomes ix-skills (`decision` → `deliver` ; `vendor-scorecard` → `decision`).
+Encore des skills autonomes, qui seront réécrits en enchaînements d'atomes ix-skills : `note-strategique` deviendra `decision` → `deliver`, `offer-comparison` deviendra `vendor-scorecard` → `decision`. Voir [Workflows](#workflows).
 
-| Skill | Ce qu'il fait |
-|---|---|
-| `note-strategique` | Produit une note stratégique structurée et argumentée, qui commence par la conclusion et rend visibles les trade-offs, pour un destinataire décideur |
-| `offer-comparison` | Compare des offres fournisseurs déjà normalisées sur une grille pondérée et conclut par une recommandation argumentée, en laissant visibles les scores fragiles et les critères non comparables |
+---
+
+#### `note-strategique` — Note stratégique, conclusion en premier
+
+**Ce qu'il fait :** Produit une note stratégique structurée et directement partageable — pour un décideur, un board ou un dirigeant. Commence par la conclusion, puis l'argument, les options, la recommandation avec trade-offs explicites. Deux pages maximum sans justification.
+
+**Ce qu'il ne fait pas :** Ne commence pas par le contexte pour enterrer la recommandation à la fin. Si vous n'avez pas encore de position claire, lancez `decision` d'abord.
+
+**Quand l'utiliser :** Vous avez une recommandation à faire et devez la packager pour un décideur. Le livrable est directement partageable.
+
+---
+
+#### `offer-comparison` — Comparaison pondérée avec recommandation
+
+**Ce qu'il fait :** Compare des offres fournisseurs déjà reçues sur une grille pondérée normalisée et produit une recommandation argumentée. Rend la méthode de scoring et l'incertitude visibles — ne cache pas les trade-offs.
+
+**Ce qu'il ne fait pas :** N'évalue pas des offres qu'on n'a pas encore reçues. Si les propositions sont trop différentes en scope, une normalisation manuelle est nécessaire d'abord.
+
+**Quand l'utiliser :** Après réception de plusieurs devis pour un achat significatif.
+
+> Pipeline : `vendor-scorecard` → `offer-comparison` → `total-cost-analysis` → `decision`.
 
 </details>
 
-## Structure du repo
+---
 
-| Chemin | Rôle |
-|---|---|
-| `skills/` | Source canonique : un `.md` par skill + surcharges `.mystaffy.json` |
-| `dist/` | Racine du plugin, **commitée** : `.claude-plugin/plugin.json` + `skills/<id>/SKILL.md` générés par `build.py` |
-| `.claude-plugin/marketplace.json` | Manifeste marketplace, pointe sur `./dist` |
-| `build.py` | Packaging (agentskills, cowork, mystaffy, ix-memory, codex), copie du builder d'ix-skills |
+## Workflows
+
+Un workflow enchaîne des atomes ix-skills pour un travail récurrent. Le format est en cours de conception : il sera testé sur un premier prototype avant d'en écrire d'autres.
+
+Premiers candidats :
+
+```
+note stratégique      decision → deliver
+choix fournisseur     rfp-draft → total-cost-analysis → vendor-scorecard → decision
+relecture avant envoi critique → fact-check → correction → fact-check → deliver → controle-qualite
+```
+
+Enchaînements déjà praticables à la main :
+
+```
+research → analyse-concurrentielle → decision
+brief    → prd → feature-spec
+fiche-poste → interview-loop-planner → interview-guide-recruteur
+legal-risk-flag → contract-review
+```
+
+---
+
+## Installation
+
+### Claude Code (plugin — recommandé)
+
+Le repo est une marketplace de plugins Claude Code (`.claude-plugin/marketplace.json` pointe sur la racine de plugin `dist/`) :
 
 ```bash
-python3 build.py --validate                 # valider sans écrire
-python3 build.py --target agentskills       # régénérer dist/skills/
+claude plugin marketplace add amiel-35/ix-recipes
+claude plugin install ix-recipes@ix-recipes
+```
+
+Pour récupérer les mises à jour ensuite :
+
+```bash
+claude plugin marketplace update ix-recipes
+claude plugin update ix-recipes
+```
+
+Puis redémarrer Claude Code. Les releases sont résolues par la version du manifeste (`dist/.claude-plugin/plugin.json`), voir `CHANGELOG.md`. Dans l'app desktop Claude Code, les mêmes étapes passent par la commande `/plugin`.
+
+> Transition : jusqu'à ix-skills 4.0.0, ces 48 skills étaient aussi livrés dans ix-skills. Mettre ix-skills à jour pour ne pas les voir en double.
+
+**Fallback manuel** : symlinker ou copier `dist/skills` dans `~/.claude/skills/` — pas `skills/`, dont le frontmatter canonique n'est pas un `SKILL.md` valide.
+
+### Claude Cowork / claude.ai
+
+**Option A — plugin** : **« Ajouter depuis un dépôt »** avec `amiel-35/ix-recipes`.
+
+**Option B — un seul skill** : les dossiers `dist/skills/<id>/` sont des Agent Skills valides, à uploader tels quels dans **Cowork → Customize** (ou l'éditeur ChatGPT Skills).
+
+### Codex CLI
+
+```bash
+git clone https://github.com/amiel-35/ix-recipes /tmp/ix-recipes
+cd /tmp/ix-recipes
+pip install -r requirements.txt
+bash scripts/install-codex.sh                 # tous les skills
+bash scripts/install-codex.sh contract-review # un seul skill
+```
+
+Les skills sont installés dans `~/.codex/skills/<id>/SKILL.md`. Redémarrer Codex pour activer.
+
+### mystaffy
+
+```bash
+python3 build.py --target mystaffy
+python3 build.py --target ix-memory   # format ix-memory natif
+```
+
+### GPT / Gemini / autre LLM
+
+Copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter YAML est ignoré sans effet de bord.
+
+---
+
+## Structure
+
+```
+ix-recipes/
+├── skills/                 ← source canonique (un .md + .mystaffy.json par skill)
+├── scripts/
+│   └── install-codex.sh    ← installateur Codex CLI
+├── dist/                   ← racine du plugin, commité
+│   ├── .claude-plugin/plugin.json   ← manifeste du plugin (à la main, bump à chaque release)
+│   └── skills/<id>/SKILL.md         ← artefacts Agent Skills, générés par build.py
+├── .claude-plugin/
+│   └── marketplace.json    ← manifeste marketplace, pointe sur ./dist
+├── mystaffy-dist/, codex-dist/  ← artefacts mystaffy / Codex (gitignore)
+├── build.py                ← packager multi-cibles, copie de celui d'ix-skills
+├── requirements.txt
+├── CHANGELOG.md            ← releases, par date
+├── THIRD_PARTY.md          ← sources tierces et licences
+└── CLAUDE.md               ← guide de contribution
+```
+
+---
+
+## Packager
+
+```bash
+python3 build.py --validate
+python3 build.py
+python3 build.py contract-review
+python3 build.py --target agentskills   # dist/skills/<id>/SKILL.md — commit it
+python3 build.py --target cowork        # validates dist/.claude-plugin/plugin.json
+python3 build.py --target mystaffy --domain rh
+python3 build.py --target codex
 claude plugin validate dist
 ```
 
+---
+
+## Projets frères
+
+- [**ix-skills**](https://github.com/amiel-35/ix-skills) — les ingrédients : gestes cognitifs atomiques (critique, decision, explorer, fact-check…) et postures de conseil (`dixieme-homme`, `red-team`, `contrarian`…). Prérequis d'ix-recipes.
+- [**ghost-council**](https://github.com/amiel-35/ghost-council) — des méthodes de raisonnement de philosophes encodées comme skills (Popper, Kant, Pascal, Wittgenstein…), et `/council`, qui fait délibérer plusieurs angles indépendants sur une décision.
+
+---
+
+## Contribuer
+
+Fork, modifie, PR. Lire [`CLAUDE.md`](CLAUDE.md) pour le format canonique d'un skill, la règle de dépendance avec ix-skills et les checklists, et [`CHANGELOG.md`](CHANGELOG.md) pour les versions.
+
+Un skill qui applique un geste de raisonnement à n'importe quel contenu appartient à ix-skills ; un skill qui demande un savoir de métier appartient ici.
+
+---
+
 ## Crédits
 
-Plusieurs skills s'inspirent de sources publiques. Elles sont listées dans [THIRD_PARTY.md](THIRD_PARTY.md), avec ce qui en est repris et sous quelle licence.
+Plusieurs skills s'inspirent de sources publiques. Chaque source reprise est listée dans [`THIRD_PARTY.md`](THIRD_PARTY.md), avec ce qui en est repris et sous quelle licence.
+
+---
 
 ## Licence
 

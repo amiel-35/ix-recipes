@@ -1,171 +1,731 @@
-# ix-recipes
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="ix-recipes: domain recipes on top of ix-skills" width="100%">
+</p>
 
-Domain recipes on top of [ix-skills](https://github.com/amiel-35/ix-skills): HR, legal, finance, procurement, product and tech deliverables, plus workflows that chain ix-skills atoms.
+<p align="center">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/amiel-35/ix-recipes?color=7f9a96"></a>
+  <img alt="Plugin version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Famiel-35%2Fix-recipes%2Fmain%2Fdist%2F.claude-plugin%2Fplugin.json&query=%24.version&label=plugin&color=7fc8bd">
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-D97757">
+  <img alt="Skills" src="https://img.shields.io/badge/skills-48-3d6b73">
+  <a href="https://github.com/amiel-35/ix-skills"><img alt="requires ix-skills" src="https://img.shields.io/badge/requires-ix--skills-7fc8bd"></a>
+  <img alt="Platforms" src="https://img.shields.io/badge/also-Codex%20%C2%B7%20GPT%20%C2%B7%20Gemini%20%C2%B7%20mystaffy-56707a">
+</p>
 
-*[Version française](README-fr.md)*
+<p align="center">
+  <a href="#quick-start"><b>Quick start</b></a> ·
+  <a href="#available-skills"><b>Catalog</b></a> ·
+  <a href="#workflows"><b>Workflows</b></a> ·
+  <a href="#contributing"><b>Contributing</b></a> ·
+  <a href="README-fr.md"><b>Français</b></a>
+</p>
+
+---
+
+<details>
+<summary><b>Table of contents</b></summary>
+
+- [About](#about)
+- [Quick start](#quick-start)
+- [Corpus convention — the null output](#corpus-convention--the-null-output)
+- [Available skills](#available-skills)
+- [Workflows](#workflows)
+- [Installation](#installation)
+- [Structure](#structure)
+- [Building](#building)
+- [Sibling projects](#sibling-projects)
+- [Contributing](#contributing)
+- [Credits](#credits)
+- [License](#license)
+
+</details>
 
 ## About
 
-[ix-skills](https://github.com/amiel-35/ix-skills) holds the ingredients: atomic cognitive gestures (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes holds the recipes:
+Domain recipes on top of [ix-skills](https://github.com/amiel-35/ix-skills) — portable across Claude, GPT, Gemini, and mystaffy.
 
-- **domain skills**: they rely on domain knowledge that can be wrong or out of date (labour law, GDPR, HR practice, financial formulas, product methods), or they produce an artefact a profession defines (PRD, NDA, job description, TCO);
-- **workflows**: chains of ix-skills atoms for a recurring job. The format is being designed; the first two candidates are listed below.
+48 skills in 8 families. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
 
-ix-recipes depends on ix-skills, never the other way round: a recipe may point to an ix-skills atom, an ix-skills atom never points to a recipe.
+- **domain skills** — they rely on domain knowledge that can be wrong or go stale (labour law, GDPR, HR practice, financial formulas, product methods), or produce an artefact a profession defines (PRD, NDA, job description, TCO);
+- **workflows** — chains of ix-skills atoms for a recurring job (being designed, see [Workflows](#workflows)).
 
-48 skills, moved from ix-skills on 2026-10-14 with their git history.
+ix-recipes depends on ix-skills, never the other way round: a recipe may point to an atom, an atom never points to a recipe. All 48 skills come from ix-skills, moved on 2026-10-14 with their git history.
+
+---
 
 ## Quick start
+
+Install both plugins in Claude Code — ix-recipes builds on ix-skills atoms:
 
 ```bash
 claude plugin marketplace add amiel-35/ix-recipes
 claude plugin install ix-recipes@ix-recipes
+claude plugin marketplace add amiel-35/ix-skills
+claude plugin install ix-skills@ix-skills
 ```
 
-Install [ix-skills](https://github.com/amiel-35/ix-skills) too: recipes and workflows refer to its atoms. Restart Claude Code. Skills are namespaced (`/ix-recipes:contract-review`), and Claude also picks them up from plain requests.
+Restart Claude Code. Skills are namespaced (`contract-review` becomes `/ix-recipes:contract-review`), and Claude also picks them up from plain requests:
 
-> Transition: until ix-skills 4.0.0, the same skills also ship inside ix-skills. If both plugins are installed, each of these skills appears twice.
+- *"Review this supplier contract before I sign."*
+- *"Draft the job description for a senior product manager."*
+- *"Estimate TAM, SAM and SOM for this market."*
 
-**Cowork**: "Add from repository" with `amiel-35/ix-recipes`. **Codex CLI**: `bash scripts/install-codex.sh`.
+Other platforms (Cowork, Codex CLI, mystaffy, GPT, Gemini): see [Installation](#installation).
 
-## Corpus convention: the null output
+---
 
-A skill that has nothing to produce opens its response with « RAS — » followed by the reason, and stops. The token is literal and identical across ix-skills and ix-recipes, which makes it greppable and testable.
+## Corpus convention — the null output
+
+A skill that has nothing to produce opens its response with « RAS — » followed by the reason, and stops. The token is literal and identical across ix-skills and ix-recipes: that is what makes it greppable and testable.
+
+---
 
 ## Available skills
 
-<details>
-<summary><b>👥 HR</b> — 13 skills</summary>
+Click a family to expand it.
 
-| Skill | What it does |
-|---|---|
-| `contrat-emploi` | Analyzes or drafts an employment contract, job offer, or HR amendment, with watch points and the legal limit recalled |
-| `entretien-professionnel` | Prepares the mandatory professional development interview (French labor code art. L6315-1) — 4-axis framework, exploratory questions, signable meeting record |
-| `fiche-poste` | Produces a structured, publishable job description — mission, responsibilities, required/desirable competencies, success criteria |
-| `grille-remuneration` | Structures a compensation grid by job family and level — salary ranges, positioning criteria, governance rules |
-| `interview-guide-recruteur` | Prepares the recruiter-side interview guide for ONE round — STAR questions, recruiter annotations, scenarios, 1-4 scoring grid, graduated red flags, Go/No-go debrief sheet |
-| `interview-loop-planner` | Designs the complete interview loop for a recruitment — number of rounds, competencies per round, consolidated scorecard, schedule, collective debrief protocol |
-| `lettre-cadrage-disciplinaire` | Drafts a disciplinary letter (warning, formal notice, reprimand) from dated, documented facts, to be validated by a lawyer before sending |
-| `offboarding-structure` | Structures an offboarding plan — knowledge and project handover, administrative checklist, exit interview, continuity risks |
-| `onboarding-plan` | Builds a 30-60-90 day onboarding plan for a new employee — objectives, actions, meetings, deliverables and checkpoints per phase |
-| `org-design-brief` | Formalizes an organizational target — current diagnosis, rationale, human risks, sequencing — before any announcement or implementation of a reorganization |
-| `people-review` | Structures a collective talent review — positioning matrix, risks, succession plans, priority actions by category |
-| `performance-review-helper` | Prepares the individual annual review — structured assessment (achievements, tension areas) and SMART objectives for next year |
-| `plan-developpement-competences` | Builds an individual or collective competency development plan — concrete actions, quarterly schedule, progress indicators, budget and financing |
+<details>
+<summary><b>👥 HR & People</b> — 13 skills</summary>
+
+Tools for the full employee lifecycle — recruiting, onboarding, development, assessment, organization design, and employment law. French labor law context is embedded where relevant.
+
+---
+
+#### `fiche-poste` — Structured job description
+
+**What it does:** Produces a structured, publishable job description from an HR brief or recruitment need. Distinguishes required from desirable criteria, identifies grey areas, and produces output that feeds the downstream recruiting workflow.
+
+**Use when:** Starting a recruitment process. Output feeds `interview-loop-planner`.
+
+---
+
+#### `interview-loop-planner` — Full interview process design
+
+**What it does:** Designs the complete interview loop for a recruitment — number of rounds, competencies per round, consolidated scorecard, and schedule. Produces round briefs that directly feed `interview-guide-recruteur`.
+
+**Use when:** Before starting interviews for a significant hire. Ensures each round assesses different dimensions.
+
+> Pipeline: `fiche-poste` → `interview-loop-planner` → `interview-guide-recruteur` (one per round).
+
+---
+
+#### `interview-guide-recruteur` — Recruiter-side interview guide
+
+**What it does:** Produces a full recruiter or manager interview guide with STAR-structured questions, evaluation annotations, scenario-based questions, a weighted 1–4 scoring grid, graduated red flags, and a Go/No-go debrief sheet.
+
+**Use when:** For a specific interview round. Best used downstream of `interview-loop-planner`, which defines the rounds and competencies.
+
+---
+
+#### `onboarding-plan` — 30-60-90 day integration plan
+
+**What it does:** Builds a structured integration plan covering the first 30, 60, and 90 days — objectives, key relationships, deliverables, and success criteria per phase.
+
+**Use when:** Before a new hire starts, to give both manager and employee a shared roadmap.
+
+---
+
+#### `entretien-professionnel` — Mandatory professional development interview
+
+**What it does:** Prepares a mandatory professional development interview (French Labor Code, art. L6315-1) — required every 2 years for all employees. Produces a framework, questions, and a meeting record template compliant with legal requirements.
+
+**What it doesn't do:** Not the same as an annual performance review. This is a legally required career development conversation, not a performance assessment.
+
+**Use when:** Every 2 years per employee, or after specific events (return from parental leave, sick leave…) as required by French law.
+
+---
+
+#### `performance-review-helper` — Annual review preparation
+
+**What it does:** Prepares an annual performance review with a structured assessment of the past year and SMART objectives for the next. Supports both manager prep and employee self-assessment.
+
+**What it doesn't do:** Not the mandatory professional development interview (`entretien-professionnel`). This is about performance — results, objectives, compensation context.
+
+**Use when:** Ahead of annual review cycles.
+
+---
+
+#### `people-review` — Collective talent review
+
+**What it does:** Structures a collective talent review with a positioning matrix (performance × potential), succession planning, retention and flight risk assessment, and priority actions per profile.
+
+**Use when:** Annual or bi-annual talent reviews, before an organizational change, or when preparing a workforce plan.
+
+---
+
+#### `plan-developpement-competences` — Skills development plan
+
+**What it does:** Builds an individual or collective skills development plan with training actions, schedule, success indicators, and budget. Links identified gaps to concrete development paths.
+
+**Use when:** After a performance review, a people review, or a skills gap assessment.
+
+---
+
+#### `grille-remuneration` — Compensation grid
+
+**What it does:** Structures a compensation grid by job family and seniority level — salary ranges, positioning criteria (internal equity, market benchmarks), and governance rules (who can offer what).
+
+**Use when:** When scaling a team and needing consistent, defensible compensation decisions across hires and existing employees.
+
+---
+
+#### `contrat-emploi` — Employment contract
+
+**What it does:** Analyzes or drafts an employment contract, job offer letter, or HR amendment. Surfaces key clauses and points of attention. Produces compliant draft language.
+
+**What it doesn't do:** Does not provide legal advice. Requires validation by a labor lawyer before use.
+
+**Use when:** Drafting a new employment contract, reviewing one received, or preparing an amendment (role change, part-time arrangement…).
+
+---
+
+#### `lettre-cadrage-disciplinaire` — Disciplinary framing letter
+
+**What it does:** Drafts a factual and proportionate disciplinary framing letter — documenting observed facts, their impact, and expected behavior change. Calibrated to the severity of the situation.
+
+**What it doesn't do:** Does not produce a formal sanction letter. Must be validated by a labor lawyer before sending.
+
+**Use when:** A documented conversation is needed before a formal disciplinary procedure, or to create a written record of a behavioral issue.
+
+---
+
+#### `offboarding-structure` — Departure plan with continuity
+
+**What it does:** Structures an offboarding plan covering knowledge handover, admin checklist, exit interview framework, and continuity risk mapping.
+
+**Use when:** When an employee gives notice. The earlier it starts, the better the knowledge transfer.
+
+---
+
+#### `org-design-brief` — Organizational redesign target
+
+**What it does:** Formalizes an organizational target with a current state diagnosis, design rationale, human risks, and sequencing — before any announcement or implementation. Surfaces what the new structure solves, what new risks it creates, and how to phase the transition.
+
+**Use when:** Before announcing a reorganization. Also useful as pre-work before engaging a management team in the design.
 
 </details>
 
 <details>
-<summary><b>⚖️ Legal</b> — 7 skills</summary>
+<summary><b>⚖️ Legal & Contracts</b> — 7 skills</summary>
 
-| Skill | What it does |
-|---|---|
-| `cgv-checker` | Surfaces unbalanced, unusual, or sensitive clauses in GTC/ToS from a given reading position (client, supplier, user) |
-| `compliance-checklist` | Generates a multi-domain compliance checklist from a project or a context — legal, contractual, regulatory and sector obligations, each with a priority and a verification status |
-| `conformite-rgpd` | Produces a GDPR compliance checklist from a technical spec or a description of personal-data processing — legal bases, DPIA, DPO, transfers outside the EU |
-| `contract-review` | Analyzes a contract clause by clause — deviations from standard positions, GREEN/YELLOW/RED classification, priority redlines with fallback language |
-| `contrat-fournisseur` | Analyzes or drafts a supplier contract from the buyer's side — SLA, penalties, termination, exclusivity, price, renewal — with renegotiation points ranked by impact |
-| `legal-risk-flag` | Scans a legal or contractual document — contract, correspondence, any text — for priority red flags in one quick pass, with a graduated risk level (high/medium/low) and a recommended action |
-| `nda-draft` | Drafts an NDA adapted to the context — parties, purpose, duration, territory — calibrated to the relationship type (contractor, partnership, employee, M&A discussion) |
+Pre-legal tools — all require professional validation before use. They orient reviews, surface risks, and produce drafts. None replace a lawyer.
+
+---
+
+#### `legal-risk-flag` — Fast red flag scan
+
+**What it does:** Quickly reads a legal or contractual document and extracts priority risk signals with graduated severity levels (high / medium / low). Designed for speed — a flash assessment before deciding whether a deeper review is needed.
+
+**What it doesn't do:** Does not perform a full analysis. Flags, does not conclude. Never replace a lawyer.
+
+**Use when:** You receive a document and need to decide in minutes whether to escalate or which clauses to focus on.
+
+> Use `legal-risk-flag` first (fast scan), then `contract-review` for the full clause-by-clause analysis.
+
+---
+
+#### `contract-review` — Clause-by-clause with redlines
+
+**What it does:** Analyzes a contract clause by clause, identifies deviations from standard positions, produces priority redlines with justification and proposed alternative language.
+
+**What it doesn't do:** Does not provide legal advice. Output must be reviewed by a qualified professional before use or negotiation.
+
+**Use when:** Before signing a significant contract. Faster than a full lawyer review for the first pass — then the lawyer validates.
+
+---
+
+#### `cgv-checker` — Unbalanced clauses in T&Cs
+
+**What it does:** Identifies unbalanced, unusual, or sensitive clauses in General Terms and Conditions (sales or use), depending on the reading position (buyer, user, subscriber).
+
+**What it doesn't do:** Does not assess the full legal validity of the T&Cs. Does not replace legal advice.
+
+**Use when:** Before accepting T&Cs for a significant vendor or platform relationship, or when drafting your own T&Cs.
+
+> Different from `contract-review`: `cgv-checker` is for standard adhesion T&Cs. `contract-review` is for negotiable contracts with custom clauses.
+
+---
+
+#### `conformite-rgpd` — GDPR compliance checklist
+
+**What it does:** Produces a GDPR compliance checklist from a technical specification, product description, or data processing document. Distinguishes observed processing, inferred processing, and obligations to confirm.
+
+**What it doesn't do:** Does not replace a DPO or qualified legal professional. Requires expert validation before operational use.
+
+**Use when:** Before launching a product or feature that processes personal data. A structured first-pass self-assessment before the DPO review.
+
+---
+
+#### `compliance-checklist` — Legal compliance checklist
+
+**What it does:** Generates a compliance checklist covering legal, contractual, and regulatory obligations — GDPR, labor law, sector-specific regulation — from a project context or document.
+
+**What it doesn't do:** Does not replace professional legal or regulatory advice. Always requires expert validation before operational use.
+
+**Use when:** Before any product launch, contractualization, or operational change with legal implications. A structured pre-validation to orient the conversation with a lawyer, not replace it.
+
+---
+
+#### `nda-draft` — NDA draft adapted to context
+
+**What it does:** Generates a confidentiality agreement draft adapted to the context — type of parties, subject of exchanges, duration. Produces a document ready for legal review, not for immediate signing.
+
+**What it doesn't do:** Does not provide legal advice. Always requires lawyer validation before signing.
+
+**Use when:** You need a starting point for NDA negotiations and don't want to start from a generic template.
+
+---
+
+#### `contrat-fournisseur` — Supplier contract, buyer's side
+
+**What it does:** Analyzes **or** drafts a supplier or service provider contract from the buyer's perspective. Surfaces unbalanced conditions, clauses to renegotiate (SLA, liability, termination, penalties, exclusivity, renewal), and contractual risks. Can also produce a first draft when no contract exists yet.
+
+**What it doesn't do:** Does not replace legal advice. Requires professional validation before use.
+
+**Use when:** Before signing a supplier contract, before entering negotiations, or when drafting initial terms for a new supplier relationship.
 
 </details>
 
 <details>
-<summary><b>💶 Finance & pricing</b> — 4 skills</summary>
+<summary><b>💶 Finance & Pricing</b> — 4 skills</summary>
 
-| Skill | What it does |
-|---|---|
-| `budget-variance-analysis` | Analyzes budget-versus-actual variances line by line with probable causes, explicitly flagged hypotheses, and corrective actions |
-| `business-case-draft` | Structures an investment decision into a costed business case — costs, expected benefits, risks, explicit financial hypotheses |
-| `financial-narrative` | Transforms raw financial figures — results, budget, cash — into a clear, prioritized narrative for an executive or board audience |
-| `strategie-prix` | Formulates a pricing recommendation linking perceived value, segmentation and candidate pricing models, with explicit trade-offs and owned critical assumptions |
+Quantify, explain and defend a money decision — budget variances, business case, financial narrative, pricing. Financial assumptions are always explicit.
+
+---
+
+#### `budget-variance-analysis` — Budget vs. actual diagnosis
+
+**What it does:** Analyzes gaps between budget and actual figures. Identifies significant variances, qualifies them by nature (volume, price, mix, timing, operational), and produces corrective hypotheses and watch points.
+
+**What it doesn't do:** Does not invent causes or figures. Does not make management decisions — produces a factual diagnosis.
+
+**Use when:** Monthly or quarterly budget review, P&L analysis, or when you need to explain performance to a board or controller.
+
+---
+
+#### `business-case-draft` — Investment decision structure
+
+**What it does:** Structures an investment decision with explicit costs, expected benefits, risk scenarios, and financial hypotheses. Distinguishes certain costs from estimated costs. Clearly marks what is a hypothesis vs a fact. If financial data is too fragile, says so and suggests `note-strategique` as an alternative.
+
+**What it doesn't do:** Does not invent figures.
+
+**Use when:** You have numbers to work with and need to frame a buy/build/invest decision. If you don't have numbers, use `note-strategique` instead.
+
+---
+
+#### `financial-narrative` — Numbers → executive story
+
+**What it does:** Transforms raw financial figures (P&L, KPIs, reporting) into a clear, message-first narrative for an executive or board audience. Starts with key messages, contextualizes figures, connects variations to explanatory factors.
+
+**What it doesn't do:** Does not invent numbers or trends. Does not reproduce the raw data. Does not distort figures to tell a better story.
+
+**Use when:** Board presentations, investor updates, quarterly reviews — any time numbers need to be communicated to an audience that needs the "so what" before the detail.
+
+---
+
+#### `strategie-prix` — Pricing strategy with trade-offs
+
+**What it does:** Formulates a pricing strategy by linking perceived value, customer segmentation, and business trade-offs. Compares pricing models (freemium, value-based, usage-based, tiered…) and produces a recommendation with explicit hypotheses.
+
+**What it doesn't do:** Does not produce a price list. Does not recommend a price without stating the assumptions behind it.
+
+**Use when:** Product launch, market repositioning, or under competitive pricing pressure. Requires context on the offer, target customers, and competitive benchmarks if available.
 
 </details>
 
 <details>
-<summary><b>🤝 Sales & procurement</b> — 6 skills</summary>
+<summary><b>🤝 Sales & Procurement</b> — 6 skills</summary>
 
-| Skill | What it does |
-|---|---|
-| `analyse-cdc` | Analyzes a received specification document from the respondent's side — explicit and implicit requirements, grey areas, contradictions, blocking questions before any commitment |
-| `offre-commerciale` | Writes the content of a structured, argued client offer or tender response, ready to use before final formatting |
-| `negotiation-brief` | Prepares a procurement negotiation position before the meeting — objective, useful facts, levers, possible concessions, BATNA, opening position, target and an owned red line |
-| `rfp-draft` | Generates a structured request for proposal, context, scope, mandatory and desirable requirements, evaluation criteria, response conditions, from a procurement or business brief |
-| `total-cost-analysis` | Structures a TCO, direct costs, hidden costs, hypotheses, risks, over a given horizon, distinguishing confirmed, estimated, and unquantified costs |
-| `vendor-scorecard` | Builds a reusable vendor evaluation grid, weighted criteria, scoring scale, space for qualitative comments, the scoring tool, not the final decision |
+Both sides of a tender: answering a specification and writing an offer, or running a call for tenders, comparing costs and scoring vendors.
+
+---
+
+#### `analyse-cdc` — Specification document analysis
+
+**What it does:** Analyzes a received specification document (CDC) from the respondent's perspective. Surfaces explicit requirements, implicit requirements, grey areas, contradictions, and the blocking questions to ask before committing to a response.
+
+**What it doesn't do:** Does not summarize the spec — it critiques it. Does not produce a response plan.
+
+**Use when:** You receive a spec, RFP, or requirements document and need to understand what's really being asked before engaging. Output feeds a response strategy or clarification meeting.
+
+---
+
+#### `offre-commerciale` — Client offer content
+
+**What it does:** Produces the structured content of a client offer — context understanding, proposed solution, value argument, pricing logic, and next steps. Focus is on content and argument, not final formatting.
+
+**What it doesn't do:** Does not format the final document (use `deliver` for that). Does not negotiate.
+
+**Use when:** Responding to an inbound request, after a discovery call, or when you need to structure a proposal before putting it into a deck or document.
+
+---
+
+#### `negotiation-brief` — Structured position before a negotiation
+
+**What it does:** Prepares a complete negotiation position — objectives, non-negotiables, tradeable points, BATNA (best alternative if no agreement), and concession logic. Designed for preparation, not to hand to the other party.
+
+**What it doesn't do:** Not a negotiation script. Not a template for the other party.
+
+**Use when:** Before any high-stakes procurement negotiation — supplier, vendor, subcontractor. The clearer the position going in, the better the outcome.
+
+---
+
+#### `rfp-draft` — Request for proposal
+
+**What it does:** Generates a structured request for proposal — context, scope, requirements, evaluation criteria, expected deliverables, and timeline.
+
+**Use when:** You are the buyer and need to solicit structured offers from multiple vendors. Output feeds `offer-comparison` and `vendor-scorecard`.
+
+---
+
+#### `total-cost-analysis` — Full lifecycle cost (TCO)
+
+**What it does:** Structures a Total Cost of Ownership analysis covering direct costs, hidden costs (implementation, training, integration, migration, exit), and financial risks over a given horizon. Distinguishes confirmed costs, estimated costs, and unquantified risks.
+
+**What it doesn't do:** Does not look at the sticker price alone. Does not invent figures without marking them as hypotheses.
+
+**Use when:** Before any significant purchase or vendor decision where the visible price doesn't capture the full economic impact. Pairs with `offer-comparison` and `vendor-scorecard`.
+
+---
+
+#### `vendor-scorecard` — Reusable vendor evaluation grid
+
+**What it does:** Builds a weighted vendor scorecard from a procurement context — criteria, weightings, scoring scale, qualitative comment fields. Produces the scoring **tool**, not the decision.
+
+**What it doesn't do:** Does not score vendors (that's `offer-comparison`). Does not invent weightings without justifying them.
+
+**Use when:** Before a consultation process begins, to align stakeholders on evaluation criteria. Reusable for future consultations of the same type.
 
 </details>
 
 <details>
 <summary><b>🧭 Product & UX</b> — 8 skills</summary>
 
-| Skill | What it does |
-|---|---|
-| `feature-spec` | Produces the complete functional spec of one feature, user stories, MoSCoW requirements, Given/When/Then acceptance criteria, success metrics |
-| `journey-map` | Produces a user journey map, stages, actions, emotions, friction points, and opportunities, from the user's point of view, not the system's |
-| `okr` | Reviews Objective/Key Result lines already written, or surfaces material to discuss from a vague brief |
-| `persona` | Produces structured user personas from research data, interviews, or a product brief, distinguishing what is observed from what is assumed |
-| `prd` | Produces a complete Product Requirements Document, problem, vision, target users, scope in and out, requirements, success metrics, the what and the why, never the how |
-| `product-spec` | Turns a brief or an already-scoped need into an actionable specification, flows, screens, data model, edge cases, acceptance criteria, for a product, design, or engineering team |
-| `reformulation-us` | Rewrites existing poorly-written user stories into clean, testable US with Given/When/Then acceptance criteria, staying faithful to the original intent |
-| `tam-sam-som` | Estimates TAM, SAM, and SOM with top-down and bottom-up methods, explicit hypotheses, and owned reliability limits |
+From a scoped need to the document a product team expects — PRD, specs, user stories, personas, journeys, OKRs, market sizing. Upstream scoping (`cadrage`, `brief`, `analysis`) stays in ix-skills.
+
+---
+
+#### `prd` — Complete Product Requirements Document
+
+**What it does:** Produces a full PRD — context, problem statement, goals, functional and non-functional requirements, out-of-scope items, success metrics, and open questions.
+
+**Use when:** You need a comprehensive product document to align the team, communicate with engineering, or frame a significant investment.
+
+---
+
+#### `feature-spec` — Feature-level functional specification
+
+**What it does:** Produces a complete functional spec for a feature — user stories, MoSCoW requirements, acceptance criteria, edge cases, and success metrics.
+
+**Use when:** A feature is approved and needs to be specified for engineering. More granular than a PRD — operates at the level of a single feature or epic.
+
+---
+
+#### `product-spec` — Lightweight actionable spec
+
+**What it does:** Produces an actionable specification from a brief or scoped need. Lighter than a PRD, more structured than a brief — a rapid spec that teams can act on.
+
+**Use when:** You need something between a brief and a full PRD. Good for smaller features, MVPs, or rapid iteration contexts.
+
+> Hierarchy: `brief` → `prd` (the what and the why) → `product-spec` / `feature-spec` (the how, increasingly detailed).
+
+---
+
+#### `reformulation-us` — Rewrite poorly-written user stories
+
+**What it does:** Rewrites existing user stories that are vague, developer-centric, or untestable into clean, testable user stories with proper structure and explicit acceptance criteria.
+
+**Use when:** In backlog refinement, when stories are being pulled into a sprint but aren't ready, or after a discovery phase where stories were written informally.
+
+---
+
+#### `persona` — Structured user personas
+
+**What it does:** Produces structured user personas from research data or a product brief — goals, frustrations, behaviors, context, and decision triggers. Designed to be actionable for product decisions, not just decorative.
+
+**Use when:** At the start of a product initiative, or when the team has diverging assumptions about who they're building for.
+
+---
+
+#### `journey-map` — User journey with friction and opportunities
+
+**What it does:** Produces a user journey map covering stages, actions, emotions, friction points, and improvement opportunities. Structured around the user's perspective, not the product's features.
+
+**Use when:** Before redesigning an experience, identifying where to invest in UX improvement, or aligning a cross-functional team on how users actually experience the product.
+
+---
+
+#### `okr` — Review O/KR lines, or surface material to discuss
+
+**What it does:** Two distinct modes. *Template*: reviews Objective/Key Result lines already written, line by line — conformity to the formula (O = action verb + what + intended impact; KR = measurement verb + what + from X to Y + deadline), task disguised as a KR, outcome or output, baseline sourced or missing, calibration profile (sandbagged / aspirational / stretch). *Material to discuss*: from a vague brief, produces candidate Objectives with what each one excludes, and families of Key Results with their traps and forcing mechanisms.
+
+**What it doesn't do:** Never hands back a finished OKR on its own — the Objective is chosen by the person, the Key Results are discussed. Never invents a missing baseline: an absent X is declared « to be measured », never replaced by a plausible number. In template mode, does not rewrite the author's lines.
+
+**Use when:** Quarterly planning, strategic alignment, or a contre-check on an OKR already drafted. Output feeds `tableau-de-bord-kpi` and `indicateurs`.
+
+---
+
+#### `tam-sam-som` — Market sizing with method
+
+**What it does:** Estimates Total Addressable Market, Serviceable Addressable Market, and Serviceable Obtainable Market using top-down and bottom-up methods with explicit hypotheses. Surfaces the method, the figures, and the degree of uncertainty. Web search required in standard/deep mode.
+
+**What it doesn't do:** Does not produce figures from memory without flagging it. TAM/SAM/SOM without hypotheses is a guess, not a sizing.
+
+**Use when:** Preparing a pitch, validating a market opportunity, or building a business case.
 
 </details>
 
 <details>
-<summary><b>⚙️ Tech</b> — 5 skills</summary>
+<summary><b>💻 Tech</b> — 5 skills</summary>
 
-| Skill | What it does |
-|---|---|
-| `code-review` | Reviews code — diff, PR, files, or a pasted snippet — across four dimensions, security, performance, correctness, maintainability, with findings ranked critical vs suggestions and anchored to precise code references |
-| `system-design` | Designs a system or technical architecture, components, data flows, API contracts, storage, with explicit trade-offs and owned scale hypotheses |
-| `tech-debt` | Inventories technical debt, scores it on impact, risk and effort, and produces a remediation plan interleavable with feature work, every item justified by a business impact rather than a purely technical one |
-| `ticket-triage` | Categorizes, prioritizes P1 through P4, and routes an incoming support ticket, with the information needed for immediate handling |
-| `mockup` | Produces a standalone, presentable HTML mockup from a brief, spec, or visual references, a visual production deliverable, not a functional prototype |
+Design, review and maintain software — architecture, code review, tech debt, support triage, HTML mockup.
+
+---
+
+#### `system-design` — Technical architecture design
+
+**What it does:** Designs a system or technical architecture — components, data flows, API contracts, storage, scalability decisions, and explicit trade-offs. Documents what was decided and why, including options rejected.
+
+**Use when:** Before building a new system, when refactoring an existing architecture, or when a team needs a shared technical blueprint.
+
+---
+
+#### `code-review` — Code review across 4 dimensions
+
+**What it does:** Reviews code across security, performance, correctness, and maintainability. For each finding: identifies the issue, explains the impact, and proposes a fix. Ranks findings as critical vs suggestions — both are surfaced, neither is hidden.
+
+**Use when:** Before merging a PR, during a codebase audit, or when onboarding to a new codebase.
+
+---
+
+#### `tech-debt` — Technical debt audit with remediation plan
+
+**What it does:** Identifies, categorizes (structural / code quality / dependency / documentation / test coverage), and prioritizes technical debt with a realistic remediation plan. Distinguishes quick wins from structural work.
+
+**Use when:** Before a significant sprint, during quarterly engineering planning, when velocity has degraded, or before an acquisition due diligence.
+
+> `code-review` evaluates a specific changeset (a PR, a file). `tech-debt` audits accumulated structural issues across the full codebase.
+
+---
+
+#### `ticket-triage` — Support ticket categorization and routing
+
+**What it does:** Categorizes an incoming support ticket, assigns a P1–P4 priority based on impact and urgency, identifies missing information needed for handling, and routes to the appropriate team or queue.
+
+**Use when:** Processing incoming support or bug tickets, especially in high-volume contexts where consistent prioritization is needed.
+
+---
+
+#### `mockup` — Standalone HTML mockup
+
+**What it does:** Produces a standalone, presentable HTML mockup from a brief, spec, or visual references. A visual deliverable for alignment and feedback.
+
+**What it doesn't do:** Not a functional prototype. Not production-ready code.
+
+**Use when:** You need something visual to present to stakeholders, validate with users, or communicate a layout before investing in design or engineering.
 
 </details>
 
 <details>
-<summary><b>📊 Data & market</b> — 3 skills</summary>
+<summary><b>📊 Data & Market</b> — 3 skills</summary>
 
-| Skill | What it does |
-|---|---|
-| `analyse-concurrentielle` | Builds a factual foundation on the competitive landscape — players, forces, differentiation, positioning |
-| `metriques-saas` | Analyzes key SaaS metrics, CAC, LTV, NRR, churn, and produces a factual diagnosis of business model health, formulas and hypotheses included |
-| `tableau-de-bord-kpi` | Defines and structures a full KPI dashboard — metric, unit, target, frequency, data source — from business objectives or context |
+Read a market and a business model with numbers — competition, SaaS metrics, KPI dashboard.
+
+---
+
+#### `analyse-concurrentielle` — Competitive landscape with differentiation logic
+
+**What it does:** Structures a competitive analysis around differentiation logic — not a list of players. Identifies market forces, compares players on a common framework, surfaces positioning risks and differentiation zones. Web search required in standard/deep mode.
+
+**What it doesn't do:** Does not produce a bullet list of competitors. Does not make strategic recommendations — use `decision` for that.
+
+**Use when:** Before a market entry, a positioning decision, or a fundraising narrative. Pairs with `note-strategique` or `decision` downstream.
+
+---
+
+#### `metriques-saas` — SaaS business model health
+
+**What it does:** Reads SaaS key metrics together — CAC, LTV, NRR, churn, payback period — and interprets them as a system, not in isolation. Surfaces implications for business model health, growth sustainability, and piloting priorities.
+
+**What it doesn't do:** Does not produce benchmarks from memory in standard/deep mode. Does not recommend actions — produces a diagnosis.
+
+**Use when:** Board preparation, fundraising, operational review, or when metric trends are contradictory and you need to understand what they mean together.
+
+---
+
+#### `tableau-de-bord-kpi` — KPI dashboard structure
+
+**What it does:** Defines and structures a KPI dashboard from business objectives, OKRs, or a business context. Distinguishes directly measurable KPIs, estimable KPIs (with stated hypotheses), and problematic KPIs (missing reliable source). Refuses vanity metrics.
+
+**Use when:** After OKRs are set, or when you need to put a monitoring structure in place for a team, product, or business unit.
 
 </details>
 
 <details>
 <summary><b>🔗 Upcoming workflows</b> — 2 skills</summary>
 
-Still standalone skills, to be rewritten as chains of ix-skills atoms (`decision` → `deliver`; `vendor-scorecard` → `decision`).
+Still standalone skills, to be rewritten as chains of ix-skills atoms: `note-strategique` will become `decision` → `deliver`, `offer-comparison` will become `vendor-scorecard` → `decision`. See [Workflows](#workflows).
 
-| Skill | What it does |
-|---|---|
-| `note-strategique` | Produces a structured, argued strategic note that opens with the conclusion and makes trade-offs visible, for a decision-maker reader |
-| `offer-comparison` | Compares already-normalized supplier offers on a weighted grid and closes with an argued recommendation, keeping fragile scores and non-comparable criteria visible |
+---
+
+#### `note-strategique` — Strategic memo, conclusion first
+
+**What it does:** Produces a structured, shareable strategic memo — for a decision-maker, board, or executive. Starts with the conclusion, then the argument, then the options, then the recommendation with explicit trade-offs. Two pages maximum without justification.
+
+**What it doesn't do:** Does not start with context and bury the recommendation at the end. If you don't have a clear position yet, run `decision` first.
+
+**Use when:** You have a recommendation to make and need to package it for a decision-maker. Output is directly shareable.
+
+---
+
+#### `offer-comparison` — Weighted comparison with recommendation
+
+**What it does:** Compares already-received supplier offers on a normalized weighted grid and produces an argued recommendation. Makes the scoring method and uncertainty visible — does not hide trade-offs.
+
+**What it doesn't do:** Does not evaluate offers you haven't received yet. If the proposals are too different in scope, manual normalization is required first.
+
+**Use when:** After receiving multiple quotes for a significant purchase.
+
+> Pipeline: `vendor-scorecard` → `offer-comparison` → `total-cost-analysis` → `decision`.
 
 </details>
 
-## Repository layout
+---
 
-| Path | Role |
-|---|---|
-| `skills/` | Canonical source: one `.md` per skill + `.mystaffy.json` overrides |
-| `dist/` | Plugin root, **committed**: `.claude-plugin/plugin.json` + `skills/<id>/SKILL.md` generated by `build.py` |
-| `.claude-plugin/marketplace.json` | Marketplace manifest, points at `./dist` |
-| `build.py` | Packaging (agentskills, cowork, mystaffy, ix-memory, codex), a copy of ix-skills' builder |
+## Workflows
+
+A workflow chains ix-skills atoms for a recurring job. The format is being designed: it will be tested on a first prototype before more are written.
+
+First candidates:
+
+```
+strategic note        decision → deliver
+vendor selection      rfp-draft → total-cost-analysis → vendor-scorecard → decision
+pre-send review       critique → fact-check → correction → fact-check → deliver → controle-qualite
+```
+
+Chains you can already run by hand:
+
+```
+research → analyse-concurrentielle → decision
+brief    → prd → feature-spec
+fiche-poste → interview-loop-planner → interview-guide-recruteur
+legal-risk-flag → contract-review
+```
+
+---
+
+## Installation
+
+### Claude Code (plugin — recommended)
+
+The repo is a Claude Code plugin marketplace (`.claude-plugin/marketplace.json` points at the `dist/` plugin root):
 
 ```bash
-python3 build.py --validate                 # validate without writing
-python3 build.py --target agentskills       # rebuild dist/skills/
+claude plugin marketplace add amiel-35/ix-recipes
+claude plugin install ix-recipes@ix-recipes
+```
+
+To pick up updates later:
+
+```bash
+claude plugin marketplace update ix-recipes
+claude plugin update ix-recipes
+```
+
+Then restart Claude Code. Releases resolve from the manifest version (`dist/.claude-plugin/plugin.json`), see `CHANGELOG.md`. In the Claude Code desktop app, the same steps go through the `/plugin` command.
+
+> Transition: until ix-skills 4.0.0, these 48 skills also shipped inside ix-skills. Update ix-skills so they don't show up twice.
+
+**Manual fallback**: symlink or copy `dist/skills` into `~/.claude/skills/` — not `skills/`, whose canonical frontmatter is not a valid `SKILL.md`.
+
+### Claude Cowork / claude.ai
+
+**Option A — plugin**: **"Add from repository"** with `amiel-35/ix-recipes`.
+
+**Option B — a single skill**: `dist/skills/<id>/` folders are valid Agent Skills; upload one as-is in **Cowork → Customize** (or the ChatGPT Skills editor).
+
+### Codex CLI
+
+```bash
+git clone https://github.com/amiel-35/ix-recipes /tmp/ix-recipes
+cd /tmp/ix-recipes
+pip install -r requirements.txt
+bash scripts/install-codex.sh                 # all skills
+bash scripts/install-codex.sh contract-review # one skill
+```
+
+Skills are installed to `~/.codex/skills/<id>/SKILL.md`. Restart Codex to activate.
+
+### mystaffy
+
+```bash
+python3 build.py --target mystaffy
+python3 build.py --target ix-memory   # native ix-memory format
+```
+
+### GPT / Gemini / other LLMs
+
+Paste the content of `skills/<id>.md` as a system prompt. The YAML frontmatter is ignored harmlessly.
+
+---
+
+## Structure
+
+```
+ix-recipes/
+├── skills/                 ← canonical source (one .md + .mystaffy.json per skill)
+├── scripts/
+│   └── install-codex.sh    ← Codex CLI installer
+├── dist/                   ← plugin root, committed
+│   ├── .claude-plugin/plugin.json   ← plugin manifest (hand-maintained, bump on each release)
+│   └── skills/<id>/SKILL.md         ← Agent Skills artifacts, generated by build.py
+├── .claude-plugin/
+│   └── marketplace.json    ← marketplace manifest, points at ./dist
+├── mystaffy-dist/, codex-dist/  ← mystaffy / Codex artifacts (gitignored)
+├── build.py                ← multi-target packager, copied from ix-skills
+├── requirements.txt
+├── CHANGELOG.md            ← releases, by date
+├── THIRD_PARTY.md          ← third-party sources and licences
+└── CLAUDE.md               ← contribution guide
+```
+
+---
+
+## Building
+
+```bash
+python3 build.py --validate
+python3 build.py
+python3 build.py contract-review
+python3 build.py --target agentskills   # dist/skills/<id>/SKILL.md — commit it
+python3 build.py --target cowork        # validates dist/.claude-plugin/plugin.json
+python3 build.py --target mystaffy --domain rh
+python3 build.py --target codex
 claude plugin validate dist
 ```
 
+---
+
+## Sibling projects
+
+- [**ix-skills**](https://github.com/amiel-35/ix-skills) — the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) and advisory postures (`dixieme-homme`, `red-team`, `contrarian`…). Required by ix-recipes.
+- [**ghost-council**](https://github.com/amiel-35/ghost-council) — philosophers' reasoning methods encoded as skills (Popper, Kant, Pascal, Wittgenstein…), and `/council`, which has several independent angles deliberate on a decision.
+
+---
+
+## Contributing
+
+Fork, edit, PR. Read [`CLAUDE.md`](CLAUDE.md) for the canonical skill format, the dependency rule with ix-skills and the checklists, and [`CHANGELOG.md`](CHANGELOG.md) for versions.
+
+A skill that applies a reasoning move to any content belongs in ix-skills; a skill that needs domain know-how belongs here.
+
+---
+
 ## Credits
 
-Several skills draw on public sources. They are listed in [THIRD_PARTY.md](THIRD_PARTY.md), with what was taken and under which licence.
+Several skills draw on public sources. Each source taken from is listed in [`THIRD_PARTY.md`](THIRD_PARTY.md), with what was taken and under which licence.
+
+---
 
 ## License
 

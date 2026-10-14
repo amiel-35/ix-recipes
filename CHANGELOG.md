@@ -2,6 +2,45 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-15 — plugin 2.3.0: the runner, the tracking page, the recipe designer
+
+### Added
+- `scripts/parcours.py` (spec: `docs/executeur.md`): plays a recipe step by step,
+  each step in a fresh call to Claude Code, Codex or Antigravity that receives only
+  its inputs, isolated from the user's own configuration. State in
+  `./parcours/<slug>/state.json`, the exact message and the full output of each step
+  kept, pauses (`validate`, `answers`, `choose`), corrections (`rerun`, `retry`,
+  `handoff --file`), a lock, cost per step. From step 2 on, any message or recorded
+  field that carries a passage of the raw request is refused, naming the fragment
+  and the remedy.
+- `scripts/interface.py` + `interface.html` (spec: `docs/interface.md`): a local page
+  (127.0.0.1, token in the URL fragment, Host check, CSP) to follow the runs, read
+  the outputs, answer the pauses and launch the next step; it only calls
+  `parcours.py`.
+- `concepteur-recette` 1.1.0: designs a recipe from a recurring job, after checking
+  that a single skill or a manual sequence is not enough (the usual conclusion).
+- Recipe format: `verbatim` fields on step 1 (lists the source imposes, copied word
+  for word, checked line by line, at most 85% of the source; what they quote may be
+  re-quoted downstream), `output_field` (a step whose deliverable is a document
+  passes its whole output on instead of a summary of it), and the context sheet
+  definitions of the recipe body sent to step 1.
+
+### Changed
+- `reponse-appel-offres` 1.5.0, `analyse-cdc` 1.3.0: imposed items, evaluation
+  criteria and submission rules extracted at step 1 and carried to the offer and the
+  compliance check; imposed items are requirements, never hypotheses nor "named
+  solutions"; the compliance check reports a missing imposed item as blocking; the
+  formatting keeps every commitment and condition as written.
+- `brief-client` 1.3.0: the final brief is the step's whole output.
+- Blocking signal: only when a later step cannot do its job; reservations go in the
+  output.
+
+### Measured
+Full tender response on a real specification, Claude engine: $0.86 for the first
+run, $1.53 for the corrected one with its reruns. A drift judge counted 113 imposed
+items: 90 verbatim in the final offer, 14 shortened, 9 under another label, none
+missing; no invented fact (prices, names, references stay placeholders).
+
 ## 2026-10-14 — plugin 2.2.0: lean orchestration, a model per step
 
 - `brief-client` 1.1.0, `reponse-appel-offres` 1.1.0: each sub-agent writes its

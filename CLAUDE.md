@@ -66,9 +66,11 @@ it for later steps, steps hand over named fields only, the human decides at paus
 `build.py` checks the `workflow` block mechanically (requires exist, brief only at
 step 1, every received field transmitted by an earlier step…).
 
-Reference recipes: `brief-client` and `reponse-appel-offres`. Still to convert:
-`note-strategique` (`decision` → `deliver`), `offer-comparison`
-(`vendor-scorecard` → `decision`).
+Reference recipes: `brief-client` and `reponse-appel-offres`. A chain must buy
+something — isolation, a human pause, a third party's answers; otherwise keep a
+single skill (that is why `note-strategique` and `offer-comparison` stay skills,
+decided 2026-10-15 after the designer benchmark). `concepteur-recette` drafts a
+recipe; test it on real material before publishing.
 
 ## 5. Checklist — adding a new skill
 

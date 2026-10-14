@@ -43,10 +43,10 @@
 
 Domain recipes on top of [ix-skills](https://github.com/amiel-35/ix-skills) — portable across Claude, GPT, Gemini, and mystaffy.
 
-49 skills in 9 families, including 2 workflows. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
+50 skills in 9 families, including 2 workflows and a workflow designer. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
 
 - **domain skills** — they rely on domain knowledge that can be wrong or go stale (labour law, GDPR, HR practice, financial formulas, product methods), or produce an artefact a profession defines (PRD, NDA, job description, TCO);
-- **workflows** — chains of ix-skills atoms for a recurring job (being designed, see [Workflows](#workflows)).
+- **workflows** — chains of ix-skills atoms for a recurring job, a designer for new ones, and a runner with a local tracking page (see [Workflows](#workflows)).
 
 ix-recipes depends on ix-skills, never the other way round: a recipe may point to an atom, an atom never points to a recipe. The skills come from ix-skills, moved on 2026-10-14 with their git history.
 
@@ -558,7 +558,7 @@ Read a market and a business model with numbers — competition, SaaS metrics, K
 </details>
 
 <details>
-<summary><b>⇢ Workflows</b> — 2 skills</summary>
+<summary><b>⇢ Workflows</b> — 3 skills</summary>
 
 Recipes that chain several skills, each step isolated in its own context, with pauses where the human validates, answers or chooses. Format: [`docs/format-recette.md`](docs/format-recette.md).
 
@@ -582,12 +582,22 @@ Recipes that chain several skills, each step isolated in its own context, with p
 
 **Use when:** A received call for tenders or specification calls for a full response.
 
+---
+
+#### `concepteur-recette` — Design a workflow recipe, or advise against one
+
+**What it does:** From a recurring job (ideally with a real example), first checks whether one existing skill or a manual sequence is enough; if a chain is justified, proposes the full recipe file in the ix-recipes format, its rationale and the questions to settle before running it. Works only from the real ix-skills and ix-recipes catalogue.
+
+**What it doesn't do:** Does not run the recipe and writes no file: it proposes, you save. Never invents a skill.
+
+**Use when:** You do the same multi-step job often and wonder whether it deserves a recipe.
+
 </details>
 
 <details>
-<summary><b>🔗 Upcoming workflows</b> — 2 skills</summary>
+<summary><b>📝 Recommendation</b> — 2 skills</summary>
 
-Still standalone skills, to be rewritten as chains of ix-skills atoms: `note-strategique` will become `decision` → `deliver`, `offer-comparison` will become `vendor-scorecard` → `decision`. See [Workflows](#workflows).
+Recommendation deliverables for a decision-maker. Once planned as workflows, they stay skills: a chain would buy no isolation, no human pause and no third party (decided 2026-10-15, after a benchmark of the recipe designer).
 
 ---
 
@@ -619,13 +629,25 @@ Still standalone skills, to be rewritten as chains of ix-skills atoms: `note-str
 
 A workflow chains skills for a recurring job. Format: [`docs/format-recette.md`](docs/format-recette.md). Each step runs isolated (a sub-agent in Claude Code) and receives only what it needs; only the first reads the raw input; a human-validated context sheet replaces it afterwards; pauses let the human validate, answer (client, buyer) or choose. A trace of each step is written to `./parcours/` when possible.
 
-Available: `brief-client`, `reponse-appel-offres` (see the catalog). Both tested in Claude Code on real material (a client meeting transcript, a tender specification).
+Available: `brief-client`, `reponse-appel-offres` (see the catalog). Both tested end to end on real material (a client meeting transcript, a tender specification). `concepteur-recette` designs new ones.
+
+### Running a workflow outside the conversation
+
+In a conversation, the recipe orchestrates itself through sub-agents. For real isolation and a trace you can resume, `scripts/parcours.py` plays it step by step, each step in a **fresh call** to an engine of your choice — Claude Code, Codex or Antigravity — that receives only its inputs. It stops at every pause and refuses any step whose message would carry a passage of the raw request beyond step 1. Spec: [`docs/executeur.md`](docs/executeur.md).
+
+```bash
+pip install pyyaml
+python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --engine claude
+python3 scripts/parcours.py next ao        # runs until the next pause
+python3 scripts/parcours.py status ao
+```
+
+`scripts/interface.py` opens a local page (127.0.0.1, token-protected) to follow the runs, read each step's output, answer the pauses and launch the next step: [`docs/interface.md`](docs/interface.md). Measured: a full tender response (7 steps, Claude) cost $0.86 to $1.53 depending on reruns.
 
 Coming next:
 
 ```
-strategic note        decision → deliver
-vendor selection      vendor-scorecard → rfp-draft → offers received → total-cost-analysis → decision
+vendor selection      vendor-scorecard → weightings pause → rfp-draft → offers received → total-cost-analysis → offer-comparison
 pre-send review       critique → fact-check → correction → fact-check → deliver → controle-qualite
 ```
 

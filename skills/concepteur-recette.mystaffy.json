@@ -1,0 +1,29 @@
+{
+  "metier": ["transverse", "fondateur_ceo"],
+  "category": "production",
+  "params": {
+    "type_travail": {
+      "label": "Type de travail récurrent",
+      "type": "enum",
+      "required": false,
+      "options": ["réponse à un tiers", "analyse de document", "décision", "livrable", "autre"],
+      "help": "Nature du travail à transformer en recette, pour orienter le choix des skills."
+    },
+    "inclure_variante": {
+      "label": "Décrire une variante écartée",
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "help": "Mentionner dans la justification la variante la plus crédible écartée et pourquoi."
+    }
+  },
+  "ui": {"simple_fields": ["type_travail"], "advanced_fields": ["inclure_variante"]},
+  "execution": {"supports_async": false, "supports_review_gate": true, "max_input_artifacts": 4, "max_estimated_tokens": 24000},
+  "color": "#4F6D8A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

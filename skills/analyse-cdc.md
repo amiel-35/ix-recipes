@@ -1,7 +1,7 @@
 ---
 id: analyse-cdc
 label: Analyse CDC
-version: 1.1.0
+version: 1.3.0
 description_fr: Analyse un cahier des charges reçu du point de vue du répondant — exigences explicites et implicites, zones floues, contradictions, questions bloquantes avant tout engagement. Déclenche sur "analyse ce cahier des charges", "qu'est-ce qui est flou dans ce CDC", "avant de répondre à cet appel d'offres, qu'est-ce qu'on doit clarifier", "quelles sont les zones à risque de ce cahier des charges". Ne produit ni plan de réponse ni contenu client — utiliser `offre-commerciale` pour rédiger la réponse elle-même.
 description_en: Analyzes a received specification document from the respondent's side — explicit and implicit requirements, grey areas, contradictions, blocking questions before any commitment. Triggers on "analyze this spec document", "what's unclear in this RFP", "before we respond to this tender, what do we need to clarify", "what are the risk areas in this spec". Does not produce a response plan or client-facing content — use `offre-commerciale` to draft the actual response.
 icon: ⊕
@@ -64,6 +64,9 @@ Recommended structure:
 - summary (nature of the need, main stake, estimated complexity)
 - explicit requirements
 - implicit or inferred requirements
+- imposed items, copied verbatim and item by item (objectives, sequences and their sub-topics, exercises, deliverables, tools, documents to submit) — a respondent will have to cover each one by its wording
+- evaluation criteria (with their weighting when stated; "not stated" otherwise — never invent one)
+- submission rules (expected documents, format, page or length limits, language, channel, deadlines for questions and for submission)
 - grey areas and ambiguities
 - identified contradictions
 - main risks

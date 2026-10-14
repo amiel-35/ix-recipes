@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Parcours — suivi</title>
+<style nonce="{{NONCE}}">
+:root {
+  --bg: #f6f6f3; --panel: #ffffff; --ink: #1d1d1b; --muted: #6a6a64; --line: #dcdcd4;
+  --accent: #1f4e8c; --accent-ink: #ffffff; --ok: #1b7a46; --warn: #9a6200; --bad: #b3261e;
+  --ok-bg: #e4f3ea; --warn-bg: #fdf1d8; --bad-bg: #fbe6e4; --info-bg: #e6eef8; --code-bg: #efefe9;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161614; --panel: #201f1d; --ink: #ecebe6; --muted: #a09f97; --line: #3a3935;
+    --accent: #7fb0ee; --accent-ink: #10151c; --ok: #6cc890; --warn: #e5b04d; --bad: #f08a82;
+    --ok-bg: #173324; --warn-bg: #3a2c0e; --bad-bg: #3e1b18; --info-bg: #182638; --code-bg: #2a2926;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; }
+header.bar { display: flex; align-items: center; gap: 16px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+header.bar h1 { font-size: 17px; margin: 0; }
+header.bar a { color: inherit; text-decoration: none; }
+#age { margin-left: auto; font-size: 13px; color: var(--muted); }
+#age.bad { color: var(--bad); font-weight: 600; }
+main { max-width: 1040px; margin: 0 auto; padding: 18px 20px 60px; }
+a { color: var(--accent); }
+h2 { font-size: 18px; margin: 26px 0 10px; }
+h3 { font-size: 15px; margin: 14px 0 6px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
+.panel h2, .panel h3:first-child { margin-top: 0; }
+.banner { border-radius: 8px; padding: 10px 14px; margin: 10px 0; border: 1px solid var(--line); background: var(--info-bg); }
+.banner.ok { background: var(--ok-bg); } .banner.warn { background: var(--warn-bg); } .banner.bad { background: var(--bad-bg); }
+.banner .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.banner .grow { flex: 1; min-width: 200px; }
+.btn { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--bad); border-color: var(--bad); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.small { padding: 2px 8px; font-size: 13px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.badge { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--code-bg); white-space: nowrap; }
+.badge.st-done, .badge.st-completed { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.badge.st-paused, .badge.st-pending-ask { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
+.badge.st-running, .badge.st-active { background: var(--info-bg); color: var(--accent); border-color: var(--accent); }
+.badge.st-failed, .badge.st-stopped { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+.badge.st-skipped, .badge.st-pending { color: var(--muted); }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 13px; color: var(--muted); font-weight: 600; }
+table.list tr.item:hover { background: var(--code-bg); }
+.meta { display: flex; gap: 6px 18px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+details.step { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin: 8px 0; }
+details.step.st-skipped { opacity: .55; }
+details.step > summary { cursor: pointer; padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; list-style-position: inside; }
+details.step > summary .num { color: var(--muted); font-variant-numeric: tabular-nums; }
+details.step > summary .name { font-weight: 600; }
+details.step > summary .push { margin-left: auto; font-size: 13px; color: var(--muted); }
+details.step > .body { padding: 2px 16px 14px; border-top: 1px solid var(--line); }
+details.sub { margin: 8px 0; }
+details.sub > summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+pre { background: var(--code-bg); padding: 10px 12px; border-radius: 6px; overflow: auto; white-space: pre-wrap; word-break: break-word; font: 13px/1.45 ui-monospace, "SF Mono", Menlo, monospace; margin: 6px 0; max-height: 520px; }
+textarea { width: 100%; min-height: 150px; font: 13px/1.45 ui-monospace, "SF Mono", Menlo, monospace; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); resize: vertical; }
+select { font: inherit; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+.md { overflow-wrap: anywhere; }
+.md p { margin: 6px 0; white-space: pre-wrap; }
+.md h3, .md h4, .md h5, .md h6 { margin: 12px 0 4px; }
+.md ul, .md ol { margin: 6px 0; padding-left: 24px; }
+.md code { background: var(--code-bg); padding: 0 4px; border-radius: 3px; font: 13px ui-monospace, "SF Mono", Menlo, monospace; }
+.md pre.code { max-height: 360px; }
+.md pre.code code { background: none; padding: 0; }
+.md table { margin: 8px 0; font-size: 14px; }
+.md th, .md td { border: 1px solid var(--line); }
+.md blockquote { margin: 6px 0; padding: 0 12px; border-left: 3px solid var(--line); color: var(--muted); }
+.md hr { border: 0; border-top: 1px solid var(--line); }
+dl.sheet { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 6px 0; }
+dl.sheet dt { color: var(--muted); font-weight: 600; } dl.sheet dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+ol.plan { padding-left: 22px; margin: 8px 0; }
+label.check { display: block; margin: 4px 0; }
+.err { color: var(--bad); }
+#top { position: sticky; top: 46px; z-index: 4; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <h1><a href="#/" id="home">Parcours</a></h1>
+  <span id="age" role="status" aria-live="polite"></span>
+</header>
+<div id="top-wrap"><div id="top" class="" aria-live="polite"></div></div>
+<main id="app"></main>
+
+<script nonce="{{NONCE}}">
+'use strict';
+
+// ===========================================================================
+// <markdown-renderer>
+// Safe minimal Markdown -> HTML. Engine outputs are untrusted text (they may quote a
+// hostile specification), so EVERY piece of text goes through escapeHtml() first; the only
+// markup in the result is what this function emits itself (p, h3-h6, ul, ol, li, strong, em,
+// code, pre, table, thead, tbody, tr, th, td, blockquote, hr). No raw HTML, no images, no
+// links: "[text](url)" and "![alt](url)" stay literal text.
+//
+// SELF-CHECK (run by hand in the browser console; not testable from Python):
+//   escaped characters : & < > " '   ->   &amp; &lt; &gt; &quot; &#39;
+//   renderMarkdown('<img onerror=alert(1)> & "q" \'s\'')
+//     must return  <p>&lt;img onerror=alert(1)&gt; &amp; &quot;q&quot; &#39;s&#39;</p>
+//   renderMarkdown('[x](javascript:alert(1)) ![y](a.png)')  must contain no <a and no <img
+//   a fenced block holding a script tag   must contain the tag as &lt;script&gt; text only
+// ===========================================================================
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function inlineMd(text) {
+  // escape first, then add our own tags; code spans are cut out so bold/italic never touch them
+  return escapeHtml(text).split(/(`[^`]+`)/).map(function (part, i) {
+    if (i % 2) return '<code>' + part.slice(1, -1) + '</code>';
+    return part.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
+               .replace(/(^|[^*])\*([^*\s][^*]*?)\*(?!\*)/g, '$1<em>$2</em>');
+  }).join('');
+}
+
+function mdTableCells(line) {
+  var t = line.trim().replace(/^\|/, '').replace(/\|$/, '').replace(/\\\|/g, '\u0001');
+  return t.split('|').map(function (c) { return c.replace(/\u0001/g, '|').trim(); });
+}
+
+var MD_FENCE = /^ {0,3}(`{3,}|~{3,})/;
+var MD_HEADING = /^(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$/;
+var MD_HR = /^ {0,3}([-*_])( *\1){2,} *$/;
+var MD_ITEM = /^( *)([-*+]|\d+[.)])[ \t]+(.*)$/;
+var MD_TABLE_SEP = /^ *\|? *:?-+:? *(\| *:?-+:? *)*\|? *$/;
+
+function mdBlockStart(lines, i) {
+  var l = lines[i];
+  return MD_FENCE.test(l) || MD_HEADING.test(l) || MD_HR.test(l) || MD_ITEM.test(l) || /^ {0,3}>/.test(l) ||
+    (l.indexOf('|') >= 0 && i + 1 < lines.length && lines[i + 1].indexOf('-') >= 0 && MD_TABLE_SEP.test(lines[i + 1]));
+}
+
+function mdList(items) {
+  var html = '', stack = [];
+  items.forEach(function (it) {
+    var tag = it.ordered ? 'ol' : 'ul';
+    if (!stack.length) {
+      html += '<' + tag + '><li>'; stack.push({ indent: it.indent, tag: tag });
+    } else if (it.indent > stack[stack.length - 1].indent) {
+      html += '<' + tag + '><li>'; stack.push({ indent: it.indent, tag: tag });
+    } else {
+      while (stack.length > 1 && it.indent < stack[stack.length - 1].indent) html += '</li></' + stack.pop().tag + '>';
+      html += '</li><li>';
+    }
+    html += inlineMd(it.text);
+  });
+  while (stack.length) html += '</li></' + stack.pop().tag + '>';
+  return html;
+}
+
+function renderMarkdown(text) {
+  var lines = String(text).replace(/\r\n?/g, '\n').split('\n');
+  var out = [], i = 0, m;
+  while (i < lines.length) {
+    var line = lines[i];
+    if (!line.trim()) { i++; continue; }
+    if ((m = MD_FENCE.exec(line))) {                       // fenced code block
+      var closer = new RegExp('^ {0,3}' + (m[1][0] === '`' ? '`' : '~') + '{' + m[1].length + ',}[ \\t]*$'), body = [];
+      for (i++; i < lines.length && !closer.test(lines[i]); i++) body.push(lines[i]);
+      i++;
+      out.push('<pre class="code"><code>' + escapeHtml(body.join('\n')) + '</code></pre>');
+      continue;
+    }
+    if ((m = MD_HEADING.exec(line))) {                     // headings: # -> h3 (the page owns h1/h2)
+      var level = Math.min(6, m[1].length + 2);
+      out.push('<h' + level + '>' + inlineMd(m[2]) + '</h' + level + '>');
+      i++; continue;
+    }
+    if (MD_HR.test(line)) { out.push('<hr>'); i++; continue; }
+    if (line.indexOf('|') >= 0 && i + 1 < lines.length && lines[i + 1].indexOf('-') >= 0 && MD_TABLE_SEP.test(lines[i + 1])) {
+      var head = mdTableCells(line), rows = [];             // table
+      for (i += 2; i < lines.length && lines[i].trim() && lines[i].indexOf('|') >= 0; i++) rows.push(mdTableCells(lines[i]));
+      out.push('<table><thead><tr>' + head.map(function (c) { return '<th>' + inlineMd(c) + '</th>'; }).join('') +
+        '</tr></thead><tbody>' + rows.map(function (r) {
+          return '<tr>' + r.map(function (c) { return '<td>' + inlineMd(c) + '</td>'; }).join('') + '</tr>';
+        }).join('') + '</tbody></table>');
+      continue;
+    }
+    if (/^ {0,3}>/.test(line)) {                           // blockquote
+      var quoted = [];
+      for (; i < lines.length && /^ {0,3}>/.test(lines[i]); i++) quoted.push(lines[i].replace(/^ {0,3}> ?/, ''));
+      out.push('<blockquote>' + renderMarkdown(quoted.join('\n')) + '</blockquote>');
+      continue;
+    }
+    if (MD_ITEM.test(line)) {                              // list (nested by indentation)
+      var items = [];
+      while (i < lines.length) {
+        var im = MD_ITEM.exec(lines[i]);
+        if (im && items.length && im[1].length === items[0].indent && /\d/.test(im[2]) !== items[0].ordered) break;   // ul/ol switch: new list
+        if (im) { items.push({ indent: im[1].length, ordered: /\d/.test(im[2]), text: im[3] }); i++; continue; }
+        if (!lines[i].trim()) {                            // a blank line only continues a list if an item follows
+          var k = i + 1; while (k < lines.length && !lines[k].trim()) k++;
+          if (k < lines.length && MD_ITEM.test(lines[k])) { i = k; continue; }
+          break;
+        }
+        if (/^ {2,}\S/.test(lines[i]) && !mdBlockStart(lines, i)) { items[items.length - 1].text += ' ' + lines[i].trim(); i++; continue; }
+        break;
+      }
+      out.push(mdList(items));
+      continue;
+    }
+    var para = [line];                                      // paragraph
+    for (i++; i < lines.length && lines[i].trim() && !mdBlockStart(lines, i); i++) para.push(lines[i]);
+    out.push('<p>' + inlineMd(para.join('\n')) + '</p>');
+  }
+  return out.join('\n');
+}
+
+// Falls back to an escaped <pre> if the renderer ever throws.
+function safeRender(text) {
+  try { return renderMarkdown(text); } catch (e) { return '<pre>' + escapeHtml(text) + '</pre>'; }
+}
+// </markdown-renderer>
+
+// ===========================================================================
+// Page
+// ===========================================================================
+var TOKEN_KEY = 'parcours-ui:token';
+var S = {
+  token: null, route: { view: 'list' }, list: null, p: null, sig: '', lastOk: 0, fails: 0, polling: false,
+  authError: false, notFound: false, busy: false, error: '', notices: {}, open: new Set(),
+  files: new Map(), plan: null, planSeq: 0, planEngine: '', ctx: {}, answers: {}, chooseSel: {}, log: null,
+  copied: '', down: false, deferred: false, wasOffline: false
+};
+
+function $(sel) { return document.querySelector(sel); }
+
+function append(el, kids) {
+  kids.forEach(function (k) {
+    if (k === null || k === undefined || k === false) return;
+    if (Array.isArray(k)) append(el, k);
+    else el.appendChild(k instanceof Node ? k : document.createTextNode(String(k)));
+  });
+}
+
+// DOM builder: text always goes through text nodes, never innerHTML.
+function h(tag, attrs) {
+  var el = document.createElement(tag);
+  Object.keys(attrs || {}).forEach(function (k) {
+    var v = attrs[k];
+    if (v === false || v === null || v === undefined) return;
+    if (k === 'class') el.className = v;
+    else if (k.indexOf('on') === 0) el.addEventListener(k.slice(2), v);
+    else if (k === 'value' || k === 'checked' || k === 'disabled' || k === 'open' || k === 'selected') el[k] = v;
+    else el.setAttribute(k, v === true ? '' : String(v));
+  });
+  append(el, Array.prototype.slice.call(arguments, 2));
+  return el;
+}
+
+function mdBox(text) {
+  var box = h('div', { class: 'md' });
+  box.innerHTML = safeRender(text);   // the only innerHTML of the page: output of the safe renderer
+  return box;
+}
+
+// ---- storage (may be unavailable: private mode, blocked)
+function store(kind) { try { return window[kind]; } catch (e) { return null; } }
+function saved(kind, key) { try { return store(kind).getItem(key); } catch (e) { return null; } }
+function save(kind, key, value) { try { if (value === null) store(kind).removeItem(key); else store(kind).setItem(key, value); } catch (e) { /* no storage */ } }
+
+// ---- labels and formats
+var STATUS_FR = { active: 'en cours', completed: 'terminé', stopped: 'arrêté (No-go)' };
+var STEP_FR = { pending: 'à faire', running: 'en cours', done: 'terminé', paused: 'en pause', skipped: 'écartée', failed: 'échec' };
+var PAUSE_FR = { validate: 'validation', answers: 'réponses', choose: 'choix', none: '' };
+// The recipe's model applies to Claude only; Codex, agy and Vibe use their own default model.
+function modelLabel(engine, model) { return (engine === 'claude' || engine === 'fake') ? (model || 'par défaut') : 'modèle par défaut du moteur'; }
+var ENGINE_FR = { claude: 'Claude Code', codex: 'Codex', agy: 'Antigravity (agy)', vibe: 'Vibe (non testé)', fake: 'fake (dev)' };
+
+function usd(x) { x = Number(x) || 0; return (x > 0 && x < 0.1 ? x.toFixed(4) : x.toFixed(2)).replace('.', ',') + ' $'; }
+function when(iso) { if (!iso) return ''; var d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString('fr-FR'); }
+function plural(n, one, many) { return n + ' ' + (n > 1 ? many : one); }
+function kb(n) { return n >= 10000 ? Math.round(n / 1000) + ' k' : String(n); }
+
+function costLine(x) {
+  var calls = x.calls || {}, sub = (calls.codex || 0) + (calls.agy || 0) + (calls.vibe || 0), parts = [usd(x.cost_usd) + ' Claude'];
+  if (sub) parts.push(plural(sub, 'appel', 'appels') + ' Codex/agy');
+  if (calls.fake) parts.push(plural(calls.fake, 'appel', 'appels') + ' fake');
+  return parts.join(' + ');
+}
+function callsLine(calls) {
+  var keys = Object.keys(calls || {}).sort();
+  return keys.length ? keys.map(function (k) { return k + ' ×' + calls[k]; }).join(', ') : 'aucun appel';
+}
+function badge(text, cls) { return h('span', { class: 'badge ' + (cls || '') }, text); }
+function offline() { return S.fails >= 2 || (S.lastOk > 0 && Date.now() - S.lastOk > 12000); }
+function canAct() { return !S.busy && !offline() && !(S.p && S.p.locked); }
+
+// ---- API
+function ApiFail(status, code, message) { this.status = status; this.code = code; this.message = message; }
+
+async function api(method, path, body, timeout) {
+  var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, timeout || 15000);
+  var headers = { 'X-Parcours-Token': S.token || '' };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  try {
+    var res = await fetch(path, {
+      method: method, headers: headers, signal: ctl.signal, cache: 'no-store', credentials: 'omit',
+      referrerPolicy: 'no-referrer', body: body === undefined ? undefined : JSON.stringify(body)
+    });
+    var data = null;
+    try { data = await res.json(); } catch (e) { data = null; }
+    if (!res.ok) throw new ApiFail(res.status, data && data.error, (data && data.message) || ('Erreur ' + res.status));
+    return data;
+  } finally { clearTimeout(timer); }
+}
+
+// ---- token: from the URL fragment (never sent to the server), then kept for the tab only
+function initToken() {
+  var m = /(?:^#|&)t=([A-Za-z0-9_-]+)/.exec(location.hash);
+  if (m) {
+    S.token = m[1];
+    save('sessionStorage', TOKEN_KEY, S.token);
+    history.replaceState(null, '', location.pathname + location.search);   // remove the token from the address bar
+  } else {
+    S.token = saved('sessionStorage', TOKEN_KEY);
+  }
+}
+
+function parseRoute() {
+  var m = /^#\/p\/([a-z0-9][a-z0-9-]*)$/.exec(location.hash);
+  return m ? { view: 'parcours', slug: m[1] } : { view: 'list' };
+}
+
+// ---- polling
+async function poll() {
+  if (S.polling || !S.token) return;
+  S.polling = true;
+  var route = S.route;
+  try {
+    if (route.view === 'list') {
+      var list = await api('GET', '/api/parcours', undefined, 8000);
+      if (route !== S.route) return;
+      S.list = list;
+      changed(JSON.stringify(list));
+    } else {
+      var p = await api('GET', '/api/parcours/' + route.slug, undefined, 15000);
+      if (route !== S.route) return;
+      var moved = !S.p || S.p.fingerprint !== p.fingerprint;
+      S.p = p; S.notFound = false;
+      if (p.locked || S.open.has('log')) await loadLog(route.slug);
+      if (S.plan && activeKind(p) !== 'run') dropPlan();     // the pause the plan led to has moved on
+      if (S.plan && S.plan.slug === route.slug && moved && !S.plan.loading) loadPlan();
+      changed(JSON.stringify([p, S.log]));
+    }
+    S.lastOk = Date.now(); S.fails = 0; S.authError = false;
+  } catch (e) {
+    if (e instanceof ApiFail && e.status === 403) { S.authError = true; S.fails = 0; }
+    else if (e instanceof ApiFail && e.status === 404 && route.view === 'parcours') { S.notFound = true; S.lastOk = Date.now(); S.fails = 0; }
+    else S.fails++;
+    changed('err:' + S.fails + S.authError + S.notFound);
+  } finally { S.polling = false; }
+  updateAge();
+}
+
+function changed(sig) { if (sig !== S.sig) { S.sig = sig; render(); } }
+async function refreshNow() { while (S.polling) await new Promise(function (r) { setTimeout(r, 50); }); S.sig = ''; await poll(); }
+
+async function loadLog(slug) {
+  try { S.log = await api('GET', '/api/parcours/' + slug + '/log', undefined, 8000); } catch (e) { /* the state poll reports problems */ }
+}
+
+function updateAge() {
+  var el = $('#age'), off = offline();
+  if (S.lastOk) {
+    var age = Math.max(0, Math.round((Date.now() - S.lastOk) / 1000));
+    el.textContent = off ? 'serveur injoignable (dernière lecture il y a ' + age + ' s)' : 'lu il y a ' + age + ' s';
+  } else { el.textContent = off ? 'serveur injoignable' : ''; }
+  el.className = off ? 'bad' : '';
+  if (off !== S.wasOffline) { S.wasOffline = off; render(); }
+}
+
+// ---- render scheduling: never replace the page under a click or a text field
+function isEditing() {
+  var a = document.activeElement;
+  return !!a && (a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || (a.tagName === 'INPUT' && a.type === 'text'));
+}
+function flush() { if (S.deferred) render(); }
+
+function render() {
+  if (S.down || isEditing()) { S.deferred = true; return; }
+  S.deferred = false;
+  var view;
+  if (!S.token) view = viewNoToken();
+  else if (S.route.view === 'list') view = viewList();
+  else view = viewParcours();
+  $('#app').replaceChildren(view);
+  renderTop();
+  wantFiles();
+}
+
+function renderTop() {
+  var top = $('#top'), msgs = [];
+  if (S.authError) msgs.push(h('div', { class: 'banner bad' }, 'Jeton refusé par le serveur. Rouvrez l’adresse affichée au lancement de interface.py (elle contient le jeton après « #t= »).'));
+  if (offline()) msgs.push(h('div', { class: 'banner bad' }, 'Serveur injoignable : les données affichées ne sont plus à jour et les actions sont suspendues. Une étape lancée continue sans le serveur.'));
+  if (S.error) msgs.push(h('div', { class: 'banner bad', role: 'alert' }, h('div', { class: 'row' },
+    h('div', { class: 'grow' }, S.error), h('button', { class: 'btn small', type: 'button', onclick: function () { S.error = ''; renderTop(); } }, 'Fermer'))));
+  top.replaceChildren.apply(top, msgs);
+}
+
+// ===========================================================================
+// Views
+// ===========================================================================
+function viewNoToken() {
+  return h('div', { class: 'panel' }, h('h2', null, 'Jeton manquant'),
+    h('p', null, 'Cette page se lit avec l’adresse affichée au lancement de ', h('code', null, 'scripts/interface.py'),
+      ' (elle se termine par ', h('code', null, '#t=…'), '). Le jeton n’est pas conservé après la fermeture de l’onglet.'));
+}
+
+function viewList() {
+  var d = S.list;
+  if (!d) return h('p', { class: 'muted' }, 'Chargement…');
+  var rows = d.parcours.map(function (x) {
+    return h('tr', { class: 'item' },
+      h('td', null, h('a', { href: '#/p/' + x.slug }, x.slug), h('div', { class: 'muted small' }, x.recipe + ' ' + (x.recipe_version || ''))),
+      h('td', null, badge(STATUS_FR[x.status] || x.status, 'st-' + x.status), x.locked ? [' ', badge('étape en cours', 'st-running')] : null),
+      h('td', null, x.pending ? pendingLabel(x.pending) : (x.status === 'active' ? h('span', { class: 'muted' }, 'prêt à lancer') : '')),
+      h('td', null, x.steps_done + ' / ' + x.steps_total),
+      h('td', null, costLine(x), h('div', { class: 'muted small' }, callsLine(x.calls))),
+      h('td', { class: 'small' }, when(x.created)));
+  });
+  return h('div', null,
+    h('h2', null, 'Parcours'),
+    h('p', { class: 'muted small' }, 'Dossier : ', h('code', null, d.parcours_dir)),
+    d.parcours.length ? h('div', { class: 'panel' }, h('table', { class: 'list' },
+      h('thead', null, h('tr', null, ['Parcours', 'Statut', 'En attente', 'Étapes', 'Coût et appels', 'Créé'].map(function (t) { return h('th', null, t); }))),
+      h('tbody', null, rows)))
+      : h('div', { class: 'panel' }, h('p', null, 'Aucun parcours dans ce dossier.'),
+        h('p', { class: 'muted small' }, 'La création se fait en ligne de commande : ', h('code', null, 'python3 scripts/parcours.py new <recette> --input demande.md'))),
+    d.without_state.length ? h('div', { class: 'panel' }, h('h3', null, 'Dossiers sans state.json'),
+      h('p', { class: 'muted small' }, 'Création interrompue : rien à suivre ici, le dossier peut être supprimé à la main.'),
+      h('ul', null, d.without_state.map(function (n) { return h('li', null, h('code', null, n)); }))) : null,
+    d.broken.length ? h('div', { class: 'panel' }, h('h3', null, 'Parcours illisibles'),
+      h('ul', null, d.broken.map(function (b) { return h('li', null, h('code', null, b.slug), ' — ', b.message); }))) : null);
+}
+
+function pendingLabel(pending) {
+  var what = { validate: 'validation', answers: 'réponses du tiers', choose: 'choix d’étapes optionnelles' }[pending.type] || pending.type;
+  return badge(what + (pending.step ? ' · ' + pending.step : ''), 'st-pending-ask');
+}
+
+function stepOf(p, id) { return p.steps.filter(function (s) { return s.id === id; })[0]; }
+
+function viewParcours() {
+  var p = S.p;
+  if (S.notFound) return h('div', { class: 'panel' }, h('p', null, 'Parcours introuvable : ', h('code', null, S.route.slug)), h('a', { href: '#/' }, 'Retour à la liste'));
+  if (!p || p.slug !== S.route.slug) return h('p', { class: 'muted' }, 'Chargement…');
+  return h('div', null, headerBlock(p), bannersBlock(p), actionBlock(p), contextBlockIfReadOnly(p), h('h2', null, 'Étapes'), timelineBlock(p));
+}
+
+function headerBlock(p) {
+  return h('div', null,
+    h('p', { class: 'small' }, h('a', { href: '#/' }, '← Tous les parcours')),
+    h('h2', null, p.slug, ' ', badge(STATUS_FR[p.status] || p.status, 'st-' + p.status)),
+    h('div', { class: 'meta' },
+      h('span', null, 'Recette ', p.recipe, ' ', p.recipe_version),
+      h('span', null, 'Moteur par défaut : ', ENGINE_FR[p.engine] || p.engine),
+      h('span', null, 'Coût : ', costLine(p)),
+      h('span', null, 'Appels : ', callsLine(p.calls)),
+      h('span', null, 'Créé : ', when(p.created)),
+      h('span', null, 'Fiche de contexte : ', p.context_sheet === null ? 'pas encore produite' : (p.context_validated ? 'validée' : 'non validée'))));
+}
+
+function bannersBlock(p) {
+  var out = [];
+  if (p.recipe_error) out.push(h('div', { class: 'banner bad' }, 'Ce parcours ne correspond plus à la recette : ' + p.recipe_error));
+  (S.notices[p.slug] || []).forEach(function (n, idx) {
+    var text = n.kind === 'context_stale'
+      ? 'Fiche corrigée : ' + plural(n.steps.length, 'étape a', 'étapes ont') + ' déjà reçu l’ancienne version (' + n.steps.join(', ') + '). Utilisez « Refaire cette étape » sur la première pour les rejouer.'
+      : 'Étape refaite. Remises en file : ' + (n.steps.join(', ') || 'aucune') + '. Lancez la suite pour les rejouer.';
+    out.push(h('div', { class: 'banner warn' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, text),
+      h('button', { class: 'btn small', type: 'button', onclick: function () { S.notices[p.slug].splice(idx, 1); render(); } }, 'Fermer'))));
+  });
+  if (p.status === 'completed') {
+    out.push(h('div', { class: 'banner ok' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, 'Parcours terminé.' + (p.final_output ? ' Sortie finale : ' + p.final_output + '.' : '')),
+      p.final_output ? h('button', { class: 'btn small', type: 'button', onclick: function () { openFinal(p); } }, 'Voir la sortie finale') : null)));
+  }
+  if (p.status === 'stopped') out.push(h('div', { class: 'banner bad' }, 'Parcours arrêté (No-go). Il n’y a plus rien à lancer.'));
+  return out;
+}
+
+function openFinal(p) {
+  var step = p.steps.filter(function (s) { return s.output === p.final_output; })[0];
+  if (step) { S.open.add('step:' + step.id); S.open.add('out:' + step.output); render(); }
+}
+
+// ---- action area: the one thing the human can do now
+function stuckSteps(p) { return p.steps.filter(function (s) { return s.status === 'failed' || s.status === 'running'; }); }
+
+// What the human can do now: one of recipe_error, inactive, running, stuck, validate, answers, choose, run.
+function activeKind(p) {
+  if (p.recipe_error) return 'recipe_error';
+  if (p.status !== 'active') return 'inactive';
+  if (p.locked) return 'running';
+  if (stuckSteps(p).length) return 'stuck';
+  return p.pending ? p.pending.type : 'run';
+}
+
+function actionBlock(p) {
+  switch (activeKind(p)) {
+    case 'running': return runningPanel(p);
+    case 'stuck': return stuckPanel(p, stuckSteps(p));
+    case 'validate': return validatePanel(p);
+    case 'answers': return answersPanel(p);
+    case 'choose': return choosePanel(p);
+    case 'run': return runPanel(p);
+    default: return null;
+  }
+}
+
+function runningPanel(p) {
+  var running = p.steps.filter(function (s) { return s.status === 'running'; })[0];
+  return h('div', { class: 'banner' }, h('div', { class: 'row' },
+    h('div', { class: 'grow' }, h('strong', null, 'Étape en cours'), running ? ' : « ' + running.id + ' » (' + (ENGINE_FR[running.engine] || running.engine) + '). ' : '. ',
+      'La page se met à jour toute seule ; les autres actions sont désactivées tant que l’étape tourne.'),
+    h('button', { class: 'btn danger', type: 'button', disabled: S.busy || offline(), onclick: stopRun }, 'Arrêter l’étape en cours')),
+    logBlock());
+}
+
+function logBlock() {
+  return h('details', { class: 'sub', open: S.open.has('log'), 'data-key': 'log' },
+    h('summary', null, 'Journal du dernier lancement (.next.log)'),
+    h('pre', null, S.log && S.log.exists ? S.log.log : (S.log ? '(aucun journal)' : 'Chargement…')));
+}
+
+async function stopRun() {
+  if (!confirm('Arrêter l’étape en cours ?\n\nL’appel au moteur est interrompu ; le coût déjà engagé reste dû. L’étape sera reprise avec « Réessayer ».')) return;
+  await doAction('stop', {});
+}
+
+function stuckPanel(p, stuck) {
+  return h('div', { class: 'panel' }, h('h2', null, 'Une étape est à reprendre'),
+    stuck.map(function (s) {
+      return h('div', null, h('p', null, h('strong', null, '« ' + s.id + ' »'), ' : ',
+        s.status === 'failed' ? 'échec.' : 'restée « en cours » sans qu’aucun processus ne tourne (arrêt brutal ou étape arrêtée).'),
+        s.error ? h('pre', null, s.error) : null,
+        manualHandoff(p, s));
+    }),
+    h('div', { class: 'actions' },
+      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: function () { doAction('retry', {}); } }, 'Réessayer'),
+      h('span', { class: 'muted small' }, 'Reprend l’étape : une sortie déjà écrite est relue sans nouvel appel au moteur. Pour un appel neuf, ouvrez l’étape et choisissez « Refaire cette étape ».')));
+}
+
+function manualHandoff(p, s) {
+  var cmd = 'python3 scripts/parcours.py handoff ' + p.slug + ' ' + s.id + ' --file champs.md' + (p.parcours_dir ? ' --parcours-dir ' + p.parcours_dir : '');
+  return h('details', { class: 'sub', open: S.open.has('hand:' + s.id), 'data-key': 'hand:' + s.id },
+    h('summary', null, 'Fournir les champs à la main'),
+    h('p', { class: 'small muted' }, 'Hors de la page pour l’instant : préparez un fichier avec les sections du HANDOFF, puis lancez dans un terminal.'),
+    h('pre', null, cmd));
+}
+
+// ---- pause: validate (also the blocking signal)
+function validatePanel(p) {
+  var step = stepOf(p, p.pending.step);
+  var editable = p.context_sheet !== null;
+  var draft = editable ? ctxDraft(p) : null;
+  var dirty = draft && draft.text !== draft.base;
+  return h('div', { class: 'panel' },
+    h('h2', null, 'À valider : étape « ' + p.pending.step + ' »'),
+    step && step.blocking ? h('div', { class: 'banner bad' }, h('strong', null, 'Blocage signalé par l’étape.'), mdBox(step.blocking),
+      h('div', { class: 'small' }, 'Vous pouvez valider quand même, corriger la fiche, ou arrêter le parcours (No-go).')) : null,
+    step && step.summary ? [h('h3', null, 'Résumé'), mdBox(step.summary)] : null,
+    h('p', { class: 'muted small' }, 'La sortie complète et le message reçu par l’étape sont dans la frise ci-dessous.'),
+    editable ? contextEditor(p, draft) : null,
+    h('div', { class: 'actions' },
+      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: function () { validatePlain(p, dirty); } }, 'Valider'),
+      editable ? h('button', { class: 'btn', type: 'button', 'data-dirty-only': 'ctx', disabled: !canAct() || !dirty, onclick: function () { validateWithContext(p); } }, 'Valider avec la fiche corrigée') : null,
+      h('button', { class: 'btn danger', type: 'button', disabled: !canAct(), onclick: function () { stopParcours(p); } }, 'Arrêter le parcours (No-go)')));
+}
+
+function validatePlain(p, dirty) {
+  if (dirty && !confirm('La fiche modifiée dans la page ne sera pas enregistrée. Valider quand même ?')) return;
+  doAction('validate', {});
+}
+function stopParcours(p) {
+  if (!confirm('Arrêter le parcours (No-go) ? Il ne pourra plus être relancé.')) return;
+  doAction('validate', { stop: true });
+}
+function parseSheet(p) {
+  var d = ctxDraft(p), sheet;
+  try { sheet = JSON.parse(d.text); } catch (e) { S.error = 'Fiche de contexte : JSON illisible (' + e.message + ').'; renderTop(); return null; }
+  if (!sheet || typeof sheet !== 'object' || Array.isArray(sheet)) { S.error = 'Fiche de contexte : un objet JSON est attendu.'; renderTop(); return null; }
+  return sheet;
+}
+async function validateWithContext(p) {
+  var sheet = parseSheet(p);
+  if (sheet && await doAction('validate', { context: sheet })) delete S.ctx[p.slug];
+}
+async function saveSheetOnly(p) {
+  var sheet = parseSheet(p);
+  if (sheet && await doAction('validate', { context: sheet })) delete S.ctx[p.slug];
+}
+
+// context sheet: key/value view, or an editor (JSON) at the pauses where the runner accepts a correction
+function ctxDraft(p) {
+  var base = JSON.stringify(p.context_sheet, null, 2), d = S.ctx[p.slug];
+  if (!d || (d.base !== base && d.text === d.base)) d = S.ctx[p.slug] = { base: base, text: base };
+  else d.base = base;   // a pending edit is kept, "modified" is judged against the sheet as it is now
+  return d;
+}
+
+function contextEditor(p, draft) {
+  var area = h('textarea', { spellcheck: 'false', 'aria-label': 'Fiche de contexte (JSON)', value: draft.text });
+  area.addEventListener('input', function () {
+    draft.text = area.value;
+    document.querySelectorAll('button[data-dirty-only]').forEach(function (b) { b.disabled = !canAct() || draft.text === draft.base; });
+  });
+  return h('div', null, h('h3', null, 'Fiche de contexte (modifiable)'),
+    h('p', { class: 'small muted' }, 'JSON : une clé par rubrique. Les étapes suivantes ne reçoivent que cette fiche, jamais la demande brute. L’ancienne version est conservée (00-context.vN.md).'),
+    area);
+}
+
+function sheetView(p) {
+  var sheet = p.context_sheet;
+  return h('dl', { class: 'sheet' }, Object.keys(sheet).map(function (k) {
+    var v = typeof sheet[k] === 'string' ? sheet[k] : JSON.stringify(sheet[k], null, 2);
+    return [h('dt', null, k), h('dd', null, v)];
+  }));
+}
+
+function contextBlockIfReadOnly(p) {
+  if (p.context_sheet === null) return null;
+  var kind = activeKind(p);
+  if (kind === 'validate' || (kind === 'answers' && sheetStep(p))) return null;   // the panel holds the editor
+  return h('details', { class: 'sub panel', open: S.open.has('sheet'), 'data-key': 'sheet' },
+    h('summary', null, 'Fiche de contexte ' + (p.context_validated ? '(validée)' : '(non validée)')), sheetView(p));
+}
+function sheetStep(p) { var s = p.pending && stepOf(p, p.pending.step); return !!(s && s.produces_context_sheet); }
+
+// ---- pause: answers
+function answersPanel(p) {
+  var step = stepOf(p, p.pending.step) || { handoff: null }, slug = p.slug;
+  var draftKey = 'parcours-ui:draft:' + slug;
+  if (S.answers[slug] === undefined) S.answers[slug] = saved('localStorage', draftKey) || '';
+  var area = h('textarea', { 'aria-label': 'Réponses du tiers', placeholder: 'Collez ici les réponses (en une ou plusieurs fois : le brouillon est conservé dans ce navigateur).', value: S.answers[slug] });
+  var note = h('span', { class: 'muted small' }, S.answers[slug] ? 'Brouillon conservé dans ce navigateur, pas encore envoyé.' : '');
+  var timer = null;
+  area.addEventListener('input', function () {
+    S.answers[slug] = area.value;
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      save('localStorage', draftKey, area.value ? area.value : null);
+      note.textContent = area.value ? 'Brouillon enregistré dans ce navigateur, pas encore envoyé.' : '';
+    }, 300);
+  });
+  var sheetEditable = sheetStep(p) && p.context_sheet !== null;
+  var draft = sheetEditable ? ctxDraft(p) : null;
+  var fields = step && step.handoff ? Object.keys(step.handoff) : [];
+  return h('div', { class: 'panel' },
+    h('h2', null, 'Réponses attendues : étape « ' + p.pending.step + ' »'),
+    step && step.summary ? [h('h3', null, 'Résumé'), mdBox(step.summary)] : null,
+    h('p', null, 'Les questions à envoyer sont dans la sortie de l’étape.'),
+    h('div', { class: 'actions' },
+      step.output ? h('button', { class: 'btn', type: 'button', onclick: function () { copyFile(step.output, 'out'); } }, S.copied === 'out' ? 'Copié ✓' : 'Copier les questions') : null,
+      fields.map(function (f) {
+        return h('button', { class: 'btn small', type: 'button', onclick: function () { copyText(step.handoff[f]).then(function () { flash('f:' + f); }); } },
+          S.copied === 'f:' + f ? 'Copié ✓' : 'Copier seulement « ' + f + ' »');
+      })),
+    sheetEditable ? contextEditor(p, draft) : null,
+    sheetEditable ? h('div', { class: 'actions' }, h('button', { class: 'btn', type: 'button', 'data-dirty-only': 'ctx', disabled: !canAct() || draft.text === draft.base, onclick: function () { saveSheetOnly(p); } },
+      'Enregistrer la fiche corrigée'), h('span', { class: 'muted small' }, 'Sans lever la pause. Enregistrer les réponses valide aussi la fiche.')) : null,
+    h('h3', null, 'Réponses du tiers'), area, note,
+    h('div', { class: 'actions' },
+      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: function () { sendAnswers(p, draftKey); } }, 'Enregistrer les réponses'),
+      h('button', { class: 'btn', type: 'button', disabled: !canAct(), onclick: function () { noAnswers(p, draftKey); } }, 'Continuer sans réponses')));
+}
+
+async function sendAnswers(p, draftKey) {
+  var text = S.answers[p.slug] || '';
+  if (!text.trim()) { S.error = 'Les réponses sont vides : collez le texte, ou choisissez « Continuer sans réponses ».'; renderTop(); return; }
+  if (await doAction('answer', { text: text })) { delete S.answers[p.slug]; save('localStorage', draftKey, null); }
+}
+async function noAnswers(p, draftKey) {
+  if (!confirm('Continuer sans réponses ? Les points ouverts restent des hypothèses pour la suite.' + (S.answers[p.slug] ? '\n\nLe brouillon de réponses de ce navigateur sera abandonné.' : ''))) return;
+  if (await doAction('answer', { none: true })) { delete S.answers[p.slug]; save('localStorage', draftKey, null); }
+}
+
+async function copyFile(name, tag) {
+  try { var d = await api('GET', '/api/parcours/' + S.route.slug + '/file/' + encodeURIComponent(name)); await copyText(d.text); flash(tag); }
+  catch (e) { S.error = 'Copie impossible : ' + e.message; renderTop(); }
+}
+function flash(tag) { S.copied = tag; render(); setTimeout(function () { S.copied = ''; render(); }, 2200); }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return; } catch (e) { /* fall through to the old way */ }
+  var area = h('textarea', { 'aria-hidden': 'true' });
+  area.value = text; document.body.appendChild(area); area.select();
+  try { document.execCommand('copy'); } finally { area.remove(); }
+}
+
+// ---- pause: choose
+function choosePanel(p) {
+  var group = p.pending.steps || [], sel = S.chooseSel[p.slug] || (S.chooseSel[p.slug] = new Set());
+  var runBtn = h('button', { class: 'btn primary', type: 'button', disabled: !canAct() || !sel.size, onclick: function () { doAction('choose', { run: group.filter(function (g) { return sel.has(g); }) }); } }, 'Jouer les étapes cochées');
+  return h('div', { class: 'panel' }, h('h2', null, 'Étapes optionnelles'),
+    h('p', null, 'Ces étapes ne tournent que si vous les choisissez.'),
+    group.map(function (id) {
+      var s = stepOf(p, id);
+      return h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: sel.has(id), onchange: function (e) {
+        if (e.target.checked) sel.add(id); else sel.delete(id);
+        runBtn.disabled = !canAct() || !sel.size;
+      } }), ' ', h('strong', null, id), s ? h('span', { class: 'muted small' }, ' — ' + s.skill.ref + (s.model ? ', modèle ' + s.model : '')) : null);
+    }),
+    h('div', { class: 'actions' }, runBtn,
+      h('button', { class: 'btn', type: 'button', disabled: !canAct(), onclick: function () { doAction('choose', { skip: true }); } }, 'Les écarter')));
+}
+
+// ---- run the next steps (plan, then confirmation)
+function runPanel(p) {
+  var engines = (p.engines || []).slice();
+  if (engines.indexOf(p.engine) < 0) engines.unshift(p.engine);
+  var chosen = S.planEngine || p.engine;
+  var select = h('select', { 'aria-label': 'Moteur', onchange: function (e) { S.planEngine = e.target.value; e.target.blur(); if (S.plan) loadPlan(); else render(); } },
+    engines.map(function (e) { return h('option', { value: e, selected: e === chosen }, ENGINE_FR[e] || e); }));
+  var plan = S.plan && S.plan.slug === p.slug ? S.plan : null;
+  return h('div', { class: 'panel' }, h('h2', null, 'Lancer la suite'),
+    h('p', null, 'Moteur : ', select, ' ', h('span', { class: 'muted small' }, chosen !== p.engine
+      ? 'Ce choix deviendra le moteur par défaut du parcours (aujourd’hui : ' + (ENGINE_FR[p.engine] || p.engine) + ').'
+      : 'Changer de moteur change aussi le moteur par défaut de ce parcours.')),
+    plan ? planView(p, plan) : h('div', { class: 'actions' },
+      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: function () { S.planEngine = chosen; loadPlan(); } }, 'Lancer la suite…'),
+      h('span', { class: 'muted small' }, 'Affiche le plan et le coût avant de dépenser quoi que ce soit.')));
+}
+
+function dropPlan() { S.planSeq++; S.plan = null; }   // an answer still on its way is then ignored
+
+async function loadPlan() {
+  var slug = S.route.slug, engine = S.planEngine, seq = ++S.planSeq;
+  S.plan = { slug: slug, loading: true, data: S.plan && S.plan.slug === slug ? S.plan.data : null };
+  render();
+  var next;
+  try {
+    var q = engine && S.p && engine !== S.p.engine ? '?engine=' + encodeURIComponent(engine) : '';
+    next = { slug: slug, data: await api('GET', '/api/parcours/' + slug + '/plan' + q) };
+  } catch (e) { next = { slug: slug, error: e.message }; }
+  if (seq !== S.planSeq) return;
+  S.plan = next;
+  render();
+}
+
+function planView(p, plan) {
+  if (plan.loading) return h('p', { class: 'muted' }, 'Calcul du plan…');
+  if (plan.error) return h('div', null, h('p', { class: 'err' }, plan.error), cancelPlanButton());
+  var d = plan.data;
+  if (!d.runnable) return h('div', null, h('p', null, d.message || 'Rien à lancer.'), cancelPlanButton());
+  var last = d.steps[d.steps.length - 1];
+  return h('div', null,
+    h('h3', null, 'Plan : ' + plural(d.steps.length, 'étape', 'étapes') + ' jusqu’à la prochaine pause'),
+    h('ol', { class: 'plan' }, d.steps.map(function (r) {
+      return h('li', null, h('strong', null, r.id), ' — ', ENGINE_FR[r.engine] || r.engine, ', ', modelLabel(r.engine, r.model), ', entrée ≈ ', kb(r.chars), ' caractères',
+        r.unknown_fields ? ' (+ ' + plural(r.unknown_fields, 'champ', 'champs') + ' à venir, non comptés)' : '');
+    })),
+    h('p', { class: 'small muted' }, 'Prochaine pause : ' + (last && PAUSE_FR[last.pause] ? PAUSE_FR[last.pause] + ' après « ' + last.id + ' »' : 'fin du parcours') + '.'),
+    d.claude_steps ? h('div', { class: 'banner warn' }, h('strong', null, 'Plafond engagé : ' + usd(d.ceiling_usd)),
+      ' (' + plural(d.claude_steps, 'étape', 'étapes') + ' Claude × ' + usd(d.max_budget_usd) + ' par appel × 2 pour la relance éventuelle). Le coût réel est en général bien plus bas.')
+      : h('p', { class: 'small muted' }, 'Aucun appel Claude : pas de coût facturé à l’appel.'),
+    d.subscription_calls ? h('p', null, plural(d.subscription_calls, 'appel', 'appels') + ' sur abonnement (' +
+      Object.keys(d.calls).filter(function (k) { return k !== 'claude'; }).map(function (k) { return k + ' ×' + d.calls[k]; }).join(', ') + ') : non chiffrés, mais les abonnements Codex et Antigravity sont petits.') : null,
+    d.agy_argv_warning ? h('div', { class: 'banner warn' }, 'Antigravity (agy) reçoit le message en argument de commande : il est visible dans ',
+      h('code', null, 'ps'), ' pour tout utilisateur de cette machine pendant l’appel.') : null,
+    d.agy_over_limit ? h('div', { class: 'banner bad' }, 'Un message dépasse la limite d’agy : l’appel sera refusé avant de partir.') : null,
+    d.changes_default_engine ? h('p', { class: 'small' }, 'Le moteur par défaut du parcours deviendra « ' + (ENGINE_FR[d.engine] || d.engine) + ' ».') : null,
+    (d.warnings || []).map(function (w) { return h('div', { class: 'banner warn' }, w); }),
+    h('div', { class: 'actions' },
+      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: confirmRun }, 'Confirmer et lancer'),
+      cancelPlanButton()));
+}
+function cancelPlanButton() { return h('button', { class: 'btn', type: 'button', onclick: function () { dropPlan(); render(); } }, 'Annuler'); }
+
+async function confirmRun() {
+  var d = S.plan && S.plan.data;
+  if (!d) return;
+  var engine = S.planEngine && S.planEngine !== S.p.engine ? S.planEngine : undefined;
+  dropPlan();
+  var ok = await doAction('next', { fingerprint: d.fingerprint, engine: engine }, { replanOnStale: true });
+  if (ok) { S.planEngine = ''; render(); }
+}
+
+// ---- timeline of the steps
+function timelineBlock(p) {
+  return h('div', null, p.steps.map(function (s) { return stepCard(p, s); }));
+}
+
+function stepCard(p, s) {
+  var key = 'step:' + s.id, isOpen = S.open.has(key);
+  var card = h('details', { class: 'step st-' + s.status, open: isOpen, 'data-key': key },
+    h('summary', null,
+      h('span', { class: 'num' }, String(s.index) + '.'), h('span', { class: 'name' }, s.id),
+      badge(STEP_FR[s.status] || s.status, 'st-' + s.status),
+      s.optional ? badge('optionnelle') : null,
+      p.pending && p.pending.step === s.id && p.status === 'active' ? badge('attend : ' + (PAUSE_FR[p.pending.type] || p.pending.type), 'st-pending-ask') : null,
+      h('span', { class: 'push' }, (ENGINE_FR[s.engine] || s.engine) + (s.engine ? ' · ' + modelLabel(s.engine, s.model) : '') + (s.cost_usd ? ' · ' + usd(s.cost_usd) : ''))));
+  if (isOpen) card.appendChild(stepBody(p, s));
+  return card;
+}
+
+function stepBody(p, s) {
+  var base = String(s.index).padStart(2, '0') + '-' + s.id;
+  var versions = p.files.filter(function (f) { return f.indexOf(base + '.') === 0 && /\.v\d+\.md$/.test(f); });
+  var body = h('div', { class: 'body' });
+  append(body, [
+    h('div', { class: 'meta' }, h('span', null, 'Skill : ' + s.skill.ref + (s.skill.version ? ' ' + s.skill.version : '')),
+      s.started ? h('span', null, 'Début : ' + when(s.started)) : null, s.ended ? h('span', null, 'Fin : ' + when(s.ended)) : null,
+      s.pause && s.pause !== 'none' ? h('span', null, 'Pause après l’étape : ' + PAUSE_FR[s.pause]) : null),
+    s.error ? [h('h3', null, 'Erreur'), h('pre', null, s.error)] : null,
+    s.blocking ? h('div', { class: 'banner bad' }, h('strong', null, 'Blocage signalé.'), mdBox(s.blocking)) : null,
+    s.status === 'skipped' ? h('p', { class: 'muted' }, 'Étape optionnelle écartée : elle n’a pas tourné.') : null,
+    s.status === 'pending' ? h('p', { class: 'muted' }, 'Pas encore jouée.') : null,
+    s.summary ? [h('h3', null, 'Résumé'), mdBox(s.summary)] : null,
+    s.handoff ? [h('h3', null, 'Champs transmis aux étapes suivantes'), Object.keys(s.handoff).map(function (f) {
+      var k = 'hf:' + s.id + ':' + f;
+      return h('details', { class: 'sub', open: S.open.has(k), 'data-key': k }, h('summary', null, f), mdBox(s.handoff[f]));
+    })] : null,
+    s.output ? fileDetails('Sortie complète (' + s.output + ')', 'out:' + s.output, s.output, 'md') : null,
+    s.trace ? fileDetails('Message exact reçu par l’étape (' + s.trace + ')', 'in:' + s.trace, s.trace, 'pre') : null,
+    s.retry_trace ? fileDetails('Message de la relance (' + s.retry_trace + ')', 'in:' + s.retry_trace, s.retry_trace, 'pre') : null,
+    versions.map(function (f) { return fileDetails('Version précédente (' + f + ')', 'ver:' + f, f, /\.in\./.test(f) ? 'pre' : 'md'); }),
+    rerunButton(p, s)
+  ]);
+  return body;
+}
+
+function rerunButton(p, s) {
+  if (p.status === 'stopped' || ['done', 'paused', 'failed'].indexOf(s.status) < 0) return null;
+  return h('div', { class: 'actions' },
+    h('button', { class: 'btn', type: 'button', disabled: !canAct(), onclick: function () { rerun(s); } }, 'Refaire cette étape'),
+    h('span', { class: 'muted small' }, 'Nouvel appel au moteur ; les étapes suivantes qui ont utilisé ses champs sont remises en file. Les anciennes versions restent en fichiers .vN.'));
+}
+async function rerun(s) {
+  if (!confirm('Refaire l’étape « ' + s.id + ' » ?\n\nElle sera remise en file avec les étapes qui ont utilisé ses champs ; le prochain lancement les rejouera (nouvel appel, coût compris).')) return;
+  await doAction('rerun', { step: s.id });
+}
+
+function fileDetails(title, key, name, kind) {
+  var open = S.open.has(key), box;
+  var entry = S.files.get(name);
+  if (!open) box = null;
+  else if (!entry || entry.text === undefined) box = h('p', { class: 'muted' }, entry && entry.error ? entry.error : 'Chargement…');
+  else box = kind === 'md' ? mdBox(entry.text) : h('pre', null, entry.text);
+  return h('details', { class: 'sub', open: open, 'data-key': key, 'data-file': name }, h('summary', null, title),
+    entry && entry.truncated && open ? h('p', { class: 'small muted' }, 'Fichier tronqué à 2 Mo.') : null, box);
+}
+
+// ---- files: fetched when their <details> is open, refreshed when the state fingerprint moves
+function wantFiles() {
+  if (!S.p || S.route.view !== 'parcours') return;
+  document.querySelectorAll('details[data-file]').forEach(function (el) {
+    if (!el.open) return;
+    var name = el.getAttribute('data-file'), entry = S.files.get(name);
+    if (entry && (entry.fp === S.p.fingerprint || entry.loading)) return;
+    S.files.set(name, Object.assign({}, entry, { loading: true }));
+    api('GET', '/api/parcours/' + S.route.slug + '/file/' + encodeURIComponent(name), undefined, 20000).then(function (d) {
+      S.files.set(name, { text: d.text, truncated: d.truncated, fp: S.p ? S.p.fingerprint : '' });
+    }).catch(function (e) {
+      S.files.set(name, { error: 'Lecture impossible : ' + e.message, fp: S.p ? S.p.fingerprint : '' });
+    }).then(function () { S.sig = ''; render(); });
+  });
+}
+
+// ---- actions
+async function doAction(action, body, opts) {
+  var slug = S.route.slug, ok = false;
+  if (isEditing()) document.activeElement.blur();   // the page is re-rendered under an action, never under a text field
+  S.busy = true; S.error = ''; render();
+  try {
+    var r = await api('POST', '/api/parcours/' + slug + '/' + action, body || {}, 150000);
+    ok = true;
+    if (r && r.notice) (S.notices[slug] = S.notices[slug] || []).push(r.notice);
+  } catch (e) {
+    S.error = e.message;
+    if (e.code === 'state_changed') {
+      S.error = 'Le parcours a changé depuis le plan affiché : rien n’a été lancé. Relisez le nouveau plan avant de confirmer.';
+      if (opts && opts.replanOnStale) { S.busy = false; await refreshNow(); loadPlan(); return false; }
+    }
+  } finally { S.busy = false; }
+  await refreshNow();
+  render();
+  return ok;
+}
+
+// ---- wiring
+document.addEventListener('toggle', function (e) {
+  var el = e.target, key = el.getAttribute && el.getAttribute('data-key');
+  if (!key || el.open === S.open.has(key)) return;   // opened by render() itself: nothing changed
+  if (el.open) S.open.add(key); else S.open.delete(key);
+  if (el.open) { S.sig = ''; render(); }       // build the body of a step / fetch a file on first opening
+}, true);
+document.addEventListener('pointerdown', function () { S.down = true; }, true);
+document.addEventListener('pointerup', function () { S.down = false; setTimeout(flush, 80); }, true);
+document.addEventListener('pointercancel', function () { S.down = false; setTimeout(flush, 80); }, true);
+document.addEventListener('focusout', function () { setTimeout(flush, 250); }, true);
+window.addEventListener('hashchange', function () { if (/(?:^#|&)t=/.test(location.hash)) initToken(); S.route = parseRoute(); S.p = null; dropPlan(); S.sig = ''; S.log = null; render(); poll(); });
+
+initToken();
+S.route = parseRoute();
+render();
+poll();
+setInterval(poll, 3000);
+setInterval(updateAge, 1000);
+</script>
+</body>
+</html>

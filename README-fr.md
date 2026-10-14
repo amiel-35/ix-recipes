@@ -43,10 +43,10 @@
 
 Recettes métier construites sur [ix-skills](https://github.com/amiel-35/ix-skills) — portables sur Claude, GPT, Gemini, mystaffy.
 
-49 skills en 9 familles, dont 2 workflows. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
+50 skills en 9 familles, dont 2 workflows et un concepteur de workflows. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
 
 - **des skills métier** — ils reposent sur une connaissance de domaine qui peut être fausse ou périmée (droit du travail, RGPD, pratiques RH, formules financières, méthodes produit), ou produisent un artefact qu'une profession définit (PRD, NDA, fiche de poste, TCO) ;
-- **des workflows** — des enchaînements d'atomes ix-skills pour un travail récurrent (en conception, voir [Workflows](#workflows)).
+- **des workflows** — des enchaînements d'atomes ix-skills pour un travail récurrent, un concepteur pour en créer, et un exécuteur avec une page de suivi locale (voir [Workflows](#workflows)).
 
 ix-recipes dépend d'ix-skills, jamais l'inverse : une recette peut renvoyer vers un atome, un atome ne renvoie jamais vers une recette. Les skills viennent d'ix-skills, déplacés le 2026-10-14 avec leur historique git.
 
@@ -558,7 +558,7 @@ Lire un marché et un modèle économique avec des chiffres — concurrence, mé
 </details>
 
 <details>
-<summary><b>⇢ Workflows</b> — 2 skills</summary>
+<summary><b>⇢ Workflows</b> — 3 skills</summary>
 
 Des recettes qui enchaînent plusieurs skills, chaque étape isolée dans son propre contexte, avec des pauses où l'humain valide, répond ou choisit. Format : [`docs/format-recette.md`](docs/format-recette.md).
 
@@ -582,12 +582,22 @@ Des recettes qui enchaînent plusieurs skills, chaque étape isolée dans son pr
 
 **Quand l'utiliser :** Un appel d'offres ou un cahier des charges reçu qui appelle une réponse complète.
 
+---
+
+#### `concepteur-recette` — Concevoir une recette-workflow, ou la déconseiller
+
+**Ce qu'il fait :** À partir d'un travail récurrent (idéalement avec un exemple réel), vérifie d'abord qu'un skill existant ou un enchaînement manuel ne suffit pas ; si une chaîne se justifie, propose le fichier de recette complet au format ix-recipes, sa justification et les questions à trancher avant de l'exécuter. Travaille uniquement sur le catalogue réel d'ix-skills et d'ix-recipes.
+
+**Ce qu'il ne fait pas :** N'exécute pas la recette et n'écrit aucun fichier : il propose, tu enregistres. N'invente jamais de skill.
+
+**Quand l'utiliser :** Tu refais souvent le même travail en plusieurs étapes et tu te demandes s'il mérite une recette.
+
 </details>
 
 <details>
-<summary><b>🔗 Futurs workflows</b> — 2 skills</summary>
+<summary><b>📝 Recommandation</b> — 2 skills</summary>
 
-Encore des skills autonomes, qui seront réécrits en enchaînements d'atomes ix-skills : `note-strategique` deviendra `decision` → `deliver`, `offer-comparison` deviendra `vendor-scorecard` → `decision`. Voir [Workflows](#workflows).
+Des livrables de recommandation pour un décideur. Un temps prévus pour devenir des workflows, ils restent des skills : une chaîne n'y apporterait ni isolation, ni pause humaine, ni tiers à interroger (décision du 2026-10-15, après un banc d'essai du concepteur de recettes).
 
 ---
 
@@ -619,13 +629,25 @@ Encore des skills autonomes, qui seront réécrits en enchaînements d'atomes ix
 
 Un workflow enchaîne des skills pour un travail récurrent. Format : [`docs/format-recette.md`](docs/format-recette.md). Chaque étape tourne isolée (un sous-agent sous Claude Code) et ne reçoit que ce dont elle a besoin ; seule la première lit la demande brute ; une fiche de contexte validée par l'humain la remplace ensuite ; les pauses font valider, répondre (client, acheteur) ou choisir. Une trace de chaque étape est écrite dans `./parcours/` quand c'est possible.
 
-Disponibles : `brief-client`, `reponse-appel-offres` (voir le catalogue). Tous deux testés sous Claude Code sur du matériau réel (une transcription de réunion client, un cahier des charges de consultation).
+Disponibles : `brief-client`, `reponse-appel-offres` (voir le catalogue). Tous deux testés de bout en bout sur du matériau réel (une transcription de réunion client, un cahier des charges de consultation). `concepteur-recette` en conçoit de nouvelles.
+
+### Exécuter un workflow hors de la conversation
+
+Dans une conversation, la recette s'orchestre elle-même par sous-agents. Pour une isolation réelle et une trace qu'on peut reprendre, `scripts/parcours.py` la joue étape par étape, chaque étape dans un **appel neuf** au moteur de ton choix — Claude Code, Codex ou Antigravity — qui ne reçoit que ses entrées. Il s'arrête à chaque pause et refuse toute étape dont le message porterait un passage de la demande brute au-delà de l'étape 1. Spécification : [`docs/executeur.md`](docs/executeur.md).
+
+```bash
+pip install pyyaml
+python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --engine claude
+python3 scripts/parcours.py next ao        # jusqu'à la prochaine pause
+python3 scripts/parcours.py status ao
+```
+
+`scripts/interface.py` ouvre une page locale (127.0.0.1, protégée par jeton) pour suivre les parcours, lire la sortie de chaque étape, répondre aux pauses et lancer l'étape suivante : [`docs/interface.md`](docs/interface.md). Mesuré : une réponse complète à un appel d'offres (7 étapes, Claude) a coûté de 0,86 $ à 1,53 $ selon les reprises.
 
 À venir :
 
 ```
-note stratégique      decision → deliver
-choix fournisseur     vendor-scorecard → rfp-draft → offres reçues → total-cost-analysis → decision
+choix fournisseur     vendor-scorecard → pause pondérations → rfp-draft → offres reçues → total-cost-analysis → offer-comparison
 relecture avant envoi critique → fact-check → correction → fact-check → deliver → controle-qualite
 ```
 

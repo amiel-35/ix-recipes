@@ -91,6 +91,15 @@ La page claude.ai reste une option de partage en lecture seule, plus tard. Bonus
 4. **Premier parcours outillé** : recrutement (le plus riche, références métier prêtes) ou réponse à appel d'offres (le plus fréquent en conseil) ?
 5. **Fusion `contrat-fournisseur` / `cgv-checker`** : on fusionne, ou on garde les deux ?
 
+## 6bis. Révisions du 2026-10-15 (banc d'essai du concepteur, arbitrage Fable)
+
+- `note-strategique` **reste un skill** : une chaîne `decision` → `deliver` n'achète ni isolation, ni pause, ni tiers. Notre plan était faux, le concepteur avait raison.
+- `offer-comparison` **reste le skill de notation** ; le parcours achats devient `vendor-scorecard` → pause pondérations → … → `offer-comparison` (remplacer par `decision` perdait la notation pondérée et le niveau de confiance).
+- `business-case-draft` recommande déjà : pas de `decision` → `deliver` derrière.
+- Personas : `affinity-mapping` → pause → `persona` reste juste (le concepteur avait doublé `persona`, ce que son propre texte interdit).
+- Format : une pause `answers` est permise sur l'étape 1 et vaut aussi validation de la fiche (plus besoin d'une étape vide pour loger une attente de réponses).
+- Exécuteur : trace du message exact de chaque étape, correction humaine aux pauses `validate`, signal de blocage optionnel, résolution des skills dès `new` — retenus après tri des leçons du stagiaire d'ix-memory.
+
 ## 7. Ordre proposé
 
 **Avancement au 2026-10-14 : lot 1 fait.** Format spécifié (`docs/format-recette.md`), validé mécaniquement par `build.py` ; `brief-client` joué de bout en bout sous Claude Code sur une vraie transcription de réunion client (5 étapes isolées, 3 pauses, environ 2,8 $ pour la dernière étape seule) ; `reponse-appel-offres` écrit et joué jusqu'aux questions à l'acheteur sur un vrai cahier des charges (1,7 $ pour deux étapes). Constat à reprendre au lot 2 : les réponses collées par l'humain passent en entier aux étapes qui les reçoivent (jusqu'à 25 000 caractères) — à borner ou résumer sans requalifier.

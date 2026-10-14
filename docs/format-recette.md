@@ -9,11 +9,12 @@ Une recette qui n'enchaîne rien reste un skill ordinaire : c'est le cas par dé
 1. **Isolation.** Chaque étape tourne dans un contexte neuf — un sous-agent quand la plateforme en a (Claude Code), un appel neuf quand un script exécute (`claude -p`, `codex exec`, `agy -p`, `vibe -p`). Elle ne reçoit **que** ce que sa ligne « reçoit » liste. Les consignes (« ignore ce qui précède ») ne sont qu'un repli là où rien ne permet d'isoler.
 2. **Le brief brut ne va qu'à l'étape 1.** Jamais au-delà, pas même à la dernière.
 3. **La fiche de contexte remplace le brief pour la suite.** L'étape 1 la produit, l'humain la valide, toutes les étapes la reçoivent. Elle contient des faits (entités, objectif, contraintes, destinataire, format, échéances, solutions déjà nommées), jamais de demande d'action.
-4. **Handoff nommé et borné.** Chaque étape termine sa sortie par un bloc `## HANDOFF` avec les seuls champs que la recette lui demande de transmettre (1 à 5). L'étape suivante reçoit ces champs, pas la sortie complète.
-5. **Une étape = un rôle.** Elle ne refait pas le travail d'une autre et ne requalifie pas un champ reçu sans le signaler (`requalifié : <raison>`).
-6. **L'orchestrateur ne tranche jamais sur le fond.** Il enchaîne, s'arrête aux pauses, s'arrête si une étape signale un blocage, et fait choisir l'humain quand la recette prévoit un embranchement.
-7. **Orchestrateur léger.** Le sous-agent écrit sa sortie complète dans le fichier de trace et ne renvoie à l'orchestrateur que son bloc `## HANDOFF` et un résumé de cinq lignes. L'orchestrateur n'accumule pas les sorties ; un modèle léger (Sonnet) lui suffit, et chaque étape indique le sien (`model`). Règle par défaut : **Opus pour l'étape 1**, seule à lire la source brute, car ce qu'elle rate est perdu pour toute la suite ; **Sonnet pour les autres**, y compris les décisions, que l'humain valide juste après ; Opus en option sur une étape à fort enjeu.
-8. **Chaîne courte et linéaire.** Pas de boucle, pas de parallèle. Une étape optionnelle n'est lancée que si l'humain le décide à la pause qui la précède.
+4. **Handoff nommé et borné.** Chaque étape termine sa sortie par un bloc `## HANDOFF` contenant une sous-section `### <champ>` par champ que la recette lui demande de transmettre (1 à 5), puis un bloc `## SUMMARY` de cinq lignes au plus. Un champ peut faire plusieurs paragraphes : c'est pour cela qu'on découpe par titres, pas par lignes ni en JSON. L'étape suivante reçoit ces champs, pas la sortie complète — sauf pour une étape dont le livrable est un document (une offre, un brief) : elle déclare `output_field`, et sa sortie complète devient ce champ, au lieu d'être recopiée (un modèle qui recopie un document long dans un champ le résume). La fiche de contexte, courte, est rendue en JSON (bloc `## CONTEXT SHEET` suivi d'un bloc de code `json`).
+5. **Extraction mot pour mot, quand la source l'impose.** Certaines listes doivent passer à l'identique (objectifs, exercices, pièces à remettre d'un cahier des charges) : l'étape 1 les recopie dans un champ déclaré `verbatim`. Ce champ est une **liste** : chaque ligne est contrôlée séparément (un élément de liste passe, un paragraphe recopié est bloqué), et l'ensemble ne peut pas couvrir plus de 85 % de la source — au-delà, c'est la source elle-même qui passerait. Ce qu'un champ `verbatim` a cité est ensuite admis : les étapes suivantes peuvent le reprendre tel quel (une offre qui reprend les éléments imposés), le reste de la source reste contrôlé.
+6. **Une étape = un rôle.** Elle ne refait pas le travail d'une autre et ne requalifie pas un champ reçu sans le signaler (`requalifié : <raison>`).
+7. **L'orchestrateur ne tranche jamais sur le fond.** Il enchaîne, s'arrête aux pauses, s'arrête si une étape signale un blocage, et fait choisir l'humain quand la recette prévoit un embranchement.
+8. **Orchestrateur léger.** Le sous-agent écrit sa sortie complète dans le fichier de trace et ne renvoie à l'orchestrateur que son bloc `## HANDOFF` et un résumé de cinq lignes. L'orchestrateur n'accumule pas les sorties ; un modèle léger (Sonnet) lui suffit, et chaque étape indique le sien (`model`). Règle par défaut : **Opus pour l'étape 1**, seule à lire la source brute, car ce qu'elle rate est perdu pour toute la suite ; **Sonnet pour les autres**, y compris les décisions, que l'humain valide juste après ; Opus en option sur une étape à fort enjeu.
+9. **Chaîne courte et linéaire.** Pas de boucle, pas de parallèle. Une étape optionnelle n'est lancée que si l'humain le décide à la pause qui la précède.
 
 ## 2. Frontmatter
 
@@ -31,6 +32,8 @@ workflow:
       receives: [brief]           # brief (étape 1 seulement), context_sheet, answers, ou <étape>.<champ>
       transmits: [need, constraints, hypotheses, open_points]
       produces_context_sheet: true   # étape 1 seulement
+      verbatim: [imposed_items]      # étape 1 seulement : champs recopiés mot pour mot exprès (listes imposées par la source)
+      output_field: offer            # quand le livrable de l'étape est un document : sa sortie complète devient ce champ
       pause: validate             # none | validate | answers | choose
       model: opus                 # opus | sonnet | haiku — indication pour Claude Code et l'exécuteur (voir §1.7)
     - id: explorer
@@ -43,7 +46,9 @@ workflow:
 
 - chaque `skill` figure dans `requires`, et chaque id de `requires` existe (dans ix-recipes, ou dans `../ix-skills/skills/` quand le dépôt voisin est présent) ;
 - les ids d'étape sont uniques ;
-- seule la première étape reçoit `brief`, et c'est elle qui porte `produces_context_sheet` ;
+- seule la première étape reçoit `brief`, et c'est elle qui porte `produces_context_sheet` ; sa pause vaut `validate` ou `answers` ;
+- `verbatim` n'est déclaré que sur la première étape et ne nomme que des champs de ses `transmits` ;
+- `output_field`, s'il est donné, fait partie des `transmits`.
 - chaque `<étape>.<champ>` reçu existe dans les `transmits` d'une étape **antérieure** ;
 - `answers` n'est reçu qu'après une étape dont la pause vaut `answers` ;
 - chaque `skill` est cité dans le corps du SKILL.md (le corps et le frontmatter ne divergent pas) ;
@@ -57,7 +62,7 @@ Le frontmatter est la version lisible par machine : c'est elle que l'exécuteur 
 |---|---|---|
 | `none` | enchaîne | — |
 | `validate` | montre la sortie de l'étape (et la fiche de contexte après l'étape 1) | l'humain valide ou corrige |
-| `answers` | montre les questions à poser à un tiers (client, acheteur) et **s'arrête** | l'humain colle les réponses, ou dit d'avancer sans (les points restent alors des hypothèses) |
+| `answers` | montre les questions à poser à un tiers (client, acheteur) et **s'arrête** | l'humain colle les réponses, ou dit d'avancer sans (les points restent alors des hypothèses). Sur l'étape 1, cette pause valide aussi la fiche de contexte : inutile d'ajouter une étape pour loger l'attente des réponses |
 | `choose` | présente l'embranchement prévu (ex. « plusieurs voies restent ouvertes : passer par `explorer` → `decision` ? ») | l'humain choisit |
 
 Un sous-agent ne parle jamais à l'humain : toutes les pauses passent par l'orchestrateur.
@@ -68,7 +73,7 @@ Ordre des sections, en anglais comme tout corps de skill :
 
 1. **Role** — orchestrer, jamais faire le travail d'une étape.
 2. **Absolute rules** — les principes du §1, dans les termes de la recette.
-3. **Context sheet** — les champs et leur définition.
+3. **Context sheet** — les champs et leur définition, en tableau `| \`champ\` | définition |` : l'exécuteur (`scripts/parcours.py`) envoie ces définitions à l'étape 1 avec les clés à remplir — un nom de clé seul ne dit ni ce qui y va, ni ce qui reste dehors.
 4. **Steps** — un tableau : étape, skill, mission, reçoit, transmet, pause.
 5. **Running a step** — le gabarit du message envoyé au sous-agent (skill à utiliser, modèle, mission, fiche de contexte, champs reçus, fichier de trace où écrire la sortie complète, réponse limitée au bloc `## HANDOFF` et à un résumé, interdiction de dépasser la mission).
 6. **Pauses** — ce qu'on montre, ce qu'on attend.

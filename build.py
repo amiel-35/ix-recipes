@@ -283,6 +283,14 @@ def validate_workflow(fm: dict, body: str) -> list:
             errs.append(f"step '{sid}': model must be one of {sorted(MODELS)}")
         if st.get("pause", "none") not in PAUSES:
             errs.append(f"step '{sid}': pause must be one of {sorted(PAUSES)}")
+        if st.get("output_field") and st["output_field"] not in (st.get("transmits") or []):
+            errs.append(f"step '{sid}': output_field '{st['output_field']}' is not in transmits")
+        verbatim = st.get("verbatim") or []
+        if verbatim and i != 0:
+            errs.append(f"step '{sid}': only the first step may declare verbatim fields (it alone reads the raw input)")
+        for field in verbatim:
+            if field not in (st.get("transmits") or []):
+                errs.append(f"step '{sid}': verbatim field '{field}' is not in transmits")
         if st.get("produces_context_sheet") and i != 0:
             errs.append(f"step '{sid}': only the first step produces the context sheet")
         for src in st.get("receives") or []:

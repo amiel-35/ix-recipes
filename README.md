@@ -6,7 +6,7 @@
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/amiel-35/ix-recipes?color=7f9a96"></a>
   <img alt="Plugin version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Famiel-35%2Fix-recipes%2Fmain%2Fdist%2F.claude-plugin%2Fplugin.json&query=%24.version&label=plugin&color=7fc8bd">
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-D97757">
-  <img alt="Skills" src="https://img.shields.io/badge/skills-47-3d6b73">
+  <img alt="Skills" src="https://img.shields.io/badge/skills-49-3d6b73">
   <a href="https://github.com/amiel-35/ix-skills"><img alt="requires ix-skills" src="https://img.shields.io/badge/requires-ix--skills-7fc8bd"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/also-Codex%20%C2%B7%20GPT%20%C2%B7%20Gemini%20%C2%B7%20mystaffy-56707a">
 </p>
@@ -43,7 +43,7 @@
 
 Domain recipes on top of [ix-skills](https://github.com/amiel-35/ix-skills) — portable across Claude, GPT, Gemini, and mystaffy.
 
-47 skills in 8 families. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
+49 skills in 9 families, including 2 workflows. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
 
 - **domain skills** — they rely on domain knowledge that can be wrong or go stale (labour law, GDPR, HR practice, financial formulas, product methods), or produce an artefact a profession defines (PRD, NDA, job description, TCO);
 - **workflows** — chains of ix-skills atoms for a recurring job (being designed, see [Workflows](#workflows)).
@@ -558,6 +558,33 @@ Read a market and a business model with numbers — competition, SaaS metrics, K
 </details>
 
 <details>
+<summary><b>⇢ Workflows</b> — 2 skills</summary>
+
+Recipes that chain several skills, each step isolated in its own context, with pauses where the human validates, answers or chooses. Format: [`docs/format-recette.md`](docs/format-recette.md).
+
+---
+
+#### `brief-client` — From a vague request to an actionable brief
+
+**What it does:** Chains `cadrage` → `questioning` → the client's answers → [`explorer` → `decision`] → `brief`. Only the first step reads the raw request (email, notes, transcript); it produces a context sheet you validate, which travels with the rest. The recipe stops on the questions to send the client and resumes with their answers.
+
+**What it doesn't do:** Does not write the offer (`offre-commerciale`) and does not read a formal tender specification (`reponse-appel-offres`, `analyse-cdc`).
+
+**Use when:** A client request is too vague to price or produce as is.
+
+---
+
+#### `reponse-appel-offres` — Answer a tender end to end
+
+**What it does:** Chains `analyse-cdc` → questions to the buyer → go / no-go → response strategy → `offre-commerciale` → compliance check (`controle-qualite`) → formatting (`deliver`). The tender file is read at step 1 only; the compliance check verifies the offer requirement by requirement against what step 1 extracted. You decide go / no-go.
+
+**What it doesn't do:** Does not replace the decision to bid nor the final proofread; does not handle submission on a platform.
+
+**Use when:** A received call for tenders or specification calls for a full response.
+
+</details>
+
+<details>
 <summary><b>🔗 Upcoming workflows</b> — 2 skills</summary>
 
 Still standalone skills, to be rewritten as chains of ix-skills atoms: `note-strategique` will become `decision` → `deliver`, `offer-comparison` will become `vendor-scorecard` → `decision`. See [Workflows](#workflows).
@@ -590,13 +617,15 @@ Still standalone skills, to be rewritten as chains of ix-skills atoms: `note-str
 
 ## Workflows
 
-A workflow chains ix-skills atoms for a recurring job. The format is being designed: it will be tested on a first prototype before more are written.
+A workflow chains skills for a recurring job. Format: [`docs/format-recette.md`](docs/format-recette.md). Each step runs isolated (a sub-agent in Claude Code) and receives only what it needs; only the first reads the raw input; a human-validated context sheet replaces it afterwards; pauses let the human validate, answer (client, buyer) or choose. A trace of each step is written to `./parcours/` when possible.
 
-First candidates:
+Available: `brief-client`, `reponse-appel-offres` (see the catalog). Both tested in Claude Code on real material (a client meeting transcript, a tender specification).
+
+Coming next:
 
 ```
 strategic note        decision → deliver
-vendor selection      rfp-draft → total-cost-analysis → vendor-scorecard → decision
+vendor selection      vendor-scorecard → rfp-draft → offers received → total-cost-analysis → decision
 pre-send review       critique → fact-check → correction → fact-check → deliver → controle-qualite
 ```
 

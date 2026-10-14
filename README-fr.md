@@ -6,7 +6,7 @@
   <a href="LICENSE"><img alt="Licence" src="https://img.shields.io/github/license/amiel-35/ix-recipes?color=7f9a96"></a>
   <img alt="Version du plugin" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Famiel-35%2Fix-recipes%2Fmain%2Fdist%2F.claude-plugin%2Fplugin.json&query=%24.version&label=plugin&color=7fc8bd">
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-D97757">
-  <img alt="Skills" src="https://img.shields.io/badge/skills-47-3d6b73">
+  <img alt="Skills" src="https://img.shields.io/badge/skills-49-3d6b73">
   <a href="https://github.com/amiel-35/ix-skills"><img alt="requires ix-skills" src="https://img.shields.io/badge/requires-ix--skills-7fc8bd"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/also-Codex%20%C2%B7%20GPT%20%C2%B7%20Gemini%20%C2%B7%20mystaffy-56707a">
 </p>
@@ -43,7 +43,7 @@
 
 Recettes métier construites sur [ix-skills](https://github.com/amiel-35/ix-skills) — portables sur Claude, GPT, Gemini, mystaffy.
 
-47 skills en 8 familles. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
+49 skills en 9 familles, dont 2 workflows. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
 
 - **des skills métier** — ils reposent sur une connaissance de domaine qui peut être fausse ou périmée (droit du travail, RGPD, pratiques RH, formules financières, méthodes produit), ou produisent un artefact qu'une profession définit (PRD, NDA, fiche de poste, TCO) ;
 - **des workflows** — des enchaînements d'atomes ix-skills pour un travail récurrent (en conception, voir [Workflows](#workflows)).
@@ -558,6 +558,33 @@ Lire un marché et un modèle économique avec des chiffres — concurrence, mé
 </details>
 
 <details>
+<summary><b>⇢ Workflows</b> — 2 skills</summary>
+
+Des recettes qui enchaînent plusieurs skills, chaque étape isolée dans son propre contexte, avec des pauses où l'humain valide, répond ou choisit. Format : [`docs/format-recette.md`](docs/format-recette.md).
+
+---
+
+#### `brief-client` — D'une demande floue à un brief exploitable
+
+**Ce qu'il fait :** Enchaîne `cadrage` → `questioning` → réponses du client → [`explorer` → `decision`] → `brief`. Seule la première étape lit la demande brute (mail, notes, transcription) ; elle produit une fiche de contexte que tu valides et qui accompagne la suite. La recette s'arrête sur les questions à envoyer au client et reprend avec ses réponses.
+
+**Ce qu'il ne fait pas :** Ne rédige pas l'offre (`offre-commerciale`) et ne lit pas un cahier des charges formel de consultation (`reponse-appel-offres`, `analyse-cdc`).
+
+**Quand l'utiliser :** Une demande client trop floue pour être chiffrée ou produite telle quelle.
+
+---
+
+#### `reponse-appel-offres` — Répondre à une consultation de bout en bout
+
+**Ce qu'il fait :** Enchaîne `analyse-cdc` → questions à l'acheteur → go / no-go → stratégie de réponse → `offre-commerciale` → contrôle de conformité (`controle-qualite`) → mise en forme (`deliver`). Le dossier de consultation n'est lu qu'à l'étape 1 ; le contrôle vérifie l'offre exigence par exigence contre ce que l'étape 1 a extrait. Tu tranches le go / no-go.
+
+**Ce qu'il ne fait pas :** Ne remplace pas la décision de répondre ni la relecture finale ; ne gère pas le dépôt sur une plateforme.
+
+**Quand l'utiliser :** Un appel d'offres ou un cahier des charges reçu qui appelle une réponse complète.
+
+</details>
+
+<details>
 <summary><b>🔗 Futurs workflows</b> — 2 skills</summary>
 
 Encore des skills autonomes, qui seront réécrits en enchaînements d'atomes ix-skills : `note-strategique` deviendra `decision` → `deliver`, `offer-comparison` deviendra `vendor-scorecard` → `decision`. Voir [Workflows](#workflows).
@@ -590,13 +617,15 @@ Encore des skills autonomes, qui seront réécrits en enchaînements d'atomes ix
 
 ## Workflows
 
-Un workflow enchaîne des atomes ix-skills pour un travail récurrent. Le format est en cours de conception : il sera testé sur un premier prototype avant d'en écrire d'autres.
+Un workflow enchaîne des skills pour un travail récurrent. Format : [`docs/format-recette.md`](docs/format-recette.md). Chaque étape tourne isolée (un sous-agent sous Claude Code) et ne reçoit que ce dont elle a besoin ; seule la première lit la demande brute ; une fiche de contexte validée par l'humain la remplace ensuite ; les pauses font valider, répondre (client, acheteur) ou choisir. Une trace de chaque étape est écrite dans `./parcours/` quand c'est possible.
 
-Premiers candidats :
+Disponibles : `brief-client`, `reponse-appel-offres` (voir le catalogue). Tous deux testés sous Claude Code sur du matériau réel (une transcription de réunion client, un cahier des charges de consultation).
+
+À venir :
 
 ```
 note stratégique      decision → deliver
-choix fournisseur     rfp-draft → total-cost-analysis → vendor-scorecard → decision
+choix fournisseur     vendor-scorecard → rfp-draft → offres reçues → total-cost-analysis → decision
 relecture avant envoi critique → fact-check → correction → fact-check → deliver → controle-qualite
 ```
 

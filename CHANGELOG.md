@@ -2,6 +2,24 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-14 — plugin 2.1.0: first workflow recipes
+
+### Added — workflow format and two recipes
+
+- `docs/format-recette.md`: the format of a workflow recipe — each step isolated
+  (sub-agent in Claude Code), raw input to step 1 only, a human-validated
+  context sheet for the rest, named handoff fields, pauses (`validate`,
+  `answers`, `choose`), a trace in `./parcours/`. `build.py` checks the
+  `workflow` block mechanically.
+- `brief-client` 1.0.0: `cadrage` → `questioning` → client answers →
+  [`explorer` → `decision`] → `brief`. Tested end to end in Claude Code on a
+  real client meeting transcript: five isolated steps, three pauses, the raw
+  transcript seen by step 1 only.
+- `reponse-appel-offres` 1.0.0: `analyse-cdc` → buyer questions → go / no-go →
+  response strategy → `offre-commerciale` → compliance check → formatting.
+  Tested in Claude Code on a real tender specification up to the buyer
+  questions; step 2 received no line of the specification.
+
 ## 2026-10-14 — plugin 2.0.0
 
 ### Removed (breaking)

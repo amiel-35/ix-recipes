@@ -93,6 +93,9 @@ La page claude.ai reste une option de partage en lecture seule, plus tard. Bonus
 
 ## 7. Ordre proposé
 
+**Avancement au 2026-10-14 : lot 1 fait.** Format spécifié (`docs/format-recette.md`), validé mécaniquement par `build.py` ; `brief-client` joué de bout en bout sous Claude Code sur une vraie transcription de réunion client (5 étapes isolées, 3 pauses, environ 2,8 $ pour la dernière étape seule) ; `reponse-appel-offres` écrit et joué jusqu'aux questions à l'acheteur sur un vrai cahier des charges (1,7 $ pour deux étapes). Constat à reprendre au lot 2 : les réponses collées par l'humain passent en entier aux étapes qui les reçoivent (jusqu'à 25 000 caractères) — à borner ou résumer sans requalifier.
+
+
 1. **Lot 1** — A + B : spec du format de recette (isolation, fiche de contexte, pauses, sous-parcours), prototypée sur **`brief-client`**, joué sous Claude Code avec sous-agents sur un vrai brief ; puis le parcours **réponse à appel d'offres** (§3ter) écrit dans le même format, en réutilisant `brief-client`.
 2. **Lot 2** — C + D + E : sortie JSON des skills du parcours, fichier d'état, exécuteur multi-moteur en script.
 3. **Lot 3** — serveur MCP « parcours » et page locale de suivi, sur ce même parcours ; partage plus tard.

@@ -1,0 +1,49 @@
+{
+  "metier": [
+    "commercial",
+    "fondateur_ceo",
+    "achats"
+  ],
+  "category": "workflow",
+  "params": {
+    "type_consultation": {
+      "label": "Type de consultation",
+      "type": "enum",
+      "required": false,
+      "options": [
+        "marché public",
+        "appel d'offres privé",
+        "consultation simple",
+        "RFP / RFI"
+      ],
+      "help": "Nature de la consultation."
+    },
+    "date_limite_questions": {
+      "label": "Date limite des questions",
+      "type": "string",
+      "required": false,
+      "help": "Si connue, pour caler la pause des questions à l'acheteur."
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "type_consultation"
+    ],
+    "advanced_fields": [
+      "date_limite_questions"
+    ]
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 6,
+    "max_estimated_tokens": 80000
+  },
+  "color": "#8A5A2B",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

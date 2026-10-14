@@ -213,8 +213,97 @@ def load_skills(skill_id=None, domain=None):
             continue
         if domain and fm.get("domain") != domain:
             continue
+        wf_errors = validate_workflow(fm, body)
+        if wf_errors:
+            for msg in wf_errors:
+                print(f"  Error in workflow of {path.stem}: {msg}")
+            errors += len(wf_errors)
+            continue
         skills.append((path, fm, body))
     return skills, errors
+
+
+# ---------------------------------------------------------------------------
+# Workflow recipes (docs/format-recette.md in ix-recipes)
+# ---------------------------------------------------------------------------
+SIBLING_SKILL_DIRS = {
+    "ix-skills": Path("../ix-skills/skills"),
+    "ix-recipes": Path("../ix-recipes/skills"),
+}
+PAUSES = {"none", "validate", "answers", "choose"}
+
+
+def _skill_exists(ref: str):
+    """True / False if checkable, None if the sibling repo is not present."""
+    if ":" not in ref:
+        return False
+    ns, sid = ref.split(":", 1)
+    local_ns = Path.cwd().name
+    if ns == local_ns:
+        return (SKILLS_DIR / f"{sid}.md").is_file()
+    d = SIBLING_SKILL_DIRS.get(ns)
+    if d is None:
+        return False
+    if not d.is_dir():
+        return None
+    return (d / f"{sid}.md").is_file()
+
+
+def validate_workflow(fm: dict, body: str) -> list:
+    """Mechanical checks of a workflow recipe; returns a list of error messages."""
+    wf = fm.get("workflow")
+    if not wf:
+        return []
+    errs = []
+    requires = fm.get("requires") or []
+    for ref in requires:
+        ok = _skill_exists(ref)
+        if ok is False:
+            errs.append(f"requires '{ref}' does not exist")
+        elif ok is None:
+            print(f"  Warning: cannot check '{ref}' (sibling repo not found next to this one)")
+    steps = wf.get("steps") or []
+    if not steps:
+        return errs + ["workflow has no steps"]
+    seen, transmitted, answers_ready = set(), {}, False
+    for i, st in enumerate(steps):
+        sid = st.get("id")
+        if not sid or sid in seen:
+            errs.append(f"step {i + 1}: missing or duplicate id '{sid}'")
+        seen.add(sid)
+        skill = st.get("skill")
+        if skill not in requires:
+            errs.append(f"step '{sid}': skill '{skill}' is not listed in requires")
+        if skill and f"`{skill}`" not in body:
+            errs.append(f"step '{sid}': skill '{skill}' is not cited in the body")
+        if not st.get("mission"):
+            errs.append(f"step '{sid}': no mission")
+        if st.get("pause", "none") not in PAUSES:
+            errs.append(f"step '{sid}': pause must be one of {sorted(PAUSES)}")
+        if st.get("produces_context_sheet") and i != 0:
+            errs.append(f"step '{sid}': only the first step produces the context sheet")
+        for src in st.get("receives") or []:
+            if src == "brief":
+                if i != 0:
+                    errs.append(f"step '{sid}': only the first step may receive the raw brief")
+            elif src == "context_sheet":
+                if i == 0:
+                    errs.append("the first step cannot receive the context sheet it produces")
+            elif src == "answers":
+                if not answers_ready:
+                    errs.append(f"step '{sid}': receives answers before any step with pause 'answers'")
+            elif "." in src:
+                prev, field = src.split(".", 1)
+                if field not in transmitted.get(prev, ()):
+                    errs.append(f"step '{sid}': '{src}' is not transmitted by an earlier step")
+            else:
+                errs.append(f"step '{sid}': unknown source '{src}'")
+        transmitted[sid] = set(st.get("transmits") or [])
+        if st.get("pause") == "answers":
+            answers_ready = True
+    if not steps[0].get("produces_context_sheet"):
+        errs.append("the first step must produce the context sheet (produces_context_sheet: true)")
+    return errs
 
 
 # ---------------------------------------------------------------------------

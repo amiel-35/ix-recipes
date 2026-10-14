@@ -56,13 +56,19 @@ Delivery depends on the installation method. Plugin installs (Claude Code, Cowor
 
 ## 4. Workflows
 
-A workflow chains ix-skills atoms for a recurring job (first candidates:
-`note-strategique` → `decision` then `deliver`; `offer-comparison` →
-`vendor-scorecard` then `decision`). **The format is not settled yet** — to be
-designed and tested on a prototype before writing more. Open points: a
-`requires` field listing the ix-skills ids, checked by `build.py`; portability,
-since Claude Code / Cowork can invoke another skill but ChatGPT / Gemini cannot be
-relied on to.
+A workflow recipe chains skills (ix-skills atoms or other recipes) for a recurring
+job. **The format is specified in [`docs/format-recette.md`](docs/format-recette.md)**:
+`category: workflow`, a `requires` list, a machine-readable `workflow` block
+(context sheet fields, steps with skill, mission, receives, transmits, pause), and a
+body that orchestrates. Core rules: each step runs isolated (a sub-agent in Claude
+Code), the raw input goes to step 1 only, a human-validated context sheet replaces
+it for later steps, steps hand over named fields only, the human decides at pauses.
+`build.py` checks the `workflow` block mechanically (requires exist, brief only at
+step 1, every received field transmitted by an earlier step…).
+
+Reference recipes: `brief-client` and `reponse-appel-offres`. Still to convert:
+`note-strategique` (`decision` → `deliver`), `offer-comparison`
+(`vendor-scorecard` → `decision`).
 
 ## 5. Checklist — adding a new skill
 

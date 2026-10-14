@@ -1,0 +1,29 @@
+{
+  "metier": ["commercial", "fondateur_ceo", "transverse"],
+  "category": "workflow",
+  "params": {
+    "type_source": {
+      "label": "Type de source",
+      "type": "enum",
+      "required": false,
+      "options": ["mail", "notes", "transcription de réunion", "document"],
+      "help": "Nature de la demande client fournie."
+    },
+    "explorer_options": {
+      "label": "Proposer d'explorer les options",
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "help": "Après les réponses du client, proposer explorer puis decision si plusieurs voies restent ouvertes."
+    }
+  },
+  "ui": {"simple_fields": ["type_source"], "advanced_fields": ["explorer_options"]},
+  "execution": {"supports_async": false, "supports_review_gate": true, "max_input_artifacts": 6, "max_estimated_tokens": 40000},
+  "color": "#8A5A2B",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

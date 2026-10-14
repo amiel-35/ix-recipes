@@ -25,8 +25,8 @@ knowledge or produces an artefact a profession defines.
 - A skill here may point to an ix-skills atom (`see \`decision\``).
 - An ix-skills atom must never point to a skill here: a user may have ix-skills
   without ix-recipes.
-- Skill ids must stay unique across both repos (Codex installs them flat into
-  `~/.codex/skills/`, a collision overwrites). Check ix-skills before naming a skill.
+- Skill ids must stay unique across both repos (the legacy Codex installer copies them
+  flat into `~/.codex/skills/`, where a collision overwrites; a bare id is also ambiguous to users). Check ix-skills before naming a skill.
 
 Placement test for a new skill: does it rely on domain knowledge that can be wrong
 or out of date (law, HR practice, finance, product methods), or produce an artefact
@@ -52,7 +52,7 @@ by the reason, and stops.
 
 Domain knowledge shared by several skills (e.g. competencies per job family) lives once in `partials/<name>.md`, in English. A skill lists the ones it needs in its frontmatter (`references: [metier_tech, metier_rh, …]`); `build.py` copies them into `dist/skills/<id>/references/` (and `codex-dist/`). The skill body says which file to read when ("identify the job family, read only the matching `references/metier_<family>.md`"): the model loads one annex, not all of them. Never inline a multi-file reference set into the body; a single always-needed annex may stay inline.
 
-Delivery depends on the installation method. Plugin installs (Claude Code, Cowork) and the Codex installer carry `references/`. Uploading one `dist/skills/<id>/` folder (Cowork Customize, ChatGPT Skills) works only if the folder is uploaded with its `references/` subfolder. The `mystaffy` / `ix-memory` targets and pasting `skills/<id>.md` into GPT or Gemini do not carry them: the skill body must keep a fallback line ("if `references/` is not available, ask for the organisation's competency framework"), and the README tells paste users to add the relevant `partials/` file.
+Delivery depends on the installation method. Plugin installs (Claude Code, Cowork, Codex, Antigravity import) and the legacy Codex installer carry `references/`. Uploading one `dist/skills/<id>/` folder (Cowork Customize, ChatGPT Skills) works only if the folder is uploaded with its `references/` subfolder. The `mystaffy` / `ix-memory` targets and pasting `skills/<id>.md` into GPT or Gemini do not carry them: the skill body must keep a fallback line ("if `references/` is not available, ask for the organisation's competency framework"), and the README tells paste users to add the relevant `partials/` file.
 
 ## 4. Workflows
 
@@ -96,8 +96,16 @@ python3 build.py                        # all targets, all skills
 python3 build.py --target agentskills   # dist/skills/<id>/SKILL.md
 python3 build.py --validate             # validate without writing
 claude plugin validate dist
-bash scripts/install-codex.sh           # build + install into ~/.codex/skills/ (`--dry-run` to preview)
+bash scripts/install-codex.sh           # legacy Codex install into ~/.codex/skills/ (`--dry-run` to preview); not re-tested on Codex 0.155
 ```
+
+Codex primary method (tested 2026-10-14, codex-cli 0.155.1): Codex reads the Claude-format
+marketplace directly: `codex plugin marketplace add amiel-35/ix-recipes`, then
+`codex plugin add ix-recipes@ix-recipes` (plus the same two commands for ix-skills, the
+dependency). Skills land in `~/.codex/plugins/cache/` with their `references/`; users must name
+the skill in the request. The `amiel-35/plugins` catalogue (`git-subdir`) is untested with Codex.
+Antigravity: `agy plugin import <clone>/dist` (not `validate`/`install`). Keep README.md and
+README-fr.md in sync when this changes.
 
 Building needs `pip install -r requirements.txt` (`jsonschema`, `pyyaml`).
 

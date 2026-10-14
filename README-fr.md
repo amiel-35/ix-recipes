@@ -77,7 +77,7 @@ Redémarrer Claude Code. Les skills sont namespacés (`fiche-poste` devient `/ix
 - *« Prépare la fiche de poste pour un product manager senior. »*
 - *« Estime le TAM, SAM et SOM de ce marché. »*
 
-Autres plateformes (Cowork, Codex CLI, mystaffy, GPT, Gemini) : voir [Installation](#installation).
+Autres plateformes (Cowork, Codex CLI, Antigravity CLI, mystaffy, GPT, Gemini) : voir [Installation](#installation).
 
 ---
 
@@ -656,6 +656,28 @@ Les 11 recettes RH qui déclarent des références par famille de métier (`part
 
 ### Codex CLI
 
+Codex lit la même marketplace que Claude Code (testé avec codex-cli 0.155.1). Les recettes s'appuient sur les atomes d'ix-skills : ajouter les deux.
+
+```bash
+codex plugin marketplace add amiel-35/ix-recipes
+codex plugin add ix-recipes@ix-recipes
+codex plugin marketplace add amiel-35/ix-skills
+codex plugin add ix-skills@ix-skills
+```
+
+Les plugins atterrissent dans `~/.codex/plugins/cache/<marketplace>/<plugin>/<version>/skills/<id>/`, avec les dossiers `references/`. Pour mettre à jour, lancer `codex plugin marketplace upgrade` puis ré-ajouter le plugin au besoin (voir `codex plugin --help`). Pour retirer :
+
+```bash
+codex plugin remove ix-recipes@ix-recipes
+codex plugin marketplace remove ix-recipes
+```
+
+**Nommer le skill dans la demande** (« utilise le skill fiche-poste du plugin ix-recipes pour… »). Codex lit alors `SKILL.md` puis seulement le fichier de référence utile. Sur une demande simple qui ne nomme pas le skill, Codex ne l'a pas utilisé lors de nos essais.
+
+Le catalogue `amiel-35/plugins` utilise des sources `git-subdir` et n'est **pas testé avec Codex** : pour Codex, passer par les marketplaces des repos ci-dessus.
+
+**Installateur historique** (copie dans `~/.codex/skills/`, non retesté sur Codex 0.155) :
+
 ```bash
 git clone https://github.com/amiel-35/ix-recipes /tmp/ix-recipes
 cd /tmp/ix-recipes
@@ -665,7 +687,22 @@ bash scripts/install-codex.sh fiche-poste     # un seul skill
 bash scripts/install-codex.sh --dry-run       # aperçu sans installer
 ```
 
-Les skills sont installés dans `~/.codex/skills/<id>/SKILL.md`, avec leur dossier `references/` quand ils en ont un. Redémarrer Codex pour activer. Les recettes s'appuient sur les atomes d'ix-skills : installer aussi ix-skills, avec le `scripts/install-codex.sh` de son propre dépôt.
+Les skills sont installés dans `~/.codex/skills/<id>/SKILL.md`, avec leur dossier `references/` quand ils en ont un. Redémarrer Codex pour activer. Installer aussi ix-skills, avec le `scripts/install-codex.sh` de son propre dépôt.
+
+### Antigravity CLI (agy, Gemini)
+
+`agy` importe un dossier de plugin au format Claude (testé avec agy 1.3.3). Importer ix-recipes et sa dépendance ix-skills :
+
+```bash
+git clone https://github.com/amiel-35/ix-recipes
+git clone https://github.com/amiel-35/ix-skills
+agy plugin import ix-recipes/dist
+agy plugin import ix-skills/dist
+```
+
+Les skills sont importés avec leurs `references/` dans `~/.gemini/config/plugins/<plugin>/`. Utiliser `import` : `agy plugin validate` et `agy plugin install` attendent un `plugin.json` à la racine et n'acceptent pas ce format. Pour importer à la place les plugins déjà installés dans Claude Code (tous) : `agy plugin import claude`. Pour retirer : `agy plugin uninstall ix-recipes`.
+
+Comme pour Codex, **nommer le skill dans la demande** : agy lit alors `SKILL.md` puis seulement le fichier de référence utile.
 
 ### mystaffy
 
@@ -676,9 +713,9 @@ python3 build.py --target ix-memory   # format ix-memory natif
 
 Ces cibles ne contiennent que `skill.md` et `manifest.json`, pas les dossiers `references/` : les skills RH demandent alors le référentiel de compétences de l'organisation.
 
-### GPT / Gemini / autre LLM
+### GPT / Gemini / autre LLM (interfaces de chat)
 
-Copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter YAML est ignoré sans effet de bord. Pour un skill qui déclare `references` dans son frontmatter (les skills RH), coller aussi le `partials/metier_<famille>.md` correspondant (`metier_tech`, `metier_rh`…), sinon le skill demandera le référentiel de compétences de l'organisation.
+Pour les interfaces de chat simples, sans CLI : copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter YAML est ignoré sans effet de bord. Pour un skill qui déclare `references` dans son frontmatter (les skills RH), coller aussi le `partials/metier_<famille>.md` correspondant (`metier_tech`, `metier_rh`…), sinon le skill demandera le référentiel de compétences de l'organisation.
 
 ---
 

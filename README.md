@@ -77,7 +77,7 @@ Restart Claude Code. Skills are namespaced (`fiche-poste` becomes `/ix-recipes:f
 - *"Draft the job description for a senior product manager."*
 - *"Estimate TAM, SAM and SOM for this market."*
 
-Other platforms (Cowork, Codex CLI, mystaffy, GPT, Gemini): see [Installation](#installation).
+Other platforms (Cowork, Codex CLI, Antigravity CLI, mystaffy, GPT, Gemini): see [Installation](#installation).
 
 ---
 
@@ -656,6 +656,28 @@ The 11 HR recipes that list job-family references (`partials/metier_*.md`, see [
 
 ### Codex CLI
 
+Codex reads the same marketplace as Claude Code (tested with codex-cli 0.155.1). The recipes build on ix-skills atoms: add both.
+
+```bash
+codex plugin marketplace add amiel-35/ix-recipes
+codex plugin add ix-recipes@ix-recipes
+codex plugin marketplace add amiel-35/ix-skills
+codex plugin add ix-skills@ix-skills
+```
+
+Plugins land in `~/.codex/plugins/cache/<marketplace>/<plugin>/<version>/skills/<id>/`, with the `references/` folders. To update, run `codex plugin marketplace upgrade` and re-add the plugin if needed (see `codex plugin --help`). To remove:
+
+```bash
+codex plugin remove ix-recipes@ix-recipes
+codex plugin marketplace remove ix-recipes
+```
+
+**Name the skill in your request** ("use the fiche-poste skill from the ix-recipes plugin to…"). Codex then reads `SKILL.md` and only the reference file it needs. On a plain request that does not name the skill, Codex did not use it in our tests.
+
+The `amiel-35/plugins` catalogue uses `git-subdir` sources and is **not tested with Codex**: for Codex, use the per-repo marketplaces above.
+
+**Legacy installer** (copies into `~/.codex/skills/`, not re-tested on Codex 0.155):
+
 ```bash
 git clone https://github.com/amiel-35/ix-recipes /tmp/ix-recipes
 cd /tmp/ix-recipes
@@ -665,7 +687,22 @@ bash scripts/install-codex.sh fiche-poste     # one skill
 bash scripts/install-codex.sh --dry-run       # preview without installing
 ```
 
-Skills are installed to `~/.codex/skills/<id>/SKILL.md`, with their `references/` folder when they have one. Restart Codex to activate. The recipes build on ix-skills atoms: install ix-skills too, with `scripts/install-codex.sh` from its own repo.
+Skills are installed to `~/.codex/skills/<id>/SKILL.md`, with their `references/` folder when they have one. Restart Codex to activate. Install ix-skills too, with `scripts/install-codex.sh` from its own repo.
+
+### Antigravity CLI (agy, Gemini)
+
+`agy` imports a Claude-format plugin folder (tested with agy 1.3.3). Import ix-recipes and its dependency ix-skills:
+
+```bash
+git clone https://github.com/amiel-35/ix-recipes
+git clone https://github.com/amiel-35/ix-skills
+agy plugin import ix-recipes/dist
+agy plugin import ix-skills/dist
+```
+
+Skills are imported with their `references/` into `~/.gemini/config/plugins/<plugin>/`. Use `import`: `agy plugin validate` and `agy plugin install` expect a `plugin.json` at the root and do not accept this format. To import the plugins already installed in Claude Code instead (all of them): `agy plugin import claude`. To remove: `agy plugin uninstall ix-recipes`.
+
+As with Codex, **name the skill in your request**: agy then reads `SKILL.md` and only the reference file it needs.
 
 ### mystaffy
 
@@ -676,9 +713,9 @@ python3 build.py --target ix-memory   # native ix-memory format
 
 These targets carry `skill.md` and `manifest.json` only, not the `references/` folders: the HR skills then ask for the organisation's competency framework.
 
-### GPT / Gemini / other LLMs
+### GPT / Gemini / other LLMs (chat interfaces)
 
-Paste the content of `skills/<id>.md` as a system prompt. The YAML frontmatter is ignored harmlessly. For a skill that lists `references` in its frontmatter (the HR skills), also paste the matching `partials/metier_<family>.md` (`metier_tech`, `metier_rh`…), or the skill will ask for the organisation's competency framework.
+For plain chat UIs with no CLI: paste the content of `skills/<id>.md` as a system prompt. The YAML frontmatter is ignored harmlessly. For a skill that lists `references` in its frontmatter (the HR skills), also paste the matching `partials/metier_<family>.md` (`metier_tech`, `metier_rh`…), or the skill will ask for the organisation's competency framework.
 
 ---
 

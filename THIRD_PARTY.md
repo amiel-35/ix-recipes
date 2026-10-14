@@ -1,9 +1,40 @@
 # Sources tierces
 
-Les skills de ce repo s'inspirent en partie de sources publiques. Chaque source reprise est listée ici avec son URL, sa licence et ce qui en est repris, sur le modèle de [ghost-council](https://github.com/amiel-35/ghost-council/blob/main/THIRD_PARTY.md).
+Ce que les skills d'ix-recipes doivent à des projets publics : la source, sa licence, ce qui en est repris. Établi le 2026-10-14 en comparant chaque skill à sa première version (projet ix-memory, mars 2026) et aux dépôts candidats.
 
-Règle : avant de reprendre quoi que ce soit d'un autre repo, vérifier sa licence et ajouter l'entrée ici dans le même commit.
+Règle pour la suite : avant de reprendre quoi que ce soit d'un autre dépôt, vérifier sa licence et ajouter l'entrée ici dans le même commit.
 
 ---
 
-*Inventaire des sources des 48 skills hérités d'ix-skills : à compléter.*
+## anthropics/knowledge-work-plugins (Anthropic)
+
+- **Source :** https://github.com/anthropics/knowledge-work-plugins, état du 2026-03-13 (commit `7b2ea8ea53095665fc1dae68602bf64a57faffab`)
+- **Licence :** Apache License 2.0, copie dans [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt). Le dépôt n'a pas de fichier NOTICE.
+- **Skills adaptés :**
+
+  | Skill ix-recipes | Fichier source | Ce qui en est repris |
+  |---|---|---|
+  | `feature-spec` | `product-management/skills/write-spec/SKILL.md` | MoSCoW avec « si tout est Must, rien n'est Must », critères Given/When/Then, indicateurs avancés et retardés, questions bloquantes et non bloquantes |
+  | `system-design` | `engineering/skills/system-design/SKILL.md` | Les cinq étapes et leur ordre : exigences, conception d'ensemble, approfondissement, montée en charge et fiabilité, compromis |
+  | `tech-debt` | `engineering/skills/tech-debt/SKILL.md` | Les trois axes notés de 1 à 5 et la formule Priorité = (Impact + Risque) × (6 − Effort) |
+  | `ticket-triage` | `customer-support/skills/ticket-triage/SKILL.md` | Les définitions P1 à P4 ; « la cause racine détermine la catégorie » ; dans le doute, monter en priorité |
+
+- **Modifications :** chaque skill a été condensé (de 1 700–2 000 mots à environ 300 pour `feature-spec` et `ticket-triage`), réécrit dans le gabarit ix (rôle, règle absolue, entrées, méthode, contraintes, format de sortie, définition de fini), rédigé en français puis traduit en anglais, débarrassé des connecteurs propres à Claude, et complété de règles maison (sortie nulle « RAS », séparation faits / hypothèses). Chaque fichier modifié porte une mention en fin de corps.
+- `code-review` et `contract-review`, issus du même dépôt, ont été retirés d'ix-recipes en 2.0.0 : la source fait mieux, et Claude Code a déjà un `/code-review` intégré.
+
+## wshobson/agents (Seth Hobson)
+
+- **Source :** https://github.com/wshobson/agents
+- **Licence :** MIT, « Copyright (c) 2024 Seth Hobson »
+- **Skills inspirés :** `metriques-saas` (`plugins/startup-business-analyst/skills/startup-metrics-framework`), `analyse-concurrentielle` (`…/competitive-landscape`), `tam-sam-som` (`…/market-sizing-analysis`), `contrat-emploi` (`plugins/hr-legal-compliance/skills/employment-contract-templates`), `tableau-de-bord-kpi` (`plugins/business-analytics/skills/kpi-dashboard-design`)
+- **Ce qui en est repris :** le périmètre et l'idée de chaque skill, importés en mars 2026 via l'annuaire agentskill.sh. Aucun passage du texte d'origine ne subsiste dans les versions actuelles ; crédit donné par prudence.
+
+## davila7/claude-code-templates (Daniel Ávila)
+
+- **Source :** https://github.com/davila7/claude-code-templates, `cli-tool/components/skills/business-marketing/pricing-strategy`
+- **Licence :** MIT, « Copyright (c) 2025 Daniel (San) Ávila »
+- **Skill inspiré :** `strategie-prix` (modèles freemium, paliers, Van Westendorp). Aucun passage du texte d'origine ne subsiste ; le dépôt est un agrégateur et l'auteur d'origine du contenu n'est pas établi.
+
+---
+
+Les méthodes publiques citées dans les skills (MoSCoW, RICE, Given/When/Then, OKR, TAM/SAM/SOM, Van Westendorp…) ne sont pas des sources tierces et ne sont pas listées ici.

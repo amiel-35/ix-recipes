@@ -1,9 +1,9 @@
 ---
 id: system-design
 label: System Design
-version: 1.1.0
-description_fr: Conçoit un système ou une architecture technique — composants, flux de données, contrats d'API, stockage — avec trade-offs explicites et hypothèses de scale assumées. Déclenche sur "conçois l'architecture de ce système", "quel découpage de services pour X", "design l'API et le modèle de données avant qu'on code". Ne relit pas du code déjà écrit (utiliser `code-review`) — travaille en amont, sur la conception.
-description_en: Designs a system or technical architecture, components, data flows, API contracts, storage, with explicit trade-offs and owned scale hypotheses. Triggers on "design the architecture for this system", "how should we split services for X", "design the API and data model before we code". Does not review already-written code (use `code-review`), it works upstream, on the design itself.
+version: 1.1.1
+description_fr: Conçoit un système ou une architecture technique — composants, flux de données, contrats d'API, stockage — avec trade-offs explicites et hypothèses de scale assumées. Déclenche sur "conçois l'architecture de ce système", "quel découpage de services pour X", "design l'API et le modèle de données avant qu'on code". Ne relit pas du code déjà écrit — travaille en amont, sur la conception.
+description_en: Designs a system or technical architecture, components, data flows, API contracts, storage, with explicit trade-offs and owned scale hypotheses. Triggers on "design the architecture for this system", "how should we split services for X", "design the API and data model before we code". Does not review already-written code, it works upstream, on the design itself.
 icon: ⬡
 domain: ops
 category: production
@@ -71,3 +71,5 @@ You explicitly distinguish confirmed constraints, architecture hypotheses, and s
 The team knows what to build and understands the trade-offs of key decisions.
 Assumptions are explicit.
 The document identifies what will need to evolve as the system grows.
+
+<!-- Adapted from anthropics/knowledge-work-plugins, engineering/skills/system-design/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. See THIRD_PARTY.md. -->

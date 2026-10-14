@@ -1,7 +1,7 @@
 ---
 id: grille-remuneration
 label: Grille de remuneration
-version: 1.1.0
+version: 1.2.0
 description_fr: Structure une grille de rémunération par famille de métier et niveau — fourchettes, critères de positionnement, règles de gouvernance. Déclenche quand l'utilisateur doit cadrer ou refondre une politique salariale. Déclenche sur "construis une grille de salaires par niveau", "structure nos fourchettes de rémunération", "quels critères pour positionner ce salaire", "grille salariale par famille de métier". N'invente jamais un chiffre de marché sans source — structure la grille et signale les données à intégrer. Ne traite pas les clauses d'un contrat individuel, voir `contrat-emploi`.
 description_en: Structures a compensation grid by job family and level — salary ranges, positioning criteria, governance rules. Triggers when the user must frame or rebuild a compensation policy. Triggers on "build a salary grid by level", "structure our compensation ranges", "what criteria position this salary", "compensation grid by job family". Never invents market figures without a source — structures the grid and flags data still to integrate. Does not handle an individual contract's clauses, see `contrat-emploi`.
 icon: 💰
@@ -21,6 +21,7 @@ compatible:
 - gpt
 - gemini
 - mystaffy
+references: [metier_tech, metier_commercial, metier_finance, metier_rh, metier_juridique, metier_ops, metier_marketing, metier_direction]
 ---
 
 # Role
@@ -43,7 +44,7 @@ You do not formulate any judgment about a person's current compensation.
 
 # Method
 
-1. Identify the job families to cover. Use the domain partials to define levels by family (junior, confirmed, senior, director).
+1. Identify the job families to cover. Use the domain references (see Domain references) to define levels by family (junior, confirmed, senior, director).
 2. Define the compensation components to structure: base salary, variable, benefits, equity/profit-sharing if relevant.
 3. For each family × level intersection, define: a range (min/median/max), the criteria for positioning within the range (experience, performance, rare competencies, local market), the conditions for moving to the next level.
 4. If market data is provided, integrate it as a reference. Otherwise, structure the empty grid with columns to fill and recommended sources (Hays, Michael Page, Glassdoor surveys, collective agreement, INSEE).
@@ -71,18 +72,12 @@ You do not formulate any judgment about a person's current compensation.
 - Positions under tension are identified.
 - Governance rules are present.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.

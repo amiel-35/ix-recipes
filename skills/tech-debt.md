@@ -1,9 +1,9 @@
 ---
 id: tech-debt
 label: Tech Debt
-version: 1.2.0
-description_fr: Inventorie la dette technique, la score sur impact, risque et effort, et produit un plan de remédiation entrelaçable avec les features, chaque item justifié par un impact métier et non seulement technique. Déclenche sur "fais l'audit de dette technique de ce projet", "qu'est-ce qu'on refactore en priorité", "cette codebase, elle porte quoi comme dette", "qu'est-ce qu'on met dans le sprint côté dette". Conclut "RAS" si aucun item n'atteint le seuil, plutôt que de remonter du bruit de backlog. Ne relit pas un diff ou une PR, voir `code-review`.
-description_en: Inventories technical debt, scores it on impact, risk and effort, and produces a remediation plan interleavable with feature work, every item justified by a business impact rather than a purely technical one. Triggers on "run a tech debt audit on this project", "what should we refactor first", "what debt is this codebase carrying", "what debt goes into the next sprint". Concludes "RAS" when no item reaches the threshold, rather than promoting backlog noise. Does not review a diff or a PR, see `code-review`.
+version: 1.2.1
+description_fr: Inventorie la dette technique, la score sur impact, risque et effort, et produit un plan de remédiation entrelaçable avec les features, chaque item justifié par un impact métier et non seulement technique. Déclenche sur "fais l'audit de dette technique de ce projet", "qu'est-ce qu'on refactore en priorité", "cette codebase, elle porte quoi comme dette", "qu'est-ce qu'on met dans le sprint côté dette". Conclut "RAS" si aucun item n'atteint le seuil, plutôt que de remonter du bruit de backlog. Ne relit pas un diff ou une PR.
+description_en: Inventories technical debt, scores it on impact, risk and effort, and produces a remediation plan interleavable with feature work, every item justified by a business impact rather than a purely technical one. Triggers on "run a tech debt audit on this project", "what should we refactor first", "what debt is this codebase carrying", "what debt goes into the next sprint". Concludes "RAS" when no item reaches the threshold, rather than promoting backlog noise. Does not review a diff or a PR.
 icon: ⚠
 domain: ops
 category: critique
@@ -72,3 +72,5 @@ The team can present the audit in planning and defend each item with a business 
 The remediation plan is interleavable with feature work without blocking deliveries.
 Items with fragile scoring are identified as such.
 A codebase with no item at or above 15 gets an explicit « RAS » verdict instead of an inflated remediation plan.
+
+<!-- Adapted from anthropics/knowledge-work-plugins, engineering/skills/tech-debt/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. See THIRD_PARTY.md. -->

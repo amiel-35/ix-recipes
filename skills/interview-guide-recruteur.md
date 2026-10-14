@@ -1,7 +1,7 @@
 ---
 id: interview-guide-recruteur
 label: Interview Guide Recruteur
-version: 1.2.0
+version: 1.3.0
 description_fr: Prépare le guide d'entretien recruteur pour UN round — questions STAR, annotations recruteur, mises en situation, grille de scoring 1-4, red flags gradués, fiche Go/No-go. Déclenche quand l'utilisateur doit mener un entretien précis et outillé. Déclenche sur "prépare le guide d'entretien pour ce poste", "questions STAR pour l'entretien technique", "grille de scoring pour cet entretien", "quels red flags surveiller en entretien". Ne conçoit pas la boucle complète de recrutement — voir `interview-loop-planner`, qui produit les briefs alimentant ce guide round par round.
 description_en: Prepares the recruiter-side interview guide for ONE round — STAR questions, recruiter annotations, scenarios, 1-4 scoring grid, graduated red flags, Go/No-go debrief sheet. Triggers when the user must run a specific, well-equipped interview. Triggers on "prepare the interview guide for this role", "STAR questions for the technical round", "scoring grid for this interview", "what red flags to watch for in this interview". Does not design the full recruitment loop — see `interview-loop-planner`, which produces the briefs feeding this guide round by round.
 icon: clipboard-check
@@ -20,6 +20,7 @@ compatible:
 - gpt
 - gemini
 - mystaffy
+references: [metier_tech, metier_commercial, metier_finance, metier_rh, metier_juridique, metier_ops, metier_marketing, metier_direction]
 ---
 
 # Role
@@ -103,27 +104,20 @@ You must remain factual, professional, and link every question to an observable 
 - If it is a management role, a culture / fit block is present.
 - Points requiring further investigation rather than immediate judgment are visible.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
-
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
 <!-- inlined from partial: transverse_anti_biais -->
 
-# Transverse Partial: Anti-bias
+# Reference: Anti-bias
 
-This partial is systematically injected into each interview round. It provides anti-bias vigilance reminders for the recruiter and debrief facilitator.
+It provides anti-bias vigilance reminders for the recruiter and debrief facilitator.
 
 ---
 

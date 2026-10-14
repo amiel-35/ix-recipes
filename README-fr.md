@@ -6,7 +6,7 @@
   <a href="LICENSE"><img alt="Licence" src="https://img.shields.io/github/license/amiel-35/ix-recipes?color=7f9a96"></a>
   <img alt="Version du plugin" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Famiel-35%2Fix-recipes%2Fmain%2Fdist%2F.claude-plugin%2Fplugin.json&query=%24.version&label=plugin&color=7fc8bd">
   <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-plugin-D97757">
-  <img alt="Skills" src="https://img.shields.io/badge/skills-48-3d6b73">
+  <img alt="Skills" src="https://img.shields.io/badge/skills-47-3d6b73">
   <a href="https://github.com/amiel-35/ix-skills"><img alt="requires ix-skills" src="https://img.shields.io/badge/requires-ix--skills-7fc8bd"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/also-Codex%20%C2%B7%20GPT%20%C2%B7%20Gemini%20%C2%B7%20mystaffy-56707a">
 </p>
@@ -43,12 +43,12 @@
 
 Recettes métier construites sur [ix-skills](https://github.com/amiel-35/ix-skills) — portables sur Claude, GPT, Gemini, mystaffy.
 
-48 skills en 8 familles. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
+47 skills en 8 familles. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
 
 - **des skills métier** — ils reposent sur une connaissance de domaine qui peut être fausse ou périmée (droit du travail, RGPD, pratiques RH, formules financières, méthodes produit), ou produisent un artefact qu'une profession définit (PRD, NDA, fiche de poste, TCO) ;
 - **des workflows** — des enchaînements d'atomes ix-skills pour un travail récurrent (en conception, voir [Workflows](#workflows)).
 
-ix-recipes dépend d'ix-skills, jamais l'inverse : une recette peut renvoyer vers un atome, un atome ne renvoie jamais vers une recette. Les 48 skills viennent d'ix-skills, déplacés le 2026-10-14 avec leur historique git.
+ix-recipes dépend d'ix-skills, jamais l'inverse : une recette peut renvoyer vers un atome, un atome ne renvoie jamais vers une recette. Les skills viennent d'ix-skills, déplacés le 2026-10-14 avec leur historique git.
 
 ---
 
@@ -63,9 +63,17 @@ claude plugin marketplace add amiel-35/ix-skills
 claude plugin install ix-skills@ix-skills
 ```
 
-Redémarrer Claude Code. Les skills sont namespacés (`contract-review` devient `/ix-recipes:contract-review`), et Claude les déclenche aussi depuis une demande ordinaire :
+Ou depuis le [catalogue amiel-35](https://github.com/amiel-35/plugins), une seule marketplace pour ix-skills, ix-recipes et ghost-council (installer chaque plugin depuis une seule marketplace) :
 
-- *« Passe ce contrat fournisseur en revue avant que je signe. »*
+```bash
+claude plugin marketplace add amiel-35/plugins
+claude plugin install ix-recipes@amiel-35
+claude plugin install ix-skills@amiel-35
+```
+
+Redémarrer Claude Code. Les skills sont namespacés (`fiche-poste` devient `/ix-recipes:fiche-poste`), et Claude les déclenche aussi depuis une demande ordinaire :
+
+- *« Passe ce contrat fournisseur en revue avant que je signe, côté acheteur. »*
 - *« Prépare la fiche de poste pour un product manager senior. »*
 - *« Estime le TAM, SAM et SOM de ce marché. »*
 
@@ -84,7 +92,7 @@ Un skill qui n'a rien à produire ouvre sa réponse par « RAS — » suivi de l
 Cliquer sur une famille pour la déplier.
 
 <details>
-<summary><b>👥 RH & People</b> — 13 skills</summary>
+<summary><b>👥 RH & People</b> — 14 skills</summary>
 
 Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, intégration, développement, évaluation, organisation et droit du travail. Le contexte droit du travail français est intégré là où c'est pertinent.
 
@@ -131,6 +139,16 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 **Ce qu'il ne fait pas :** Pas la même chose qu'un entretien annuel d'évaluation. C'est un entretien de développement professionnel obligatoire légalement, pas une évaluation de performance.
 
 **Quand l'utiliser :** Tous les 2 ans par salarié, ou après certains événements spécifiques (retour de congé maternité, longue maladie…) selon la loi française.
+
+---
+
+#### `analyse-entretien` — Les signaux d'un entretien déjà tenu
+
+**Ce qu'il fait :** Lit une grille d'entretien remplie ou des notes brutes et en extrait les signaux : points forts, axes de développement, risques RH (démotivation, intention de départ, surcharge, conflit), besoins exprimés. Sépare ce qui est dit de ce qui est inféré, et lit les signaux au niveau du poste grâce à la référence de la famille de métier.
+
+**Ce qu'il ne fait pas :** Ne prépare pas un entretien à venir (`performance-review-helper`, `entretien-professionnel`) et ne porte aucun jugement sur la personne.
+
+**Quand l'utiliser :** Après un entretien annuel, pour en tirer une synthèse actionnable pour le manager ou les RH.
 
 ---
 
@@ -205,7 +223,7 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 </details>
 
 <details>
-<summary><b>⚖️ Juridique & Contrats</b> — 7 skills</summary>
+<summary><b>⚖️ Juridique & Contrats</b> — 6 skills</summary>
 
 Outils pré-juridiques — tous nécessitent une validation professionnelle avant utilisation. Ils orientent les revues, font surface les risques et produisent des projets. Aucun ne remplace un juriste.
 
@@ -219,17 +237,6 @@ Outils pré-juridiques — tous nécessitent une validation professionnelle avan
 
 **Quand l'utiliser :** Vous recevez un document et devez décider en quelques minutes s'il faut escalader à un juriste, ou sur quelles clauses concentrer la revue.
 
-> Utiliser `legal-risk-flag` en premier (scan rapide), puis `contract-review` pour l'analyse clause par clause complète.
-
----
-
-#### `contract-review` — Revue clause par clause avec redlines
-
-**Ce qu'il fait :** Analyse un contrat clause par clause, identifie les déviations par rapport aux positions standard, produit des redlines prioritaires avec justification et langage alternatif proposé.
-
-**Ce qu'il ne fait pas :** Ne fournit pas de conseil juridique. Le livrable doit être revu par un professionnel qualifié avant utilisation ou négociation.
-
-**Quand l'utiliser :** Avant de signer un contrat significatif. Plus rapide qu'une revue complète par un juriste pour le premier passage — puis le juriste valide.
 
 ---
 
@@ -241,7 +248,6 @@ Outils pré-juridiques — tous nécessitent une validation professionnelle avan
 
 **Quand l'utiliser :** Avant d'accepter les CGV d'un fournisseur ou d'une plateforme significatifs, ou lors de la rédaction de ses propres CGV.
 
-> Différent de `contract-review` : `cgv-checker` est pour les CGV standard (contrats d'adhésion). `contract-review` est pour les contrats négociables avec clauses sur mesure.
 
 ---
 
@@ -475,9 +481,9 @@ Du besoin cadré au document que l'équipe produit attend — PRD, specs, user s
 </details>
 
 <details>
-<summary><b>💻 Tech</b> — 5 skills</summary>
+<summary><b>💻 Tech</b> — 4 skills</summary>
 
-Concevoir, relire et entretenir du logiciel — architecture, revue de code, dette technique, triage support, maquette HTML.
+Concevoir et entretenir du logiciel — architecture, dette technique, triage support, maquette HTML.
 
 ---
 
@@ -489,21 +495,12 @@ Concevoir, relire et entretenir du logiciel — architecture, revue de code, det
 
 ---
 
-#### `code-review` — Revue de code sur 4 dimensions
-
-**Ce qu'il fait :** Revue du code sur sécurité, performance, correction et maintenabilité. Pour chaque finding : identifie le problème, explique l'impact, propose un correctif. Classe les constats en critiques vs suggestions — les deux sont remontés, aucun n'est masqué.
-
-**Quand l'utiliser :** Avant de merger une PR, lors d'un audit codebase, ou lors d'une prise en main d'un nouveau codebase.
-
----
-
 #### `tech-debt` — Audit de dette technique avec plan de remédiation
 
 **Ce qu'il fait :** Identifie, catégorise (structurelle / qualité de code / dépendances / documentation / couverture de tests) et priorise la dette technique avec un plan de remédiation réaliste. Distingue les quick wins du travail structurel.
 
 **Quand l'utiliser :** Avant un sprint significatif, en planning ingénierie trimestriel, quand la vélocité a dégradé, ou avant une due diligence d'acquisition.
 
-> `code-review` évalue un changeset spécifique (une PR, un fichier). `tech-debt` audite les problèmes structurels accumulés sur l'ensemble du codebase.
 
 ---
 
@@ -609,7 +606,6 @@ Enchaînements déjà praticables à la main :
 research → analyse-concurrentielle → decision
 brief    → prd → feature-spec
 fiche-poste → interview-loop-planner → interview-guide-recruteur
-legal-risk-flag → contract-review
 ```
 
 ---
@@ -623,6 +619,8 @@ Le repo est une marketplace de plugins Claude Code (`.claude-plugin/marketplace.
 ```bash
 claude plugin marketplace add amiel-35/ix-recipes
 claude plugin install ix-recipes@ix-recipes
+claude plugin marketplace add amiel-35/ix-skills     # requis : les atomes sur lesquels reposent les recettes
+claude plugin install ix-skills@ix-skills
 ```
 
 Pour récupérer les mises à jour ensuite :
@@ -634,15 +632,27 @@ claude plugin update ix-recipes
 
 Puis redémarrer Claude Code. Les releases sont résolues par la version du manifeste (`dist/.claude-plugin/plugin.json`), voir `CHANGELOG.md`. Dans l'app desktop Claude Code, les mêmes étapes passent par la commande `/plugin`.
 
-> Transition : jusqu'à ix-skills 4.0.0, ces 48 skills étaient aussi livrés dans ix-skills. Mettre ix-skills à jour pour ne pas les voir en double.
+**Alternative — le catalogue `amiel-35`.** [amiel-35/plugins](https://github.com/amiel-35/plugins) est une marketplace qui référence ix-skills, ix-recipes et ghost-council, chacun pointant sur le dossier `dist/` de son propre dépôt :
+
+```bash
+claude plugin marketplace add amiel-35/plugins
+claude plugin install ix-recipes@amiel-35
+claude plugin install ix-skills@amiel-35
+```
+
+Installer un plugin depuis une seule marketplace (`ix-recipes@ix-recipes` ou `ix-recipes@amiel-35`, pas les deux), sinon il apparaît en double ; les mises à jour passent alors par `claude plugin marketplace update amiel-35`. Testé dans Claude Code ; pas encore testé avec « Ajouter depuis un dépôt » de Cowork : pour Cowork, garder la marketplace propre à chaque dépôt, ci-dessous.
+
+Les 11 recettes RH qui déclarent des références par famille de métier (`partials/metier_*.md`, voir [Structure](#structure) ; tous les skills RH sauf `contrat-emploi`, `lettre-cadrage-disciplinaire` et `org-design-brief`) reçoivent leur dossier `references/` avec le plugin : rien de plus à faire.
+
+> Transition : jusqu'à ix-skills 4.0.0, ces skills étaient aussi livrés dans ix-skills. Mettre ix-skills à jour pour ne pas les voir en double. ix-recipes 2.0.0 retire `code-review` et `contract-review` (voir `CHANGELOG.md`).
 
 **Fallback manuel** : symlinker ou copier `dist/skills` dans `~/.claude/skills/` — pas `skills/`, dont le frontmatter canonique n'est pas un `SKILL.md` valide.
 
 ### Claude Cowork / claude.ai
 
-**Option A — plugin** : **« Ajouter depuis un dépôt »** avec `amiel-35/ix-recipes`.
+**Option A — plugin** : **« Ajouter depuis un dépôt »** avec `amiel-35/ix-recipes`, puis à nouveau avec `amiel-35/ix-skills` (les recettes s'appuient sur ses atomes). Les références sont incluses.
 
-**Option B — un seul skill** : les dossiers `dist/skills/<id>/` sont des Agent Skills valides, à uploader tels quels dans **Cowork → Customize** (ou l'éditeur ChatGPT Skills).
+**Option B — un seul skill** : les dossiers `dist/skills/<id>/` sont des Agent Skills valides, à uploader tels quels dans **Cowork → Customize** (ou l'éditeur ChatGPT Skills). Pour les 11 skills RH qui déclarent des références (`fiche-poste`, `entretien-professionnel`, `analyse-entretien`…), uploader le dossier entier, sous-dossier `references/` compris ; sans lui, le skill demande le référentiel de compétences de l'organisation. Un skill uploadé seul n'embarque pas les atomes ix-skills.
 
 ### Codex CLI
 
@@ -651,10 +661,11 @@ git clone https://github.com/amiel-35/ix-recipes /tmp/ix-recipes
 cd /tmp/ix-recipes
 pip install -r requirements.txt
 bash scripts/install-codex.sh                 # tous les skills
-bash scripts/install-codex.sh contract-review # un seul skill
+bash scripts/install-codex.sh fiche-poste     # un seul skill
+bash scripts/install-codex.sh --dry-run       # aperçu sans installer
 ```
 
-Les skills sont installés dans `~/.codex/skills/<id>/SKILL.md`. Redémarrer Codex pour activer.
+Les skills sont installés dans `~/.codex/skills/<id>/SKILL.md`, avec leur dossier `references/` quand ils en ont un. Redémarrer Codex pour activer. Les recettes s'appuient sur les atomes d'ix-skills : installer aussi ix-skills, avec le `scripts/install-codex.sh` de son propre dépôt.
 
 ### mystaffy
 
@@ -663,9 +674,11 @@ python3 build.py --target mystaffy
 python3 build.py --target ix-memory   # format ix-memory natif
 ```
 
+Ces cibles ne contiennent que `skill.md` et `manifest.json`, pas les dossiers `references/` : les skills RH demandent alors le référentiel de compétences de l'organisation.
+
 ### GPT / Gemini / autre LLM
 
-Copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter YAML est ignoré sans effet de bord.
+Copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter YAML est ignoré sans effet de bord. Pour un skill qui déclare `references` dans son frontmatter (les skills RH), coller aussi le `partials/metier_<famille>.md` correspondant (`metier_tech`, `metier_rh`…), sinon le skill demandera le référentiel de compétences de l'organisation.
 
 ---
 
@@ -674,16 +687,22 @@ Copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter
 ```
 ix-recipes/
 ├── skills/                 ← source canonique (un .md + .mystaffy.json par skill)
+├── partials/               ← références par famille de métier (metier_*.md), copiées dans references/ des skills qui les déclarent
 ├── scripts/
 │   └── install-codex.sh    ← installateur Codex CLI
 ├── dist/                   ← racine du plugin, commité
 │   ├── .claude-plugin/plugin.json   ← manifeste du plugin (à la main, bump à chaque release)
-│   └── skills/<id>/SKILL.md         ← artefacts Agent Skills, générés par build.py
+│   └── skills/<id>/                 ← artefacts Agent Skills, générés par build.py
+│       ├── SKILL.md
+│       └── references/              ← seulement pour les skills qui déclarent des références
 ├── .claude-plugin/
 │   └── marketplace.json    ← manifeste marketplace, pointe sur ./dist
-├── mystaffy-dist/, codex-dist/  ← artefacts mystaffy / Codex (gitignore)
+├── mystaffy-dist/, codex-dist/  ← artefacts mystaffy / Codex (ignorés par git)
 ├── build.py                ← packager multi-cibles, copie de celui d'ix-skills
-├── requirements.txt
+├── requirements.txt        ← jsonschema, pyyaml
+├── docs/                   ← bannière et notes de travail
+├── LICENSE                 ← MIT
+├── LICENSES/               ← copies des licences des sources tierces (Apache-2.0)
 ├── CHANGELOG.md            ← releases, par date
 ├── THIRD_PARTY.md          ← sources tierces et licences
 └── CLAUDE.md               ← guide de contribution
@@ -694,11 +713,12 @@ ix-recipes/
 ## Packager
 
 ```bash
+pip install -r requirements.txt         # jsonschema, pyyaml
 python3 build.py --validate
 python3 build.py
-python3 build.py contract-review
-python3 build.py --target agentskills   # dist/skills/<id>/SKILL.md — commit it
-python3 build.py --target cowork        # validates dist/.claude-plugin/plugin.json
+python3 build.py fiche-poste
+python3 build.py --target agentskills   # dist/skills/<id>/SKILL.md — à commiter
+python3 build.py --target cowork        # valide dist/.claude-plugin/plugin.json
 python3 build.py --target mystaffy --domain rh
 python3 build.py --target codex
 claude plugin validate dist
@@ -710,6 +730,7 @@ claude plugin validate dist
 
 - [**ix-skills**](https://github.com/amiel-35/ix-skills) — les ingrédients : gestes cognitifs atomiques (critique, decision, explorer, fact-check…) et postures de conseil (`dixieme-homme`, `red-team`, `contrarian`…). Prérequis d'ix-recipes.
 - [**ghost-council**](https://github.com/amiel-35/ghost-council) — des méthodes de raisonnement de philosophes encodées comme skills (Popper, Kant, Pascal, Wittgenstein…), et `/council`, qui fait délibérer plusieurs angles indépendants sur une décision.
+- [**plugins**](https://github.com/amiel-35/plugins) — la marketplace `amiel-35`, qui référence ix-skills, ix-recipes et ghost-council au même endroit.
 
 ---
 

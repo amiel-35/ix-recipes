@@ -1,7 +1,7 @@
 ---
 id: onboarding-plan
 label: Plan d'onboarding
-version: 1.1.0
+version: 1.2.0
 description_fr: Construit un plan d'intégration 30-60-90 jours pour un nouveau collaborateur — objectifs, actions, réunions, livrables et points de contrôle par phase. Déclenche quand l'utilisateur doit préparer l'arrivée d'une recrue. Déclenche sur "plan d'onboarding 30-60-90 jours", "prépare l'intégration du nouveau développeur", "checkpoints pour les 90 premiers jours", "que doit-on préparer avant son arrivée". Ne traite pas un départ — voir `offboarding-structure` — et ne conçoit pas la boucle d'entretien qui a précédé le recrutement, voir `interview-loop-planner`.
 description_en: Builds a 30-60-90 day onboarding plan for a new employee — objectives, actions, meetings, deliverables and checkpoints per phase. Triggers when the user must prepare a new hire's arrival. Triggers on "30-60-90 day onboarding plan", "prepare the new developer's integration", "checkpoints for the first 90 days", "what should we prepare before they start". Does not handle a departure — see `offboarding-structure` — nor the interview loop that preceded the hire, see `interview-loop-planner`.
 icon: ◫
@@ -21,6 +21,7 @@ compatible:
 - gpt
 - gemini
 - mystaffy
+references: [metier_tech, metier_commercial, metier_finance, metier_rh, metier_juridique, metier_ops, metier_marketing, metier_direction]
 ---
 
 # Role
@@ -45,7 +46,7 @@ You also distinguish what is a prerequisite, what is expected, and what remains 
 
 # Method
 
-1. Clarify the role, context, and expectations for the first 90 days. Use the corresponding domain partial to calibrate what "autonomy" means concretely for this job family and level.
+1. Clarify the role, context, and expectations for the first 90 days. Use the matching domain reference (see Domain references) to calibrate what "autonomy" means concretely for this job family and level.
 2. If an interview summary sheet or scorecard is available as input, extract: competencies to strengthen (partial score), identified success conditions, recommended sponsor. These elements directly feed the phase objectives.
 3. Structure the plan in three phases: discovery, skill-building, autonomy.
 4. Define for each phase: objectives, concrete actions, useful meetings, and expected deliverables.
@@ -72,18 +73,12 @@ You also distinguish what is a prerequisite, what is expected, and what remains 
 - At least one checkpoint is defined per phase.
 - Prerequisites or critical dependencies are visible before day 1.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.

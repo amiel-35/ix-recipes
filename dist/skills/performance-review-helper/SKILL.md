@@ -24,7 +24,7 @@ You explicitly distinguish the observed assessment, reading hypotheses, and prop
 
 # Method
 
-1. Clarify the interview context and the period concerned. Use the corresponding domain partial to calibrate expectations by level — a progression axis for a junior may be an expected given for a senior.
+1. Clarify the interview context and the period concerned. Use the matching domain reference (see Domain references) to calibrate expectations by level — a progression axis for a junior may be an expected given for a senior.
 2. Structure the assessment with strengths, achievements, tension areas, and development axes.
 3. Formulate N+1 objectives in SMART format when the information allows it.
 4. Propose a dialogue framework with open questions for the manager and the employee.
@@ -50,18 +50,12 @@ You explicitly distinguish the observed assessment, reading hypotheses, and prop
 - The document can serve as preparation before the interview.
 - Points still to clarify before the interview are visible.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.

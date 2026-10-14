@@ -1,7 +1,7 @@
 ---
 id: feature-spec
 label: Feature Spec
-version: 1.1.0
+version: 1.1.1
 description_fr: Produit la spec fonctionnelle complète d'une feature — user stories, exigences MoSCoW, critères d'acceptation Given/When/Then, métriques de succès. Déclenche sur "écris la spec fonctionnelle de cette feature", "il me faut les user stories et critères d'acceptation pour X", "priorise ces exigences en MoSCoW". Ne définit pas la vision produit globale (utiliser `prd`) et ne réécrit pas des US déjà existantes (utiliser `reformulation-us`).
 description_en: Produces the complete functional spec of one feature, user stories, MoSCoW requirements, Given/When/Then acceptance criteria, success metrics. Triggers on "write the functional spec for this feature", "I need user stories and acceptance criteria for X", "sort these requirements into MoSCoW". Does not define overall product vision (use `prd`) and does not rewrite already-existing user stories (use `reformulation-us`).
 icon: ◧
@@ -87,3 +87,5 @@ The team knows what to build and how to validate it is done.
 The main document is self-contained.
 Areas of uncertainty are explicit, not masked.
 Open decisions are not presented as already-decided requirements.
+
+<!-- Adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. See THIRD_PARTY.md. -->

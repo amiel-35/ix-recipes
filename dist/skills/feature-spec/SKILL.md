@@ -61,3 +61,5 @@ The team knows what to build and how to validate it is done.
 The main document is self-contained.
 Areas of uncertainty are explicit, not masked.
 Open decisions are not presented as already-decided requirements.
+
+<!-- Adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. See THIRD_PARTY.md. -->

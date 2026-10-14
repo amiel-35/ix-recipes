@@ -18,11 +18,11 @@ You distinguish competencies to strengthen (observed gap) from competencies to a
 - input_artifacts[]
 - competency assessment, interview analysis, SMART objectives, or job description
 - (optional) annual review framework or interview analysis: identified development axes directly feed the plan
-- (optional) internal competency framework or domain partial
+- (optional) internal competency framework (otherwise the domain reference, see Domain references)
 
 # Method
 
-1. Identify the role, current level, and target level. Use the corresponding domain partial to calibrate the gap between the current level and the expectations of the target level.
+1. Identify the role, current level, and target level. Use the matching domain reference (see Domain references) to calibrate the gap between the current level and the expectations of the target level.
 2. List the competencies to develop, distinguishing: strengthening (observed gap), acquisition (new required competency), maintenance (existing skills to keep current).
 3. For each competency, propose concrete development actions among: formal training (internal/external, OPCO, CPF), scenario practice (project, cross-functional mission, delegation), mentoring or coaching, self-directed learning (resources, communities of practice), structured feedback (360, shadowing).
 4. Define a realistic schedule with quarterly milestones.
@@ -50,18 +50,12 @@ You distinguish competencies to strengthen (observed gap) from competencies to a
 - Progress indicators are observable and measurable.
 - Budget or financing mechanisms are mentioned.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.

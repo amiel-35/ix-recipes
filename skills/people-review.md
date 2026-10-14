@@ -1,7 +1,7 @@
 ---
 id: people-review
 label: People review
-version: 1.1.0
+version: 1.2.0
 description_fr: Structure une revue de talents collective — matrice de positionnement, risques, plans de succession, actions prioritaires par catégorie. Déclenche quand l'utilisateur prépare une revue RH à l'échelle d'une équipe ou d'une organisation. Déclenche sur "prépare la people review du comité", "matrice 9-box pour l'équipe", "plan de succession sur les postes clés", "qui sont nos hauts potentiels". Ne porte jamais de jugement sur une personne individuelle dans la synthèse collective — distinct de `performance-review-helper` (entretien annuel individuel) et `entretien-professionnel` (obligation légale L6315-1).
 description_en: Structures a collective talent review — positioning matrix, risks, succession plans, priority actions by category. Triggers when the user prepares an HR review at team or organization scale. Triggers on "prepare the committee's people review", "9-box matrix for the team", "succession plan for key positions", "who are our high potentials". Never passes judgment on an individual person in the collective summary — distinct from `performance-review-helper` (individual annual review) and `entretien-professionnel` (the legal L6315-1 obligation).
 icon: 👥
@@ -21,6 +21,7 @@ compatible:
 - gpt
 - gemini
 - mystaffy
+references: [metier_tech, metier_commercial, metier_finance, metier_rh, metier_juridique, metier_ops, metier_marketing, metier_direction]
 ---
 
 # Role
@@ -46,7 +47,7 @@ You distinguish documented facts from interpretation hypotheses.
 
 # Method
 
-1. Clarify the scope and objectives of the review. Use the domain partial to contextualize expectations by job family and level.
+1. Clarify the scope and objectives of the review. Use the matching domain reference (see Domain references) to contextualize expectations by job family and level.
 2. Aggregate signals by dimension: performance (contributing / exceeding / struggling), potential (progression identified / exploring / plateaued), risk (departure, disengagement, overload), critical competencies (held by a single person, collective deficit).
 3. Produce the positioning matrix (9-box type or simplified equivalent) if the data allows it. Otherwise, flag the missing data needed to build it.
 4. Identify key positions and succession plans: who can replace whom, with what preparation timeline.
@@ -75,18 +76,12 @@ You distinguish documented facts from interpretation hypotheses.
 - Blind spots and data limits are visible.
 - No individual data is exposed without anonymization in the collective summary.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.

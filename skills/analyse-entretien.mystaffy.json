@@ -1,0 +1,56 @@
+{
+  "metier": [
+    "rh"
+  ],
+  "uses_partials": [
+    "metier_tech",
+    "metier_commercial",
+    "metier_finance",
+    "metier_rh",
+    "metier_juridique",
+    "metier_ops",
+    "metier_marketing",
+    "metier_direction"
+  ],
+  "category": "production",
+  "params": {
+    "destinataire": {
+      "label": "Destinataire",
+      "type": "enum",
+      "required": false,
+      "default": "manager",
+      "values": [
+        "manager",
+        "rh",
+        "direction"
+      ],
+      "help": "Oriente le niveau de detail et le ton de la synthese."
+    },
+    "inclure_actions": {
+      "label": "Inclure actions recommandees",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    }
+  },
+  "ui": {
+    "simple_fields": [
+      "destinataire",
+      "inclure_actions"
+    ],
+    "advanced_fields": []
+  },
+  "execution": {
+    "supports_async": false,
+    "supports_review_gate": true,
+    "max_input_artifacts": 4,
+    "max_estimated_tokens": 16000
+  },
+  "color": "#553C9A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

@@ -55,3 +55,5 @@ Handling can start without re-reading the source ticket.
 The priority is justified and actionable.
 Routing is unambiguous.
 Gaps that weaken the triage are visible.
+
+<!-- Adapted from anthropics/knowledge-work-plugins, customer-support/skills/ticket-triage/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. See THIRD_PARTY.md. -->

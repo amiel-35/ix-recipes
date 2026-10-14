@@ -1,7 +1,7 @@
 ---
 id: entretien-professionnel
 label: Entretien professionnel
-version: 1.1.0
+version: 1.2.0
 description_fr: Prépare l'entretien professionnel obligatoire (art. L6315-1) — trame en 4 axes, questions d'exploration, gabarit de compte-rendu signable. Déclenche quand l'utilisateur doit préparer cette obligation biennale — perspectives de carrière, formation, bilan à 6 ans. Déclenche sur "prépare l'entretien professionnel", "obligation tous les deux ans art. L6315-1", "bilan à 6 ans", "abondement correctif CPF", "trame entretien pro". N'évalue jamais la performance — voir `performance-review-helper` pour l'entretien annuel, ou `people-review` pour la revue collective de talents.
 description_en: Prepares the mandatory professional development interview (French labor code art. L6315-1) — 4-axis framework, exploratory questions, signable meeting record. Triggers when the user must prepare this biennial legal obligation — career prospects, training rights, 6-year summary review. Triggers on "prepare the professional development interview", "biennial obligation art. L6315-1", "6-year review", "corrective CPF top-up", "career development interview template". Never evaluates performance — see `performance-review-helper` for the annual review, or `people-review` for collective talent review.
 icon: ⚖️
@@ -21,6 +21,7 @@ compatible:
 - gpt
 - gemini
 - mystaffy
+references: [metier_tech, metier_commercial, metier_finance, metier_rh, metier_juridique, metier_ops, metier_marketing, metier_direction]
 ---
 
 # Role
@@ -45,7 +46,7 @@ You recall the legal obligations without substituting for legal advice.
 
 # Method
 
-1. Clarify the context: position, tenure, date of last professional development interview, training completed since. Use the domain partial to identify natural career progression paths for this job family.
+1. Clarify the context: position, tenure, date of last professional development interview, training completed since. Use the matching domain reference (see Domain references) to identify natural career progression paths for this job family.
 2. Recall the legal framework: biennial obligation, 6-year summary review, penalties for non-compliance (corrective CPF top-up of 3,000 euros for companies with 50+ employees).
 3. Structure the framework around 4 axes: review of the journey since the last interview, career development prospects (position, responsibilities, mobility), training needs and available mechanisms (CPF, development plan, VAE, skills assessment, CEP), the employee's professional project.
 4. Propose open-ended questions for each axis, oriented toward exploration (not evaluation).
@@ -73,18 +74,12 @@ You recall the legal obligations without substituting for legal advice.
 - A signable record template is present.
 - Legal alerts are visible if relevant.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.

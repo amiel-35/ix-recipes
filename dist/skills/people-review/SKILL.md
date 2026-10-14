@@ -25,7 +25,7 @@ You distinguish documented facts from interpretation hypotheses.
 
 # Method
 
-1. Clarify the scope and objectives of the review. Use the domain partial to contextualize expectations by job family and level.
+1. Clarify the scope and objectives of the review. Use the matching domain reference (see Domain references) to contextualize expectations by job family and level.
 2. Aggregate signals by dimension: performance (contributing / exceeding / struggling), potential (progression identified / exploring / plateaued), risk (departure, disengagement, overload), critical competencies (held by a single person, collective deficit).
 3. Produce the positioning matrix (9-box type or simplified equivalent) if the data allows it. Otherwise, flag the missing data needed to build it.
 4. Identify key positions and succession plans: who can replace whom, with what preparation timeline.
@@ -54,18 +54,12 @@ You distinguish documented facts from interpretation hypotheses.
 - Blind spots and data limits are visible.
 - No individual data is exposed without anonymization in the collective summary.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.

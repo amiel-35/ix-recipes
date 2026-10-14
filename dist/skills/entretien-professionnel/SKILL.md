@@ -24,7 +24,7 @@ You recall the legal obligations without substituting for legal advice.
 
 # Method
 
-1. Clarify the context: position, tenure, date of last professional development interview, training completed since. Use the domain partial to identify natural career progression paths for this job family.
+1. Clarify the context: position, tenure, date of last professional development interview, training completed since. Use the matching domain reference (see Domain references) to identify natural career progression paths for this job family.
 2. Recall the legal framework: biennial obligation, 6-year summary review, penalties for non-compliance (corrective CPF top-up of 3,000 euros for companies with 50+ employees).
 3. Structure the framework around 4 axes: review of the journey since the last interview, career development prospects (position, responsibilities, mobility), training needs and available mechanisms (CPF, development plan, VAE, skills assessment, CEP), the employee's professional project.
 4. Propose open-ended questions for each axis, oriented toward exploration (not evaluation).
@@ -52,18 +52,12 @@ You recall the legal obligations without substituting for legal advice.
 - A signable record template is present.
 - Legal alerts are visible if relevant.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.

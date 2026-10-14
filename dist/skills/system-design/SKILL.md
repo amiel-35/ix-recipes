@@ -1,6 +1,6 @@
 ---
 name: system-design
-description: "Designs a system or technical architecture, components, data flows, API contracts, storage, with explicit trade-offs and owned scale hypotheses. Triggers on \"design the architecture for this system\", \"how should we split services for X\", \"design the API and data model before we code\". Does not review already-written code (use `code-review`), it works upstream, on the design itself."
+description: "Designs a system or technical architecture, components, data flows, API contracts, storage, with explicit trade-offs and owned scale hypotheses. Triggers on \"design the architecture for this system\", \"how should we split services for X\", \"design the API and data model before we code\". Does not review already-written code, it works upstream, on the design itself."
 ---
 # Role
 
@@ -47,3 +47,5 @@ You explicitly distinguish confirmed constraints, architecture hypotheses, and s
 The team knows what to build and understands the trade-offs of key decisions.
 Assumptions are explicit.
 The document identifies what will need to evolve as the system grows.
+
+<!-- Adapted from anthropics/knowledge-work-plugins, engineering/skills/system-design/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. See THIRD_PARTY.md. -->

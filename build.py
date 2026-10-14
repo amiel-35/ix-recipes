@@ -17,6 +17,7 @@ Usage:
 
 import argparse
 import json
+import shutil
 import re
 import sys
 from pathlib import Path
@@ -32,6 +33,7 @@ DIST_DIR = Path("dist")
 DIST_SKILLS_DIR = DIST_DIR / "skills"
 MYSTAFFY_DIST_DIR = Path("mystaffy-dist")
 CODEX_DIST_DIR = Path("codex-dist")
+PARTIALS_DIR = Path("partials")
 PLUGIN_JSON = DIST_DIR / ".claude-plugin" / "plugin.json"
 
 # ---------------------------------------------------------------------------
@@ -263,11 +265,36 @@ def build_agentskills(skills: list, dry_run: bool = False) -> int:
             if not dry_run:
                 out_dir.mkdir(parents=True, exist_ok=True)
                 out_file.write_text(content, encoding="utf-8")
+            _write_references(fm, out_dir, dry_run)
             print(f"  \u2713 agentskills {skill_id:<20} \u2192 dist/skills/{skill_id}/SKILL.md{dry_tag}")
         except Exception as e:
             print(f"  \u2717 agentskills {skill_id:<20} \u2192 {e}")
             errors += 1
     return errors
+
+
+def _write_references(fm: dict, out_dir: Path, dry_run: bool) -> list:
+    """Copy the partials listed in `references` next to the SKILL.md.
+
+    Progressive disclosure: partials/<name>.md lands in <out_dir>/references/,
+    and the skill body tells the model which one to read when — so a skill can
+    ship eight domain annexes while the model loads only the one it needs.
+    The references/ folder is rebuilt from scratch on every build.
+    """
+    names = fm.get("references") or []
+    for name in names:
+        if not (PARTIALS_DIR / f"{name}.md").is_file():
+            raise FileNotFoundError(f"reference '{name}' not found in {PARTIALS_DIR}/")
+    if dry_run:
+        return names
+    ref_dir = out_dir / "references"
+    if ref_dir.is_dir():
+        shutil.rmtree(ref_dir)
+    if names:
+        ref_dir.mkdir(parents=True)
+        for name in names:
+            shutil.copyfile(PARTIALS_DIR / f"{name}.md", ref_dir / f"{name}.md")
+    return names
 
 
 # ---------------------------------------------------------------------------
@@ -532,6 +559,7 @@ def build_codex(skills: list, dry_run: bool = False) -> int:
                 CODEX_DIST_DIR.mkdir(exist_ok=True)
                 out_dir.mkdir(exist_ok=True)
                 out_file.write_text(content, encoding="utf-8")
+            _write_references(fm, out_dir, dry_run)
             print(f"  \u2713 codex      {skill_id:<20} \u2192 codex-dist/{skill_id}/SKILL.md{dry_tag}")
         except Exception as e:
             print(f"  \u2717 codex      {skill_id:<20} \u2192 {e}")

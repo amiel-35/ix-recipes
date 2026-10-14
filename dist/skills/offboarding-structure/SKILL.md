@@ -23,7 +23,7 @@ You do not presuppose the reason for departure unless explicitly provided.
 
 # Method
 
-1. Identify the role, level, and scope of responsibilities. Use the domain partial to assess the criticality of the knowledge held and the risk of knowledge loss.
+1. Identify the role, level, and scope of responsibilities. Use the matching domain reference (see Domain references) to assess the criticality of the knowledge held and the risk of knowledge loss.
 2. Structure the handover plan in 3 components: knowledge (what the person knows that others need to learn), projects (what is in progress and must be transferred), access and tools (what must be revoked or transferred).
 3. For each component, define: what to transmit, to whom, in what format (documentation, handover session, shadowing), with what deadline.
 4. Produce the administrative checklist: equipment to recover, access to revoke (email, VPN, SaaS tools, badges), final settlement, documents to provide (employment certificate, unemployment attestation, health/welfare insurance portability).
@@ -51,18 +51,12 @@ You do not presuppose the reason for departure unless explicitly provided.
 - Continuity risks are identified.
 - A schedule for the last period is proposed.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.

@@ -67,6 +67,8 @@ if [[ -n "$SKILL_ID" ]]; then
   else
     mkdir -p "$dst_dir"
     cp "$src" "${dst_dir}/SKILL.md"
+    rm -rf "${dst_dir}/references"
+    [[ -d "${CODEX_DIST_DIR}/${SKILL_ID}/references" ]] && cp -R "${CODEX_DIST_DIR}/${SKILL_ID}/references" "${dst_dir}/references"
     echo "  ✓ ${SKILL_ID} → ${dst_dir}/SKILL.md"
   fi
   count=1
@@ -81,6 +83,8 @@ else
     else
       mkdir -p "$dst_dir"
       cp "${skill_dir}/SKILL.md" "${dst_dir}/SKILL.md"
+      rm -rf "${dst_dir}/references"
+      [[ -d "${skill_dir}/references" ]] && cp -R "${skill_dir}/references" "${dst_dir}/references"
       echo "  ✓ ${skill_name}"
     fi
     count=$((count + 1))

@@ -83,27 +83,20 @@ You must remain factual, professional, and link every question to an observable 
 - If it is a management role, a culture / fit block is present.
 - Points requiring further investigation rather than immediate judgment are visible.
 
-> Domain calibration: tech. Adapt lens and output format accordingly.
+# Domain references
 
-> Domain calibration: commercial. Adapt lens and output format accordingly.
+This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
 
-> Domain calibration: finance. Adapt lens and output format accordingly.
-
-> Domain calibration: rh. Adapt lens and output format accordingly.
-
-> Domain calibration: juridique. Adapt lens and output format accordingly.
-
-> Domain calibration: ops. Adapt lens and output format accordingly.
-
-> Domain calibration: marketing. Adapt lens and output format accordingly.
-
-> Domain calibration: direction. Adapt lens and output format accordingly.
+- Identify the job family of each role concerned, then read only the matching file — never all of them.
+- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
+- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
+- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
 <!-- inlined from partial: transverse_anti_biais -->
 
-# Transverse Partial: Anti-bias
+# Reference: Anti-bias
 
-This partial is systematically injected into each interview round. It provides anti-bias vigilance reminders for the recruiter and debrief facilitator.
+It provides anti-bias vigilance reminders for the recruiter and debrief facilitator.
 
 ---
 

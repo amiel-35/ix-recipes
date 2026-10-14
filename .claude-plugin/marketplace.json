@@ -1,0 +1,15 @@
+{
+  "name": "ix-recipes",
+  "description": "Domain recipes on top of ix-skills — HR, legal, finance, procurement, product and tech deliverables, plus workflows chaining ix-skills atoms.",
+  "owner": {
+    "name": "Amiel Lavon",
+    "url": "https://github.com/amiel-35"
+  },
+  "plugins": [
+    {
+      "name": "ix-recipes",
+      "source": "./dist",
+      "description": "Domain recipes on top of ix-skills — HR, legal, finance, procurement, product and tech deliverables, plus workflows chaining ix-skills atoms."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "ix-recipes",
+  "description": "Domain recipes on top of ix-skills — HR, legal, finance, procurement, product and tech deliverables, plus workflows chaining ix-skills atoms. Compatible with Claude, GPT, Gemini, and mystaffy.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Amiel Lavon",
+    "url": "https://github.com/amiel-35"
+  },
+  "homepage": "https://github.com/amiel-35/ix-recipes",
+  "license": "MIT"
+}

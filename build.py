@@ -231,6 +231,7 @@ SIBLING_SKILL_DIRS = {
     "ix-recipes": Path("../ix-recipes/skills"),
 }
 PAUSES = {"none", "validate", "answers", "choose"}
+MODELS = {"sonnet", "opus", "haiku"}
 
 
 def _skill_exists(ref: str):
@@ -278,6 +279,8 @@ def validate_workflow(fm: dict, body: str) -> list:
             errs.append(f"step '{sid}': skill '{skill}' is not cited in the body")
         if not st.get("mission"):
             errs.append(f"step '{sid}': no mission")
+        if st.get("model", "sonnet") not in MODELS:
+            errs.append(f"step '{sid}': model must be one of {sorted(MODELS)}")
         if st.get("pause", "none") not in PAUSES:
             errs.append(f"step '{sid}': pause must be one of {sorted(PAUSES)}")
         if st.get("produces_context_sheet") and i != 0:

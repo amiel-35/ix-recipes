@@ -1,7 +1,7 @@
 ---
 id: reponse-appel-offres
 label: Réponse à appel d'offres
-version: 1.0.0
+version: 1.1.0
 description_fr: "Conduit une réponse à appel d'offres de bout en bout — lecture du cahier des charges, questions à l'acheteur, go / no-go, stratégie de réponse, rédaction de l'offre, contrôle de conformité, mise en forme — chaque étape isolée, le dossier de consultation lu seulement par la première, une fiche de contexte validée par l'humain, et des pauses pour les réponses de l'acheteur et les décisions. Déclenche quand une consultation, un appel d'offres ou un cahier des charges reçu appelle une réponse complète. Déclenche sur \"on répond à cet appel d'offres\", \"prépare notre réponse à ce cahier des charges\", \"on y va ou pas sur cette consultation\", \"monte la réponse à cet AO\". Ne fait pas seulement l'analyse du cahier des charges — voir `analyse-cdc` — ni seulement l'offre — voir `offre-commerciale` ; pour une demande client informelle, voir `brief-client`."
 description_en: "Runs a tender response end to end — reading the specification, questions to the buyer, go / no-go, response strategy, writing the offer, compliance check, formatting — each step isolated, the tender file read only by the first, a human-validated context sheet, and pauses for the buyer's answers and the decisions. Triggers when a consultation, call for tenders or received specification calls for a full response. Triggers on \"we're answering this call for tenders\", \"prepare our response to this specification\", \"should we bid on this consultation\", \"build the response to this tender\". Does not only analyse the specification — see `analyse-cdc` — nor only write the offer — see `offre-commerciale`; for an informal client request, see `brief-client`."
 icon: ⇶
@@ -34,42 +34,49 @@ workflow:
       transmits: [requirements, evaluation_criteria, submission_rules, grey_zones, blocking_questions]
       produces_context_sheet: true
       pause: validate
+      model: opus
     - id: questioning
       skill: ix-skills:questioning
       mission: Turn the grey zones and blocking questions into the questions to send the buyer within the consultation's question period, most blocking first.
       receives: [context_sheet, analyse-cdc.grey_zones, analyse-cdc.blocking_questions]
       transmits: [buyer_questions]
       pause: answers
+      model: sonnet
     - id: go-no-go
       skill: ix-skills:decision
       mission: "Recommend Go, Go with conditions or No-go against the requirements, the evaluation criteria and the buyer's answers, with visible trade-offs."
       receives: [context_sheet, analyse-cdc.requirements, analyse-cdc.evaluation_criteria, answers]
       transmits: [go_no_go, conditions]
       pause: validate
+      model: sonnet
     - id: strategie
       skill: ix-skills:brief
       mission: Write the response brief — angle, how each evaluation criterion will be met, proofs to provide, risks, what we will not propose.
       receives: [context_sheet, analyse-cdc.requirements, analyse-cdc.evaluation_criteria, answers, go-no-go.conditions]
       transmits: [response_brief]
       pause: none
+      model: sonnet
     - id: offre
       skill: ix-recipes:offre-commerciale
       mission: Write the content of the offer from the response brief, within the submission rules.
       receives: [context_sheet, strategie.response_brief, analyse-cdc.submission_rules]
       transmits: [offer]
       pause: none
+      model: sonnet
     - id: conformite
       skill: ix-skills:controle-qualite
       mission: Check the offer against the tender's requirements, evaluation criteria and submission rules, one verdict per requirement with the exact passage.
       receives: [offre.offer, analyse-cdc.requirements, analyse-cdc.evaluation_criteria, analyse-cdc.submission_rules]
       transmits: [compliance_verdicts]
       pause: validate
+      model: sonnet
     - id: mise-en-forme
       skill: ix-skills:deliver
       mission: Format the offer for the buyer's evaluation committee, following the submission rules, without changing its substance.
       receives: [context_sheet, offre.offer, analyse-cdc.submission_rules]
       transmits: [final_offer]
       pause: none
+      model: sonnet
 ---
 
 # Role
@@ -126,14 +133,17 @@ Context sheet:
 Input:
 <only the fields listed in "Receives", each under its name; for step 1, the tender file verbatim>
 Stay strictly within the mission: do not produce later deliverables.
-End your answer with:
+Write your full output to <trace file>, ending with:
 ## HANDOFF
 <one line per field in "Transmits": `- <field>: …`>
+Reply to me with only the HANDOFF block and a summary of 5 lines at most.
 ```
+
+Launch the sub-agent with the step's model: Opus for step 1 (`analyse-cdc`) — it alone reads the raw input, and what it misses is lost for every later step — and Sonnet for the others, `go-no-go` included since the human decides right after it. For a high-stakes run, the human may ask for Opus on `go-no-go` too. If the platform cannot write files, the sub-agent returns its full output instead; keep it, but pass on only the HANDOFF fields.
 
 For step 1, also ask: "Before the HANDOFF block, add a `## CONTEXT SHEET` block with the fields buyer, objective, constraints, recipient, format, deadlines, named_solutions — facts from the tender file only, `not stated` when absent." For step 3, give the three options explicitly: Go, Go with conditions, No-go. For step 6, the reference is the requirements, criteria and rules received — say so to the sub-agent.
 
-After each step, show the human a short summary (5 lines at most) and keep the full output.
+After each step, show the human the sub-agent's summary. Do not load the full output into your own context unless the human asks for it; the trace file holds it. You need only light reasoning to orchestrate: when you can choose your own model, a light one (Sonnet) is enough.
 
 # Pauses
 

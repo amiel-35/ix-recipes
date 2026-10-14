@@ -2,6 +2,21 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-14 — plugin 2.2.0: lean orchestration, a model per step
+
+- `brief-client` 1.1.0, `reponse-appel-offres` 1.1.0: each sub-agent writes its
+  full output to the trace file and returns only its HANDOFF block and a
+  5-line summary, so the orchestrator no longer accumulates outputs (in the
+  first test, the orchestrator's growing context made 78% of the cost). Each
+  step names its model: **Opus for step 1**, the only one reading the raw input,
+  **Sonnet for the others**, decisions included since the human decides right
+  after them. Measured: tender step 1 went from $0.73 to $0.52 with a Sonnet
+  orchestrator; in a blind comparison, the Opus scoping of a real meeting kept
+  what later steps need (the existing specification as a constraint, the need
+  separated from the training already named) where the Sonnet one lost it.
+- `docs/format-recette.md`: `model` field per step and the lean-orchestrator rule;
+  `build.py` validates `model`.
+
 ## 2026-10-14 — plugin 2.1.0: first workflow recipes
 
 ### Added — workflow format and two recipes

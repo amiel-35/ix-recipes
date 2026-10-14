@@ -53,14 +53,17 @@ Context sheet:
 Input:
 <only the fields listed in "Receives", each under its name; for step 1, the raw request verbatim>
 Stay strictly within the mission: do not produce later deliverables, do not answer the client's question yourself.
-End your answer with:
+Write your full output to <trace file>, ending with:
 ## HANDOFF
 <one line per field in "Transmits": `- <field>: …`>
+Reply to me with only the HANDOFF block and a summary of 5 lines at most.
 ```
+
+Launch the sub-agent with the step's model: Opus for step 1 (`cadrage`) — it alone reads the raw input, and what it misses is lost for every later step — and Sonnet for the others, `decision` included since the human decides right after it. For a high-stakes run, the human may ask for Opus on `decision` too. If the platform cannot write files, the sub-agent returns its full output instead; keep it, but pass on only the HANDOFF fields.
 
 For step 1, also ask: "Before the HANDOFF block, add a `## CONTEXT SHEET` block with the fields client, objective, constraints, recipient, format, deadlines, named_solutions — facts from the request only, `not stated` when absent."
 
-After each step, show the human a short summary (5 lines at most) and keep the full output.
+After each step, show the human the sub-agent's summary. Do not load the full output into your own context unless the human asks for it; the trace file holds it. You need only light reasoning to orchestrate: when you can choose your own model, a light one (Sonnet) is enough.
 
 # Pauses
 

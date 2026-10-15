@@ -2,6 +2,16 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-15 — plugin 2.6.0: a README you can try in one prompt, a hidden dossier folder
+
+- README (FR and EN): it opens on a short description, a single prompt to paste into Claude
+  Code that installs both plugins and opens the tracking page without a restart, and a sample
+  client request to try the "Brief client" recipe; installation details, catalogue and
+  contribution come after, for those who want them.
+- The tracking page keeps its dossiers in `~/.ix-recipes/parcours` (hidden) instead of
+  `~/Parcours`; an existing `~/Parcours` that holds dossiers stays in use until it is moved,
+  and the page says so. `suivi-parcours` 1.1.1, `configuration-ix` 1.0.1.
+
 ## 2026-10-15 — plugin 2.5.0: Inflexion theme, many dossiers, setup
 
 - Home: filter chips by recipe (with counts) once dossiers mix several recipes; the

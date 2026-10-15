@@ -820,6 +820,34 @@ class CommandLineTests(InterfaceTestCase):
 # The Markdown renderer of the page (optional: needs node)
 # ---------------------------------------------------------------------------
 @unittest.skipUnless(shutil.which("node"), "node is not installed")
+class DefaultDirTests(unittest.TestCase):
+    """The hidden default, and the pre-2.6.0 ~/Parcours kept while it holds dossiers."""
+
+    def setUp(self):
+        self.home = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.home)
+        patcher = mock.patch.dict(os.environ, {"HOME": str(self.home)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_hidden_default(self):
+        self.assertEqual(interface.default_dir(), "~/.ix-recipes/parcours")
+
+    def test_empty_legacy_folder_is_ignored(self):
+        (self.home / "Parcours" / "themes").mkdir(parents=True)
+        self.assertEqual(interface.default_dir(), "~/.ix-recipes/parcours")
+
+    def test_legacy_folder_with_dossiers_is_kept(self):
+        (self.home / "Parcours" / "ao").mkdir(parents=True)
+        (self.home / "Parcours" / "ao" / "state.json").write_text("{}")
+        self.assertEqual(interface.default_dir(), str(self.home / "Parcours"))
+
+    def test_new_folder_wins_once_it_exists(self):
+        (self.home / "Parcours" / ".archives").mkdir(parents=True)
+        (self.home / ".ix-recipes" / "parcours").mkdir(parents=True)
+        self.assertEqual(interface.default_dir(), "~/.ix-recipes/parcours")
+
+
 class RendererTests(unittest.TestCase):
     def render(self, text):
         html = (REPO / "scripts" / "interface.html").read_text(encoding="utf-8")

@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="#démarrage-rapide"><b>Démarrage rapide</b></a> ·
+  <a href="#essayer-en-deux-minutes"><b>Essayer</b></a> ·
   <a href="#skills-disponibles"><b>Catalogue</b></a> ·
   <a href="#workflows"><b>Workflows</b></a> ·
   <a href="#contribuer"><b>Contribuer</b></a> ·
@@ -24,8 +24,9 @@
 <details>
 <summary><b>Sommaire</b></summary>
 
+- [Essayer en deux minutes](#essayer-en-deux-minutes)
 - [À propos](#à-propos)
-- [Démarrage rapide](#démarrage-rapide)
+- [Installation détaillée](#installation-détaillée)
 - [Convention de corpus — la sortie nulle](#convention-de-corpus--la-sortie-nulle)
 - [Skills disponibles](#skills-disponibles)
 - [Workflows](#workflows)
@@ -38,6 +39,43 @@
 - [Licence](#licence)
 
 </details>
+
+## Essayer en deux minutes
+
+ix-recipes fait avec Claude le travail de fond des métiers du conseil, des RH, du juridique, de la finance et du produit : répondre à un appel d'offres, transformer une demande client floue en brief, écrire une fiche de poste, relire un contrat… Les plus gros travaux sont des **recettes** : une suite d'étapes que vous suivez dans une page sur votre ordinateur, qui s'arrête chaque fois qu'il faut votre avis.
+
+**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page.
+
+```text
+Installe ix-recipes sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
+(https://github.com/amiel-35/ix-recipes). Fais tout toi-même, sans me demander de redémarrer :
+1. Ajoute la marketplace amiel-35/plugins (si ça échoue faute de clé SSH GitHub, utilise
+   https://github.com/amiel-35/plugins.git), puis installe ix-skills@amiel-35 et
+   ix-recipes@amiel-35. S'ils sont déjà installés, mets-les à jour ; s'ils viennent d'une autre
+   marketplace, garde celle-là et ne crée pas de doublon.
+2. Vérifie python3 (3.9 ou plus) ; s'il manque, dis-moi quoi installer et arrête-toi.
+3. Lance en arrière-plan le script skills/suivi-parcours/scripts/interface.py du plugin
+   ix-recipes installé (sous ~/.claude/plugins/cache/, la version la plus récente) ; il ouvre
+   la page dans le navigateur et affiche son adresse.
+Ne change rien d'autre sans me demander. Réponds en trois lignes : l'adresse de la page, où sont
+rangés mes dossiers, comment arrêter la page.
+```
+
+**2. Essayez.** Dans la page, choisissez la recette « Brief client », collez une demande de client, par exemple celle-ci, et lancez :
+
+```text
+Bonjour, on aimerait refaire notre site, il est vieillot et on ne reçoit aucune demande de devis
+en ligne. Budget à voir, idéalement prêt pour le salon de mars. Vous pouvez nous faire une
+proposition ? — Claire, directrice commerciale d'une menuiserie industrielle de 40 personnes
+```
+
+Chaque étape prend une à deux minutes, et la page s'arrête pour vous montrer la fiche de contexte, puis les questions à poser au client.
+
+**Bon à savoir.** Il faut Claude Code installé et connecté, et Python 3.9 ou plus (déjà présent sur macOS) ; pas Cowork, car la page tourne sur votre ordinateur. Chaque étape consomme votre abonnement Claude ou votre crédit API : une réponse complète à un appel d'offres a coûté de 1 à 2 $ dans nos tests. Ensuite, dans n'importe quelle conversation Claude Code, `/ix-recipes:suivi-parcours` rouvre la page, et les skills se déclenchent depuis une demande ordinaire (« prépare la fiche de poste d'un product manager senior »).
+
+---
+
+*Tout ce qui suit sert à aller plus loin : ce que contient le dépôt, l'installation détaillée, le catalogue complet, les autres plateformes et la contribution.*
 
 ## À propos
 
@@ -52,28 +90,7 @@ ix-recipes dépend d'ix-skills, jamais l'inverse : une recette peut renvoyer ver
 
 ---
 
-## Démarrage rapide
-
-### En une phrase : le prompt d'installation
-
-Copiez ce texte dans Claude Code (ou dans Cowork, qui vous guidera pour les clics) :
-
-```text
-Installe et configure ix-recipes pour moi (https://github.com/amiel-35/ix-recipes).
-1. Si tu peux lancer des commandes : ajoute la marketplace amiel-35/plugins et installe
-   ix-skills@amiel-35 puis ix-recipes@amiel-35 (mets-les à jour s'ils sont déjà là ; si l'ajout
-   de la marketplace échoue faute de clé SSH GitHub, réessaie avec
-   https://github.com/amiel-35/plugins.git). Si l'un
-   d'eux est déjà installé depuis une autre marketplace, ne crée pas de doublon : dis-le-moi
-   et propose de n'en garder qu'une source. Si tu ne peux pas lancer de commandes (Cowork,
-   claude.ai), dis-moi exactement où cliquer pour ajouter amiel-35/ix-recipes et
-   amiel-35/ix-skills depuis un dépôt.
-2. Vérifie python3 (3.9 ou plus) et la CLI claude : la page de suivi des recettes en a besoin.
-   Ne change rien d'autre sans me demander.
-3. Termine par ce qui marche, ce qui manque, et ce que je dois faire ensuite.
-```
-
-Une fois Claude Code redémarré : `/ix-recipes:suivi-parcours` (ou « lance la page de suivi ix-recipes ») ouvre la page des recettes, et « configure ix » (skill `configuration-ix`) vérifie et règle le reste — mises à jour, dossier des parcours, thème de la page, moteurs Codex et Antigravity.
+## Installation détaillée
 
 ### Ce qui se déploie
 
@@ -82,10 +99,10 @@ Une fois Claude Code redémarré : `/ix-recipes:suivi-parcours` (ou « lance la 
 | plugin **ix-skills** | les atomes cognitifs (cadrage, décision, critique…) | partout où les skills se chargent (Claude Code, Cowork, Codex, Antigravity) |
 | plugin **ix-recipes** | les skills métier et les recettes-workflows qui enchaînent les atomes | idem |
 | **page de suivi** (`suivi-parcours`) | crée et suit les dossiers d'une recette, étape par étape | Claude Code sur votre ordinateur : un serveur local, Python 3.9+, la CLI Claude connectée — pas Cowork |
-| **dossiers** | un dossier par demande traitée : sorties, traces, état | `~/Parcours` (ou `$PARCOURS_DIR`) ; les terminés s'archivent dans `.archives/` |
+| **dossiers** | un dossier par demande traitée : sorties, traces, état | `~/.ix-recipes/parcours`, caché (ou `$PARCOURS_DIR`) ; les terminés s'archivent dans `.archives/` |
 | **thème** | l'habillage de la page : la charte Inflexion par défaut (livrée avec la page, polices sous licence OFL), `none` pour l'apparence neutre, ou le dossier d'une autre charte | `$PARCOURS_THEME` ou `--theme` |
 
-Pour une équipe : chacun colle le prompt ci-dessus ; une autre charte se partage comme un dossier de thème (un `theme.css` et ses polices), activé par `configuration-ix`.
+Pour une équipe : chacun colle le prompt d'[Essayer en deux minutes](#essayer-en-deux-minutes) ; une autre charte se partage comme un dossier de thème (un `theme.css` et ses polices), activé par `configuration-ix`.
 
 ### Commande par commande
 
@@ -702,13 +719,13 @@ La page s'ouvre dans votre navigateur (en local seulement, protégée par une cl
 - **Un dossier** : les étapes à gauche ; en haut, la seule chose attendue de vous (« Valider et continuer », « Envoyer les réponses et continuer », « Refaire l'étape »…) ; au centre, le résultat de chaque étape lu comme un document mis en forme, à copier, télécharger ou imprimer en PDF. La fiche de contexte, seule chose que les étapes suivantes savent de votre demande, se vérifie et se corrige champ par champ après la première étape.
 - **Détails techniques** (interrupteur en haut) : moteur et modèle, coût par étape, champs transmis, sorties brutes, messages exacts reçus, journal.
 
-Les dossiers sont rangés dans `~/Parcours` (`--parcours-dir` ou `PARCOURS_DIR` pour changer). Spécifications : [`docs/interface.md`](docs/interface.md), [`docs/executeur.md`](docs/executeur.md). Mesuré : une réponse complète à un appel d'offres (7 étapes, Claude) a coûté de 0,86 $ à 1,53 $ selon les reprises.
+Les dossiers sont rangés dans `~/.ix-recipes/parcours` (`--parcours-dir` ou `PARCOURS_DIR` pour changer). Spécifications : [`docs/interface.md`](docs/interface.md), [`docs/executeur.md`](docs/executeur.md). Mesuré : une réponse complète à un appel d'offres (7 étapes, Claude) a coûté de 0,86 $ à 1,53 $ selon les reprises.
 
 Le même exécuteur s'utilise en ligne de commande, pour des scripts :
 
 ```bash
-python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/Parcours
-python3 scripts/parcours.py next ao --parcours-dir ~/Parcours        # jusqu'à la prochaine pause
+python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/.ix-recipes/parcours
+python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours        # jusqu'à la prochaine pause
 ```
 
 À venir :

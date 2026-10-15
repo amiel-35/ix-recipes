@@ -9,7 +9,7 @@ positionals, absolute --parcours-dir, --json), so the page does what the command
 line does, with the same checks and the same state.json.
 
 Usage:
-    python3 scripts/interface.py [--parcours-dir ~/Parcours] [--port 8765] [--dev] [--no-browser]
+    python3 scripts/interface.py [--parcours-dir ~/.ix-recipes/parcours] [--port 8765] [--dev] [--no-browser]
 
 Access control (see docs/interface.md §1): a random token kept in
 <parcours-dir>/.interface-token (mode 0600, stable across restarts) goes in the
@@ -60,7 +60,8 @@ ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun", "ar
 MAX_BODY = 4_000_000        # bytes of a POST body (a pasted answer can be long)
 MAX_FILE = 2_000_000        # bytes of a file sent to the page
 MAX_TITLE = 120             # characters of a parcours title
-DEFAULT_DIR = "~/Parcours"  # one place for the dossiers, wherever the page is launched from
+DEFAULT_DIR = "~/.ix-recipes/parcours"  # one hidden place for the dossiers, wherever the page is launched from
+LEGACY_DIR = "~/Parcours"              # default before 2.6.0, still used while it holds dossiers
 # The Inflexion theme ships with the page: themes/inflexion in the repository, scripts/themes/inflexion in the plugin.
 DEFAULT_THEMES = (HERE / "themes" / "inflexion", HERE.parent / "themes" / "inflexion")
 THEME_ASSET_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\[\],-]{0,99}\.(ttf|otf|woff2?|svg|png)$")
@@ -705,9 +706,17 @@ def theme_folder(choice):
     return Path(choice).expanduser()
 
 
+def default_dir():
+    """The hidden default, unless the pre-2.6.0 ~/Parcours still holds dossiers and the new one does not exist."""
+    new, old = Path(DEFAULT_DIR).expanduser(), Path(LEGACY_DIR).expanduser()
+    if not new.exists() and old.is_dir() and (any(old.glob("*/state.json")) or (old / ".archives").is_dir()):
+        return str(old)
+    return DEFAULT_DIR
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Page de suivi des parcours (voir docs/interface.md)")
-    parser.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or DEFAULT_DIR,
+    parser.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or default_dir(),
                         help=f"dossier des parcours (défaut : $PARCOURS_DIR, sinon {DEFAULT_DIR})")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port local (défaut {DEFAULT_PORT}, 0 = au hasard)")
     parser.add_argument("--dev", action="store_true", help="propose aussi le moteur fake (PARCOURS_FAKE_DIR)")
@@ -723,6 +732,8 @@ def main(argv=None):
         return 1
     url = f"http://127.0.0.1:{server.server_address[1]}/#t={server.app.token}"
     print(f"Dossier des parcours : {server.app.dir}", flush=True)
+    if server.app.dir == Path(LEGACY_DIR).expanduser().resolve() and not os.environ.get("PARCOURS_DIR"):
+        print(f"(ancien emplacement : déplacez-le vers {DEFAULT_DIR} pour libérer votre dossier personnel)", flush=True)
     print(f"Page de suivi : {url}", flush=True)
     print("Ctrl-C pour arrêter (une étape en cours continue sans le serveur).", flush=True)
     if not args.no_browser:

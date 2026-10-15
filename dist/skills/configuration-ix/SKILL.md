@@ -18,7 +18,7 @@ You check and adjust the user's installation of the ix-skills and ix-recipes plu
 
 1. **Plugins**: `claude plugin list` (or `/plugin` in the desktop app). Expected: `ix-skills` and `ix-recipes`, one source each. Compare their versions with the marketplace after `claude plugin marketplace update <marketplace>` (an update of the catalogue changes nothing installed).
 2. **Tracking page prerequisites**: `python3 --version` (3.9 or later; the standard library is enough), `claude --version` (installed; signed in if a recipe has already run, otherwise say the first run will tell).
-3. **Dossier folder**: `$PARCOURS_DIR` if set, else `~/Parcours`. Say how many dossiers it holds (folders with a `state.json`) and how many are archived (`.archives/`).
+3. **Dossier folder**: `$PARCOURS_DIR` if set, else `~/.ix-recipes/parcours` (or `~/Parcours` if that older folder still holds dossiers). Say how many dossiers it holds (folders with a `state.json`) and how many are archived (`.archives/`).
 4. **Theme**: `$PARCOURS_THEME` if set (`none` = neutral look; a folder must hold a `theme.css`). Not set: the page uses the Inflexion theme it ships with.
 5. **Optional engines**: `codex --version`, `agy --version`. They are optional: Claude is the default engine.
 6. **Shell profile**: which file sets the variables above, if any (`~/.zshrc`, `~/.bashrc`, `~/.profile`).

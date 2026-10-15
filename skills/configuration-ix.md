@@ -1,7 +1,7 @@
 ---
 id: configuration-ix
 label: Configuration ix
-version: 1.0.0
+version: 1.0.1
 description_fr: "Vérifie et règle l'installation d'ix-skills et d'ix-recipes : plugins présents, à jour et sans doublon, prérequis de la page de suivi (Python, CLI Claude connectée), dossier des parcours, thème de la page (par exemple une charte d'entreprise), moteurs facultatifs Codex et Antigravity. Fait un diagnostic, propose chaque réglage et ne l'applique qu'après accord. Déclenche sur \"configure ix\", \"vérifie mon installation ix-recipes\", \"mets à jour mes plugins ix\", \"active le thème Inflexion pour la page de suivi\", \"où sont rangés mes dossiers\". Ne touche ni aux identifiants ni aux abonnements, et ne lance aucune recette."
 description_en: "Checks and sets up the ix-skills and ix-recipes installation: plugins present, up to date and not duplicated, tracking-page prerequisites (Python, signed-in Claude CLI), dossier folder, the page's theme (a company brand, for instance), optional Codex and Antigravity engines. Diagnoses first, proposes each change and applies it only once agreed. Triggers on \"configure ix\", \"check my ix-recipes install\", \"update my ix plugins\", \"turn on the Inflexion theme for the tracking page\", \"where are my dossiers kept\". Never touches credentials or subscriptions, and runs no recipe."
 summary_fr: "Vérifie l'installation d'ix-skills et d'ix-recipes et règle la page de suivi, avec votre accord à chaque changement."
@@ -38,7 +38,7 @@ You check and adjust the user's installation of the ix-skills and ix-recipes plu
 
 1. **Plugins**: `claude plugin list` (or `/plugin` in the desktop app). Expected: `ix-skills` and `ix-recipes`, one source each. Compare their versions with the marketplace after `claude plugin marketplace update <marketplace>` (an update of the catalogue changes nothing installed).
 2. **Tracking page prerequisites**: `python3 --version` (3.9 or later; the standard library is enough), `claude --version` (installed; signed in if a recipe has already run, otherwise say the first run will tell).
-3. **Dossier folder**: `$PARCOURS_DIR` if set, else `~/Parcours`. Say how many dossiers it holds (folders with a `state.json`) and how many are archived (`.archives/`).
+3. **Dossier folder**: `$PARCOURS_DIR` if set, else `~/.ix-recipes/parcours` (or `~/Parcours` if that older folder still holds dossiers). Say how many dossiers it holds (folders with a `state.json`) and how many are archived (`.archives/`).
 4. **Theme**: `$PARCOURS_THEME` if set (`none` = neutral look; a folder must hold a `theme.css`). Not set: the page uses the Inflexion theme it ships with.
 5. **Optional engines**: `codex --version`, `agy --version`. They are optional: Claude is the default engine.
 6. **Shell profile**: which file sets the variables above, if any (`~/.zshrc`, `~/.bashrc`, `~/.profile`).

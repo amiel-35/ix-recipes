@@ -9,7 +9,7 @@ positionals, absolute --parcours-dir, --json), so the page does what the command
 line does, with the same checks and the same state.json.
 
 Usage:
-    python3 scripts/interface.py [--parcours-dir ./parcours] [--port 8765] [--dev] [--no-browser]
+    python3 scripts/interface.py [--parcours-dir ~/Parcours] [--port 8765] [--dev] [--no-browser]
 
 Access control (see docs/interface.md §1): a random token kept in
 <parcours-dir>/.interface-token (mode 0600, stable across restarts) goes in the
@@ -39,7 +39,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
-import parcours  # only for is_locked(): the same non-blocking probe as `status --json`
+import parcours  # reads only: is_locked() (the probe of `status --json`), load_recipe() labels, output_document()
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -59,6 +59,8 @@ REAL_ENGINES = ("claude", "codex", "agy", "vibe")
 ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun")
 MAX_BODY = 4_000_000        # bytes of a POST body (a pasted answer can be long)
 MAX_FILE = 2_000_000        # bytes of a file sent to the page
+MAX_TITLE = 120             # characters of a parcours title
+DEFAULT_DIR = "~/Parcours"  # one place for the dossiers, wherever the page is launched from
 LOG_TAIL = 100_000          # bytes of .next.log sent to the page
 QUICK_WAIT = 2.5            # seconds `next` is watched after launch, to report a refusal at once
 SYNC_TIMEOUT = 120          # seconds for the commands that do not call an engine
@@ -139,33 +141,47 @@ class App:
     def argv(self, command, flags=(), positionals=()):
         """Command line of the runner: absolute --parcours-dir, --json, `--` before the positionals."""
         return [sys.executable, str(PARCOURS_SCRIPT), command, *flags,
-                "--parcours-dir", str(self.dir), "--json", "--", *positionals]
+                "--parcours-dir", str(self.dir), "--json", *(["--", *positionals] if positionals else [])]
 
     @staticmethod
     def child_env():
         return dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
 
-    def run(self, command, flags=(), positionals=(), timeout=SYNC_TIMEOUT):
-        """Run the runner to completion; returns (stdout, stderr) or raises ApiError."""
+    def run(self, command, flags=(), positionals=(), timeout=SYNC_TIMEOUT, input_text=None):
+        """Run the runner to completion; returns (stdout, stderr) or raises ApiError.
+
+        `input_text` goes to the runner's stdin (`new --input -`), never through a file."""
+        stdin = {"input": input_text} if input_text is not None else {"stdin": subprocess.DEVNULL}
         try:
             done = subprocess.run(
-                self.argv(command, flags, positionals), stdin=subprocess.DEVNULL, capture_output=True,
+                self.argv(command, flags, positionals), capture_output=True, **stdin,
                 text=True, encoding="utf-8", errors="replace", timeout=timeout, env=self.child_env())
         except subprocess.TimeoutExpired:
             raise ApiError(504, "timeout", f"parcours.py n'a pas répondu en {timeout} s")
         interpret(done.returncode, done.stdout, done.stderr)
         return done.stdout, done.stderr
 
-    def run_json(self, command, flags=(), positionals=()):
-        out, _ = self.run(command, flags, positionals)
+    def run_json(self, command, flags=(), positionals=(), input_text=None):
+        out, _ = self.run(command, flags, positionals, input_text=input_text)
         try:
             return json.loads(out)
         except ValueError:
             raise ApiError(500, "unreadable", "réponse illisible de parcours.py")
 
     # -- reads ------------------------------------------------------------
+    @staticmethod
+    def recipe_labels(recipe_id, cache):
+        """(recipe label, {step id: label}) for the list page; the ids if the recipe is unreadable."""
+        if recipe_id not in cache:
+            try:
+                recipe = parcours.load_recipe(recipe_id)
+                cache[recipe_id] = (recipe["label"], {s["id"]: s["label"] for s in recipe["steps"]})
+            except Exception:  # a broken recipe must not break the list
+                cache[recipe_id] = (recipe_id, {})
+        return cache[recipe_id]
+
     def list_parcours(self):
-        items, without_state, broken = [], [], []
+        items, without_state, broken, labels = [], [], [], {}
         for entry in sorted(self.dir.iterdir()):
             if not entry.is_dir() or entry.is_symlink() or not SLUG_RE.match(entry.name):
                 continue
@@ -177,8 +193,15 @@ class App:
                 state = json.loads(state_file.read_text(encoding="utf-8"))
                 steps = state["steps"]
                 pending = state.get("pending")
+                recipe_label, step_labels = self.recipe_labels(state["recipe"], labels)
+                current = next((s for s in steps if s["status"] in ("running", "failed", "paused")), None) \
+                    or next((s for s in steps if s["status"] == "pending"), None)
                 items.append({
-                    "slug": entry.name, "recipe": state["recipe"], "recipe_version": state.get("recipe_version"),
+                    "slug": entry.name, "title": state.get("title"), "recipe_label": recipe_label,
+                    "updated": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(state_file.stat().st_mtime)),
+                    "current": {"id": current["id"], "label": step_labels.get(current["id"]),
+                                "status": current["status"]} if current else None,
+                    "recipe": state["recipe"], "recipe_version": state.get("recipe_version"),
                     "status": state["status"], "engine": state.get("engine"), "created": state.get("created"),
                     "pending": {"type": pending["type"], "step": pending.get("step"), "steps": pending.get("steps")}
                     if pending else None,
@@ -213,6 +236,34 @@ class App:
             raise ApiError(404, "not_found", f"fichier introuvable : {name}")
         raw = path.read_bytes()[:MAX_FILE + 1]
         return {"name": name, "text": raw[:MAX_FILE].decode("utf-8", errors="replace"), "truncated": len(raw) > MAX_FILE}
+
+    def read_document(self, slug, name):
+        """A step output as a reader sees it: the document before its HANDOFF / SUMMARY blocks,
+        without its front matter (returned apart as `meta`)."""
+        data = self.read_file(slug, name)
+        document, meta = parcours.output_document(data["text"])
+        return {"name": name, "document": document, "meta": meta, "truncated": data["truncated"]}
+
+    def recipes(self):
+        return self.run_json("recipes")
+
+    def create(self, body):
+        recipe, text = body.get("recipe"), body.get("text")
+        title, engine = body.get("title") or "", body.get("engine")
+        if not isinstance(recipe, str) or not SLUG_RE.match(recipe):
+            raise ApiError(400, "bad_request", "recette invalide")
+        if recipe not in {r["id"] for r in self.recipes()["recipes"]}:
+            raise ApiError(404, "not_found", f"recette introuvable : {recipe}")
+        if not isinstance(text, str) or not text.strip():
+            raise ApiError(400, "bad_request", "la demande est vide : collez le texte ou déposez un fichier")
+        if not isinstance(title, str) or len(title) > MAX_TITLE:
+            raise ApiError(400, "bad_request", f"titre invalide ({MAX_TITLE} caractères au plus)")
+        flags = ["--input", "-"]
+        if title.strip():
+            flags += [f"--title={title.strip()}", f"--slug={title.strip()}"]   # `=`: a title starting with "-" stays a value
+        if engine:
+            flags += ["--engine", self.check_engine(engine)]
+        return self.run_json("new", flags, [recipe], input_text=text)
 
     def read_log(self, slug):
         path = self.parcours_dir(slug) / ".next.log"
@@ -489,13 +540,22 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "bad_json", "corps JSON illisible")
         if not isinstance(body, dict):
             raise ApiError(400, "bad_json", "un objet JSON est attendu")
+        try:
+            json.dumps(body, ensure_ascii=False).encode("utf-8")
+        except UnicodeEncodeError:  # a lone surrogate (\ud800) is valid JSON, not valid text for a file or a pipe
+            raise ApiError(400, "bad_json", "texte illisible (caractère Unicode invalide)")
         return body
 
     # -- routes -----------------------------------------------------------
     def route(self, method, parts, query):
         if parts == ["parcours"]:
+            if method == "POST":
+                return self.send_json(200, self.app.create(self.read_json_body()))
             self.only(method, "GET")
             return self.send_json(200, self.app.list_parcours())
+        if parts == ["recipes"]:
+            self.only(method, "GET")
+            return self.send_json(200, self.app.recipes())
         if len(parts) >= 2 and parts[0] == "parcours":
             slug, rest = parts[1], parts[2:]
             if not rest:
@@ -504,6 +564,9 @@ class Handler(BaseHTTPRequestHandler):
             if rest[0] == "file" and len(rest) == 2:
                 self.only(method, "GET")
                 return self.send_json(200, self.app.read_file(slug, rest[1]))
+            if rest[0] == "document" and len(rest) == 2:
+                self.only(method, "GET")
+                return self.send_json(200, self.app.read_document(slug, rest[1]))
             if rest == ["plan"]:
                 self.only(method, "GET")
                 return self.send_json(200, self.app.plan(slug, (query.get("engine") or [None])[0]))
@@ -565,13 +628,14 @@ def make_server(parcours_dir, port=0, dev=False):
 # ---------------------------------------------------------------------------
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Page de suivi des parcours (voir docs/interface.md)")
-    parser.add_argument("--parcours-dir", default="./parcours", help="dossier des parcours")
+    parser.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or DEFAULT_DIR,
+                        help=f"dossier des parcours (défaut : $PARCOURS_DIR, sinon {DEFAULT_DIR})")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port local (défaut {DEFAULT_PORT}, 0 = au hasard)")
     parser.add_argument("--dev", action="store_true", help="propose aussi le moteur fake (PARCOURS_FAKE_DIR)")
     parser.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
     args = parser.parse_args(argv)
     try:
-        server = make_server(args.parcours_dir, args.port, args.dev)
+        server = make_server(Path(args.parcours_dir).expanduser(), args.port, args.dev)
     except OSError as exc:
         print(f"Erreur : impossible de démarrer le serveur sur le port {args.port} ({exc})", file=sys.stderr)
         return 1

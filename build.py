@@ -279,6 +279,8 @@ def validate_workflow(fm: dict, body: str) -> list:
             errs.append(f"step '{sid}': skill '{skill}' is not cited in the body")
         if not st.get("mission"):
             errs.append(f"step '{sid}': no mission")
+        if "label" in st and not (isinstance(st["label"], str) and st["label"].strip()):
+            errs.append(f"step '{sid}': label must be a non-empty string (shown to the user, in French)")
         if st.get("model", "sonnet") not in MODELS:
             errs.append(f"step '{sid}': model must be one of {sorted(MODELS)}")
         if st.get("pause", "none") not in PAUSES:
@@ -312,6 +314,12 @@ def validate_workflow(fm: dict, body: str) -> list:
         transmitted[sid] = set(st.get("transmits") or [])
         if st.get("pause") == "answers":
             answers_ready = True
+    labels = wf.get("context_labels") or {}
+    if not isinstance(labels, dict) or any(k not in (wf.get("context_sheet") or []) or not isinstance(v, str) or not v.strip()
+                                           for k, v in labels.items()):
+        errs.append("context_labels must map context_sheet keys to non-empty labels (shown to the user, in French)")
+    if "summary_fr" in fm and not (isinstance(fm["summary_fr"], str) and fm["summary_fr"].strip()):
+        errs.append("summary_fr must be a non-empty string (one sentence shown to the user)")
     if not steps[0].get("produces_context_sheet"):
         errs.append("the first step must produce the context sheet (produces_context_sheet: true)")
     return errs
@@ -366,11 +374,52 @@ def build_agentskills(skills: list, dry_run: bool = False) -> int:
                 out_dir.mkdir(parents=True, exist_ok=True)
                 out_file.write_text(content, encoding="utf-8")
             _write_references(fm, out_dir, dry_run)
+            _write_recipe_json(fm, out_dir, dry_run)
+            _write_bundled_scripts(fm, out_dir, dry_run)
             print(f"  \u2713 agentskills {skill_id:<20} \u2192 dist/skills/{skill_id}/SKILL.md{dry_tag}")
         except Exception as e:
             print(f"  \u2717 agentskills {skill_id:<20} \u2192 {e}")
             errors += 1
     return errors
+
+
+RECIPE_JSON_KEYS = ("id", "label", "version", "summary_fr", "description_fr", "icon", "workflow")
+
+
+def _write_recipe_json(fm: dict, out_dir: Path, dry_run: bool) -> None:
+    """A workflow recipe ships its `workflow` block next to its SKILL.md, as recipe.json.
+
+    SKILL.md keeps the Agent Skills front matter (name, description) that the Cowork
+    validator accepts; the runner bundled in the plugin (scripts/parcours.py, see
+    `scripts` below) reads the steps from recipe.json and the body from SKILL.md.
+    """
+    target = out_dir / "recipe.json"
+    if dry_run:
+        return
+    if not fm.get("workflow"):
+        if target.is_file():
+            target.unlink()
+        return
+    data = {k: fm[k] for k in RECIPE_JSON_KEYS if k in fm}
+    target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def _write_bundled_scripts(fm: dict, out_dir: Path, dry_run: bool) -> None:
+    """Copy the repository files a skill lists in `scripts` into <out_dir>/scripts/ (rebuilt
+    from scratch): an Agent Skill may bundle the code it runs."""
+    names = fm.get("scripts") or []
+    for name in names:
+        if not Path(name).is_file():
+            raise FileNotFoundError(f"script '{name}' not found")
+    if dry_run:
+        return
+    folder = out_dir / "scripts"
+    if folder.is_dir():
+        shutil.rmtree(folder)
+    if names:
+        folder.mkdir(parents=True)
+        for name in names:
+            shutil.copy2(name, folder / Path(name).name)
 
 
 def _write_references(fm: dict, out_dir: Path, dry_run: bool) -> list:

@@ -4,113 +4,298 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<title>Parcours — suivi</title>
+<title>Parcours</title>
 <style nonce="{{NONCE}}">
 :root {
-  --bg: #f6f6f3; --panel: #ffffff; --ink: #1d1d1b; --muted: #6a6a64; --line: #dcdcd4;
-  --accent: #1f4e8c; --accent-ink: #ffffff; --ok: #1b7a46; --warn: #9a6200; --bad: #b3261e;
-  --ok-bg: #e4f3ea; --warn-bg: #fdf1d8; --bad-bg: #fbe6e4; --info-bg: #e6eef8; --code-bg: #efefe9;
+  --bg: #f7f6f2; --surface: #ffffff; --surface-2: #fbfaf7; --hover: rgba(30, 29, 27, .045); --selected: rgba(30, 29, 27, .075);
+  --ink: #1e1d1b; --ink-2: #5d5b55; --ink-3: #8d8b84; --line: rgba(30, 29, 27, .10); --line-2: rgba(30, 29, 27, .18);
+  --primary: #1e1d1b; --primary-hover: #3a3936; --on-primary: #ffffff; --accent: #2f5bd3;
+  --ok: #2f7d4f; --ok-bg: #e9f3ec; --warn: #855700; --warn-bg: #fbf1dc; --bad: #b23a2e; --bad-bg: #fbe9e6; --run: #2f5bd3; --run-bg: #eaf0fc;
+  --warn-dot: #d99a1e; --code-bg: #f1f0eb; --shadow: 0 1px 2px rgba(30, 29, 27, .06), 0 8px 24px rgba(30, 29, 27, .06);
+  --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, "Book Antiqua", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 8px; --r-lg: 12px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #161614; --panel: #201f1d; --ink: #ecebe6; --muted: #a09f97; --line: #3a3935;
-    --accent: #7fb0ee; --accent-ink: #10151c; --ok: #6cc890; --warn: #e5b04d; --bad: #f08a82;
-    --ok-bg: #173324; --warn-bg: #3a2c0e; --bad-bg: #3e1b18; --info-bg: #182638; --code-bg: #2a2926;
+    --bg: #191917; --surface: #222220; --surface-2: #1e1e1c; --hover: rgba(255, 255, 255, .05); --selected: rgba(255, 255, 255, .09);
+    --ink: #ecebe5; --ink-2: #b3b0a8; --ink-3: #85837c; --line: rgba(255, 255, 255, .09); --line-2: rgba(255, 255, 255, .17);
+    --primary: #ecebe5; --primary-hover: #ffffff; --on-primary: #191917; --accent: #8fb0ff;
+    --ok: #7bcb99; --ok-bg: #1d3125; --warn: #e6b65c; --warn-bg: #362b15; --bad: #f09186; --bad-bg: #3b201c; --run: #8fb0ff; --run-bg: #1f2a44;
+    --warn-dot: #e2a93a; --code-bg: #2a2a27; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
   }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; }
-header.bar { display: flex; align-items: center; gap: 16px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
-header.bar h1 { font-size: 17px; margin: 0; }
-header.bar a { color: inherit; text-decoration: none; }
-#age { margin-left: auto; font-size: 13px; color: var(--muted); }
-#age.bad { color: var(--bad); font-weight: 600; }
-main { max-width: 1040px; margin: 0 auto; padding: 18px 20px 60px; }
-a { color: var(--accent); }
-h2 { font-size: 18px; margin: 26px 0 10px; }
-h3 { font-size: 15px; margin: 14px 0 6px; }
-.muted { color: var(--muted); }
-.small { font-size: 13px; }
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
-.panel h2, .panel h3:first-child { margin-top: 0; }
-.banner { border-radius: 8px; padding: 10px 14px; margin: 10px 0; border: 1px solid var(--line); background: var(--info-bg); }
-.banner.ok { background: var(--ok-bg); } .banner.warn { background: var(--warn-bg); } .banner.bad { background: var(--bad-bg); }
-.banner .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.banner .grow { flex: 1; min-width: 200px; }
-.btn { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
-.btn:hover:not(:disabled) { border-color: var(--accent); }
-.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.btn.danger { color: var(--bad); border-color: var(--bad); }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
-.btn.small { padding: 2px 8px; font-size: 13px; }
-.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
-.badge { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--code-bg); white-space: nowrap; }
-.badge.st-done, .badge.st-completed { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
-.badge.st-paused, .badge.st-pending-ask { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
-.badge.st-running, .badge.st-active { background: var(--info-bg); color: var(--accent); border-color: var(--accent); }
-.badge.st-failed, .badge.st-stopped { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
-.badge.st-skipped, .badge.st-pending { color: var(--muted); }
-table { border-collapse: collapse; width: 100%; }
-th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-th { font-size: 13px; color: var(--muted); font-weight: 600; }
-table.list tr.item:hover { background: var(--code-bg); }
-.meta { display: flex; gap: 6px 18px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin: 4px 0 0; }
-details.step { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin: 8px 0; }
-details.step.st-skipped { opacity: .55; }
-details.step > summary { cursor: pointer; padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; list-style-position: inside; }
-details.step > summary .num { color: var(--muted); font-variant-numeric: tabular-nums; }
-details.step > summary .name { font-weight: 600; }
-details.step > summary .push { margin-left: auto; font-size: 13px; color: var(--muted); }
-details.step > .body { padding: 2px 16px 14px; border-top: 1px solid var(--line); }
-details.sub { margin: 8px 0; }
-details.sub > summary { cursor: pointer; font-size: 14px; font-weight: 600; }
-pre { background: var(--code-bg); padding: 10px 12px; border-radius: 6px; overflow: auto; white-space: pre-wrap; word-break: break-word; font: 13px/1.45 ui-monospace, "SF Mono", Menlo, monospace; margin: 6px 0; max-height: 520px; }
-textarea { width: 100%; min-height: 150px; font: 13px/1.45 ui-monospace, "SF Mono", Menlo, monospace; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); resize: vertical; }
-select { font: inherit; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
-.md { overflow-wrap: anywhere; }
-.md p { margin: 6px 0; white-space: pre-wrap; }
-.md h3, .md h4, .md h5, .md h6 { margin: 12px 0 4px; }
-.md ul, .md ol { margin: 6px 0; padding-left: 24px; }
-.md code { background: var(--code-bg); padding: 0 4px; border-radius: 3px; font: 13px ui-monospace, "SF Mono", Menlo, monospace; }
-.md pre.code { max-height: 360px; }
-.md pre.code code { background: none; padding: 0; }
-.md table { margin: 8px 0; font-size: 14px; }
-.md th, .md td { border: 1px solid var(--line); }
-.md blockquote { margin: 6px 0; padding: 0 12px; border-left: 3px solid var(--line); color: var(--muted); }
-.md hr { border: 0; border-top: 1px solid var(--line); }
-dl.sheet { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 6px 0; }
-dl.sheet dt { color: var(--muted); font-weight: 600; } dl.sheet dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-ol.plan { padding-left: 22px; margin: 8px 0; }
-label.check { display: block; margin: 4px 0; }
-.err { color: var(--bad); }
-#top { position: sticky; top: 46px; z-index: 4; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); text-underline-offset: 2px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.muted { color: var(--ink-3); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- chrome */
+header.bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 20px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: saturate(1.2) blur(8px); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 600; letter-spacing: -.01em; text-decoration: none; color: var(--ink); }
+.brand .mark { width: 22px; height: 22px; border-radius: 6px; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.crumb { color: var(--ink-3); display: flex; align-items: center; gap: 8px; min-width: 0; }
+.crumb span.t { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46vw; }
+.bar .push { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.conn { font-size: 12.5px; color: var(--bad); display: none; }
+.conn.on { display: inline; }
+.switch { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; user-select: none; }
+.switch input { appearance: none; width: 30px; height: 18px; border-radius: 9px; background: var(--line-2); position: relative; cursor: pointer; margin: 0; transition: background .15s; }
+.switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .15s; }
+.switch input:checked { background: var(--primary); }
+.switch input:checked::after { transform: translateX(12px); background: var(--on-primary); }
+#banners { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 80px; }
+
+/* ---- buttons */
+.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: var(--r); border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); cursor: pointer; font-size: 14px; font-weight: 500; white-space: nowrap; transition: background .12s, border-color .12s; }
+.btn:hover { background: var(--surface-2); border-color: var(--ink-3); }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.btn.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--ink-2); }
+.btn.ghost:hover { background: var(--hover); color: var(--ink); }
+.btn.danger { color: var(--bad); }
+.btn.icon { width: 32px; height: 32px; padding: 0; }
+.btn[aria-busy="true"] { pointer-events: none; opacity: .75; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.grow { flex: 1; min-width: 0; }
+
+/* ---- home */
+.page-head { display: flex; align-items: flex-end; gap: 16px; margin: 0 0 24px; }
+.page-head h1 { font-size: 26px; letter-spacing: -.02em; margin: 0; font-weight: 600; }
+.page-head p { margin: 4px 0 0; color: var(--ink-2); }
+.group-title { font-size: 12.5px; font-weight: 600; color: var(--ink-3); text-transform: none; letter-spacing: .01em; margin: 26px 0 10px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.card { display: block; text-decoration: none; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 18px 14px; transition: border-color .12s, box-shadow .12s; }
+a.card:hover { border-color: var(--line-2); box-shadow: var(--shadow); }
+.card .ttl { font-weight: 600; font-size: 15.5px; letter-spacing: -.01em; margin: 0 0 2px; }
+.card .sub { color: var(--ink-3); font-size: 13px; }
+.card .state { display: flex; align-items: center; gap: 7px; margin: 14px 0 10px; font-size: 13.5px; color: var(--ink-2); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.dot.warn { background: var(--warn-dot); } .dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); } .dot.run { background: var(--run); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+.progress { display: flex; gap: 3px; }
+.progress i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+.progress i.done { background: var(--ok); } .progress i.now { background: var(--warn-dot); } .progress i.run { background: var(--run); } .progress i.bad { background: var(--bad); } .progress i.skip { background: var(--line); opacity: .5; }
+.card .foot { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12.5px; color: var(--ink-3); }
+.empty { text-align: center; padding: 56px 20px; background: var(--surface); border: 1px dashed var(--line-2); border-radius: var(--r-lg); }
+.empty h2 { margin: 0 0 6px; font-size: 19px; }
+.empty p { color: var(--ink-2); margin: 0 0 18px; }
+
+/* ---- new */
+.narrow { max-width: 760px; margin: 0 auto; }
+.field { margin: 0 0 22px; }
+.field > label, .field > .label { display: block; font-weight: 600; font-size: 14px; margin: 0 0 4px; }
+.field .hint { color: var(--ink-2); font-size: 13px; margin: 0 0 10px; }
+.input, textarea.input { width: 100%; padding: 9px 12px; border: 1px solid var(--line-2); border-radius: var(--r); background: var(--surface); outline: none; }
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+textarea.input { min-height: 220px; resize: vertical; line-height: 1.5; }
+textarea.input.mono { font: 13px/1.5 var(--mono); }
+.choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.choice { position: relative; display: block; padding: 14px 16px; border: 1px solid var(--line-2); border-radius: var(--r-lg); background: var(--surface); cursor: pointer; }
+.choice:hover { border-color: var(--ink-3); }
+.choice input { position: absolute; opacity: 0; }
+.choice.on { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary) inset; }
+.choice:has(input:focus-visible), .drop:has(input:focus-visible) .btn { outline: 2px solid var(--accent); outline-offset: 2px; }
+.action h2:focus { outline: none; }
+.choice .ttl { font-weight: 600; }
+.choice .desc { color: var(--ink-2); font-size: 13px; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.choice .steps { color: var(--ink-3); font-size: 12.5px; margin-top: 8px; }
+.drop { border: 1px dashed var(--line-2); border-radius: var(--r); padding: 10px 12px; color: var(--ink-2); font-size: 13px; display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.drop.over { border-color: var(--accent); background: var(--run-bg); }
+.form-foot { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 18px; }
+
+/* ---- dossier */
+.dossier-head { margin: 0 0 22px; }
+.dossier-head h1 { font-size: 24px; letter-spacing: -.02em; margin: 0; font-weight: 600; }
+.dossier-head .meta { color: var(--ink-3); font-size: 13.5px; margin-top: 4px; display: flex; gap: 6px 14px; flex-wrap: wrap; }
+.layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; }
+nav.rail { position: sticky; top: 76px; }
+nav.rail ol { list-style: none; margin: 0; padding: 0; }
+nav.rail li a { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: var(--r); text-decoration: none; color: var(--ink-2); }
+nav.rail li a:hover { background: var(--hover); color: var(--ink); }
+nav.rail li a[aria-current="page"] { background: var(--selected); color: var(--ink); }
+nav.rail .ic { width: 18px; height: 18px; flex: none; margin-top: 1px; display: grid; place-items: center; }
+nav.rail .nm { font-size: 14px; line-height: 1.35; }
+nav.rail .st { display: block; font-size: 12px; color: var(--ink-3); margin-top: 1px; }
+nav.rail .st.warn { color: var(--warn); } nav.rail .st.bad { color: var(--bad); } nav.rail .st.run { color: var(--run); }
+nav.rail li.skipped .nm { text-decoration: line-through; color: var(--ink-3); }
+nav.rail .sep { height: 1px; background: var(--line); margin: 8px 10px; }
+.ic svg { width: 18px; height: 18px; }
+.c-ok { color: var(--ok); } .c-warn { color: var(--warn-dot); } .c-bad { color: var(--bad); } .c-run { color: var(--run); } .c-mute { color: var(--ink-3); }
+
+.action { border-radius: var(--r-lg); padding: 16px 18px; margin: 0 0 18px; border: 1px solid var(--line); background: var(--surface); }
+.action.warn { background: var(--warn-bg); border-color: transparent; }
+.action.bad { background: var(--bad-bg); border-color: transparent; }
+.action.ok { background: var(--ok-bg); border-color: transparent; }
+.action.run { background: var(--run-bg); border-color: transparent; }
+.action h2 { font-size: 15.5px; margin: 0; font-weight: 600; letter-spacing: -.005em; }
+.action.warn h2 { color: var(--warn); } .action.bad h2 { color: var(--bad); } .action.ok h2 { color: var(--ok); } .action.run h2 { color: var(--run); }
+.action p.lead { margin: 3px 0 0; color: var(--ink-2); font-size: 14px; }
+.action .btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+.action .note { font-size: 12.5px; color: var(--ink-2); margin-top: 10px; }
+.action .callout { margin-top: 12px; padding: 12px 14px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); }
+.action textarea.input { min-height: 170px; margin-top: 12px; background: var(--surface); }
+.action label.check { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; cursor: pointer; }
+.action label.check input { margin-top: 4px; }
+
+.doc-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); }
+.doc-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px 10px 22px; border-bottom: 1px solid var(--line); min-height: 52px; }
+.doc-bar .ttl { font-weight: 600; font-size: 14px; }
+.doc-bar .when { color: var(--ink-3); font-size: 12.5px; }
+.doc-bar .tools { margin-left: auto; display: flex; gap: 2px; align-items: center; }
+.doc { padding: 34px 56px 48px; }
+.placeholder { padding: 56px 40px; text-align: center; color: var(--ink-2); }
+.placeholder .big { font-size: 16px; color: var(--ink); font-weight: 600; margin-bottom: 4px; }
+.skeleton { padding: 36px 56px; }
+.print-head { display: none; }
+.skeleton i { display: block; height: 12px; border-radius: 6px; background: var(--line); margin: 0 0 14px; animation: pulse 1.6s ease-in-out infinite; }
+
+/* ---- the document itself */
+.md { font-family: var(--serif); font-size: 17px; line-height: 1.68; color: var(--ink); max-width: 74ch; overflow-wrap: anywhere; }
+.md > :first-child { margin-top: 0; }
+.md h2, .md h3, .md h4, .md h5, .md h6 { font-family: var(--sans); letter-spacing: -.01em; line-height: 1.3; }
+.md h2 { font-size: 25px; font-weight: 650; margin: 36px 0 12px; }
+.md h3 { font-size: 19px; font-weight: 600; margin: 32px 0 10px; }
+.md h4 { font-size: 16.5px; font-weight: 600; margin: 24px 0 8px; }
+.md h5, .md h6 { font-size: 15px; font-weight: 600; margin: 20px 0 6px; color: var(--ink-2); }
+.md p { margin: 0 0 14px; }
+.md ul, .md ol { margin: 0 0 14px; padding-left: 26px; }
+.md li { margin: 3px 0; }
+.md li > ul, .md li > ol { margin: 4px 0; }
+.md strong { font-weight: 650; }
+.md code { font: .84em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.md pre.code { font: 13px/1.5 var(--mono); background: var(--code-bg); padding: 12px 14px; border-radius: var(--r); overflow: auto; margin: 0 0 16px; }
+.md pre.code code { background: none; padding: 0; font-size: inherit; }
+.md blockquote { margin: 0 0 16px; padding: 2px 0 2px 16px; border-left: 3px solid var(--line-2); color: var(--ink-2); }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+.md .tbl { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--line); border-radius: var(--r); }
+.md table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 14px; line-height: 1.45; }
+.md th, .md td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.md th { background: var(--surface-2); font-weight: 600; color: var(--ink-2); }
+.md tr:last-child td { border-bottom: 0; }
+.md del { color: var(--ink-3); }
+.md .task { font-family: var(--sans); color: var(--ink-3); margin-right: 4px; }
+.md.compact { font-size: 15px; line-height: 1.6; max-width: none; }
+
+/* ---- context sheet */
+.sheet { padding: 0 56px 40px; }
+.doc-bar + .sheet { padding-top: 28px; border-bottom: 1px solid var(--line); }
+.sheet h3 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+.sheet .hint { color: var(--ink-2); font-size: 13px; margin: 0 0 14px; }
+.sheet dl { display: grid; grid-template-columns: minmax(130px, 200px) minmax(0, 1fr); gap: 0; margin: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.sheet dt, .sheet dd { padding: 10px 14px; border-bottom: 1px solid var(--line); margin: 0; }
+.sheet dt { color: var(--ink-2); font-size: 13.5px; background: var(--surface-2); font-weight: 500; }
+.sheet dd { white-space: pre-wrap; font-size: 14.5px; }
+.sheet dl > :nth-last-child(-n+2) { border-bottom: 0; }
+.sheet .edit-row { margin: 0 0 14px; }
+.sheet .edit-row label { display: block; font-size: 13.5px; font-weight: 600; margin: 0 0 4px; }
+.sheet .edit-row .def { font-size: 12.5px; color: var(--ink-3); margin: 0 0 6px; }
+.sheet textarea.input { min-height: 64px; }
+.err-inline { color: var(--bad); font-size: 13px; margin-top: 6px; }
+
+/* ---- technical details */
+.tech { border-top: 1px solid var(--line); padding: 16px 22px 20px; background: var(--surface-2); border-radius: 0 0 var(--r-lg) var(--r-lg); font-size: 13.5px; }
+.tech h4 { font-size: 12px; font-weight: 600; color: var(--ink-3); margin: 0 0 8px; letter-spacing: .02em; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 3px 16px; margin: 0 0 12px; }
+.kv dt { color: var(--ink-3); } .kv dd { margin: 0; overflow-wrap: anywhere; }
+details.sub { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); margin: 8px 0; }
+details.sub > summary { cursor: pointer; padding: 8px 12px; font-weight: 500; list-style: none; display: flex; gap: 8px; align-items: center; }
+details.sub > summary::-webkit-details-marker { display: none; }
+details.sub > summary::before { content: "›"; color: var(--ink-3); transition: transform .12s; display: inline-block; }
+details.sub[open] > summary::before { transform: rotate(90deg); }
+details.sub > .in { padding: 4px 12px 12px; }
+pre.raw { font: 12.5px/1.5 var(--mono); background: var(--code-bg); padding: 10px 12px; border-radius: 6px; overflow: auto; white-space: pre-wrap; word-break: break-word; max-height: 480px; margin: 6px 0 0; }
+.engine-pick { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+select.input { width: auto; padding: 5px 10px; }
+
+/* ---- banners, toast, dialog */
+.banner { margin: 14px 0 0; padding: 10px 14px; border-radius: var(--r); font-size: 14px; display: flex; gap: 10px; align-items: center; }
+.banner.bad { background: var(--bad-bg); color: var(--bad); }
+.banner.warn { background: var(--warn-bg); color: var(--warn); }
+.banner .grow { color: inherit; }
+#toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--primary); color: var(--on-primary); padding: 10px 16px; border-radius: var(--r); font-size: 14px; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 30; max-width: calc(100vw - 32px); }
+#toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+dialog { border: 0; border-radius: var(--r-lg); padding: 0; width: min(480px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); box-shadow: 0 24px 60px rgba(0,0,0,.25); }
+dialog::backdrop { background: rgba(20, 19, 17, .42); }
+dialog .dlg { padding: 22px 22px 18px; }
+dialog h2 { margin: 0 0 8px; font-size: 17px; }
+dialog p { margin: 0 0 8px; color: var(--ink-2); }
+dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+/* ---- small screens */
+@media (max-width: 860px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  nav.rail { position: static; overflow-x: auto; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  nav.rail ol { display: flex; gap: 4px; }
+  nav.rail li a { white-space: nowrap; }
+  nav.rail .sep { display: none; }
+  .doc, .skeleton { padding: 24px 20px 32px; }
+  .sheet { padding: 0 20px 28px; }
+  .sheet dl { grid-template-columns: minmax(0, 1fr); }
+  .md { font-size: 16px; }
+  .md h2 { font-size: 21px; } .md h3 { font-size: 17.5px; }
+  .doc-bar { padding-left: 16px; } .doc-bar .when { display: none; }
+  .dossier-head h1 { font-size: 21px; }
+  .crumb span.t { max-width: 40vw; }
+  .switch .lbl { display: none; }
+  .page-head { flex-direction: column; align-items: flex-start; }
+}
+
+/* ---- print: the document only */
+@media print {
+  body { background: #fff; color: #000; }
+  header.bar, #banners, nav.rail, .action, .doc-bar, .tech, .dossier-head, #toast, .sheet button, .sheet .hint { display: none !important; }
+  .print-head { display: block !important; margin: 0 0 18pt; padding-bottom: 8pt; border-bottom: 1px solid #bbb; font-family: var(--sans); }
+  .print-head .p-title { font-size: 16pt; font-weight: 600; } .print-head .p-sub { font-size: 10pt; color: #555; }
+  .sheet { padding: 0 0 14pt; border: 0; } .doc-bar + .sheet { padding-top: 0; }
+  main { padding: 0; max-width: none; }
+  .layout { display: block; }
+  .doc-card { border: 0; }
+  .doc { padding: 0; }
+  .md { max-width: none; font-size: 11.5pt; color: #000; }
+  .md .tbl { border-color: #bbb; }
+  .md h2, .md h3 { break-after: avoid; }
+  .md table, .md pre { break-inside: avoid; }
+}
 </style>
 </head>
 <body>
 <header class="bar">
-  <h1><a href="#/" id="home">Parcours</a></h1>
-  <span id="age" role="status" aria-live="polite"></span>
+  <a class="brand" href="#/"><span class="mark" aria-hidden="true">P</span>Parcours</a>
+  <span class="crumb" id="crumb"></span>
+  <span class="push">
+    <span class="conn" id="conn" role="status" aria-live="polite"></span>
+    <label class="switch" title="Affiche le moteur, le coût de chaque étape, les champs transmis, les messages reçus et le journal">
+      <input type="checkbox" id="tech-toggle" aria-label="Détails techniques"><span class="lbl" aria-hidden="true">Détails techniques</span>
+    </label>
+  </span>
 </header>
-<div id="top-wrap"><div id="top" class="" aria-live="polite"></div></div>
+<div id="banners" aria-live="polite"></div>
 <main id="app"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+<dialog id="dialog" aria-labelledby="dlg-title"></dialog>
 
 <script nonce="{{NONCE}}">
 'use strict';
 
 // ===========================================================================
 // <markdown-renderer>
-// Safe minimal Markdown -> HTML. Engine outputs are untrusted text (they may quote a
-// hostile specification), so EVERY piece of text goes through escapeHtml() first; the only
-// markup in the result is what this function emits itself (p, h3-h6, ul, ol, li, strong, em,
-// code, pre, table, thead, tbody, tr, th, td, blockquote, hr). No raw HTML, no images, no
-// links: "[text](url)" and "![alt](url)" stay literal text.
-//
-// SELF-CHECK (run by hand in the browser console; not testable from Python):
-//   escaped characters : & < > " '   ->   &amp; &lt; &gt; &quot; &#39;
-//   renderMarkdown('<img onerror=alert(1)> & "q" \'s\'')
-//     must return  <p>&lt;img onerror=alert(1)&gt; &amp; &quot;q&quot; &#39;s&#39;</p>
-//   renderMarkdown('[x](javascript:alert(1)) ![y](a.png)')  must contain no <a and no <img
-//   a fenced block holding a script tag   must contain the tag as &lt;script&gt; text only
+// Safe Markdown -> HTML. Engine outputs are untrusted text (they may quote a hostile
+// specification), so EVERY piece of text goes through escapeHtml() first; the only markup in
+// the result is what this code emits itself: p, br, h2-h6, ul, ol (start), li, strong, em, del,
+// code, pre, div.tbl, table, thead, tbody, tr, th, td, blockquote, hr, span.task, and a with an
+// http(s) href only (target=_blank, rel=noopener noreferrer). No raw HTML, no images.
+// Document headings start at h2: the page owns h1. HTML comments are dropped.
+// Tested under node by tests/test_interface.py (RendererTests).
 // ===========================================================================
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, function (c) {
@@ -118,14 +303,30 @@ function escapeHtml(s) {
   });
 }
 
+function inlineSpans(escaped) {
+  return escaped
+    .replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__([^_]+?)__/g, '<strong>$1</strong>')
+    .replace(/(^|[^*\w])\*([^*\s][^*]*?)\*(?!\*)/g, '$1<em>$2</em>')
+    .replace(/(^|[^_\w])_([^_\s][^_]*?)_(?![_\w])/g, '$1<em>$2</em>')
+    .replace(/~~([^~]+?)~~/g, '<del>$1</del>');
+}
+
 function inlineMd(text) {
-  // escape first, then add our own tags; code spans are cut out so bold/italic never touch them
-  return escapeHtml(text).split(/(`[^`]+`)/).map(function (part, i) {
-    if (i % 2) return '<code>' + part.slice(1, -1) + '</code>';
-    return part.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
-               .replace(/(^|[^*])\*([^*\s][^*]*?)\*(?!\*)/g, '$1<em>$2</em>');
+  // code spans first (nothing inside them is touched), then links, then emphasis; all escaped first
+  return String(text).split(/(`[^`]+`)/).map(function (part, i) {
+    if (i % 2) return '<code>' + escapeHtml(part.slice(1, -1)) + '</code>';
+    var out = '', last = 0, re = /\[([^\]\n]{1,500})\]\((https?:\/\/[^\s()<>"'\[\]]{1,2000})\)/g, m;
+    while ((m = re.exec(part))) {
+      out += inlineSpans(escapeHtml(part.slice(last, m.index)));
+      out += '<a href="' + escapeHtml(m[2]) + '" target="_blank" rel="noopener noreferrer">' + inlineSpans(escapeHtml(m[1])) + '</a>';
+      last = m.index + m[0].length;
+    }
+    return out + inlineSpans(escapeHtml(part.slice(last)));
   }).join('');
 }
+
+function inlineLines(lines) { return lines.map(inlineMd).join('<br>'); }
 
 function mdTableCells(line) {
   var t = line.trim().replace(/^\|/, '').replace(/\|$/, '').replace(/\\\|/g, '\u0001');
@@ -133,37 +334,69 @@ function mdTableCells(line) {
 }
 
 var MD_FENCE = /^ {0,3}(`{3,}|~{3,})/;
-var MD_HEADING = /^(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$/;
+var MD_HEADING = /^ {0,3}(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$/;
 var MD_HR = /^ {0,3}([-*_])( *\1){2,} *$/;
 var MD_ITEM = /^( *)([-*+]|\d+[.)])[ \t]+(.*)$/;
 var MD_TABLE_SEP = /^ *\|? *:?-+:? *(\| *:?-+:? *)*\|? *$/;
 
+function isTableStart(lines, i) {
+  return lines[i].indexOf('|') >= 0 && i + 1 < lines.length && lines[i + 1].indexOf('-') >= 0 && MD_TABLE_SEP.test(lines[i + 1]);
+}
 function mdBlockStart(lines, i) {
   var l = lines[i];
-  return MD_FENCE.test(l) || MD_HEADING.test(l) || MD_HR.test(l) || MD_ITEM.test(l) || /^ {0,3}>/.test(l) ||
-    (l.indexOf('|') >= 0 && i + 1 < lines.length && lines[i + 1].indexOf('-') >= 0 && MD_TABLE_SEP.test(lines[i + 1]));
+  return MD_FENCE.test(l) || MD_HEADING.test(l) || MD_HR.test(l) || MD_ITEM.test(l) || /^ {0,3}>/.test(l) || isTableStart(lines, i);
+}
+
+function itemHtml(text) {
+  var m = /^\[([ xX])\][ \t]+(.*)$/.exec(text);
+  if (m) return '<span class="task">' + (m[1] === ' ' ? '☐' : '☑') + '</span>' + inlineMd(m[2]);
+  return inlineMd(text);
 }
 
 function mdList(items) {
   var html = '', stack = [];
+  function open(it) {
+    var tag = it.ordered ? 'ol' : 'ul', start = it.ordered && it.number > 1 ? ' start="' + it.number + '"' : '';
+    html += '<' + tag + start + '><li>'; stack.push({ indent: it.indent, tag: tag });
+  }
   items.forEach(function (it) {
-    var tag = it.ordered ? 'ol' : 'ul';
-    if (!stack.length) {
-      html += '<' + tag + '><li>'; stack.push({ indent: it.indent, tag: tag });
-    } else if (it.indent > stack[stack.length - 1].indent) {
-      html += '<' + tag + '><li>'; stack.push({ indent: it.indent, tag: tag });
-    } else {
+    if (!stack.length || it.indent > stack[stack.length - 1].indent) open(it);
+    else {
       while (stack.length > 1 && it.indent < stack[stack.length - 1].indent) html += '</li></' + stack.pop().tag + '>';
       html += '</li><li>';
     }
-    html += inlineMd(it.text);
+    html += itemHtml(it.text);
   });
   while (stack.length) html += '</li></' + stack.pop().tag + '>';
   return html;
 }
 
+var MD_MAX = 300000;   // beyond this, an escaped <pre>: the renderer runs on the page's only thread
+function stripComments(s) {   // linear: a regex rescans to the end for every unclosed "<!--"
+  var out = '', at = 0, open;
+  while ((open = s.indexOf('<!--', at)) >= 0) {
+    var close = s.indexOf('-->', open + 4);
+    if (close < 0) break;
+    out += s.slice(at, open); at = close + 3;
+  }
+  return out + s.slice(at);
+}
+function stripOutsideFences(s) {   // comments are dropped from the text, never from a code block
+  var lines = s.split('\n'), out = [], prose = [], fence = null;
+  function flushProse() { if (prose.length) { out.push(stripComments(prose.join('\n'))); prose = []; } }
+  lines.forEach(function (line) {
+    var m = MD_FENCE.exec(line);
+    if (fence) { out.push(line); if (m && m[1][0] === fence[0] && m[1].length >= fence.length && !line.trim().slice(m[1].length).trim()) fence = null; }
+    else if (m) { flushProse(); out.push(line); fence = m[1]; }
+    else prose.push(line);
+  });
+  flushProse();
+  return out.join('\n');
+}
 function renderMarkdown(text) {
-  var lines = String(text).replace(/\r\n?/g, '\n').split('\n');
+  if (String(text).length > MD_MAX) return '<pre class="raw">' + escapeHtml(text) + '</pre>';
+  var source = stripOutsideFences(String(text).replace(/\r\n?/g, '\n'));
+  var lines = source.split('\n');
   var out = [], i = 0, m;
   while (i < lines.length) {
     var line = lines[i];
@@ -175,19 +408,19 @@ function renderMarkdown(text) {
       out.push('<pre class="code"><code>' + escapeHtml(body.join('\n')) + '</code></pre>');
       continue;
     }
-    if ((m = MD_HEADING.exec(line))) {                     // headings: # -> h3 (the page owns h1/h2)
-      var level = Math.min(6, m[1].length + 2);
+    if ((m = MD_HEADING.exec(line))) {                     // # -> h2 (the page owns h1)
+      var level = Math.min(6, m[1].length + 1);
       out.push('<h' + level + '>' + inlineMd(m[2]) + '</h' + level + '>');
       i++; continue;
     }
     if (MD_HR.test(line)) { out.push('<hr>'); i++; continue; }
-    if (line.indexOf('|') >= 0 && i + 1 < lines.length && lines[i + 1].indexOf('-') >= 0 && MD_TABLE_SEP.test(lines[i + 1])) {
-      var head = mdTableCells(line), rows = [];             // table
+    if (isTableStart(lines, i)) {                          // table
+      var head = mdTableCells(line), rows = [];
       for (i += 2; i < lines.length && lines[i].trim() && lines[i].indexOf('|') >= 0; i++) rows.push(mdTableCells(lines[i]));
-      out.push('<table><thead><tr>' + head.map(function (c) { return '<th>' + inlineMd(c) + '</th>'; }).join('') +
+      out.push('<div class="tbl"><table><thead><tr>' + head.map(function (c) { return '<th>' + inlineMd(c) + '</th>'; }).join('') +
         '</tr></thead><tbody>' + rows.map(function (r) {
           return '<tr>' + r.map(function (c) { return '<td>' + inlineMd(c) + '</td>'; }).join('') + '</tr>';
-        }).join('') + '</tbody></table>');
+        }).join('') + '</tbody></table></div>');
       continue;
     }
     if (/^ {0,3}>/.test(line)) {                           // blockquote
@@ -201,7 +434,7 @@ function renderMarkdown(text) {
       while (i < lines.length) {
         var im = MD_ITEM.exec(lines[i]);
         if (im && items.length && im[1].length === items[0].indent && /\d/.test(im[2]) !== items[0].ordered) break;   // ul/ol switch: new list
-        if (im) { items.push({ indent: im[1].length, ordered: /\d/.test(im[2]), text: im[3] }); i++; continue; }
+        if (im) { items.push({ indent: im[1].length, ordered: /\d/.test(im[2]), number: parseInt(im[2], 10) || 1, text: im[3] }); i++; continue; }
         if (!lines[i].trim()) {                            // a blank line only continues a list if an item follows
           var k = i + 1; while (k < lines.length && !lines[k].trim()) k++;
           if (k < lines.length && MD_ITEM.test(lines[k])) { i = k; continue; }
@@ -213,32 +446,33 @@ function renderMarkdown(text) {
       out.push(mdList(items));
       continue;
     }
-    var para = [line];                                      // paragraph
+    var para = [line];                                      // paragraph: its line breaks are kept
     for (i++; i < lines.length && lines[i].trim() && !mdBlockStart(lines, i); i++) para.push(lines[i]);
-    out.push('<p>' + inlineMd(para.join('\n')) + '</p>');
+    out.push('<p>' + inlineLines(para.map(function (l) { return l.trim(); })) + '</p>');
   }
   return out.join('\n');
 }
 
 // Falls back to an escaped <pre> if the renderer ever throws.
 function safeRender(text) {
-  try { return renderMarkdown(text); } catch (e) { return '<pre>' + escapeHtml(text) + '</pre>'; }
+  try { return renderMarkdown(text); } catch (e) { return '<pre class="raw">' + escapeHtml(text) + '</pre>'; }
 }
 // </markdown-renderer>
 
 // ===========================================================================
-// Page
+// State, helpers
 // ===========================================================================
-var TOKEN_KEY = 'parcours-ui:token';
+var TOKEN_KEY = 'parcours-ui:token', TECH_KEY = 'parcours-ui:tech';
 var S = {
-  token: null, route: { view: 'list' }, list: null, p: null, sig: '', lastOk: 0, fails: 0, polling: false,
-  authError: false, notFound: false, busy: false, error: '', notices: {}, open: new Set(),
-  files: new Map(), plan: null, planSeq: 0, planEngine: '', ctx: {}, answers: {}, chooseSel: {}, log: null,
-  copied: '', down: false, deferred: false, wasOffline: false
+  token: null, route: { view: 'home' }, list: null, recipes: null, recipesError: '', p: null, sig: '',
+  lastOk: 0, fails: 0, polling: false, authError: false, notFound: false,
+  busy: '', error: '', notices: {}, open: new Set(), docs: new Map(), files: new Map(),
+  ctx: {}, ctxEdit: {}, answers: {}, chooseSel: {}, engine: {}, log: null, plan: null,
+  draft: { recipe: '', title: '', text: '', engine: '', fileNote: '' },
+  tech: false, down: false, deferred: false, wasOffline: false
 };
 
 function $(sel) { return document.querySelector(sel); }
-
 function append(el, kids) {
   kids.forEach(function (k) {
     if (k === null || k === undefined || k === false) return;
@@ -246,14 +480,14 @@ function append(el, kids) {
     else el.appendChild(k instanceof Node ? k : document.createTextNode(String(k)));
   });
 }
-
-// DOM builder: text always goes through text nodes, never innerHTML.
+// DOM builder: text always goes through text nodes.
 function h(tag, attrs) {
   var el = document.createElement(tag);
   Object.keys(attrs || {}).forEach(function (k) {
     var v = attrs[k];
     if (v === false || v === null || v === undefined) return;
     if (k === 'class') el.className = v;
+    else if (k === 'style') el.style.cssText = v;   // CSSOM: allowed by the CSP, unlike a style attribute
     else if (k.indexOf('on') === 0) el.addEventListener(k.slice(2), v);
     else if (k === 'value' || k === 'checked' || k === 'disabled' || k === 'open' || k === 'selected') el[k] = v;
     else el.setAttribute(k, v === true ? '' : String(v));
@@ -261,11 +495,40 @@ function h(tag, attrs) {
   append(el, Array.prototype.slice.call(arguments, 2));
   return el;
 }
-
-function mdBox(text) {
-  var box = h('div', { class: 'md' });
-  box.innerHTML = safeRender(text);   // the only innerHTML of the page: output of the safe renderer
+function mdBox(text, cls) {
+  var box = h('div', { class: 'md' + (cls ? ' ' + cls : '') });
+  box.innerHTML = safeRender(text);   // innerHTML of data: only the output of the safe renderer
   return box;
+}
+
+// Icons: SVG built node by node from the constant shapes below (no data in them).
+var ICONS = {
+  check: [["path", {"d": "M5 12.5l4.2 4.2L19 7"}]],
+  circle: [["circle", {"cx": "12", "cy": "12", "r": "7.5"}]],
+  dot: [["circle", {"cx": "12", "cy": "12", "r": "7.5"}], ["circle", {"cx": "12", "cy": "12", "r": "3", "fill": "currentColor", "stroke": "none"}]],
+  alert: [["circle", {"cx": "12", "cy": "12", "r": "8.5"}], ["path", {"d": "M12 7.8v5"}], ["path", {"d": "M12 16.2v.01"}]],
+  skip: [["path", {"d": "M7 12h10"}]],
+  copy: [["rect", {"x": "8.5", "y": "8.5", "width": "11", "height": "11", "rx": "2"}], ["path", {"d": "M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"}]],
+  download: [["path", {"d": "M12 4.5v10"}], ["path", {"d": "M7.5 10.5l4.5 4.5 4.5-4.5"}], ["path", {"d": "M5 19.5h14"}]],
+  print: [["path", {"d": "M7 9V4.5h10V9"}], ["rect", {"x": "4.5", "y": "9", "width": "15", "height": "7.5", "rx": "1.5"}], ["path", {"d": "M7 14.5h10v5H7z"}]],
+  redo: [["path", {"d": "M19 8v4.5h-4.5"}], ["path", {"d": "M18.6 12.4A7 7 0 1 1 16.9 6"}]],
+  doc: [["path", {"d": "M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10A.5.5 0 0 1 7 20z"}], ["path", {"d": "M14 3.5V8h4"}]],
+  plus: [["path", {"d": "M12 5v14"}], ["path", {"d": "M5 12h14"}]],
+  file: [["path", {"d": "M14 3.5H7.5A1.5 1.5 0 0 0 6 5v14a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 19V7.5z"}], ["path", {"d": "M14 3.5v4h4"}], ["path", {"d": "M9 13h6M9 16.5h4"}]]
+};
+var SVG_NS = 'http://www.w3.org/2000/svg';
+function icon(name, cls) {
+  var span = h('span', { class: 'ic ' + (cls || ''), 'aria-hidden': 'true' });
+  var svg = document.createElementNS(SVG_NS, 'svg');
+  [['viewBox', '0 0 24 24'], ['fill', 'none'], ['stroke', 'currentColor'], ['stroke-width', '1.7'], ['stroke-linecap', 'round'], ['stroke-linejoin', 'round']]
+    .forEach(function (a) { svg.setAttribute(a[0], a[1]); });
+  ICONS[name].forEach(function (shape) {
+    var el = document.createElementNS(SVG_NS, shape[0]);
+    Object.keys(shape[1]).forEach(function (k) { el.setAttribute(k, shape[1][k]); });
+    svg.appendChild(el);
+  });
+  span.appendChild(svg);
+  return span;
 }
 
 // ---- storage (may be unavailable: private mode, blocked)
@@ -273,36 +536,40 @@ function store(kind) { try { return window[kind]; } catch (e) { return null; } }
 function saved(kind, key) { try { return store(kind).getItem(key); } catch (e) { return null; } }
 function save(kind, key, value) { try { if (value === null) store(kind).removeItem(key); else store(kind).setItem(key, value); } catch (e) { /* no storage */ } }
 
-// ---- labels and formats
-var STATUS_FR = { active: 'en cours', completed: 'terminé', stopped: 'arrêté (No-go)' };
-var STEP_FR = { pending: 'à faire', running: 'en cours', done: 'terminé', paused: 'en pause', skipped: 'écartée', failed: 'échec' };
-var PAUSE_FR = { validate: 'validation', answers: 'réponses', choose: 'choix', none: '' };
-// The recipe's model applies to Claude only; Codex, agy and Vibe use their own default model.
-function modelLabel(engine, model) { return (engine === 'claude' || engine === 'fake') ? (model || 'par défaut') : 'modèle par défaut du moteur'; }
-var ENGINE_FR = { claude: 'Claude Code', codex: 'Codex', agy: 'Antigravity (agy)', vibe: 'Vibe (non testé)', fake: 'fake (dev)' };
-
-function usd(x) { x = Number(x) || 0; return (x > 0 && x < 0.1 ? x.toFixed(4) : x.toFixed(2)).replace('.', ',') + ' $'; }
-function when(iso) { if (!iso) return ''; var d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString('fr-FR'); }
+// ---- words
+var ENGINE_FR = { claude: 'Claude', codex: 'Codex', agy: 'Antigravity', vibe: 'Vibe (non testé)', fake: 'fake (dev)' };
+// A context sheet key as the reader sees it: the recipe's own label (`context_labels`), else the key.
+function ctxLabel(p, k) { return (p.context_labels && p.context_labels[k]) || pretty(k); }
+// The runner's « absent » marker, in the reader's words.
+function ctxShown(p, v) { var s = asText(v); return p.not_stated && s.trim() === p.not_stated ? 'non indiqué' : s; }
+function pretty(id) { var s = String(id || '').replace(/[-_]+/g, ' ').trim(); return s ? s[0].toUpperCase() + s.slice(1) : ''; }
+function stepName(s) { return (s && (s.label || pretty(s.id))) || ''; }
+function titleOf(x) { return x.title || pretty(x.slug); }
+function usd(x) { x = Number(x) || 0; return (x > 0 && x < 0.1 ? x.toFixed(3) : x.toFixed(2)).replace('.', ',') + ' $'; }
 function plural(n, one, many) { return n + ' ' + (n > 1 ? many : one); }
-function kb(n) { return n >= 10000 ? Math.round(n / 1000) + ' k' : String(n); }
-
-function costLine(x) {
-  var calls = x.calls || {}, sub = (calls.codex || 0) + (calls.agy || 0) + (calls.vibe || 0), parts = [usd(x.cost_usd) + ' Claude'];
-  if (sub) parts.push(plural(sub, 'appel', 'appels') + ' Codex/agy');
-  if (calls.fake) parts.push(plural(calls.fake, 'appel', 'appels') + ' fake');
-  return parts.join(' + ');
+function fmtDate(iso) {
+  if (!iso) return ''; var d = new Date(iso); if (isNaN(d)) return iso;
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
-function callsLine(calls) {
-  var keys = Object.keys(calls || {}).sort();
-  return keys.length ? keys.map(function (k) { return k + ' ×' + calls[k]; }).join(', ') : 'aucun appel';
+function ago(iso) {
+  var d = new Date(iso); if (!iso || isNaN(d)) return '';
+  var s = Math.max(0, (Date.now() - d.getTime()) / 1000);
+  if (s < 60) return 'à l’instant';
+  if (s < 3600) return 'il y a ' + Math.round(s / 60) + ' min';
+  if (s < 86400) return 'il y a ' + Math.round(s / 3600) + ' h';
+  if (s < 86400 * 7) return 'il y a ' + plural(Math.round(s / 86400), 'jour', 'jours');
+  return 'le ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
-function badge(text, cls) { return h('span', { class: 'badge ' + (cls || '') }, text); }
+function elapsed(iso) {
+  var d = new Date(iso); if (!iso || isNaN(d)) return '';
+  var s = Math.max(0, Math.round((Date.now() - d.getTime()) / 1000));
+  return s < 60 ? s + ' s' : Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0');
+}
 function offline() { return S.fails >= 2 || (S.lastOk > 0 && Date.now() - S.lastOk > 12000); }
 function canAct() { return !S.busy && !offline() && !(S.p && S.p.locked); }
 
 // ---- API
 function ApiFail(status, code, message) { this.status = status; this.code = code; this.message = message; }
-
 async function api(method, path, body, timeout) {
   var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, timeout || 15000);
   var headers = { 'X-Parcours-Token': S.token || '' };
@@ -316,8 +583,12 @@ async function api(method, path, body, timeout) {
     try { data = await res.json(); } catch (e) { data = null; }
     if (!res.ok) throw new ApiFail(res.status, data && data.error, (data && data.message) || ('Erreur ' + res.status));
     return data;
+  } catch (e) {
+    if (e instanceof ApiFail) throw e;
+    throw new ApiFail(0, 'network', e && e.name === 'AbortError' ? 'Le serveur met trop de temps à répondre.' : 'Le serveur local ne répond pas.');
   } finally { clearTimeout(timer); }
 }
+function slugPath(slug) { return '/api/parcours/' + encodeURIComponent(slug); }
 
 // ---- token: from the URL fragment (never sent to the server), then kept for the tab only
 function initToken() {
@@ -332,584 +603,867 @@ function initToken() {
 }
 
 function parseRoute() {
-  var m = /^#\/p\/([a-z0-9][a-z0-9-]*)$/.exec(location.hash);
-  return m ? { view: 'parcours', slug: m[1] } : { view: 'list' };
+  var m;
+  if ((m = /^#\/p\/([a-z0-9][a-z0-9-]*)(?:\/([a-z0-9][a-z0-9-]*|demande))?$/.exec(location.hash))) return { view: 'parcours', slug: m[1], step: m[2] || null };
+  if (location.hash === '#/nouveau') return { view: 'new' };
+  return { view: 'home' };
 }
+function go(hash) { if (location.hash === hash) { S.route = parseRoute(); render(); } else location.hash = hash; }
 
-// ---- polling
+// ===========================================================================
+// Polling and rendering
+// ===========================================================================
 async function poll() {
   if (S.polling || !S.token) return;
   S.polling = true;
-  var route = S.route;
+  var route = S.route, sig = null;
   try {
-    if (route.view === 'list') {
+    if (route.view === 'home' || route.view === 'new') {
       var list = await api('GET', '/api/parcours', undefined, 8000);
       if (route !== S.route) return;
       S.list = list;
-      changed(JSON.stringify(list));
+      if (!S.recipes && !S.recipesError) await loadRecipes();
+      sig = JSON.stringify([list, S.recipes]);
     } else {
-      var p = await api('GET', '/api/parcours/' + route.slug, undefined, 15000);
+      var p = await api('GET', slugPath(route.slug), undefined, 15000);
       if (route !== S.route) return;
       var moved = !S.p || S.p.fingerprint !== p.fingerprint;
       S.p = p; S.notFound = false;
-      if (p.locked || S.open.has('log')) await loadLog(route.slug);
-      if (S.plan && activeKind(p) !== 'run') dropPlan();     // the pause the plan led to has moved on
-      if (S.plan && S.plan.slug === route.slug && moved && !S.plan.loading) loadPlan();
-      changed(JSON.stringify([p, S.log]));
+      if (S.tech && (p.locked || S.open.has('log'))) await loadLog(route.slug);
+      if (moved) S.plan = null;
+      sig = JSON.stringify([p, S.tech ? S.log : null]);
     }
     S.lastOk = Date.now(); S.fails = 0; S.authError = false;
   } catch (e) {
     if (e instanceof ApiFail && e.status === 403) { S.authError = true; S.fails = 0; }
     else if (e instanceof ApiFail && e.status === 404 && route.view === 'parcours') { S.notFound = true; S.lastOk = Date.now(); S.fails = 0; }
     else S.fails++;
-    changed('err:' + S.fails + S.authError + S.notFound);
+    sig = 'err:' + S.fails + S.authError + S.notFound;
   } finally { S.polling = false; }
-  updateAge();
+  if (sig !== null) changed(sig);   // outside the network try: a rendering bug is not a network failure
+  updateConn();
 }
-
+async function loadRecipes() {
+  try { S.recipes = (await api('GET', '/api/recipes', undefined, 20000)).recipes; S.recipesError = ''; }
+  catch (e) { S.recipesError = e.message; }
+}
+async function loadLog(slug) {
+  try { S.log = await api('GET', slugPath(slug) + '/log', undefined, 8000); } catch (e) { /* the state poll reports problems */ }
+}
 function changed(sig) { if (sig !== S.sig) { S.sig = sig; render(); } }
 async function refreshNow() { while (S.polling) await new Promise(function (r) { setTimeout(r, 50); }); S.sig = ''; await poll(); }
 
-async function loadLog(slug) {
-  try { S.log = await api('GET', '/api/parcours/' + slug + '/log', undefined, 8000); } catch (e) { /* the state poll reports problems */ }
-}
-
-function updateAge() {
-  var el = $('#age'), off = offline();
-  if (S.lastOk) {
-    var age = Math.max(0, Math.round((Date.now() - S.lastOk) / 1000));
-    el.textContent = off ? 'serveur injoignable (dernière lecture il y a ' + age + ' s)' : 'lu il y a ' + age + ' s';
-  } else { el.textContent = off ? 'serveur injoignable' : ''; }
-  el.className = off ? 'bad' : '';
+function updateConn() {
+  var el = $('#conn'), off = offline();
+  el.textContent = off ? 'Serveur local injoignable' : '';
+  el.className = 'conn' + (off ? ' on' : '');
   if (off !== S.wasOffline) { S.wasOffline = off; render(); }
 }
 
-// ---- render scheduling: never replace the page under a click or a text field
+// never replace the page under a click or a text field
 function isEditing() {
   var a = document.activeElement;
-  return !!a && (a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || (a.tagName === 'INPUT' && a.type === 'text'));
+  return !!a && (a.tagName === 'TEXTAREA' || a.tagName === 'SELECT' || (a.tagName === 'INPUT' && (a.type === 'text' || a.type === 'search')));
 }
 function flush() { if (S.deferred) render(); }
+
+// ---- keyboard focus survives a re-render (the page is rebuilt, not patched)
+function focusKeyOf(el) {
+  if (!el || el === document.body || !$('#app').contains(el)) return null;
+  return el.id || el.getAttribute('data-k') || (el.tagName + '|' + (el.getAttribute('href') || '') + '|' + el.textContent.trim().slice(0, 60));
+}
+function restoreFocus(key) {
+  if (!key) return;
+  var found = null;
+  document.querySelectorAll('#app a, #app button, #app input, #app select, #app textarea, #app summary').forEach(function (el) {
+    if (!found && focusKeyOf(el) === key) found = el;
+  });
+  if (found) found.focus({ preventScroll: true });
+}
 
 function render() {
   if (S.down || isEditing()) { S.deferred = true; return; }
   S.deferred = false;
-  var view;
-  if (!S.token) view = viewNoToken();
-  else if (S.route.view === 'list') view = viewList();
-  else view = viewParcours();
+  var view, focusKey = focusKeyOf(document.activeElement);
+  try {
+    if (!S.token) view = viewNoToken();
+    else if (S.route.view === 'new') view = viewNew();
+    else if (S.route.view === 'parcours') view = viewParcours();
+    else view = viewHome();
+  } catch (e) {
+    if (window.console) console.error(e);
+    view = h('div', { class: 'narrow' }, h('div', { class: 'empty' }, h('h2', null, 'Affichage momentanément impossible'),
+      h('p', null, 'La page se remet à jour d’elle-même dans quelques secondes.')));
+  }
   $('#app').replaceChildren(view);
-  renderTop();
+  restoreFocus(focusKey);
+  var current = document.querySelector('nav.rail [aria-current="page"]'), railBox = document.querySelector('nav.rail');
+  if (current && railBox && railBox.scrollWidth > railBox.clientWidth) railBox.scrollLeft = current.parentNode.offsetLeft - 16;   // phone: show the current step
+  renderChrome();
+  wantDocs();
   wantFiles();
 }
 
-function renderTop() {
-  var top = $('#top'), msgs = [];
-  if (S.authError) msgs.push(h('div', { class: 'banner bad' }, 'Jeton refusé par le serveur. Rouvrez l’adresse affichée au lancement de interface.py (elle contient le jeton après « #t= »).'));
-  if (offline()) msgs.push(h('div', { class: 'banner bad' }, 'Serveur injoignable : les données affichées ne sont plus à jour et les actions sont suspendues. Une étape lancée continue sans le serveur.'));
-  if (S.error) msgs.push(h('div', { class: 'banner bad', role: 'alert' }, h('div', { class: 'row' },
-    h('div', { class: 'grow' }, S.error), h('button', { class: 'btn small', type: 'button', onclick: function () { S.error = ''; renderTop(); } }, 'Fermer'))));
-  top.replaceChildren.apply(top, msgs);
+function renderChrome() {
+  var crumb = $('#crumb'), parts = [];
+  if (S.route.view === 'parcours' && S.p && S.p.slug === S.route.slug) parts = [h('span', null, '/'), h('span', { class: 't' }, titleOf(S.p))];
+  else if (S.route.view === 'new') parts = [h('span', null, '/'), h('span', { class: 't' }, 'Nouveau dossier')];
+  crumb.replaceChildren.apply(crumb, parts);
+  $('#tech-toggle').checked = S.tech;
+  var banners = $('#banners'), msgs = [];
+  if (S.authError) msgs.push(h('div', { class: 'banner bad' }, 'Accès refusé : rouvrez l’adresse affichée au lancement de la page de suivi (elle contient la clé d’accès).'));
+  if (offline()) msgs.push(h('div', { class: 'banner bad' }, 'Le serveur local ne répond plus. Les informations affichées peuvent être anciennes ; une étape déjà lancée continue de son côté.'));
+  if (S.error) msgs.push(h('div', { class: 'banner bad', role: 'alert' }, h('span', { class: 'grow' }, S.error),
+    h('button', { class: 'btn ghost', type: 'button', onclick: function () { S.error = ''; renderChrome(); } }, 'Fermer')));
+  banners.replaceChildren.apply(banners, msgs);
+  document.title = pageTitle();
+}
+
+function pageTitle() {
+  if (S.route.view === 'parcours' && S.p && S.p.slug === S.route.slug) {
+    var k = kindOf(S.p), mark = { validate: 'À valider', answers: 'Réponses attendues', choose: 'Choix à faire', stuck: 'À reprendre', running: 'En cours' }[k];
+    return (mark ? '(' + mark + ') ' : '') + titleOf(S.p) + ' — Parcours';
+  }
+  return S.route.view === 'new' ? 'Nouveau dossier — Parcours' : 'Vos dossiers — Parcours';
+}
+
+var toastTimer = null;
+function toast(text) {
+  var el = $('#toast'); el.textContent = text; el.className = 'on';
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.className = ''; }, 2600);
+}
+
+// Confirmation dialog: resolves true / false.
+function ask(title, body, okLabel, danger) {
+  return new Promise(function (resolve) {
+    var dlg = $('#dialog');
+    var done = function (v) { dlg.close(); resolve(v); };
+    dlg.replaceChildren(h('div', { class: 'dlg' }, h('h2', { id: 'dlg-title' }, title),
+      (Array.isArray(body) ? body : [body]).map(function (t) { return h('p', null, t); }),
+      h('div', { class: 'btns' },
+        h('button', { class: 'btn ghost', type: 'button', onclick: function () { done(false); } }, 'Annuler'),
+        h('button', { class: 'btn ' + (danger ? 'danger' : 'primary'), type: 'button', onclick: function () { done(true); } }, okLabel))));
+    dlg.onclose = function () { resolve(false); };
+    dlg.showModal();
+    dlg.querySelector(danger ? '.btn.ghost' : '.btn:last-child').focus();   // a destructive action is never one Enter away
+  });
+}
+
+// ===========================================================================
+// What a parcours waits for
+// ===========================================================================
+function stepOf(p, id) { return p.steps.filter(function (s) { return s.id === id; })[0]; }
+function stuckSteps(p) { return p.steps.filter(function (s) { return s.status === 'failed' || s.status === 'running'; }); }
+// One of: recipe_error, completed, stopped, running, stuck, validate, answers, choose, run.
+function kindOf(p) {
+  if (p.recipe_error) return 'recipe_error';
+  if (p.status === 'completed') return 'completed';
+  if (p.status !== 'active') return 'stopped';
+  if (p.locked) return 'running';
+  if (stuckSteps(p).length) return 'stuck';
+  return p.pending ? p.pending.type : 'run';
+}
+// The step the human should look at now.
+function focusStep(p) {
+  var k = kindOf(p);
+  if (k === 'running') {   // the lock is taken a moment before a step is marked running, and released after
+    return p.steps.filter(function (s) { return s.status === 'running'; })[0] ||
+      p.steps.filter(function (s) { return s.status === 'pending' || s.status === 'paused'; })[0] || p.steps[p.steps.length - 1];
+  }
+  if (k === 'stuck') return stuckSteps(p)[0];
+  if ((k === 'validate' || k === 'answers') && p.pending.step) return stepOf(p, p.pending.step);
+  if (k === 'completed' && p.final_output) return p.steps.filter(function (s) { return s.output === p.final_output; })[0];
+  var done = p.steps.filter(function (s) { return s.status === 'done'; });
+  return done.length ? done[done.length - 1] : p.steps[0];
+}
+// Steps the next run would play after the pause at index `from` (0-based) is lifted.
+function upcoming(p, from) {
+  var out = [];
+  for (var i = from + 1; i < p.steps.length; i++) {
+    var s = p.steps[i];
+    if (s.status !== 'pending') continue;
+    if (s.optional && !s.chosen) break;
+    out.push(s);
+    if (s.pause === 'validate' || s.pause === 'answers') break;
+  }
+  return out;
+}
+function costNote(p, steps, from) {
+  if (!steps.length) {
+    var later = p.steps.slice(from + 1).filter(function (s) { return s.status === 'pending'; });
+    if (!later.length) return 'Ce sera la fin du dossier.';
+    var optional = [];
+    for (var i = 0; i < later.length && later[i].optional && !later[i].chosen; i++) optional.push(stepName(later[i]));
+    return optional.length ? 'Ensuite, vous choisirez de jouer ou non : ' + optional.join(', ') + '.' : '';
+  }
+  var engine = S.engine[p.slug] || p.engine, claude = steps.filter(function (s) { return (p.engine_steps[s.id] || engine) === 'claude'; }).length;
+  var names = steps.map(stepName).join(', ');
+  var text = 'Ensuite : ' + names + '.';
+  if (claude && S.tech) text += ' Plafond de sécurité ' + usd(claude * (p.max_budget_usd || 5) * 2) + ' (' + claude + ' appel(s) Claude × ' + usd(p.max_budget_usd || 5) + ' × 2 pour une relance éventuelle).';
+  return text;
 }
 
 // ===========================================================================
 // Views
 // ===========================================================================
 function viewNoToken() {
-  return h('div', { class: 'panel' }, h('h2', null, 'Jeton manquant'),
-    h('p', null, 'Cette page se lit avec l’adresse affichée au lancement de ', h('code', null, 'scripts/interface.py'),
-      ' (elle se termine par ', h('code', null, '#t=…'), '). Le jeton n’est pas conservé après la fermeture de l’onglet.'));
+  return h('div', { class: 'narrow' }, h('div', { class: 'empty' }, h('h2', null, 'Ouvrez la page depuis son adresse de lancement'),
+    h('p', null, 'L’adresse affichée au démarrage de la page de suivi contient une clé d’accès. Elle n’est pas conservée après la fermeture de l’onglet.')));
 }
 
-function viewList() {
+// ---- home
+function listState(x) {
+  if (x.locked) return { dot: 'run', text: 'En cours' + (x.current && x.current.label ? ' : ' + x.current.label : '') };
+  if (x.status === 'completed') return { dot: 'ok', text: 'Terminé' };
+  if (x.status === 'stopped') return { dot: '', text: 'Arrêté' };
+  var cur = x.current, label = cur && (cur.label || pretty(cur.id));
+  if (x.pending) {
+    if (x.pending.type === 'validate') return { dot: 'warn', text: 'À valider' + (label ? ' : ' + label : ''), you: true };
+    if (x.pending.type === 'answers') return { dot: 'warn', text: 'Réponses attendues', you: true };
+    if (x.pending.type === 'choose') return { dot: 'warn', text: 'Choix à faire', you: true };
+  }
+  if (cur && cur.status === 'failed') return { dot: 'bad', text: 'À reprendre : ' + label, you: true };
+  if (cur && cur.status === 'running') return { dot: 'bad', text: 'Interrompu : ' + label, you: true };
+  return { dot: 'warn', text: 'Prêt à continuer', you: true };
+}
+
+function dossierCard(x) {
+  var st = listState(x), bars = [];
+  for (var i = 0; i < x.steps_total; i++) bars.push(h('i', { class: i < x.steps_done ? 'done' : (i === x.steps_done ? (x.locked ? 'run' : st.dot === 'bad' ? 'bad' : st.you ? 'now' : '') : '') }));
+  return h('a', { class: 'card', href: '#/p/' + x.slug },
+    h('div', { class: 'ttl' }, titleOf(x)),
+    h('div', { class: 'sub' }, x.recipe_label || x.recipe),
+    h('div', { class: 'state' }, h('span', { class: 'dot ' + st.dot }), st.text),
+    h('div', { class: 'progress', role: 'img', 'aria-label': x.steps_done + ' étapes sur ' + x.steps_total }, bars),
+    h('div', { class: 'foot' }, h('span', null, x.steps_done + ' / ' + x.steps_total + ' étapes'), h('span', null, ago(x.updated || x.created))));
+}
+
+function viewHome() {
   var d = S.list;
   if (!d) return h('p', { class: 'muted' }, 'Chargement…');
-  var rows = d.parcours.map(function (x) {
-    return h('tr', { class: 'item' },
-      h('td', null, h('a', { href: '#/p/' + x.slug }, x.slug), h('div', { class: 'muted small' }, x.recipe + ' ' + (x.recipe_version || ''))),
-      h('td', null, badge(STATUS_FR[x.status] || x.status, 'st-' + x.status), x.locked ? [' ', badge('étape en cours', 'st-running')] : null),
-      h('td', null, x.pending ? pendingLabel(x.pending) : (x.status === 'active' ? h('span', { class: 'muted' }, 'prêt à lancer') : '')),
-      h('td', null, x.steps_done + ' / ' + x.steps_total),
-      h('td', null, costLine(x), h('div', { class: 'muted small' }, callsLine(x.calls))),
-      h('td', { class: 'small' }, when(x.created)));
+  var head = h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Vos dossiers'),
+    h('p', null, 'Une recette est une suite d’étapes guidées ; vous relisez et validez à chaque étape clé.')),
+    d.parcours.length ? h('button', { class: 'btn primary', type: 'button', onclick: function () { go('#/nouveau'); } }, icon('plus'), 'Nouveau dossier') : null);
+  if (!d.parcours.length) {
+    return h('div', null, head, h('div', { class: 'empty' }, h('h2', null, 'Créez votre premier dossier'),
+      h('p', null, 'Choisissez une recette, collez la demande ou le cahier des charges : la première étape démarre aussitôt.'),
+      h('button', { class: 'btn primary', type: 'button', onclick: function () { go('#/nouveau'); } }, icon('plus'), 'Nouveau dossier')), techFooter(d));
+  }
+  var groups = [['À traiter', []], ['En cours', []], ['Terminés', []], ['Arrêtés', []]];
+  d.parcours.forEach(function (x) {
+    var st = listState(x);
+    groups[x.locked ? 1 : x.status === 'completed' ? 2 : x.status === 'stopped' ? 3 : st.you ? 0 : 1][1].push(x);
   });
-  return h('div', null,
-    h('h2', null, 'Parcours'),
-    h('p', { class: 'muted small' }, 'Dossier : ', h('code', null, d.parcours_dir)),
-    d.parcours.length ? h('div', { class: 'panel' }, h('table', { class: 'list' },
-      h('thead', null, h('tr', null, ['Parcours', 'Statut', 'En attente', 'Étapes', 'Coût et appels', 'Créé'].map(function (t) { return h('th', null, t); }))),
-      h('tbody', null, rows)))
-      : h('div', { class: 'panel' }, h('p', null, 'Aucun parcours dans ce dossier.'),
-        h('p', { class: 'muted small' }, 'La création se fait en ligne de commande : ', h('code', null, 'python3 scripts/parcours.py new <recette> --input demande.md'))),
-    d.without_state.length ? h('div', { class: 'panel' }, h('h3', null, 'Dossiers sans state.json'),
-      h('p', { class: 'muted small' }, 'Création interrompue : rien à suivre ici, le dossier peut être supprimé à la main.'),
-      h('ul', null, d.without_state.map(function (n) { return h('li', null, h('code', null, n)); }))) : null,
-    d.broken.length ? h('div', { class: 'panel' }, h('h3', null, 'Parcours illisibles'),
-      h('ul', null, d.broken.map(function (b) { return h('li', null, h('code', null, b.slug), ' — ', b.message); }))) : null);
+  return h('div', null, head,
+    groups.filter(function (g) { return g[1].length; }).map(function (g) {
+      return h('section', null, h('h2', { class: 'group-title' }, g[0] + ' · ' + g[1].length), h('div', { class: 'cards' }, g[1].map(dossierCard)));
+    }),
+    d.broken.length ? h('section', null, h('h2', { class: 'group-title' }, 'Dossiers illisibles'),
+      h('div', { class: 'banner warn' }, d.broken.map(function (b) { return b.slug; }).join(', ') + ' : leur fichier d’état est illisible.')) : null,
+    techFooter(d));
+}
+function techFooter(d) {
+  if (!S.tech) return null;
+  return h('p', { class: 'muted', style: 'margin-top:32px;font-size:12.5px;color:var(--ink-3)' }, 'Dossier des parcours : ' + d.parcours_dir +
+    (d.without_state.length ? ' · créations interrompues : ' + d.without_state.join(', ') : ''));
 }
 
-function pendingLabel(pending) {
-  var what = { validate: 'validation', answers: 'réponses du tiers', choose: 'choix d’étapes optionnelles' }[pending.type] || pending.type;
-  return badge(what + (pending.step ? ' · ' + pending.step : ''), 'st-pending-ask');
+// ---- new dossier
+function viewNew() {
+  var dr = S.draft;
+  if (!S.recipes) return h('div', { class: 'narrow' }, S.recipesError ? h('div', { class: 'banner bad' }, 'Impossible de lire les recettes : ' + S.recipesError) : h('p', null, 'Chargement des recettes…'));
+  if (!dr.recipe && S.recipes.length === 1) dr.recipe = S.recipes[0].id;
+  var chosen = S.recipes.filter(function (r) { return r.id === dr.recipe; })[0];
+  var text = h('textarea', { class: 'input', id: 'new-text', placeholder: 'Collez ici le mail du client, vos notes de réunion ou le cahier des charges…', value: dr.text, 'aria-label': 'Demande' });
+  text.addEventListener('input', function () { dr.text = text.value; count.textContent = countText(); saveDraft(); S.formError = null; });
+  var count = h('span', { class: 'muted', style: 'font-size:12.5px;color:var(--ink-3)' }, countText());
+  var fileInput = h('input', { type: 'file', accept: '.md,.txt,.markdown,text/plain,text/markdown', class: 'sr-only', id: 'new-file', onchange: function (e) { readFile(e.target.files[0]); } });
+  var drop = h('div', { class: 'drop' }, icon('file'), h('span', { class: 'grow' }, dr.fileNote || 'Ou importez un fichier texte (.md, .txt). Pour un PDF ou un Word, copiez-collez son texte.'),
+    h('label', { class: 'btn', for: 'new-file' }, 'Choisir un fichier'), fileInput);
+  ['dragover', 'dragenter'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function (e) { if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
+  var title = h('input', { class: 'input', type: 'text', value: dr.title, maxlength: '120', placeholder: 'Offre formation gestion de projet', 'aria-label': 'Titre du dossier' });
+  title.addEventListener('input', function () { dr.title = title.value; saveDraft(); });
+  return h('div', { class: 'narrow' },
+    h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Nouveau dossier'), h('p', null, 'Seule la première étape lit votre texte. Les suivantes travaillent sur une fiche de contexte que vous validerez après cette première étape.'))),
+    h('div', { class: 'field' }, h('div', { class: 'label' }, 'Recette'), fieldError('recipe'),
+      h('div', { class: 'choices', role: 'radiogroup', 'aria-label': 'Recette' }, S.recipes.map(function (r) {
+        return h('label', { class: 'choice' + (r.id === dr.recipe ? ' on' : '') },
+          h('input', { type: 'radio', name: 'recipe', value: r.id, checked: r.id === dr.recipe, onchange: function () { dr.recipe = r.id; S.formError = null; saveDraft(); render(); } }),
+          h('div', { class: 'ttl' }, r.label), h('div', { class: 'desc' }, r.summary || firstSentence(r.description)),
+          h('div', { class: 'steps' }, plural(r.steps.length, 'étape', 'étapes') + ' · ' + plural(r.steps.filter(function (s) { return s.pause === 'validate' || s.pause === 'answers'; }).length, 'relecture', 'relectures')));
+      }))),
+    h('div', { class: 'field' }, h('label', null, 'Titre'), h('p', { class: 'hint' }, 'Pour retrouver le dossier dans la liste. Facultatif.'), title),
+    h('div', { class: 'field' }, h('label', { for: 'new-text' }, 'La demande'), h('p', { class: 'hint' }, 'Le texte brut tel que vous l’avez reçu.'), text, fieldError('text'), h('div', { class: 'row', style: 'margin-top:6px' }, h('span', { class: 'grow' }), count), drop),
+    S.tech ? h('div', { class: 'field' }, h('label', null, 'Moteur'), engineSelect(dr.engine || 'claude', S.list ? S.list.engines : ['claude'], function (v) { dr.engine = v; })) : null,
+    h('div', { class: 'form-foot' },
+      h('button', { class: 'btn primary', type: 'button', 'aria-busy': S.busy ? 'true' : 'false', onclick: createDossier }, S.busy ? h('span', { class: 'spin' }) : null, S.busy || 'Créer et démarrer'),
+      h('button', { class: 'btn ghost', type: 'button', onclick: function () { go('#/'); } }, 'Annuler'),
+      h('span', { class: 'grow' }), chosen ? h('span', { style: 'font-size:12.5px;color:var(--ink-3)' }, 'Première étape : ' + (chosen.steps[0].label || pretty(chosen.steps[0].id))) : null));
+}
+var DRAFT_KEY = 'parcours-ui:new';
+function saveDraft() { save('sessionStorage', DRAFT_KEY, JSON.stringify({ recipe: S.draft.recipe, title: S.draft.title, text: S.draft.text })); }
+function loadDraft() { try { var d = JSON.parse(saved('sessionStorage', DRAFT_KEY) || 'null'); if (d) Object.assign(S.draft, d); } catch (e) { /* none */ } }
+function fieldError(field) {
+  return S.formError && S.formError.field === field ? h('div', { class: 'err-inline', role: 'alert', 'data-error': '' }, S.formError.text) : null;
+}
+function firstSentence(s) { s = String(s || ''); var m = /^(.{40,260}?[.!?])(\s|$)/.exec(s); return m ? m[1] : s.slice(0, 260); }
+function countText() { var n = S.draft.text.trim() ? S.draft.text.trim().split(/\s+/).length : 0; return n ? plural(n, 'mot', 'mots') : ''; }
+function readFile(file) {
+  if (!file) return;
+  if (file.size > 3000000) { S.draft.fileNote = 'Fichier trop gros (3 Mo au plus).'; render(); return; }
+  var reader = new FileReader();
+  reader.onload = function () {
+    var t = String(reader.result || '');
+    if (/\u0000/.test(t.slice(0, 2000))) { S.draft.fileNote = '« ' + file.name + ' » n’est pas un fichier texte : copiez-collez son contenu.'; render(); return; }
+    S.draft.text = t; S.draft.fileNote = '« ' + file.name + ' » importé.'; saveDraft();
+    if (!S.draft.title) S.draft.title = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+    render();
+  };
+  reader.onerror = function () { S.draft.fileNote = 'Lecture impossible de « ' + file.name + ' ».'; render(); };
+  reader.readAsText(file, 'utf-8');
+}
+async function createDossier() {
+  var dr = S.draft;
+  S.formError = !dr.recipe ? { field: 'recipe', text: 'Choisissez une recette.' }
+    : !dr.text.trim() ? { field: 'text', text: 'Collez la demande, ou importez un fichier texte.' } : null;
+  if (S.formError) { render(); var bad = document.querySelector('[data-error]'); if (bad) bad.scrollIntoView({ block: 'center' }); return; }
+  S.busy = 'Création…'; S.error = ''; render();
+  try {
+    var r = await api('POST', '/api/parcours', { recipe: dr.recipe, title: dr.title.trim(), text: dr.text, engine: dr.engine || undefined }, 60000);
+    S.draft = { recipe: dr.recipe, title: '', text: '', engine: '', fileNote: '' }; save('sessionStorage', DRAFT_KEY, null);
+    S.busy = '';
+    go('#/p/' + r.slug);
+    await refreshNow();
+    await continueRun(r.slug);
+  } catch (e) { S.error = friendlyError(e); S.busy = ''; render(); }
 }
 
-function stepOf(p, id) { return p.steps.filter(function (s) { return s.id === id; })[0]; }
-
+// ---- a dossier
 function viewParcours() {
   var p = S.p;
-  if (S.notFound) return h('div', { class: 'panel' }, h('p', null, 'Parcours introuvable : ', h('code', null, S.route.slug)), h('a', { href: '#/' }, 'Retour à la liste'));
-  if (!p || p.slug !== S.route.slug) return h('p', { class: 'muted' }, 'Chargement…');
-  return h('div', null, headerBlock(p), bannersBlock(p), actionBlock(p), contextBlockIfReadOnly(p), h('h2', null, 'Étapes'), timelineBlock(p));
-}
-
-function headerBlock(p) {
+  if (S.notFound) return h('div', { class: 'narrow' }, h('div', { class: 'empty' }, h('h2', null, 'Dossier introuvable'), h('p', null, 'Il a peut-être été déplacé ou supprimé.'), h('a', { class: 'btn', href: '#/' }, 'Vos dossiers')));
+  if (!p || p.slug !== S.route.slug) return h('p', null, 'Chargement…');
+  var focus = focusStep(p);
+  var selected = S.route.step === 'demande' ? 'demande' : (S.route.step && stepOf(p, S.route.step)) || focus || p.steps[0];
+  var done = p.steps.filter(function (s) { return s.status === 'done' || s.status === 'skipped'; }).length;
   return h('div', null,
-    h('p', { class: 'small' }, h('a', { href: '#/' }, '← Tous les parcours')),
-    h('h2', null, p.slug, ' ', badge(STATUS_FR[p.status] || p.status, 'st-' + p.status)),
-    h('div', { class: 'meta' },
-      h('span', null, 'Recette ', p.recipe, ' ', p.recipe_version),
-      h('span', null, 'Moteur par défaut : ', ENGINE_FR[p.engine] || p.engine),
-      h('span', null, 'Coût : ', costLine(p)),
-      h('span', null, 'Appels : ', callsLine(p.calls)),
-      h('span', null, 'Créé : ', when(p.created)),
-      h('span', null, 'Fiche de contexte : ', p.context_sheet === null ? 'pas encore produite' : (p.context_validated ? 'validée' : 'non validée'))));
+    h('div', { class: 'dossier-head' }, h('h1', null, titleOf(p)),
+      h('div', { class: 'meta' }, h('span', null, p.recipe_label || p.recipe), h('span', null, plural(done, 'étape', 'étapes') + ' sur ' + p.steps.length),
+        h('span', null, 'créé ' + ago(p.created)), p.cost_usd ? h('span', null, 'coût ' + usd(p.cost_usd)) : null)),
+    h('div', { class: 'layout' }, rail(p, selected, focus),
+      h('div', null, actionCard(p, focus, selected), selected === 'demande' ? requestPanel(p) : docPanel(p, selected))));
 }
 
-function bannersBlock(p) {
-  var out = [];
-  if (p.recipe_error) out.push(h('div', { class: 'banner bad' }, 'Ce parcours ne correspond plus à la recette : ' + p.recipe_error));
-  (S.notices[p.slug] || []).forEach(function (n, idx) {
-    var text = n.kind === 'context_stale'
-      ? 'Fiche corrigée : ' + plural(n.steps.length, 'étape a', 'étapes ont') + ' déjà reçu l’ancienne version (' + n.steps.join(', ') + '). Utilisez « Refaire cette étape » sur la première pour les rejouer.'
-      : 'Étape refaite. Remises en file : ' + (n.steps.join(', ') || 'aucune') + '. Lancez la suite pour les rejouer.';
-    out.push(h('div', { class: 'banner warn' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, text),
-      h('button', { class: 'btn small', type: 'button', onclick: function () { S.notices[p.slug].splice(idx, 1); render(); } }, 'Fermer'))));
-  });
-  if (p.status === 'completed') {
-    out.push(h('div', { class: 'banner ok' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, 'Parcours terminé.' + (p.final_output ? ' Sortie finale : ' + p.final_output + '.' : '')),
-      p.final_output ? h('button', { class: 'btn small', type: 'button', onclick: function () { openFinal(p); } }, 'Voir la sortie finale') : null)));
+function railState(p, s) {
+  var k = kindOf(p), pend = p.pending && p.pending.step === s.id && p.status === 'active';
+  if (s.status === 'running' && p.locked) return { ic: h('span', { class: 'ic c-run' }, h('span', { class: 'spin' })), st: 'En cours…', cls: 'run' };
+  if (s.status === 'running') return { ic: icon('alert', 'c-bad'), st: 'Interrompue', cls: 'bad' };
+  if (s.status === 'failed') return { ic: icon('alert', 'c-bad'), st: 'À reprendre', cls: 'bad' };
+  if (pend && k === 'validate') return { ic: icon('dot', 'c-warn'), st: 'À valider', cls: 'warn' };
+  if (pend && k === 'answers') return { ic: icon('dot', 'c-warn'), st: 'Réponses attendues', cls: 'warn' };
+  if (s.status === 'done' || s.status === 'paused') return { ic: icon('check', 'c-ok'), st: s.output === p.final_output ? 'Livrable final' : 'Terminée', cls: '' };
+  if (s.status === 'skipped') return { ic: icon('skip', 'c-mute'), st: 'Écartée', cls: '' };
+  if (k === 'choose' && (p.pending.steps || []).indexOf(s.id) >= 0) return { ic: icon('circle', 'c-warn'), st: 'Facultative, à choisir', cls: 'warn' };
+  return { ic: icon('circle', 'c-mute'), st: s.optional ? 'Facultative' : 'À venir', cls: '' };
+}
+function rail(p, selected, focus) {
+  return h('nav', { class: 'rail', 'aria-label': 'Étapes du dossier' }, h('ol', null,
+    h('li', null, h('a', { href: '#/p/' + p.slug + '/demande', 'aria-current': selected === 'demande' ? 'page' : null },
+      icon('doc', 'c-mute'), h('span', null, h('span', { class: 'nm' }, 'Votre demande'), h('span', { class: 'st' }, 'Le texte de départ')))),
+    h('li', { class: 'sep', 'aria-hidden': 'true' }),
+    p.steps.map(function (s) {
+      var r = railState(p, s);
+      return h('li', { class: s.status === 'skipped' ? 'skipped' : '' }, h('a', { href: '#/p/' + p.slug + '/' + s.id, 'aria-current': selected === s ? 'page' : null },
+        r.ic, h('span', null, h('span', { class: 'nm' }, stepName(s)), h('span', { class: 'st ' + r.cls }, r.st))));
+    })));
+}
+
+// ---- the action card: the one thing to do now
+function busyBtn(label, cls, onclick, busyLabel) {
+  var busy = S.busy && S.busy === busyLabel;
+  return h('button', { class: 'btn ' + (cls || ''), type: 'button', 'aria-busy': busy ? 'true' : 'false', disabled: !canAct() && !busy, onclick: onclick },
+    busy ? h('span', { class: 'spin' }) : null, busy ? busyLabel : label);
+}
+function seeLink(p, s, selected) {
+  if (!s || selected === s) return null;
+  return h('a', { href: '#/p/' + p.slug + '/' + s.id, style: 'font-size:13.5px' }, 'Voir « ' + stepName(s) + ' »');
+}
+
+function actionCard(p, focus, selected) {
+  var k = kindOf(p), idx;
+  if (k === 'recipe_error') return h('div', { class: 'action bad' }, h('h2', null, 'Ce dossier ne correspond plus à sa recette'),
+    h('p', { class: 'lead' }, 'La recette a changé depuis la création du dossier : il ne peut plus avancer. Ses étapes jouées restent consultables ; pour aller au bout, créez un nouveau dossier avec la même demande.'),
+    h('div', { class: 'btns' }, h('a', { class: 'btn', href: '#/nouveau' }, 'Nouveau dossier')), S.tech ? h('pre', { class: 'raw' }, p.recipe_error) : null);
+  if (k === 'stopped') return h('div', { class: 'action' }, h('h2', null, 'Dossier arrêté'), h('p', { class: 'lead' }, 'Vous avez décidé de ne pas aller plus loin. Les étapes jouées restent consultables.'));
+  if (k === 'completed') {
+    var fin = focus;
+    return h('div', { class: 'action ok' }, h('h2', null, 'Votre livrable est prêt'),
+      h('p', { class: 'lead' }, fin ? '« ' + stepName(fin) + ' » est la dernière étape : relisez-le, puis téléchargez-le ou imprimez-le en PDF.' : 'Toutes les étapes sont jouées.'),
+      fin ? h('div', { class: 'btns' }, selected !== fin ? h('a', { class: 'btn primary', href: '#/p/' + p.slug + '/' + fin.id }, 'Ouvrir le livrable') : null,
+        h('button', { class: 'btn' + (selected === fin ? ' primary' : ''), type: 'button', onclick: function () { downloadDoc(p, fin); } }, icon('download'), 'Télécharger'),
+        h('button', { class: 'btn', type: 'button', onclick: function () { printDoc(p, fin); } }, icon('print'), 'Imprimer ou PDF')) : null);
   }
-  if (p.status === 'stopped') out.push(h('div', { class: 'banner bad' }, 'Parcours arrêté (No-go). Il n’y a plus rien à lancer.'));
+  if (k === 'running') {
+    var running = focus;
+    return h('div', { class: 'action run' }, h('div', { class: 'row' }, h('span', { class: 'spin c-run' }),
+      h('h2', { class: 'grow' }, running ? '« ' + stepName(running) + ' » en cours' : 'Étape en cours'),
+      running && running.started ? h('span', { class: 'note', 'data-since': running.started, style: 'margin:0' }, elapsed(running.started)) : null),
+      h('p', { class: 'lead' }, 'Cela prend en général une à quelques minutes. Vous pouvez fermer la page : l’étape continue, et le dossier vous attendra ici.'),
+      h('div', { class: 'btns' }, h('button', { class: 'btn ghost', type: 'button', disabled: !!S.busy || offline(), onclick: interrupt }, 'Interrompre')));
+  }
+  if (k === 'stuck') {
+    var s = focus, redoOnly = /isolation/.test(s.error || '');   // re-reading the same output would fail the same way
+    return h('div', { class: 'action bad' }, h('h2', null, '« ' + stepName(s) + ' » n’a pas abouti'),
+      h('p', { class: 'lead' }, s.status === 'running' ? 'L’étape a été interrompue avant la fin.' : 'Le résultat n’a pas pu être exploité.'),
+      s.error ? h('div', { class: 'callout', style: 'font-size:13.5px' }, humanError(s.error)) : null,
+      h('div', { class: 'btns' },
+        redoOnly ? null : busyBtn('Reprendre', 'primary', function () { retryAndContinue(p); }, 'Reprise…'),
+        busyBtn('Refaire l’étape', redoOnly ? 'primary' : '', function () { rerunAndContinue(p, s); }, 'Relance…'),
+        seeLink(p, s, selected)),
+      redoOnly ? null : h('p', { class: 'note' }, hasRawOutput(p, s)
+        ? '« Reprendre » relit le résultat déjà rendu par le moteur, sans nouvel appel ; « Refaire » relance l’étape depuis zéro.'
+        : 'Aucun résultat n’a été enregistré : « Reprendre » relance l’appel au moteur là où il s’est arrêté ; « Refaire » repart de zéro.'), engineLine(p));
+  }
+  if (k === 'validate') {
+    var v = stepOf(p, p.pending.step); idx = p.steps.indexOf(v);
+    var draft = v && v.produces_context_sheet ? ctxDraft(p) : null, dirty = draft && ctxDirty(p);
+    return h('div', { class: 'action warn' },
+      h('h2', null, v && v.blocking ? 'Point d’attention sur « ' + stepName(v) + ' »' : 'À vous : relisez « ' + stepName(v) + ' »'),
+      h('p', { class: 'lead' }, v && v.produces_context_sheet
+        ? 'Vérifiez surtout la fiche de contexte' + (selected === v ? ', juste en dessous' : ' (sur la page de cette étape)') + ' : c’est elle, et non votre texte de départ, que liront toutes les étapes suivantes.'
+        : 'Si le résultat vous convient, validez : la suite démarre.'),
+      v && v.blocking ? h('div', { class: 'callout' }, mdBox(v.blocking, 'compact')) : null,
+      h('div', { class: 'btns' },
+        markPrimary(busyBtn(validateLabel(v, dirty), 'primary', function () { validateAndContinue(p, !!(draft && ctxDirty(p))); }, 'Validation…'), function () { return validateLabel(v, ctxDirty(p)); }),
+        busyBtn('Refaire l’étape', '', function () { rerunAndContinue(p, v); }, 'Relance…'),
+        busyBtn('Arrêter le dossier', 'ghost danger', function () { stopDossier(p); }, 'Arrêt…'),
+        seeLink(p, v, selected)),
+      h('p', { class: 'note' }, costNote(p, upcoming(p, idx), idx)), engineLine(p));
+  }
+  if (k === 'answers') {
+    var a = stepOf(p, p.pending.step); idx = p.steps.indexOf(a);
+    var slug = p.slug, key = 'parcours-ui:draft:' + slug + ':' + a.id;
+    if (S.answers[slug] === undefined) S.answers[slug] = saved('localStorage', key) || '';
+    var area = h('textarea', { class: 'input', 'aria-label': 'Réponses reçues', placeholder: 'Collez ici les réponses reçues, en une ou plusieurs fois : le brouillon est gardé dans ce navigateur.', value: S.answers[slug] });
+    var timer = null;
+    area.addEventListener('input', function () {
+      S.answers[slug] = area.value; clearTimeout(timer);
+      timer = setTimeout(function () { save('localStorage', key, area.value ? area.value : null); }, 300);
+    });
+    var sheetStep = a && a.produces_context_sheet;
+    return h('div', { class: 'action warn' },
+      h('h2', null, 'Envoyez les questions, puis collez les réponses'),
+      h('p', { class: 'lead' }, '« ' + stepName(a) + ' » a préparé les questions à poser. Copiez-les, envoyez-les, et revenez ici avec les réponses.' +
+        (sheetStep ? ' La fiche de contexte, sous ce cadre, se corrige aussi à ce moment.' : '')),
+      h('div', { class: 'btns' }, h('button', { class: 'btn', type: 'button', onclick: function () { copyDoc(p, a); } }, icon('copy'), 'Copier les questions'), seeLink(p, a, selected)),
+      area,
+      h('div', { class: 'btns' },
+        busyBtn('Envoyer les réponses et continuer', 'primary', function () { answerAndContinue(p, key, false); }, 'Envoi…'),
+        busyBtn('Continuer sans réponses', '', function () { answerAndContinue(p, key, true); }, 'Suite…')),
+      h('p', { class: 'note' }, costNote(p, upcoming(p, idx), idx)), engineLine(p));
+  }
+  if (k === 'choose') {
+    var group = p.pending.steps || [], sel = S.chooseSel[p.slug] || (S.chooseSel[p.slug] = new Set());
+    return h('div', { class: 'action warn' }, h('h2', null, 'Des étapes facultatives sont possibles'),
+      h('p', { class: 'lead' }, 'Cochez celles à jouer, ou passez directement à la suite.'),
+      group.map(function (id) {
+        var s = stepOf(p, id);
+        return h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: sel.has(id), onchange: function (e) { if (e.target.checked) sel.add(id); else sel.delete(id); render(); } }),
+          h('span', null, h('strong', null, stepName(s)), S.tech && s ? h('span', { lang: 'en', style: 'display:block;font-size:12.5px;color:var(--ink-3)' }, s.mission) : null));
+      }),
+      h('div', { class: 'btns' },
+        (function () {
+      var b = busyBtn(sel.size ? 'Jouer ' + plural(sel.size, 'étape', 'étapes') + ' et continuer' : 'Jouer les étapes cochées et continuer', 'primary',
+        function () { if (sel.size) chooseAndContinue(p, group.filter(function (g) { return sel.has(g); })); }, 'Lancement…');
+      if (!sel.size) { b.disabled = true; b.title = 'Cochez au moins une étape'; }
+      return b;
+    })(),
+        busyBtn('Passer ces étapes', '', function () { chooseAndContinue(p, null); }, 'Suite…')), engineLine(p));
+  }
+  // run: ready to go on
+  var next = p.steps.filter(function (s) { return s.status === 'pending'; })[0];
+  idx = next ? p.steps.indexOf(next) - 1 : p.steps.length;
+  var rest = upcoming(p, idx);
+  return h('div', { class: 'action' }, h('h2', null, next ? 'Prêt pour « ' + stepName(next) + ' »' : 'Prêt à continuer'),
+    h('p', { class: 'lead' }, rest.length > 1 ? 'Les étapes s’enchaînent jusqu’à votre prochaine relecture.' : 'L’étape démarre dès que vous lancez.'),
+    h('div', { class: 'btns' }, busyBtn(p.steps.some(function (s) { return s.status !== 'pending'; }) ? 'Continuer' : 'Démarrer', 'primary', function () { continueRun(p.slug); }, 'Lancement…')),
+    h('p', { class: 'note' }, rest.length ? costNote(p, rest, idx).replace(/^Ensuite : /, 'Au programme : ') : ''), engineLine(p));
+}
+// Technical mode only: the engine of the steps the next launch plays (it becomes the dossier's default).
+function engineLine(p) {
+  if (!S.tech || p.status !== 'active' || p.locked) return null;
+  return h('div', { class: 'engine-pick', style: 'margin:12px 0 0' }, h('span', { style: 'color:var(--ink-2);font-size:13px' }, 'Moteur des prochaines étapes'),
+    engineSelect(S.engine[p.slug] || p.engine, p.engines || [p.engine], function (v) { S.engine[p.slug] = v === p.engine ? undefined : v; render(); }),
+    S.engine[p.slug] ? h('span', { style: 'color:var(--ink-3);font-size:12.5px' }, 'deviendra le moteur par défaut du dossier') : null);
+}
+function validateLabel(v, dirty) { return dirty ? 'Valider la fiche corrigée et continuer' : (v && v.blocking ? 'Continuer quand même' : 'Valider et continuer'); }
+// The primary button whose label follows the sheet being edited (the page is not re-rendered under a text field).
+var primaryLabel = null;
+function markPrimary(btn, label) { btn.setAttribute('data-primary', ''); primaryLabel = label; return btn; }
+function refreshPrimary() {
+  var b = document.querySelector('[data-primary]');
+  if (b && primaryLabel && b.getAttribute('aria-busy') !== 'true') b.textContent = primaryLabel();
+}
+function hasRawOutput(p, s) { return (p.files || []).indexOf(String(s.index).padStart(2, '0') + '-' + s.id + '.md') >= 0; }
+function humanError(text) {
+  var t = String(text || '').replace(/`[^`]*`/g, '').replace(/\s+/g, ' ').trim();
+  if (/isolation/.test(t)) return 'Le résultat recopie un passage de la demande d’origine, ce que les étapes suivantes ne doivent pas recevoir. Refaites l’étape.';
+  if (/HANDOFF|introuvable|manquant/.test(t)) return 'Le moteur a rendu un texte incomplet. Reprenez, ou refaites l’étape si cela se reproduit.';
+  if (/timeout|délai/i.test(t)) return 'Le moteur n’a pas répondu à temps. Refaites l’étape.';
+  if (/budget/i.test(t)) return 'L’étape a atteint son plafond de coût. Refaites-la, ou augmentez le plafond en ligne de commande.';
+  return t.length > 260 ? t.slice(0, 260) + '…' : t;
+}
+
+// ---- the request panel
+function requestPanel(p) {
+  var entry = S.files.get('input.md');
+  if (!entry) S.files.set('input.md', entry = { want: true });
+  return h('div', { class: 'doc-card' },
+    h('div', { class: 'doc-bar' }, h('span', { class: 'ttl' }, 'Votre demande'), h('span', { class: 'when' }, 'lue par la première étape seulement')),
+    entry.text === undefined ? h('div', { class: 'skeleton' }, h('i', { style: 'width:70%' }), h('i'), h('i', { style: 'width:85%' }))
+      : h('div', { class: 'doc' }, mdBox(entry.text)));
+}
+
+// ---- the document panel of a step
+function docPanel(p, s) {
+  var st = railState(p, s), body;
+  var doc = s.output ? S.docs.get(s.output) : null;
+  if (s.status === 'running' && p.locked) body = h('div', { class: 'skeleton', 'aria-label': 'Rédaction en cours' }, h('i', { style: 'width:42%;height:18px;margin-bottom:22px' }), h('i'), h('i', { style: 'width:92%' }), h('i', { style: 'width:78%' }), h('i', { style: 'width:88%' }));
+  else if (s.status === 'skipped') body = h('div', { class: 'placeholder' }, h('div', { class: 'big' }, 'Étape écartée'), 'Elle était facultative et n’a pas été jouée.');
+  else if (!s.output) body = h('div', { class: 'placeholder' }, h('div', { class: 'big' }, s.status === 'failed' ? 'Pas de résultat exploitable' : 'Pas encore jouée'),
+    s.status === 'failed' ? 'Reprenez ou refaites l’étape depuis le cadre ci-dessus.' : 'Elle démarrera quand les étapes précédentes seront validées.');
+  else if (!doc || doc.document === undefined) body = doc && doc.error ? h('div', { class: 'placeholder' }, doc.error) : h('div', { class: 'skeleton' }, h('i', { style: 'width:50%;height:18px' }), h('i'), h('i', { style: 'width:90%' }));
+  else body = h('div', { class: 'doc' }, doc.document.trim() ? mdBox(doc.document) : h('p', { style: 'color:var(--ink-3)' }, 'Cette étape n’a produit que des éléments transmis à la suite ; ils sont visibles dans les détails techniques.'));
+  var hasDoc = doc && doc.document !== undefined && doc.document.trim();
+  var sheetFirst = s.produces_context_sheet && p.context_sheet && sheetEditable(p, s);   // what is validated comes first
+  return h('div', { class: 'doc-card' },
+    h('div', { class: 'print-head' }, h('div', { class: 'p-title' }, titleOf(p)), h('div', { class: 'p-sub' }, stepName(s) + (s.ended ? ' · ' + fmtDate(s.ended) : ''))),
+    h('div', { class: 'doc-bar' }, h('span', { class: 'ttl' }, stepName(s)), h('span', { class: 'when' }, s.ended && s.status !== 'running' ? fmtDate(s.ended) : st.st),
+      h('span', { class: 'tools' },
+        hasDoc ? h('button', { class: 'btn ghost icon', type: 'button', title: 'Copier le texte', 'aria-label': 'Copier le texte', onclick: function () { copyDoc(p, s); } }, icon('copy')) : null,
+        hasDoc ? h('button', { class: 'btn ghost icon', type: 'button', title: 'Télécharger (.md)', 'aria-label': 'Télécharger', onclick: function () { downloadDoc(p, s); } }, icon('download')) : null,
+        hasDoc ? h('button', { class: 'btn ghost icon', type: 'button', title: 'Imprimer ou enregistrer en PDF', 'aria-label': 'Imprimer', onclick: function () { printDoc(p, s); } }, icon('print')) : null,
+        canRerun(p, s) && kindOf(p) !== 'validate' && kindOf(p) !== 'stuck' ? h('button', { class: 'btn ghost', type: 'button', disabled: !canAct(), onclick: function () { rerunAndContinue(p, s); } }, icon('redo'), 'Refaire') : null)),
+    sheetFirst ? sheetBlock(p, s) : null,
+    body,
+    s.produces_context_sheet && p.context_sheet && !sheetFirst ? sheetBlock(p, s) : null,
+    S.tech ? techBlock(p, s) : null);
+}
+function canRerun(p, s) { return p.status !== 'stopped' && !p.recipe_error && !p.locked && ['done', 'paused', 'failed'].indexOf(s.status) >= 0; }
+
+// ---- context sheet: a readable list, or a form at the pause of the step that produced it
+function sheetEditable(p, s) {
+  var k = kindOf(p);
+  return (k === 'validate' || k === 'answers') && p.pending && p.pending.step === s.id;
+}
+function asText(v) { return typeof v === 'string' ? v : Array.isArray(v) && v.every(function (x) { return typeof x === 'string'; }) ? v.join('\n') : JSON.stringify(v, null, 2); }
+function ctxDraft(p) {
+  var base = JSON.stringify(p.context_sheet), d = S.ctx[p.slug];
+  if (!d || d.base !== base) {
+    if (d && ctxDirtyDraft(d)) toast('La fiche a changé entre-temps : vos corrections non validées ont été remplacées par la nouvelle version.');
+    var values = {};
+    Object.keys(p.context_sheet || {}).forEach(function (k) { values[k] = asText(p.context_sheet[k]); });
+    d = S.ctx[p.slug] = { base: base, values: values, errors: {} };
+  }
+  return d;
+}
+function ctxDirtyDraft(d) { var old = JSON.parse(d.base || '{}'); return Object.keys(d.values).some(function (k) { return d.values[k] !== asText(old[k]); }); }
+function ctxDirty(p) {
+  var d = S.ctx[p.slug]; if (!d) return false;
+  return Object.keys(d.values).some(function (k) { return d.values[k] !== asText(p.context_sheet[k]); });
+}
+function ctxValue(original, text) {
+  if (typeof original === 'string') return text;
+  if (Array.isArray(original) && original.every(function (x) { return typeof x === 'string'; })) return text.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+  return JSON.parse(text);
+}
+function sheetBlock(p, s) {
+  var sheet = p.context_sheet, keys = Object.keys(sheet);
+  var editing = sheetEditable(p, s) && S.ctxEdit[p.slug];
+  var head = h('div', { class: 'row' }, h('div', { class: 'grow' }, h('h3', null, 'Fiche de contexte'),
+    h('p', { class: 'hint' }, 'Ce que les étapes suivantes savent du dossier. ' + (p.context_validated ? 'Validée.' : 'À valider avec l’étape.'))),
+    sheetEditable(p, s) && !editing ? h('button', { class: 'btn', type: 'button', onclick: function () { S.ctxEdit[p.slug] = true; render(); } }, 'Corriger la fiche') : null);
+  if (!editing) {
+    return h('div', { class: 'sheet' }, head, h('dl', null, keys.map(function (k) {
+      return [h('dt', null, ctxLabel(p, k)), h('dd', null, ctxShown(p, sheet[k]))];
+    })));
+  }
+  var d = ctxDraft(p);
+  return h('div', { class: 'sheet' }, head, keys.map(function (k) {
+    var area = h('textarea', { class: 'input' + (typeof sheet[k] === 'string' || Array.isArray(sheet[k]) ? '' : ' mono'), value: d.values[k], 'aria-label': ctxLabel(p, k), rows: '2' });
+    area.addEventListener('input', function () { d.values[k] = area.value; delete d.errors[k]; autosize(area); refreshPrimary(); });
+    requestAnimationFrame(function () { autosize(area); });
+    return h('div', { class: 'edit-row' }, h('label', null, ctxLabel(p, k)),
+      Array.isArray(sheet[k]) ? h('p', { class: 'def' }, 'Un élément par ligne.') : null, area, d.errors[k] ? h('div', { class: 'err-inline' }, d.errors[k]) : null);
+  }), h('div', { class: 'row' }, h('span', { class: 'grow', style: 'font-size:12.5px;color:var(--ink-3)' }, 'Les corrections sont enregistrées quand vous validez (cadre du haut). L’ancienne version est conservée.'),
+    h('button', { class: 'btn ghost', type: 'button', onclick: function () { delete S.ctx[p.slug]; S.ctxEdit[p.slug] = false; render(); } }, 'Annuler les corrections')));
+}
+function autosize(area) { area.style.height = 'auto'; area.style.height = Math.min(area.scrollHeight + 2, 420) + 'px'; }
+function sheetFromDraft(p) {
+  var d = ctxDraft(p), out = {}, bad = false;
+  Object.keys(p.context_sheet).forEach(function (k) {
+    try { out[k] = ctxValue(p.context_sheet[k], d.values[k]); }
+    catch (e) { d.errors[k] = 'Format illisible : gardez la structure d’origine (JSON).'; bad = true; }
+  });
+  if (bad) { S.error = 'La fiche contient une rubrique illisible.'; render(); return null; }
   return out;
 }
 
-function openFinal(p) {
-  var step = p.steps.filter(function (s) { return s.output === p.final_output; })[0];
-  if (step) { S.open.add('step:' + step.id); S.open.add('out:' + step.output); render(); }
-}
-
-// ---- action area: the one thing the human can do now
-function stuckSteps(p) { return p.steps.filter(function (s) { return s.status === 'failed' || s.status === 'running'; }); }
-
-// What the human can do now: one of recipe_error, inactive, running, stuck, validate, answers, choose, run.
-function activeKind(p) {
-  if (p.recipe_error) return 'recipe_error';
-  if (p.status !== 'active') return 'inactive';
-  if (p.locked) return 'running';
-  if (stuckSteps(p).length) return 'stuck';
-  return p.pending ? p.pending.type : 'run';
-}
-
-function actionBlock(p) {
-  switch (activeKind(p)) {
-    case 'running': return runningPanel(p);
-    case 'stuck': return stuckPanel(p, stuckSteps(p));
-    case 'validate': return validatePanel(p);
-    case 'answers': return answersPanel(p);
-    case 'choose': return choosePanel(p);
-    case 'run': return runPanel(p);
-    default: return null;
-  }
-}
-
-function runningPanel(p) {
-  var running = p.steps.filter(function (s) { return s.status === 'running'; })[0];
-  return h('div', { class: 'banner' }, h('div', { class: 'row' },
-    h('div', { class: 'grow' }, h('strong', null, 'Étape en cours'), running ? ' : « ' + running.id + ' » (' + (ENGINE_FR[running.engine] || running.engine) + '). ' : '. ',
-      'La page se met à jour toute seule ; les autres actions sont désactivées tant que l’étape tourne.'),
-    h('button', { class: 'btn danger', type: 'button', disabled: S.busy || offline(), onclick: stopRun }, 'Arrêter l’étape en cours')),
-    logBlock());
-}
-
-function logBlock() {
-  return h('details', { class: 'sub', open: S.open.has('log'), 'data-key': 'log' },
-    h('summary', null, 'Journal du dernier lancement (.next.log)'),
-    h('pre', null, S.log && S.log.exists ? S.log.log : (S.log ? '(aucun journal)' : 'Chargement…')));
-}
-
-async function stopRun() {
-  if (!confirm('Arrêter l’étape en cours ?\n\nL’appel au moteur est interrompu ; le coût déjà engagé reste dû. L’étape sera reprise avec « Réessayer ».')) return;
-  await doAction('stop', {});
-}
-
-function stuckPanel(p, stuck) {
-  return h('div', { class: 'panel' }, h('h2', null, 'Une étape est à reprendre'),
-    stuck.map(function (s) {
-      return h('div', null, h('p', null, h('strong', null, '« ' + s.id + ' »'), ' : ',
-        s.status === 'failed' ? 'échec.' : 'restée « en cours » sans qu’aucun processus ne tourne (arrêt brutal ou étape arrêtée).'),
-        s.error ? h('pre', null, s.error) : null,
-        manualHandoff(p, s));
-    }),
-    h('div', { class: 'actions' },
-      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: function () { doAction('retry', {}); } }, 'Réessayer'),
-      h('span', { class: 'muted small' }, 'Reprend l’étape : une sortie déjà écrite est relue sans nouvel appel au moteur. Pour un appel neuf, ouvrez l’étape et choisissez « Refaire cette étape ».')));
-}
-
-function manualHandoff(p, s) {
-  var cmd = 'python3 scripts/parcours.py handoff ' + p.slug + ' ' + s.id + ' --file champs.md' + (p.parcours_dir ? ' --parcours-dir ' + p.parcours_dir : '');
-  return h('details', { class: 'sub', open: S.open.has('hand:' + s.id), 'data-key': 'hand:' + s.id },
-    h('summary', null, 'Fournir les champs à la main'),
-    h('p', { class: 'small muted' }, 'Hors de la page pour l’instant : préparez un fichier avec les sections du HANDOFF, puis lancez dans un terminal.'),
-    h('pre', null, cmd));
-}
-
-// ---- pause: validate (also the blocking signal)
-function validatePanel(p) {
-  var step = stepOf(p, p.pending.step);
-  var editable = p.context_sheet !== null;
-  var draft = editable ? ctxDraft(p) : null;
-  var dirty = draft && draft.text !== draft.base;
-  return h('div', { class: 'panel' },
-    h('h2', null, 'À valider : étape « ' + p.pending.step + ' »'),
-    step && step.blocking ? h('div', { class: 'banner bad' }, h('strong', null, 'Blocage signalé par l’étape.'), mdBox(step.blocking),
-      h('div', { class: 'small' }, 'Vous pouvez valider quand même, corriger la fiche, ou arrêter le parcours (No-go).')) : null,
-    step && step.summary ? [h('h3', null, 'Résumé'), mdBox(step.summary)] : null,
-    h('p', { class: 'muted small' }, 'La sortie complète et le message reçu par l’étape sont dans la frise ci-dessous.'),
-    editable ? contextEditor(p, draft) : null,
-    h('div', { class: 'actions' },
-      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: function () { validatePlain(p, dirty); } }, 'Valider'),
-      editable ? h('button', { class: 'btn', type: 'button', 'data-dirty-only': 'ctx', disabled: !canAct() || !dirty, onclick: function () { validateWithContext(p); } }, 'Valider avec la fiche corrigée') : null,
-      h('button', { class: 'btn danger', type: 'button', disabled: !canAct(), onclick: function () { stopParcours(p); } }, 'Arrêter le parcours (No-go)')));
-}
-
-function validatePlain(p, dirty) {
-  if (dirty && !confirm('La fiche modifiée dans la page ne sera pas enregistrée. Valider quand même ?')) return;
-  doAction('validate', {});
-}
-function stopParcours(p) {
-  if (!confirm('Arrêter le parcours (No-go) ? Il ne pourra plus être relancé.')) return;
-  doAction('validate', { stop: true });
-}
-function parseSheet(p) {
-  var d = ctxDraft(p), sheet;
-  try { sheet = JSON.parse(d.text); } catch (e) { S.error = 'Fiche de contexte : JSON illisible (' + e.message + ').'; renderTop(); return null; }
-  if (!sheet || typeof sheet !== 'object' || Array.isArray(sheet)) { S.error = 'Fiche de contexte : un objet JSON est attendu.'; renderTop(); return null; }
-  return sheet;
-}
-async function validateWithContext(p) {
-  var sheet = parseSheet(p);
-  if (sheet && await doAction('validate', { context: sheet })) delete S.ctx[p.slug];
-}
-async function saveSheetOnly(p) {
-  var sheet = parseSheet(p);
-  if (sheet && await doAction('validate', { context: sheet })) delete S.ctx[p.slug];
-}
-
-// context sheet: key/value view, or an editor (JSON) at the pauses where the runner accepts a correction
-function ctxDraft(p) {
-  var base = JSON.stringify(p.context_sheet, null, 2), d = S.ctx[p.slug];
-  if (!d || (d.base !== base && d.text === d.base)) d = S.ctx[p.slug] = { base: base, text: base };
-  else d.base = base;   // a pending edit is kept, "modified" is judged against the sheet as it is now
-  return d;
-}
-
-function contextEditor(p, draft) {
-  var area = h('textarea', { spellcheck: 'false', 'aria-label': 'Fiche de contexte (JSON)', value: draft.text });
-  area.addEventListener('input', function () {
-    draft.text = area.value;
-    document.querySelectorAll('button[data-dirty-only]').forEach(function (b) { b.disabled = !canAct() || draft.text === draft.base; });
-  });
-  return h('div', null, h('h3', null, 'Fiche de contexte (modifiable)'),
-    h('p', { class: 'small muted' }, 'JSON : une clé par rubrique. Les étapes suivantes ne reçoivent que cette fiche, jamais la demande brute. L’ancienne version est conservée (00-context.vN.md).'),
-    area);
-}
-
-function sheetView(p) {
-  var sheet = p.context_sheet;
-  return h('dl', { class: 'sheet' }, Object.keys(sheet).map(function (k) {
-    var v = typeof sheet[k] === 'string' ? sheet[k] : JSON.stringify(sheet[k], null, 2);
-    return [h('dt', null, k), h('dd', null, v)];
-  }));
-}
-
-function contextBlockIfReadOnly(p) {
-  if (p.context_sheet === null) return null;
-  var kind = activeKind(p);
-  if (kind === 'validate' || (kind === 'answers' && sheetStep(p))) return null;   // the panel holds the editor
-  return h('details', { class: 'sub panel', open: S.open.has('sheet'), 'data-key': 'sheet' },
-    h('summary', null, 'Fiche de contexte ' + (p.context_validated ? '(validée)' : '(non validée)')), sheetView(p));
-}
-function sheetStep(p) { var s = p.pending && stepOf(p, p.pending.step); return !!(s && s.produces_context_sheet); }
-
-// ---- pause: answers
-function answersPanel(p) {
-  var step = stepOf(p, p.pending.step) || { handoff: null }, slug = p.slug;
-  var draftKey = 'parcours-ui:draft:' + slug;
-  if (S.answers[slug] === undefined) S.answers[slug] = saved('localStorage', draftKey) || '';
-  var area = h('textarea', { 'aria-label': 'Réponses du tiers', placeholder: 'Collez ici les réponses (en une ou plusieurs fois : le brouillon est conservé dans ce navigateur).', value: S.answers[slug] });
-  var note = h('span', { class: 'muted small' }, S.answers[slug] ? 'Brouillon conservé dans ce navigateur, pas encore envoyé.' : '');
-  var timer = null;
-  area.addEventListener('input', function () {
-    S.answers[slug] = area.value;
-    clearTimeout(timer);
-    timer = setTimeout(function () {
-      save('localStorage', draftKey, area.value ? area.value : null);
-      note.textContent = area.value ? 'Brouillon enregistré dans ce navigateur, pas encore envoyé.' : '';
-    }, 300);
-  });
-  var sheetEditable = sheetStep(p) && p.context_sheet !== null;
-  var draft = sheetEditable ? ctxDraft(p) : null;
-  var fields = step && step.handoff ? Object.keys(step.handoff) : [];
-  return h('div', { class: 'panel' },
-    h('h2', null, 'Réponses attendues : étape « ' + p.pending.step + ' »'),
-    step && step.summary ? [h('h3', null, 'Résumé'), mdBox(step.summary)] : null,
-    h('p', null, 'Les questions à envoyer sont dans la sortie de l’étape.'),
-    h('div', { class: 'actions' },
-      step.output ? h('button', { class: 'btn', type: 'button', onclick: function () { copyFile(step.output, 'out'); } }, S.copied === 'out' ? 'Copié ✓' : 'Copier les questions') : null,
-      fields.map(function (f) {
-        return h('button', { class: 'btn small', type: 'button', onclick: function () { copyText(step.handoff[f]).then(function () { flash('f:' + f); }); } },
-          S.copied === 'f:' + f ? 'Copié ✓' : 'Copier seulement « ' + f + ' »');
-      })),
-    sheetEditable ? contextEditor(p, draft) : null,
-    sheetEditable ? h('div', { class: 'actions' }, h('button', { class: 'btn', type: 'button', 'data-dirty-only': 'ctx', disabled: !canAct() || draft.text === draft.base, onclick: function () { saveSheetOnly(p); } },
-      'Enregistrer la fiche corrigée'), h('span', { class: 'muted small' }, 'Sans lever la pause. Enregistrer les réponses valide aussi la fiche.')) : null,
-    h('h3', null, 'Réponses du tiers'), area, note,
-    h('div', { class: 'actions' },
-      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: function () { sendAnswers(p, draftKey); } }, 'Enregistrer les réponses'),
-      h('button', { class: 'btn', type: 'button', disabled: !canAct(), onclick: function () { noAnswers(p, draftKey); } }, 'Continuer sans réponses')));
-}
-
-async function sendAnswers(p, draftKey) {
-  var text = S.answers[p.slug] || '';
-  if (!text.trim()) { S.error = 'Les réponses sont vides : collez le texte, ou choisissez « Continuer sans réponses ».'; renderTop(); return; }
-  if (await doAction('answer', { text: text })) { delete S.answers[p.slug]; save('localStorage', draftKey, null); }
-}
-async function noAnswers(p, draftKey) {
-  if (!confirm('Continuer sans réponses ? Les points ouverts restent des hypothèses pour la suite.' + (S.answers[p.slug] ? '\n\nLe brouillon de réponses de ce navigateur sera abandonné.' : ''))) return;
-  if (await doAction('answer', { none: true })) { delete S.answers[p.slug]; save('localStorage', draftKey, null); }
-}
-
-async function copyFile(name, tag) {
-  try { var d = await api('GET', '/api/parcours/' + S.route.slug + '/file/' + encodeURIComponent(name)); await copyText(d.text); flash(tag); }
-  catch (e) { S.error = 'Copie impossible : ' + e.message; renderTop(); }
-}
-function flash(tag) { S.copied = tag; render(); setTimeout(function () { S.copied = ''; render(); }, 2200); }
-async function copyText(text) {
-  try { await navigator.clipboard.writeText(text); return; } catch (e) { /* fall through to the old way */ }
-  var area = h('textarea', { 'aria-hidden': 'true' });
-  area.value = text; document.body.appendChild(area); area.select();
-  try { document.execCommand('copy'); } finally { area.remove(); }
-}
-
-// ---- pause: choose
-function choosePanel(p) {
-  var group = p.pending.steps || [], sel = S.chooseSel[p.slug] || (S.chooseSel[p.slug] = new Set());
-  var runBtn = h('button', { class: 'btn primary', type: 'button', disabled: !canAct() || !sel.size, onclick: function () { doAction('choose', { run: group.filter(function (g) { return sel.has(g); }) }); } }, 'Jouer les étapes cochées');
-  return h('div', { class: 'panel' }, h('h2', null, 'Étapes optionnelles'),
-    h('p', null, 'Ces étapes ne tournent que si vous les choisissez.'),
-    group.map(function (id) {
-      var s = stepOf(p, id);
-      return h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: sel.has(id), onchange: function (e) {
-        if (e.target.checked) sel.add(id); else sel.delete(id);
-        runBtn.disabled = !canAct() || !sel.size;
-      } }), ' ', h('strong', null, id), s ? h('span', { class: 'muted small' }, ' — ' + s.skill.ref + (s.model ? ', modèle ' + s.model : '')) : null);
-    }),
-    h('div', { class: 'actions' }, runBtn,
-      h('button', { class: 'btn', type: 'button', disabled: !canAct(), onclick: function () { doAction('choose', { skip: true }); } }, 'Les écarter')));
-}
-
-// ---- run the next steps (plan, then confirmation)
-function runPanel(p) {
-  var engines = (p.engines || []).slice();
-  if (engines.indexOf(p.engine) < 0) engines.unshift(p.engine);
-  var chosen = S.planEngine || p.engine;
-  var select = h('select', { 'aria-label': 'Moteur', onchange: function (e) { S.planEngine = e.target.value; e.target.blur(); if (S.plan) loadPlan(); else render(); } },
-    engines.map(function (e) { return h('option', { value: e, selected: e === chosen }, ENGINE_FR[e] || e); }));
-  var plan = S.plan && S.plan.slug === p.slug ? S.plan : null;
-  return h('div', { class: 'panel' }, h('h2', null, 'Lancer la suite'),
-    h('p', null, 'Moteur : ', select, ' ', h('span', { class: 'muted small' }, chosen !== p.engine
-      ? 'Ce choix deviendra le moteur par défaut du parcours (aujourd’hui : ' + (ENGINE_FR[p.engine] || p.engine) + ').'
-      : 'Changer de moteur change aussi le moteur par défaut de ce parcours.')),
-    plan ? planView(p, plan) : h('div', { class: 'actions' },
-      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: function () { S.planEngine = chosen; loadPlan(); } }, 'Lancer la suite…'),
-      h('span', { class: 'muted small' }, 'Affiche le plan et le coût avant de dépenser quoi que ce soit.')));
-}
-
-function dropPlan() { S.planSeq++; S.plan = null; }   // an answer still on its way is then ignored
-
-async function loadPlan() {
-  var slug = S.route.slug, engine = S.planEngine, seq = ++S.planSeq;
-  S.plan = { slug: slug, loading: true, data: S.plan && S.plan.slug === slug ? S.plan.data : null };
-  render();
-  var next;
-  try {
-    var q = engine && S.p && engine !== S.p.engine ? '?engine=' + encodeURIComponent(engine) : '';
-    next = { slug: slug, data: await api('GET', '/api/parcours/' + slug + '/plan' + q) };
-  } catch (e) { next = { slug: slug, error: e.message }; }
-  if (seq !== S.planSeq) return;
-  S.plan = next;
-  render();
-}
-
-function planView(p, plan) {
-  if (plan.loading) return h('p', { class: 'muted' }, 'Calcul du plan…');
-  if (plan.error) return h('div', null, h('p', { class: 'err' }, plan.error), cancelPlanButton());
-  var d = plan.data;
-  if (!d.runnable) return h('div', null, h('p', null, d.message || 'Rien à lancer.'), cancelPlanButton());
-  var last = d.steps[d.steps.length - 1];
-  return h('div', null,
-    h('h3', null, 'Plan : ' + plural(d.steps.length, 'étape', 'étapes') + ' jusqu’à la prochaine pause'),
-    h('ol', { class: 'plan' }, d.steps.map(function (r) {
-      return h('li', null, h('strong', null, r.id), ' — ', ENGINE_FR[r.engine] || r.engine, ', ', modelLabel(r.engine, r.model), ', entrée ≈ ', kb(r.chars), ' caractères',
-        r.unknown_fields ? ' (+ ' + plural(r.unknown_fields, 'champ', 'champs') + ' à venir, non comptés)' : '');
-    })),
-    h('p', { class: 'small muted' }, 'Prochaine pause : ' + (last && PAUSE_FR[last.pause] ? PAUSE_FR[last.pause] + ' après « ' + last.id + ' »' : 'fin du parcours') + '.'),
-    d.claude_steps ? h('div', { class: 'banner warn' }, h('strong', null, 'Plafond engagé : ' + usd(d.ceiling_usd)),
-      ' (' + plural(d.claude_steps, 'étape', 'étapes') + ' Claude × ' + usd(d.max_budget_usd) + ' par appel × 2 pour la relance éventuelle). Le coût réel est en général bien plus bas.')
-      : h('p', { class: 'small muted' }, 'Aucun appel Claude : pas de coût facturé à l’appel.'),
-    d.subscription_calls ? h('p', null, plural(d.subscription_calls, 'appel', 'appels') + ' sur abonnement (' +
-      Object.keys(d.calls).filter(function (k) { return k !== 'claude'; }).map(function (k) { return k + ' ×' + d.calls[k]; }).join(', ') + ') : non chiffrés, mais les abonnements Codex et Antigravity sont petits.') : null,
-    d.agy_argv_warning ? h('div', { class: 'banner warn' }, 'Antigravity (agy) reçoit le message en argument de commande : il est visible dans ',
-      h('code', null, 'ps'), ' pour tout utilisateur de cette machine pendant l’appel.') : null,
-    d.agy_over_limit ? h('div', { class: 'banner bad' }, 'Un message dépasse la limite d’agy : l’appel sera refusé avant de partir.') : null,
-    d.changes_default_engine ? h('p', { class: 'small' }, 'Le moteur par défaut du parcours deviendra « ' + (ENGINE_FR[d.engine] || d.engine) + ' ».') : null,
-    (d.warnings || []).map(function (w) { return h('div', { class: 'banner warn' }, w); }),
-    h('div', { class: 'actions' },
-      h('button', { class: 'btn primary', type: 'button', disabled: !canAct(), onclick: confirmRun }, 'Confirmer et lancer'),
-      cancelPlanButton()));
-}
-function cancelPlanButton() { return h('button', { class: 'btn', type: 'button', onclick: function () { dropPlan(); render(); } }, 'Annuler'); }
-
-async function confirmRun() {
-  var d = S.plan && S.plan.data;
-  if (!d) return;
-  var engine = S.planEngine && S.planEngine !== S.p.engine ? S.planEngine : undefined;
-  dropPlan();
-  var ok = await doAction('next', { fingerprint: d.fingerprint, engine: engine }, { replanOnStale: true });
-  if (ok) { S.planEngine = ''; render(); }
-}
-
-// ---- timeline of the steps
-function timelineBlock(p) {
-  return h('div', null, p.steps.map(function (s) { return stepCard(p, s); }));
-}
-
-function stepCard(p, s) {
-  var key = 'step:' + s.id, isOpen = S.open.has(key);
-  var card = h('details', { class: 'step st-' + s.status, open: isOpen, 'data-key': key },
-    h('summary', null,
-      h('span', { class: 'num' }, String(s.index) + '.'), h('span', { class: 'name' }, s.id),
-      badge(STEP_FR[s.status] || s.status, 'st-' + s.status),
-      s.optional ? badge('optionnelle') : null,
-      p.pending && p.pending.step === s.id && p.status === 'active' ? badge('attend : ' + (PAUSE_FR[p.pending.type] || p.pending.type), 'st-pending-ask') : null,
-      h('span', { class: 'push' }, (ENGINE_FR[s.engine] || s.engine) + (s.engine ? ' · ' + modelLabel(s.engine, s.model) : '') + (s.cost_usd ? ' · ' + usd(s.cost_usd) : ''))));
-  if (isOpen) card.appendChild(stepBody(p, s));
-  return card;
-}
-
-function stepBody(p, s) {
+// ---- technical details of a step
+function techBlock(p, s) {
+  var engine = s.engine || p.engine;
+  var files = [];
+  if (s.output) files.push(['Sortie brute du moteur', 'raw:' + s.output, s.output]);
+  if (s.trace) files.push(['Message exact reçu par l’étape', 'raw:' + s.trace, s.trace]);
+  if (s.retry_trace) files.push(['Message de la relance', 'raw:' + s.retry_trace, s.retry_trace]);
   var base = String(s.index).padStart(2, '0') + '-' + s.id;
-  var versions = p.files.filter(function (f) { return f.indexOf(base + '.') === 0 && /\.v\d+\.md$/.test(f); });
-  var body = h('div', { class: 'body' });
-  append(body, [
-    h('div', { class: 'meta' }, h('span', null, 'Skill : ' + s.skill.ref + (s.skill.version ? ' ' + s.skill.version : '')),
-      s.started ? h('span', null, 'Début : ' + when(s.started)) : null, s.ended ? h('span', null, 'Fin : ' + when(s.ended)) : null,
-      s.pause && s.pause !== 'none' ? h('span', null, 'Pause après l’étape : ' + PAUSE_FR[s.pause]) : null),
-    s.error ? [h('h3', null, 'Erreur'), h('pre', null, s.error)] : null,
-    s.blocking ? h('div', { class: 'banner bad' }, h('strong', null, 'Blocage signalé.'), mdBox(s.blocking)) : null,
-    s.status === 'skipped' ? h('p', { class: 'muted' }, 'Étape optionnelle écartée : elle n’a pas tourné.') : null,
-    s.status === 'pending' ? h('p', { class: 'muted' }, 'Pas encore jouée.') : null,
-    s.summary ? [h('h3', null, 'Résumé'), mdBox(s.summary)] : null,
-    s.handoff ? [h('h3', null, 'Champs transmis aux étapes suivantes'), Object.keys(s.handoff).map(function (f) {
-      var k = 'hf:' + s.id + ':' + f;
-      return h('details', { class: 'sub', open: S.open.has(k), 'data-key': k }, h('summary', null, f), mdBox(s.handoff[f]));
-    })] : null,
-    s.output ? fileDetails('Sortie complète (' + s.output + ')', 'out:' + s.output, s.output, 'md') : null,
-    s.trace ? fileDetails('Message exact reçu par l’étape (' + s.trace + ')', 'in:' + s.trace, s.trace, 'pre') : null,
-    s.retry_trace ? fileDetails('Message de la relance (' + s.retry_trace + ')', 'in:' + s.retry_trace, s.retry_trace, 'pre') : null,
-    versions.map(function (f) { return fileDetails('Version précédente (' + f + ')', 'ver:' + f, f, /\.in\./.test(f) ? 'pre' : 'md'); }),
-    rerunButton(p, s)
-  ]);
-  return body;
+  (p.files || []).filter(function (f) { return f.indexOf(base + '.') === 0 && /\.v\d+\.md$/.test(f); }).forEach(function (f) { files.push(['Version précédente (' + f + ')', 'raw:' + f, f]); });
+  return h('div', { class: 'tech' },
+    h('h4', null, 'Détails techniques'),
+    h('dl', { class: 'kv' },
+      h('dt', null, 'Étape'), h('dd', null, s.id + ' · ' + (s.skill && s.skill.ref || '') + (s.skill && s.skill.version ? ' ' + s.skill.version : '')),
+      h('dt', null, 'Moteur'), h('dd', null, (ENGINE_FR[engine] || engine) + (engine === 'claude' || engine === 'fake' ? ' · ' + (s.model || 'modèle par défaut') : ' · modèle par défaut du moteur')),
+      h('dt', null, 'Coût'), h('dd', null, s.cost_usd ? usd(s.cost_usd) : '—'),
+      s.started ? [h('dt', null, 'Durée'), h('dd', null, fmtDate(s.started) + (s.ended && s.ended !== s.started ? ' → ' + fmtDate(s.ended) : ''))] : null,
+      h('dt', null, 'Pause'), h('dd', null, { validate: 'relecture', answers: 'réponses d’un tiers', none: 'aucune' }[s.pause] || s.pause || '—'),
+      s.mission ? [h('dt', null, 'Mission'), h('dd', { lang: 'en' }, s.mission)] : null),
+    s.error ? subDetails('Erreur', 'err:' + s.id, h('pre', { class: 'raw' }, s.error)) : null,
+    s.summary ? subDetails('Résumé transmis', 'sum:' + s.id, mdBox(s.summary, 'compact')) : null,
+    s.handoff ? subDetails('Champs transmis aux étapes suivantes (' + Object.keys(s.handoff).length + ')', 'hf:' + s.id,
+      Object.keys(s.handoff).map(function (f) { return h('div', { style: 'margin:8px 0 14px' }, h('div', { style: 'font: 12px var(--mono);color:var(--ink-3);margin-bottom:4px' }, f), mdBox(s.handoff[f], 'compact')); })) : null,
+    files.map(function (f) { return fileDetails(f[0], f[1], f[2]); }),
+    s.status === 'running' || S.open.has('log') ? subDetails('Journal du lancement', 'log', h('pre', { class: 'raw' }, S.log && S.log.exists ? S.log.log : 'Aucun journal.')) : null);
+}
+function engineSelect(value, engines, onchange) {
+  var list = engines.slice(); if (list.indexOf(value) < 0) list.unshift(value);
+  return h('select', { class: 'input', 'aria-label': 'Moteur', onchange: function (e) { onchange(e.target.value); e.target.blur(); } },
+    list.map(function (e) { return h('option', { value: e, selected: e === value }, ENGINE_FR[e] || e); }));
+}
+function subDetails(title, key, content) {
+  return h('details', { class: 'sub', open: S.open.has(key), 'data-key': key }, h('summary', null, title), S.open.has(key) ? h('div', { class: 'in' }, content) : null);
+}
+function fileDetails(title, key, name) {
+  var open = S.open.has(key), entry = S.files.get(name), box = null;
+  if (open) box = !entry || entry.text === undefined ? h('p', null, entry && entry.error ? entry.error : 'Chargement…') : h('pre', { class: 'raw' }, entry.text);
+  return h('details', { class: 'sub', open: open, 'data-key': key, 'data-file': name }, h('summary', null, title), open ? h('div', { class: 'in' }, box) : null);
 }
 
-function rerunButton(p, s) {
-  if (p.status === 'stopped' || ['done', 'paused', 'failed'].indexOf(s.status) < 0) return null;
-  return h('div', { class: 'actions' },
-    h('button', { class: 'btn', type: 'button', disabled: !canAct(), onclick: function () { rerun(s); } }, 'Refaire cette étape'),
-    h('span', { class: 'muted small' }, 'Nouvel appel au moteur ; les étapes suivantes qui ont utilisé ses champs sont remises en file. Les anciennes versions restent en fichiers .vN.'));
+// ---- documents and files: fetched when shown, refreshed when the state fingerprint moves
+function wantDocs() {
+  var p = S.p;
+  if (!p || S.route.view !== 'parcours' || p.slug !== S.route.slug) return;
+  var sel = S.route.step && S.route.step !== 'demande' ? stepOf(p, S.route.step) : (S.route.step ? null : focusStep(p));
+  var names = [];
+  if (sel && sel.output) names.push(sel.output);
+  var k = kindOf(p);
+  if (k === 'answers') { var a = stepOf(p, p.pending.step); if (a && a.output) names.push(a.output); }
+  names.forEach(function (name) {
+    var entry = S.docs.get(name);
+    if (entry && (entry.fp === p.fingerprint || entry.loading)) return;
+    S.docs.set(name, Object.assign({}, entry, { loading: true }));
+    api('GET', slugPath(p.slug) + '/document/' + encodeURIComponent(name), undefined, 20000).then(function (d) {
+      S.docs.set(name, { document: d.document, meta: d.meta, fp: S.p ? S.p.fingerprint : '' });
+    }).catch(function (e) {
+      S.docs.set(name, Object.assign({}, entry, { loading: false, error: 'Lecture impossible : ' + e.message, fp: S.p ? S.p.fingerprint : '' }));
+    }).then(function () { S.sig = ''; render(); });
+  });
 }
-async function rerun(s) {
-  if (!confirm('Refaire l’étape « ' + s.id + ' » ?\n\nElle sera remise en file avec les étapes qui ont utilisé ses champs ; le prochain lancement les rejouera (nouvel appel, coût compris).')) return;
-  await doAction('rerun', { step: s.id });
-}
-
-function fileDetails(title, key, name, kind) {
-  var open = S.open.has(key), box;
-  var entry = S.files.get(name);
-  if (!open) box = null;
-  else if (!entry || entry.text === undefined) box = h('p', { class: 'muted' }, entry && entry.error ? entry.error : 'Chargement…');
-  else box = kind === 'md' ? mdBox(entry.text) : h('pre', null, entry.text);
-  return h('details', { class: 'sub', open: open, 'data-key': key, 'data-file': name }, h('summary', null, title),
-    entry && entry.truncated && open ? h('p', { class: 'small muted' }, 'Fichier tronqué à 2 Mo.') : null, box);
-}
-
-// ---- files: fetched when their <details> is open, refreshed when the state fingerprint moves
 function wantFiles() {
   if (!S.p || S.route.view !== 'parcours') return;
-  document.querySelectorAll('details[data-file]').forEach(function (el) {
-    if (!el.open) return;
-    var name = el.getAttribute('data-file'), entry = S.files.get(name);
-    if (entry && (entry.fp === S.p.fingerprint || entry.loading)) return;
+  var wanted = [];
+  document.querySelectorAll('details[data-file]').forEach(function (el) { if (el.open) wanted.push(el.getAttribute('data-file')); });
+  if (S.route.step === 'demande') wanted.push('input.md');
+  wanted.forEach(function (name) {
+    var entry = S.files.get(name);
+    if (entry && (entry.loading || (entry.text !== undefined && entry.fp === S.p.fingerprint) || (name === 'input.md' && entry.text !== undefined))) return;
     S.files.set(name, Object.assign({}, entry, { loading: true }));
-    api('GET', '/api/parcours/' + S.route.slug + '/file/' + encodeURIComponent(name), undefined, 20000).then(function (d) {
+    api('GET', slugPath(S.route.slug) + '/file/' + encodeURIComponent(name), undefined, 20000).then(function (d) {
       S.files.set(name, { text: d.text, truncated: d.truncated, fp: S.p ? S.p.fingerprint : '' });
     }).catch(function (e) {
       S.files.set(name, { error: 'Lecture impossible : ' + e.message, fp: S.p ? S.p.fingerprint : '' });
     }).then(function () { S.sig = ''; render(); });
   });
 }
-
-// ---- actions
-async function doAction(action, body, opts) {
-  var slug = S.route.slug, ok = false;
-  if (isEditing()) document.activeElement.blur();   // the page is re-rendered under an action, never under a text field
-  S.busy = true; S.error = ''; render();
+async function docText(p, s) {
+  var entry = S.docs.get(s.output);
+  if (entry && entry.document !== undefined && entry.fp === p.fingerprint) return entry.document;
+  var d = await api('GET', slugPath(p.slug) + '/document/' + encodeURIComponent(s.output), undefined, 20000);
+  return d.document;
+}
+async function copyDoc(p, s) {
+  try { await copyText(await docText(p, s)); toast('Texte copié'); }
+  catch (e) { S.error = 'Copie impossible : ' + e.message; renderChrome(); }
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return; } catch (e) { /* fall through to the old way */ }
+  var area = h('textarea', { 'aria-hidden': 'true', style: 'position:absolute;left:-9999px' });
+  area.value = text; document.body.appendChild(area); area.select();
+  try { document.execCommand('copy'); } finally { area.remove(); }
+}
+async function downloadDoc(p, s) {
   try {
-    var r = await api('POST', '/api/parcours/' + slug + '/' + action, body || {}, 150000);
-    ok = true;
-    if (r && r.notice) (S.notices[slug] = S.notices[slug] || []).push(r.notice);
-  } catch (e) {
-    S.error = e.message;
-    if (e.code === 'state_changed') {
-      S.error = 'Le parcours a changé depuis le plan affiché : rien n’a été lancé. Relisez le nouveau plan avant de confirmer.';
-      if (opts && opts.replanOnStale) { S.busy = false; await refreshNow(); loadPlan(); return false; }
-    }
-  } finally { S.busy = false; }
-  await refreshNow();
-  render();
-  return ok;
+    var text = await docText(p, s);
+    var name = (p.slug + '-' + s.id).replace(/[^a-z0-9-]/g, '') + '.md';
+    var url = URL.createObjectURL(new Blob([text], { type: 'text/markdown;charset=utf-8' }));
+    var a = h('a', { href: url, download: name }); document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  } catch (e) { S.error = 'Téléchargement impossible : ' + e.message; renderChrome(); }
+}
+function printDoc(p, s) {
+  if (S.route.step !== s.id) go('#/p/' + p.slug + '/' + s.id);
+  var tries = 0;
+  (function whenReady() {   // never print the loading skeleton
+    var entry = S.docs.get(s.output);
+    if (entry && entry.document !== undefined && document.querySelector('.doc .md')) window.print();
+    else if (++tries < 50) setTimeout(whenReady, 100);
+  })();
 }
 
-// ---- wiring
+// ===========================================================================
+// Actions: each human gesture, then the run up to the next pause
+// ===========================================================================
+var chainDepth = 0;
+// A gesture followed by the launch: the clicked button stays busy, and every other one disabled, until the end.
+async function inChain(label, fn) {
+  if (S.busy) return;
+  if (isEditing()) document.activeElement.blur();
+  chainDepth++; S.busy = label; S.error = ''; render();
+  try { return await fn(); }
+  finally {
+    chainDepth--;
+    if (!chainDepth) {
+      S.busy = ''; await refreshNow();
+      if (document.activeElement === document.body) { var t = document.querySelector('.action h2'); if (t) t.focus({ preventScroll: true }); }
+    }
+  }
+}
+async function post(action, body, busyLabel) {
+  var slug = S.route.slug;
+  if (isEditing()) document.activeElement.blur();
+  if (!chainDepth) { S.busy = busyLabel || '…'; S.error = ''; render(); }
+  try {
+    var r = await api('POST', slugPath(slug) + '/' + action, body || {}, 150000);
+    if (r && r.notice && r.notice.kind === 'context_stale') toast('Fiche corrigée : les étapes déjà jouées ont reçu l’ancienne version.');
+    return r || {};
+  } catch (e) {
+    S.error = friendlyError(e);
+    return null;
+  } finally { if (!chainDepth) S.busy = ''; await refreshNow(); }
+}
+// Server refusals in plain words; the original message stays in the console.
+function friendlyError(e) {
+  var code = e && e.code, msg = String(e && e.message || '');
+  if (window.console && msg) console.warn(code, msg);
+  if (code === 'state_changed') return 'Le dossier a changé entre-temps : rien n’a été lancé. Réessayez.';
+  if (code === 'running' || code === 'locked') return 'Une étape tourne déjà sur ce dossier. Attendez qu’elle finisse.';
+  if (code === 'not_owned') return 'Cette étape a été lancée hors de la page : arrêtez-la depuis la fenêtre où elle tourne.';
+  if (code === 'network') return msg;
+  if (/attend une pause|en attente : rien|pas de pause/.test(msg)) return 'Le dossier a avancé entre-temps ; la page vient d’être mise à jour.';
+  if (code === 'leak') return 'Le résultat recopie un passage de la demande d’origine. Refaites l’étape.';
+  if (code === 'interface_bug' || code === 'internal' || code === 'unexpected' || code === 'unreadable')
+    return 'Un problème technique est survenu ; le détail est dans la fenêtre où tourne la page de suivi.';
+  return humanError(msg);
+}
+
+// Launch the steps up to the next pause: plan (fingerprint), then `next`.
+async function continueRun(slug) {
+  slug = slug || S.route.slug;
+  if (!chainDepth) { S.busy = 'Lancement…'; render(); }
+  try {
+    var engine = S.engine[slug];
+    var plan = await api('GET', slugPath(slug) + '/plan' + (engine ? '?engine=' + encodeURIComponent(engine) : ''), undefined, 30000);
+    if (!plan.runnable) return;
+    if (plan.agy_over_limit) { S.error = 'Le texte à transmettre dépasse la limite d’Antigravity : choisissez un autre moteur dans les détails techniques.'; return; }
+    await api('POST', slugPath(slug) + '/next', { fingerprint: plan.fingerprint, engine: engine }, 30000);
+    S.engine[slug] = undefined;
+    if (S.tech && plan.warnings && plan.warnings.length) toast(plan.warnings[0]);
+  } catch (e) {
+    S.error = friendlyError(e);
+  } finally { if (!chainDepth) S.busy = ''; await refreshNow(); }
+}
+async function validateAndContinue(p, dirty) {
+  var body = {};
+  if (dirty) { var sheet = sheetFromDraft(p); if (!sheet) return; body.context = sheet; }
+  await inChain('Validation…', async function () {
+    if (await post('validate', body)) { delete S.ctx[p.slug]; S.ctxEdit[p.slug] = false; await continueRun(p.slug); }
+  });
+}
+async function answerAndContinue(p, key, none) {
+  var text = S.answers[p.slug] || '';
+  if (!none && !text.trim()) { S.error = 'Collez les réponses reçues, ou choisissez « Continuer sans réponses ».'; renderChrome(); return; }
+  if (none && !(await ask('Continuer sans réponses ?', ['Les points ouverts resteront des hypothèses pour la suite du dossier.']
+    .concat(text.trim() ? ['Le texte déjà collé sera ignoré.'] : []), 'Continuer sans réponses'))) return;
+  var sheet = null;
+  if (ctxDirty(p)) { sheet = sheetFromDraft(p); if (!sheet) return; }
+  await inChain(none ? 'Suite…' : 'Envoi…', async function () {
+    if (sheet) { if (!(await post('validate', { context: sheet }))) return; delete S.ctx[p.slug]; S.ctxEdit[p.slug] = false; }
+    if (await post('answer', none ? { none: true } : { text: text })) {
+      delete S.answers[p.slug]; save('localStorage', key, null);
+      await continueRun(p.slug);
+    }
+  });
+}
+async function chooseAndContinue(p, run) {
+  await inChain(run ? 'Lancement…' : 'Suite…', async function () {
+    if (await post('choose', run ? { run: run } : { skip: true })) await continueRun(p.slug);
+  });
+}
+async function rerunAndContinue(p, s) {
+  var after = p.steps.slice(p.steps.indexOf(s) + 1).filter(function (x) { return ['done', 'paused', 'failed'].indexOf(x.status) >= 0; });
+  var body = ['L’étape repart de zéro, avec un nouvel appel au moteur.'];
+  body.push(after.length ? 'Les étapes suivantes déjà jouées seront refaites aussi : ' + after.map(stepName).join(', ') + ' (' + plural(after.length + 1, 'nouvel appel', 'nouveaux appels') + ' en tout, au fil des relectures).'
+    : 'Aucune autre étape n’est touchée.');
+  body.push('Les anciennes versions restent consultables dans les détails techniques.');
+  if (!(await ask('Refaire « ' + stepName(s) + ' » ?', body, 'Refaire l’étape'))) return;
+  await inChain('Relance…', async function () {
+    if (await post('rerun', { step: s.id })) { go('#/p/' + p.slug + '/' + s.id); await continueRun(p.slug); }
+  });
+}
+async function retryAndContinue(p) {
+  await inChain('Reprise…', async function () { if (await post('retry', {})) await continueRun(p.slug); });
+}
+async function stopDossier(p) {
+  if (!(await ask('Arrêter le dossier ?', ['Vous décidez de ne pas aller plus loin. Le dossier ne pourra plus avancer ; les étapes jouées restent consultables.'], 'Arrêter le dossier', true))) return;
+  if (await post('validate', { stop: true }, 'Arrêt…')) toast('Dossier arrêté');
+}
+async function interrupt() {
+  if (!(await ask('Interrompre l’étape en cours ?', ['L’appel au moteur est coupé ; ce qu’il a déjà coûté reste dû. Vous pourrez reprendre ou refaire l’étape ensuite.'], 'Interrompre', true))) return;
+  await post('stop', {}, 'Arrêt…');
+}
+
+// ===========================================================================
+// Wiring
+// ===========================================================================
 document.addEventListener('toggle', function (e) {
   var el = e.target, key = el.getAttribute && el.getAttribute('data-key');
   if (!key || el.open === S.open.has(key)) return;   // opened by render() itself: nothing changed
   if (el.open) S.open.add(key); else S.open.delete(key);
-  if (el.open) { S.sig = ''; render(); }       // build the body of a step / fetch a file on first opening
+  if (el.open) { S.sig = ''; render(); if (key === 'log' && S.route.slug) loadLog(S.route.slug).then(render); }
 }, true);
 document.addEventListener('pointerdown', function () { S.down = true; }, true);
 document.addEventListener('pointerup', function () { S.down = false; setTimeout(flush, 80); }, true);
 document.addEventListener('pointercancel', function () { S.down = false; setTimeout(flush, 80); }, true);
 document.addEventListener('focusout', function () { setTimeout(flush, 250); }, true);
-window.addEventListener('hashchange', function () { if (/(?:^#|&)t=/.test(location.hash)) initToken(); S.route = parseRoute(); S.p = null; dropPlan(); S.sig = ''; S.log = null; render(); poll(); });
+window.addEventListener('hashchange', function () {
+  if (/(?:^#|&)t=/.test(location.hash)) initToken();
+  var before = S.route; S.route = parseRoute();
+  if (S.route.view !== 'parcours' || before.slug !== S.route.slug) { S.p = null; S.log = null; S.files = new Map(); S.docs = new Map(); }
+  if (S.route.view === 'new' && S.recipesError) { S.recipesError = ''; S.recipes = null; }   // try again
+  S.sig = ''; render(); refreshNow(); window.scrollTo(0, 0);
+});
+$('#tech-toggle').addEventListener('change', function (e) { S.tech = e.target.checked; save('localStorage', TECH_KEY, S.tech ? '1' : null); S.sig = ''; render(); poll(); });
+setInterval(function () { document.querySelectorAll('[data-since]').forEach(function (el) { el.textContent = elapsed(el.getAttribute('data-since')); }); }, 1000);
 
 initToken();
+loadDraft();
+S.tech = saved('localStorage', TECH_KEY) === '1';
 S.route = parseRoute();
 render();
 poll();
 setInterval(poll, 3000);
-setInterval(updateAge, 1000);
+setInterval(updateConn, 1000);
 </script>
 </body>
 </html>

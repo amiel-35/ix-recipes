@@ -43,7 +43,7 @@
 
 Domain recipes on top of [ix-skills](https://github.com/amiel-35/ix-skills) — portable across Claude, GPT, Gemini, and mystaffy.
 
-50 skills in 9 families, including 2 workflows and a workflow designer. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
+51 skills in 9 families, including 2 workflows, a workflow designer and the tracking page. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
 
 - **domain skills** — they rely on domain knowledge that can be wrong or go stale (labour law, GDPR, HR practice, financial formulas, product methods), or produce an artefact a profession defines (PRD, NDA, job description, TCO);
 - **workflows** — chains of ix-skills atoms for a recurring job, a designer for new ones, and a runner with a local tracking page (see [Workflows](#workflows)).
@@ -558,7 +558,7 @@ Read a market and a business model with numbers — competition, SaaS metrics, K
 </details>
 
 <details>
-<summary><b>⇢ Workflows</b> — 3 skills</summary>
+<summary><b>⇢ Workflows</b> — 4 skills</summary>
 
 Recipes that chain several skills, each step isolated in its own context, with pauses where the human validates, answers or chooses. Format: [`docs/format-recette.md`](docs/format-recette.md).
 
@@ -591,6 +591,16 @@ Recipes that chain several skills, each step isolated in its own context, with p
 **What it doesn't do:** Does not run the recipe and writes no file: it proposes, you save. Never invents a skill.
 
 **Use when:** You do the same multi-step job often and wonder whether it deserves a recipe.
+
+---
+
+#### `suivi-parcours` — Open the tracking page
+
+**What it does:** Starts the local tracking page bundled in the plugin and gives you its address: create a dossier by pasting the request, review and validate each step, read the deliverable as a document. See [Running a workflow outside the conversation](#running-a-workflow-outside-the-conversation-the-tracking-page).
+
+**What it doesn't do:** Runs no step and reads no dossier itself. Not from Cowork: the page runs on your computer.
+
+**Use when:** You want to run a recipe step by step, with pauses, outside a conversation.
 
 </details>
 
@@ -631,18 +641,30 @@ A workflow chains skills for a recurring job. Format: [`docs/format-recette.md`]
 
 Available: `brief-client`, `reponse-appel-offres` (see the catalog). Both tested end to end on real material (a client meeting transcript, a tender specification). `concepteur-recette` designs new ones.
 
-### Running a workflow outside the conversation
+### Running a workflow outside the conversation: the tracking page
 
-In a conversation, the recipe orchestrates itself through sub-agents. For real isolation and a trace you can resume, `scripts/parcours.py` plays it step by step, each step in a **fresh call** to an engine of your choice — Claude Code, Codex or Antigravity — that receives only its inputs. It stops at every pause and refuses any step whose message would carry a passage of the raw request beyond step 1. Spec: [`docs/executeur.md`](docs/executeur.md).
+In a conversation, the recipe orchestrates itself through sub-agents. For real isolation, a trace you can resume and no command line, use the tracking page: each step runs in a **fresh call** to an engine (Claude Code by default; Codex or Antigravity in technical mode) that receives only its inputs, and the page stops at every pause for you.
+
+**With the plugins installed** (ix-recipes and ix-skills, in Claude Code on your computer), ask Claude: *"open the tracking page"*. The `suivi-parcours` skill starts it from the plugin itself: Python 3.9+ and the signed-in Claude Code CLI are all it needs. **From a clone** of this repository (ix-skills cloned alongside, or installed as a plugin):
 
 ```bash
-pip install pyyaml
-python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --engine claude
-python3 scripts/parcours.py next ao        # runs until the next pause
-python3 scripts/parcours.py status ao
+python3 scripts/interface.py
 ```
 
-`scripts/interface.py` opens a local page (127.0.0.1, token-protected) to follow the runs, read each step's output, answer the pauses and launch the next step: [`docs/interface.md`](docs/interface.md). Measured: a full tender response (7 steps, Claude) cost $0.86 to $1.53 depending on reruns.
+The page opens in your browser (local only, protected by a key in its address). Not from Cowork: the page runs on your computer, out of reach of a remote sandbox. There:
+
+- **New dossier**: pick a recipe, paste the request (client email, notes, tender specification) or import a text file, then *Create and start*.
+- **A dossier**: the steps on the left; at the top, the one thing expected from you (*Validate and continue*, *Send the answers and continue*, *Redo the step*…); in the middle, each step's output read as a formatted document, to copy, download or print to PDF. The context sheet, the only thing later steps know of your request, is checked and corrected field by field after step 1.
+- **Technical details** (switch at the top): engine and model, cost per step, transmitted fields, raw outputs, exact messages received, log.
+
+Dossiers live in `~/Parcours` (`--parcours-dir` or `PARCOURS_DIR` to change it). Specs: [`docs/interface.md`](docs/interface.md), [`docs/executeur.md`](docs/executeur.md). Measured: a full tender response (7 steps, Claude) cost $0.86 to $1.53 depending on reruns.
+
+The same runner works from the command line, for scripts:
+
+```bash
+python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/Parcours
+python3 scripts/parcours.py next ao --parcours-dir ~/Parcours        # runs until the next pause
+```
 
 Coming next:
 

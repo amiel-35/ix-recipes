@@ -46,7 +46,10 @@ import unicodedata
 from datetime import datetime
 from pathlib import Path
 
-import yaml
+try:
+    import yaml
+except ImportError:  # the copy bundled in the plugin runs on the standard library alone
+    yaml = None
 
 try:
     import fcntl
@@ -223,14 +226,48 @@ def split_frontmatter(text):
     match = FRONTMATTER_RE.match(text)
     if not match:
         return {}, text
+    if yaml is None:  # only flat `key: value` front matters are read without pyyaml (SKILL.md files)
+        flat = {}
+        for line in match.group(1).splitlines():
+            key, sep, value = line.partition(":")
+            if sep and re.fullmatch(r"[A-Za-z_][\w-]*", key.strip()):
+                flat[key.strip()] = value.strip().strip('"').strip("'")
+        return flat, text[match.end():]
     return yaml.safe_load(match.group(1)) or {}, text[match.end():]
 
 
-def load_recipe(recipe_id):
+def bundled():
+    """True when this file runs from the copy bundled in the plugin: ROOT is then the skill
+    folder (dist/skills/suivi-parcours) and the recipes are its sibling folders."""
+    return (ROOT / "SKILL.md").is_file() and not (ROOT / "skills").is_dir()
+
+
+def recipe_source(recipe_id):
+    """(front matter, body) of a recipe: skills/<id>.md in the repository, or, in the plugin,
+    <skills>/<id>/recipe.json (written by build.py) with the body of <skills>/<id>/SKILL.md."""
     path = ROOT / "skills" / f"{recipe_id}.md"
-    if not path.is_file():
-        raise ParcoursError(f"recette introuvable : {path}")
-    fm, body = split_frontmatter(path.read_text(encoding="utf-8"))
+    if path.is_file():
+        return split_frontmatter(path.read_text(encoding="utf-8"))
+    folder = ROOT.parent / recipe_id
+    if bundled() and re.fullmatch(r"[a-z0-9][a-z0-9-]*", recipe_id) and (folder / "recipe.json").is_file():
+        try:
+            fm = json.loads((folder / "recipe.json").read_text(encoding="utf-8"))
+        except ValueError as exc:
+            raise ParcoursError(f"recette illisible : {folder / 'recipe.json'} ({exc})")
+        _, body = split_frontmatter((folder / "SKILL.md").read_text(encoding="utf-8"))
+        return fm, body
+    raise ParcoursError(f"recette introuvable : {recipe_id}")
+
+
+def recipe_ids():
+    ids = {p.stem for p in (ROOT / "skills").glob("*.md")}
+    if bundled():
+        ids |= {p.parent.name for p in ROOT.parent.glob("*/recipe.json")}
+    return sorted(ids)
+
+
+def load_recipe(recipe_id):
+    fm, body = recipe_source(recipe_id)
     workflow = fm.get("workflow") or {}
     if not workflow.get("steps"):
         raise ParcoursError(f"'{recipe_id}' n'a pas de bloc workflow")
@@ -238,8 +275,13 @@ def load_recipe(recipe_id):
     return {
         "id": recipe_id,
         "version": str(fm.get("version", "")),
+        "label": str(fm.get("label") or recipe_id),
+        "description": str(fm.get("description_fr") or ""),
+        "summary": str(fm.get("summary_fr") or ""),
+        "icon": str(fm.get("icon") or ""),
         "context_sheet": list(workflow.get("context_sheet") or []),
         "context_definitions": context_definitions(body),
+        "context_labels": {str(k): str(v) for k, v in (workflow.get("context_labels") or {}).items()},
         "steps": steps,
     }
 
@@ -271,6 +313,7 @@ def normalize_step(raw, index):
         raise ParcoursError(f"étape '{raw['id']}' : pause '{pause}' inconnue")
     return {
         "id": raw["id"],
+        "label": str(raw.get("label") or "").strip() or None,
         "skill": raw["skill"],
         "mission": str(raw["mission"]).strip(),
         "receives": list(raw.get("receives") or []),
@@ -314,7 +357,7 @@ def skill_search_roots(namespace):
         env = [Path(p) for p in os.environ.get("IX_SKILLS_PATH", "").split(os.pathsep) if p]
         return env + [ROOT.parent / "ix-skills" / "dist" / "skills"] + cache_skill_roots("ix-skills")
     if namespace == "ix-recipes":
-        return [ROOT / "dist" / "skills"] + cache_skill_roots("ix-recipes")
+        return [ROOT / "dist" / "skills"] + ([ROOT.parent] if bundled() else []) + cache_skill_roots("ix-recipes")
     raise ParcoursError(f"espace de noms de skill inconnu : '{namespace}'")
 
 
@@ -411,11 +454,12 @@ def save_state(directory, state):
     write_atomic(directory / "state.json", json.dumps(state, indent=2, ensure_ascii=False) + "\n")
 
 
-def new_state(recipe, slug, engine, engine_steps, skills):
+def new_state(recipe, slug, engine, engine_steps, skills, title=None):
     return {
         "recipe": recipe["id"],
         "recipe_version": recipe["version"],
         "slug": slug,
+        "title": title,
         "created": now(),
         "status": "active",
         "engine": engine,
@@ -1083,6 +1127,30 @@ def output_body(text):
     return "\n".join(lines[:cut]).strip()
 
 
+FRONT_MATTER_RE = re.compile(r"\A---[ \t]*\n(.{0,2000}?)\n---[ \t]*(?:\n|\Z)", re.S)
+META_LINE_RE = re.compile(r"[A-Za-z_][\w-]*[ \t]*:.*")
+
+
+def output_document(text):
+    """(document, meta) of a step output, for a reader: the body before the closing blocks
+    (output_body), without a leading YAML front matter, whose simple `key: value` lines are
+    returned apart (`status: draft`, `recipient: ...`)."""
+    body = output_body(text)
+    # the skills' status block (`status: draft`, `skill: …`) opens the document, or follows its title
+    title = re.match(r"#[^\n]*\n\s*\n?", body)
+    head, rest = (body[:title.end()], body[title.end():]) if title else ("", body)
+    match = FRONT_MATTER_RE.match(rest)
+    lines = [l for l in match.group(1).splitlines() if l.strip()] if match else []
+    if not lines or not all(META_LINE_RE.fullmatch(l.strip()) for l in lines):
+        return body, {}   # a horizontal rule, not a status block
+    meta = {}
+    for line in match.group(1).splitlines():
+        key, sep, value = line.partition(":")
+        if sep and re.fullmatch(r"[A-Za-z_][\w-]*", key.strip()):
+            meta[key.strip()] = value.strip()
+    return (head.rstrip() + "\n\n" + rest[match.end():].lstrip()).strip(), meta
+
+
 def parse_step_output(text, transmits, context_fields=None, output_field=None):
     """Parse an engine output; raise ParseError when a transmitted field is missing.
 
@@ -1499,12 +1567,46 @@ def cmd_new(args):
     skills = resolve_recipe_skills(recipe)  # fail early, naming every missing skill
     base = Path(args.parcours_dir)
     base.mkdir(parents=True, exist_ok=True)
-    wanted = slugify(args.slug) if args.slug else default_slug(recipe["id"], text)
+    # a slug stays within the page's whitelist (^[a-z0-9][a-z0-9-]{0,79}$): truncated, and the
+    # default one when nothing ASCII is left (a title such as « 🚀 » or « — »)
+    wanted = (slugify(args.slug)[:60].strip("-") if args.slug else "") or default_slug(recipe["id"], text)
     directory, slug = create_unique_dir(base, wanted)
+    title = " ".join((args.title or "").split())[:120] or None
     write_atomic(directory / "input.md", text)
-    save_state(directory, new_state(recipe, slug, args.engine or "claude", engine_steps, skills))
+    save_state(directory, new_state(recipe, slug, args.engine or "claude", engine_steps, skills, title))
+    if args.json:
+        emit_json({"slug": slug, "title": title})
+        return 0
     say(f"Parcours créé : {slug} ({directory})")
     say(f"Suite : parcours.py next {slug}")
+    return 0
+
+
+def list_recipes():
+    """The workflow recipes of this repo, for a page that creates parcours (`recipes --json`)."""
+    found = []
+    unreadable = (ParcoursError, OSError, ValueError) + ((yaml.YAMLError,) if yaml else ())
+    for recipe_id in recipe_ids():
+        try:
+            recipe = load_recipe(recipe_id)
+        except unreadable:
+            continue  # not a workflow recipe, or unreadable: not offered
+        found.append({
+            "id": recipe["id"], "label": recipe["label"], "description": recipe["description"],
+            "icon": recipe["icon"], "version": recipe["version"], "summary": recipe["summary"],
+            "steps": [{"id": s["id"], "label": s["label"], "pause": effective_pause(s),
+                       "optional": s["optional"]} for s in recipe["steps"]],
+        })
+    return found
+
+
+def cmd_recipes(args):
+    recipes = list_recipes()
+    if args.json:
+        emit_json({"recipes": recipes})
+        return 0
+    for r in recipes:
+        say(f"{r['id']} — {r['label']} ({len(r['steps'])} étapes)")
     return 0
 
 
@@ -1703,6 +1805,7 @@ def status_report(directory, state, fingerprint):
             "blocking": step.get("blocking"), "error": step.get("error"),
             "cost_usd": step.get("cost_usd", 0.0), "started": step.get("started"), "ended": step.get("ended"),
             "skill": {k: (step.get("skill") or {}).get(k) for k in ("ref", "version")},
+            "label": defn["label"] if defn else None, "mission": defn["mission"] if defn else None,
         }
         for key, kind in (("trace", "main"), ("retry_trace", "retry")):
             name = trace_name(idx, step["id"], kind)
@@ -1713,15 +1816,17 @@ def status_report(directory, state, fingerprint):
         last = next((s for s in reversed(state["steps"]) if s["status"] == "done"), None)
         final = last["output"] if last else None
     return {
-        "slug": state["slug"], "recipe": state["recipe"], "recipe_version": state["recipe_version"],
+        "slug": state["slug"], "title": state.get("title"), "recipe": state["recipe"],
+        "recipe_version": state["recipe_version"], "recipe_label": recipe["label"] if recipe else state["recipe"],
         "created": state.get("created"), "status": state["status"],
         "engine": state["engine"], "engine_steps": state["engine_steps"],
         "cost_usd": state["cost_usd"], "calls": state["calls"],
         "context_sheet": state["context_sheet"], "context_validated": state["context_validated"],
         "context_fields": list(recipe["context_sheet"]) if recipe else [],
+        "context_labels": dict(recipe["context_labels"]) if recipe else {}, "not_stated": NOT_STATED,
         "answers": state.get("answers"), "pending": state["pending"], "steps": steps,
         "files": files, "final_output": final, "recipe_error": problem,
-        "locked": is_locked(directory), "fingerprint": fingerprint,
+        "locked": is_locked(directory), "fingerprint": fingerprint, "max_budget_usd": DEFAULT_BUDGET,
         "updated": datetime.fromtimestamp((Path(directory) / "state.json").stat().st_mtime).isoformat(timespec="seconds"),
     }
 
@@ -2093,7 +2198,8 @@ def build_parser():
     common.add_argument("--yes", action="store_true", help="ne pas demander confirmation avant de lancer")
     common.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help="délai maximal par appel, en secondes")
     common.add_argument("--max-budget-usd", type=float, default=DEFAULT_BUDGET, help="plafond par appel (claude)")
-    common.add_argument("--parcours-dir", default="./parcours", help="dossier des parcours")
+    common.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or "./parcours",
+                        help="dossier des parcours (défaut : $PARCOURS_DIR, sinon ./parcours)")
     common.add_argument("--json", action="store_true",
                         help="sortie lisible par un programme (plan, status) ; erreurs en JSON sur la sortie standard")
     common.add_argument("--json-errors", action="store_true", default=argparse.SUPPRESS,
@@ -2113,6 +2219,8 @@ def build_parser():
     p = add("new", cmd_new, "créer un parcours", "recipe")
     p.add_argument("--input", required=True, help="demande brute (fichier, ou - pour stdin)")
     p.add_argument("--slug")
+    p.add_argument("--title", help="titre lisible du parcours (affiché par la page de suivi)")
+    add("recipes", cmd_recipes, "les recettes-workflows disponibles")
     p = add("next", cmd_next, "jouer jusqu'à la prochaine pause", "slug")
     p.add_argument("--if-state", metavar="FINGERPRINT",
                    help="empreinte de l'état (donnée par `plan --json`) ; refusé sous le verrou si l'état a changé")

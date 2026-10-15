@@ -1,9 +1,10 @@
 ---
 id: reponse-appel-offres
 label: Réponse à appel d'offres
-version: 1.5.0
+version: 1.6.0
 description_fr: "Conduit une réponse à appel d'offres de bout en bout — lecture du cahier des charges, questions à l'acheteur, go / no-go, stratégie de réponse, rédaction de l'offre, contrôle de conformité, mise en forme — chaque étape isolée, le dossier de consultation lu seulement par la première, une fiche de contexte validée par l'humain, et des pauses pour les réponses de l'acheteur et les décisions. Déclenche quand une consultation, un appel d'offres ou un cahier des charges reçu appelle une réponse complète. Déclenche sur \"on répond à cet appel d'offres\", \"prépare notre réponse à ce cahier des charges\", \"on y va ou pas sur cette consultation\", \"monte la réponse à cet AO\". Ne fait pas seulement l'analyse du cahier des charges — voir `analyse-cdc` — ni seulement l'offre — voir `offre-commerciale` ; pour une demande client informelle, voir `brief-client`."
 description_en: "Runs a tender response end to end — reading the specification, questions to the buyer, go / no-go, response strategy, writing the offer, compliance check, formatting — each step isolated, the tender file read only by the first, a human-validated context sheet, and pauses for the buyer's answers and the decisions. Triggers when a consultation, call for tenders or received specification calls for a full response. Triggers on \"we're answering this call for tenders\", \"prepare our response to this specification\", \"should we bid on this consultation\", \"build the response to this tender\". Does not only analyse the specification — see `analyse-cdc` — nor only write the offer — see `offre-commerciale`; for an informal client request, see `brief-client`."
+summary_fr: "Du cahier des charges à une offre vérifiée : analyse, questions à l’acheteur, décision, rédaction et contrôle de conformité."
 icon: ⇶
 domain: sales
 category: workflow
@@ -26,8 +27,17 @@ compatible:
 requires: [ix-recipes:analyse-cdc, ix-skills:questioning, ix-skills:decision, ix-skills:brief, ix-recipes:offre-commerciale, ix-skills:controle-qualite, ix-skills:deliver]
 workflow:
   context_sheet: [buyer, objective, constraints, recipient, format, deadlines, named_solutions]
+  context_labels:
+    buyer: "Acheteur"
+    objective: "Objectif"
+    constraints: "Contraintes"
+    recipient: "Destinataire"
+    format: "Format attendu"
+    deadlines: "Échéances"
+    named_solutions: "Solutions déjà nommées"
   steps:
     - id: analyse-cdc
+      label: "Analyse du cahier des charges"
       skill: ix-recipes:analyse-cdc
       mission: Read the tender file from the bidder's side — explicit and implicit requirements, evaluation criteria, submission rules, grey zones, blocking questions — and copy verbatim, item by item, every list the tender imposes (objectives, sequences and their sub-topics, exercises, deliverables, tools, documents to submit) and every sentence that prescribes what the response or the service must do (must, shall, is expected).
       receives: [brief]
@@ -37,6 +47,7 @@ workflow:
       pause: validate
       model: opus
     - id: questioning
+      label: "Questions à l'acheteur"
       skill: ix-skills:questioning
       mission: Turn the grey zones and blocking questions into the questions to send the buyer within the consultation's question period, most blocking first. Do not question what the tender imposes (format, duration, the choice of a training, required deliverables) — the buyer decided it; ask only what is unclear or missing.
       receives: [context_sheet, analyse-cdc.grey_zones, analyse-cdc.blocking_questions]
@@ -44,6 +55,7 @@ workflow:
       pause: answers
       model: sonnet
     - id: go-no-go
+      label: "Décision de répondre"
       skill: ix-skills:decision
       mission: "Recommend Go, Go with conditions or No-go against the requirements, the evaluation criteria and the buyer's answers, with visible trade-offs. Conditions are conditions to bid (eligibility, capacity, price risk, missing information), not choices of response design, which belong to the next step; without information on the bidder, say so instead of judging the fit."
       receives: [context_sheet, analyse-cdc.requirements, analyse-cdc.evaluation_criteria, answers]
@@ -51,6 +63,7 @@ workflow:
       pause: validate
       model: sonnet
     - id: strategie
+      label: "Stratégie de réponse"
       skill: ix-skills:brief
       mission: Write the response brief — angle, how each evaluation criterion and each imposed item will be met, proofs to provide, risks, what we will not propose. Imposed items are requirements to meet, never hypotheses or options to validate with the buyer.
       receives: [context_sheet, analyse-cdc.requirements, analyse-cdc.imposed_items, analyse-cdc.evaluation_criteria, answers, go-no-go.conditions]
@@ -59,6 +72,7 @@ workflow:
       pause: none
       model: sonnet
     - id: offre
+      label: "Rédaction de l'offre"
       skill: ix-recipes:offre-commerciale
       mission: Write the content of the offer from the response brief, within the submission rules. Cover every imposed item explicitly and by its tender wording (place each objective and exercise in the schedule); imposed items are requirements, never hypotheses; never claim a placement or a coverage the text does not show. Leave unknown facts (prices, names, references, certifications) as visible placeholders.
       receives: [context_sheet, strategie.response_brief, analyse-cdc.imposed_items, analyse-cdc.submission_rules]
@@ -67,6 +81,7 @@ workflow:
       pause: none
       model: sonnet
     - id: conformite
+      label: "Contrôle de conformité"
       skill: ix-skills:controle-qualite
       mission: Check the offer against the tender's requirements, imposed items, evaluation criteria and submission rules — one line per requirement and per imposed item, met ones included, each with the exact passage of the offer. An imposed item missing from the offer is blocking (report it in the blocking section).
       receives: [offre.offer, analyse-cdc.requirements, analyse-cdc.imposed_items, analyse-cdc.evaluation_criteria, analyse-cdc.submission_rules]
@@ -74,6 +89,7 @@ workflow:
       pause: validate
       model: sonnet
     - id: mise-en-forme
+      label: "Mise en forme finale"
       skill: ix-skills:deliver
       mission: Format the offer for the buyer's evaluation committee, following the submission rules, without changing its substance. Remove internal annotations (hypothesis tags, legends, internal recaps) from the document handed over and list them in a separate note to the bidder; never delete a commitment or a sentence of substance, and never turn a condition into a commitment ("if they exist", "subject to" stay as written).
       receives: [context_sheet, offre.offer, analyse-cdc.submission_rules]

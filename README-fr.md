@@ -43,7 +43,7 @@
 
 Recettes métier construites sur [ix-skills](https://github.com/amiel-35/ix-skills) — portables sur Claude, GPT, Gemini, mystaffy.
 
-50 skills en 9 familles, dont 2 workflows et un concepteur de workflows. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
+51 skills en 9 familles, dont 2 workflows, un concepteur de workflows et la page de suivi. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
 
 - **des skills métier** — ils reposent sur une connaissance de domaine qui peut être fausse ou périmée (droit du travail, RGPD, pratiques RH, formules financières, méthodes produit), ou produisent un artefact qu'une profession définit (PRD, NDA, fiche de poste, TCO) ;
 - **des workflows** — des enchaînements d'atomes ix-skills pour un travail récurrent, un concepteur pour en créer, et un exécuteur avec une page de suivi locale (voir [Workflows](#workflows)).
@@ -558,7 +558,7 @@ Lire un marché et un modèle économique avec des chiffres — concurrence, mé
 </details>
 
 <details>
-<summary><b>⇢ Workflows</b> — 3 skills</summary>
+<summary><b>⇢ Workflows</b> — 4 skills</summary>
 
 Des recettes qui enchaînent plusieurs skills, chaque étape isolée dans son propre contexte, avec des pauses où l'humain valide, répond ou choisit. Format : [`docs/format-recette.md`](docs/format-recette.md).
 
@@ -591,6 +591,16 @@ Des recettes qui enchaînent plusieurs skills, chaque étape isolée dans son pr
 **Ce qu'il ne fait pas :** N'exécute pas la recette et n'écrit aucun fichier : il propose, tu enregistres. N'invente jamais de skill.
 
 **Quand l'utiliser :** Tu refais souvent le même travail en plusieurs étapes et tu te demandes s'il mérite une recette.
+
+---
+
+#### `suivi-parcours` — Ouvrir la page de suivi
+
+**Ce qu'il fait :** Démarre la page de suivi locale embarquée dans le plugin et t'en donne l'adresse : créer un dossier en collant la demande, relire et valider chaque étape, lire le livrable comme un document. Voir [Exécuter un workflow hors de la conversation](#exécuter-un-workflow-hors-de-la-conversation--la-page-de-suivi).
+
+**Ce qu'il ne fait pas :** Ne joue aucune étape et ne lit aucun dossier lui-même. Pas depuis Cowork : la page tourne sur ton ordinateur.
+
+**Quand l'utiliser :** Tu veux jouer une recette étape par étape, avec ses pauses, hors d'une conversation.
 
 </details>
 
@@ -631,18 +641,30 @@ Un workflow enchaîne des skills pour un travail récurrent. Format : [`docs/for
 
 Disponibles : `brief-client`, `reponse-appel-offres` (voir le catalogue). Tous deux testés de bout en bout sur du matériau réel (une transcription de réunion client, un cahier des charges de consultation). `concepteur-recette` en conçoit de nouvelles.
 
-### Exécuter un workflow hors de la conversation
+### Exécuter un workflow hors de la conversation : la page de suivi
 
-Dans une conversation, la recette s'orchestre elle-même par sous-agents. Pour une isolation réelle et une trace qu'on peut reprendre, `scripts/parcours.py` la joue étape par étape, chaque étape dans un **appel neuf** au moteur de ton choix — Claude Code, Codex ou Antigravity — qui ne reçoit que ses entrées. Il s'arrête à chaque pause et refuse toute étape dont le message porterait un passage de la demande brute au-delà de l'étape 1. Spécification : [`docs/executeur.md`](docs/executeur.md).
+Dans une conversation, la recette s'orchestre elle-même par sous-agents. Pour une isolation réelle, une trace qu'on peut reprendre et aucune ligne de commande, utilisez la page de suivi : chaque étape tourne dans un **appel neuf** à un moteur (Claude Code par défaut ; Codex ou Antigravity en mode technique) qui ne reçoit que ses entrées, et la page s'arrête à chaque pause pour vous.
+
+**Avec les plugins installés** (ix-recipes et ix-skills, dans Claude Code sur votre ordinateur), demandez à Claude : « ouvre la page de suivi ». Le skill `suivi-parcours` la lance depuis le plugin lui-même : il suffit de Python 3.9 ou plus et de la CLI Claude Code connectée. **Depuis un clone** de ce dépôt (ix-skills cloné à côté, ou installé en plugin) :
 
 ```bash
-pip install pyyaml
-python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --engine claude
-python3 scripts/parcours.py next ao        # jusqu'à la prochaine pause
-python3 scripts/parcours.py status ao
+python3 scripts/interface.py
 ```
 
-`scripts/interface.py` ouvre une page locale (127.0.0.1, protégée par jeton) pour suivre les parcours, lire la sortie de chaque étape, répondre aux pauses et lancer l'étape suivante : [`docs/interface.md`](docs/interface.md). Mesuré : une réponse complète à un appel d'offres (7 étapes, Claude) a coûté de 0,86 $ à 1,53 $ selon les reprises.
+La page s'ouvre dans votre navigateur (en local seulement, protégée par une clé dans son adresse). Pas depuis Cowork : la page tourne sur votre ordinateur, hors de portée d'un environnement distant. On y trouve :
+
+- **Nouveau dossier** : choisir une recette, coller la demande (mail du client, notes, cahier des charges) ou importer un fichier texte, puis « Créer et démarrer ».
+- **Un dossier** : les étapes à gauche ; en haut, la seule chose attendue de vous (« Valider et continuer », « Envoyer les réponses et continuer », « Refaire l'étape »…) ; au centre, le résultat de chaque étape lu comme un document mis en forme, à copier, télécharger ou imprimer en PDF. La fiche de contexte, seule chose que les étapes suivantes savent de votre demande, se vérifie et se corrige champ par champ après la première étape.
+- **Détails techniques** (interrupteur en haut) : moteur et modèle, coût par étape, champs transmis, sorties brutes, messages exacts reçus, journal.
+
+Les dossiers sont rangés dans `~/Parcours` (`--parcours-dir` ou `PARCOURS_DIR` pour changer). Spécifications : [`docs/interface.md`](docs/interface.md), [`docs/executeur.md`](docs/executeur.md). Mesuré : une réponse complète à un appel d'offres (7 étapes, Claude) a coûté de 0,86 $ à 1,53 $ selon les reprises.
+
+Le même exécuteur s'utilise en ligne de commande, pour des scripts :
+
+```bash
+python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/Parcours
+python3 scripts/parcours.py next ao --parcours-dir ~/Parcours        # jusqu'à la prochaine pause
+```
 
 À venir :
 

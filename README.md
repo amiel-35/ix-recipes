@@ -72,7 +72,7 @@ Install and set up ix-recipes for me (https://github.com/amiel-35/ix-recipes).
 3. End with what works, what is missing, and what I should do next.
 ```
 
-Once Claude Code has restarted: "open the tracking page" starts the recipes' page, and "configure ix" (`configuration-ix` skill) checks and sets up the rest — updates, dossier folder, the page's theme, Codex and Antigravity engines.
+Once Claude Code has restarted: `/ix-recipes:suivi-parcours` (or "start the ix-recipes tracking page") opens the recipes' page, and "configure ix" (`configuration-ix` skill) checks and sets up the rest — updates, dossier folder, the page's theme, Codex and Antigravity engines.
 
 ### What gets deployed
 
@@ -689,7 +689,7 @@ Available: `brief-client`, `reponse-appel-offres` (see the catalog). Both tested
 
 In a conversation, the recipe orchestrates itself through sub-agents. For real isolation, a trace you can resume and no command line, use the tracking page: each step runs in a **fresh call** to an engine (Claude Code by default; Codex or Antigravity in technical mode) that receives only its inputs, and the page stops at every pause for you.
 
-**With the plugins installed** (ix-recipes and ix-skills, in Claude Code on your computer), ask Claude: *"open the tracking page"*. The `suivi-parcours` skill starts it from the plugin itself: Python 3.9+ and the signed-in Claude Code CLI are all it needs. **From a clone** of this repository (ix-skills cloned alongside, or installed as a plugin):
+**With the plugins installed** (ix-recipes and ix-skills, in Claude Code on your computer), type `/ix-recipes:suivi-parcours` or ask *"start the ix-recipes tracking page"*. The `suivi-parcours` skill starts it from the plugin itself: Python 3.9+ and the signed-in Claude Code CLI are all it needs. **From a clone** of this repository (ix-skills cloned alongside, or installed as a plugin):
 
 ```bash
 python3 scripts/interface.py

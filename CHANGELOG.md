@@ -4,6 +4,12 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
 
 ## Unreleased (branches `theme`, `dossiers`) — themes, many dossiers, setup
 
+- Home: filter chips by recipe (with counts) once dossiers mix several recipes; the
+  choice is remembered in the browser.
+- `suivi-parcours` 1.1.0: a description that says plainly it starts a local page (an
+  isolated Claude had taken "open the tracking page" for a claude.ai artifact); on a busy
+  port it rebuilds the address of the running page from the folder's access key. The README
+  recommends `/ix-recipes:suivi-parcours`, tested in an isolated Claude Code.
 - The Inflexion theme ships with the page and is on by default (`themes/inflexion/`, bundled
   in the plugin; Archivo, Source Sans 3 and IBM Plex Mono under the SIL OFL 1.1, licences
   included); `--theme none` / `PARCOURS_THEME=none` for the neutral look.

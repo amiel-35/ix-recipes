@@ -86,7 +86,13 @@ a.card:hover { border-color: var(--line-2); box-shadow: var(--shadow); }
 .progress i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
 .progress i.done { background: var(--ok); } .progress i.now { background: var(--warn-dot); } .progress i.run { background: var(--run); } .progress i.bad { background: var(--bad); } .progress i.skip { background: var(--line); opacity: .5; }
 .card .foot { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12.5px; color: var(--ink-3); }
-.search { max-width: 360px; margin: 0 0 6px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin: 0 0 6px; }
+.search { max-width: 320px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 13px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink-2); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.chip:hover { border-color: var(--ink-3); color: var(--ink); }
+.chip.on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.chip .n { font-variant-numeric: tabular-nums; opacity: .75; }
 .more { margin-top: 10px; }
 .archives-link { margin-top: 30px; font-size: 13.5px; }
 .archive-row { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
@@ -475,7 +481,7 @@ var S = {
   lastOk: 0, fails: 0, polling: false, authError: false, notFound: false,
   busy: '', error: '', notices: {}, open: new Set(), docs: new Map(), files: new Map(),
   ctx: {}, ctxEdit: {}, answers: {}, chooseSel: {}, engine: {}, log: null, plan: null,
-  draft: { recipe: '', title: '', text: '', engine: '', fileNote: '' }, search: '', archives: null,
+  draft: { recipe: '', title: '', text: '', engine: '', fileNote: '' }, search: '', archives: null, recipeFilter: '',
   tech: false, down: false, deferred: false, wasOffline: false
 };
 
@@ -860,6 +866,16 @@ function viewHome() {
       h('button', { class: 'btn primary', type: 'button', onclick: function () { go('#/nouveau'); } }, icon('plus'), 'Nouveau dossier')), techFooter(d));
   }
   var q = S.search.trim().toLowerCase(), shown = d.parcours;
+  var byRecipe = {};
+  d.parcours.forEach(function (x) { byRecipe[x.recipe] = byRecipe[x.recipe] || { label: x.recipe_label || x.recipe, n: 0 }; byRecipe[x.recipe].n++; });
+  if (S.recipeFilter && !byRecipe[S.recipeFilter]) S.recipeFilter = '';
+  if (S.recipeFilter) shown = shown.filter(function (x) { return x.recipe === S.recipeFilter; });
+  var chips = Object.keys(byRecipe).length > 1 ? h('div', { class: 'chips', role: 'group', 'aria-label': 'Filtrer par recette' },
+    [['', 'Toutes', d.parcours.length]].concat(Object.keys(byRecipe).sort(function (a, b) { return byRecipe[b].n - byRecipe[a].n; })
+      .map(function (k) { return [k, byRecipe[k].label, byRecipe[k].n]; })).map(function (c) {
+      return h('button', { class: 'chip' + (S.recipeFilter === c[0] ? ' on' : ''), type: 'button', 'aria-pressed': S.recipeFilter === c[0] ? 'true' : 'false',
+        onclick: function () { S.recipeFilter = c[0]; save('localStorage', 'parcours-ui:recipe', c[0] || null); render(); } }, c[1], h('span', { class: 'n' }, String(c[2])));
+    })) : null;
   if (q) shown = shown.filter(function (x) { return (titleOf(x) + ' ' + (x.recipe_label || x.recipe)).toLowerCase().indexOf(q) >= 0; });
   // what waits for you or runs is always shown; finished dossiers fold beyond the most recent ones
   var groups = [['À traiter', [], false], ['En cours', [], false], ['Terminés', [], true], ['Arrêtés', [], true]];
@@ -872,7 +888,7 @@ function viewHome() {
     search = h('input', { class: 'input search', type: 'search', placeholder: 'Rechercher un dossier', value: S.search, 'aria-label': 'Rechercher un dossier' });
     search.addEventListener('input', function () { S.search = search.value; clearTimeout(searchTimer); searchTimer = setTimeout(function () { S.sig = ''; renderKeepingSearch(); }, 150); });
   }
-  return h('div', null, head, search,
+  return h('div', null, head, h('div', { class: 'filters' }, search, chips),
     q && !shown.length ? h('p', { style: 'color:var(--ink-2)' }, 'Aucun dossier ne correspond à « ' + S.search.trim() + ' ».') : null,
     groups.filter(function (g) { return g[1].length; }).map(function (g) {
       var key = 'more:' + g[0], all = q || !g[2] || S.open.has(key) || g[1].length <= FOLD_AT;
@@ -1524,6 +1540,7 @@ setInterval(function () { document.querySelectorAll('[data-since]').forEach(func
 
 initToken();
 loadDraft();
+S.recipeFilter = saved('localStorage', 'parcours-ui:recipe') || '';
 S.tech = saved('localStorage', TECH_KEY) === '1';
 S.route = parseRoute();
 render();

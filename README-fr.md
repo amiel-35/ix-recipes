@@ -73,7 +73,7 @@ Installe et configure ix-recipes pour moi (https://github.com/amiel-35/ix-recipe
 3. Termine par ce qui marche, ce qui manque, et ce que je dois faire ensuite.
 ```
 
-Une fois Claude Code redémarré : « ouvre la page de suivi » lance la page des recettes, et « configure ix » (skill `configuration-ix`) vérifie et règle le reste — mises à jour, dossier des parcours, thème de la page, moteurs Codex et Antigravity.
+Une fois Claude Code redémarré : `/ix-recipes:suivi-parcours` (ou « lance la page de suivi ix-recipes ») ouvre la page des recettes, et « configure ix » (skill `configuration-ix`) vérifie et règle le reste — mises à jour, dossier des parcours, thème de la page, moteurs Codex et Antigravity.
 
 ### Ce qui se déploie
 
@@ -690,7 +690,7 @@ Disponibles : `brief-client`, `reponse-appel-offres` (voir le catalogue). Tous d
 
 Dans une conversation, la recette s'orchestre elle-même par sous-agents. Pour une isolation réelle, une trace qu'on peut reprendre et aucune ligne de commande, utilisez la page de suivi : chaque étape tourne dans un **appel neuf** à un moteur (Claude Code par défaut ; Codex ou Antigravity en mode technique) qui ne reçoit que ses entrées, et la page s'arrête à chaque pause pour vous.
 
-**Avec les plugins installés** (ix-recipes et ix-skills, dans Claude Code sur votre ordinateur), demandez à Claude : « ouvre la page de suivi ». Le skill `suivi-parcours` la lance depuis le plugin lui-même : il suffit de Python 3.9 ou plus et de la CLI Claude Code connectée. **Depuis un clone** de ce dépôt (ix-skills cloné à côté, ou installé en plugin) :
+**Avec les plugins installés** (ix-recipes et ix-skills, dans Claude Code sur votre ordinateur), tapez `/ix-recipes:suivi-parcours` ou demandez « lance la page de suivi ix-recipes ». Le skill `suivi-parcours` la lance depuis le plugin lui-même : il suffit de Python 3.9 ou plus et de la CLI Claude Code connectée. **Depuis un clone** de ce dépôt (ix-skills cloné à côté, ou installé en plugin) :
 
 ```bash
 python3 scripts/interface.py

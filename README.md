@@ -74,6 +74,21 @@ Each step takes one to two minutes, and the page stops to show you the context s
 
 **Good to know.** You need Claude Code installed and signed in, and Python 3.9 or later (already there on macOS); not Cowork, since the page runs on your computer. Each step uses your Claude subscription or API credit: a full tender response cost $1 to $2 in our tests. Afterwards, in any Claude Code conversation, `/ix-recipes:suivi-parcours` reopens the page, and the skills trigger from an ordinary request ("write the job description for a senior product manager").
 
+**Remove everything.** Trying it is installing it: everything comes off with this second prompt, also pasted into Claude Code. Nothing is deleted for good, and your dossiers go only with your agreement.
+
+```text
+Cleanly uninstall ix-recipes from this computer (https://github.com/amiel-35/ix-recipes).
+1. Stop the tracking page if it runs (a python3 running suivi-parcours/scripts/interface.py).
+2. Uninstall the ix-recipes then ix-skills plugins, whatever their marketplace. Before
+   ix-skills, check that no other installed plugin uses it (ghost-council, for example); if
+   one does, ask me whether to keep it.
+3. Remove their marketplace (amiel-35, ix-recipes or ix-skills) only if no installed plugin
+   comes from it any more, then move their copies in ~/.claude/plugins/cache/ to the trash.
+4. My dossiers and recipes (~/.ix-recipes, and ~/Parcours if it exists): tell me how many there
+   are and ask me whether to keep them or move them to the trash.
+Delete nothing for good. End with what was removed and what remains.
+```
+
 ---
 
 *Everything below is for going further: what the repository holds, detailed installation, the full catalogue, other platforms and contributing.*

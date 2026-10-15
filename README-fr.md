@@ -74,6 +74,21 @@ Chaque étape prend une à deux minutes, et la page s'arrête pour vous montrer 
 
 **Bon à savoir.** Il faut Claude Code installé et connecté, et Python 3.9 ou plus (déjà présent sur macOS) ; pas Cowork, car la page tourne sur votre ordinateur. Chaque étape consomme votre abonnement Claude ou votre crédit API : une réponse complète à un appel d'offres a coûté de 1 à 2 $ dans nos tests. Ensuite, dans n'importe quelle conversation Claude Code, `/ix-recipes:suivi-parcours` rouvre la page, et les skills se déclenchent depuis une demande ordinaire (« prépare la fiche de poste d'un product manager senior »).
 
+**Tout retirer.** Essayer, c'est installer : tout se retire avec ce second prompt, à coller aussi dans Claude Code. Rien n'est supprimé définitivement, et vos dossiers ne partent qu'avec votre accord.
+
+```text
+Désinstalle proprement ix-recipes de cet ordinateur (https://github.com/amiel-35/ix-recipes).
+1. Arrête la page de suivi si elle tourne (un python3 qui lance suivi-parcours/scripts/interface.py).
+2. Désinstalle les plugins ix-recipes puis ix-skills, quelle que soit leur marketplace. Avant
+   ix-skills, vérifie qu'aucun autre plugin installé ne s'en sert (ghost-council, par exemple) ;
+   si c'est le cas, demande-moi s'il faut le garder.
+3. Retire leur marketplace (amiel-35, ix-recipes ou ix-skills) seulement si plus aucun plugin
+   installé n'en vient, puis mets à la corbeille leurs copies dans ~/.claude/plugins/cache/.
+4. Mes dossiers et mes recettes (~/.ix-recipes, et ~/Parcours s'il existe) : dis-moi combien
+   il y en a et demande-moi s'il faut les garder ou les mettre à la corbeille.
+Ne supprime rien définitivement. Termine par ce qui a été retiré et ce qui reste.
+```
+
 ---
 
 *Tout ce qui suit sert à aller plus loin : ce que contient le dépôt, l'installation détaillée, le catalogue complet, les autres plateformes et la contribution.*

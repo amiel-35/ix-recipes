@@ -2,7 +2,7 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
-## Unreleased (branch `ihm-produit`) — the tracking page becomes a product
+## 2026-10-15 — plugin 2.4.0: the tracking page becomes a product
 
 - `scripts/interface.html` rewritten: "Your dossiers" grouped by what they wait for,
   a "New dossier" screen (pick a recipe, paste or import the request, create and

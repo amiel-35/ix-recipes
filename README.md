@@ -44,16 +44,16 @@
 
 ix-recipes does the groundwork of consulting, HR, legal, finance and product jobs with Claude: answering a call for tenders, turning a vague client request into a brief, writing a job description, reviewing a contract… The bigger jobs are **recipes**: a series of steps you follow in a page on your computer, which stops whenever your judgement is needed.
 
-**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.7.0**:
+**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.8.0**:
 
 ```text
-Install ix-recipes (version 2.7.0 or later) on this computer and open its tracking page so I can try it
+Install ix-recipes (version 2.8.0 or later) on this computer and open its tracking page so I can try it
 (https://github.com/amiel-35/ix-recipes). Do everything yourself, without asking me to restart:
 1. Add the amiel-35/plugins marketplace (if that fails for lack of a GitHub SSH key, use
    https://github.com/amiel-35/plugins.git), then install ix-skills@amiel-35 and
    ix-recipes@amiel-35. If they are already installed, update them; if they come from another
    marketplace, keep that one and create no duplicate. Check the installed ix-recipes version:
-   if it is older than 2.7.0, update the marketplace and the plugin.
+   if it is older than 2.8.0, update the marketplace and the plugin.
 2. Check python3 (3.9 or later); if it is missing, tell me what to install and stop.
 3. Start, in the background, the script skills/suivi-parcours/scripts/interface.py of the
    installed ix-recipes plugin (under ~/.claude/plugins/cache/, the latest version); it opens
@@ -733,9 +733,10 @@ python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours       
 
 ### Your own recipes
 
-The page also makes recipes, outside the repository, under **Recipes**:
+Under **Recipes**, the page shows the supplied recipes and yours, each as cards (or as a standard flowchart, one click away; click a step for its mission, inputs and outputs); a supplied recipe can be launched, or copied to make your own version. It also makes recipes, outside the repository:
 
-1. **New recipe**: describe the recurring job (what comes in, what must come out, who reads it). One fresh engine call plays `concepteur-recette` over the **real catalogue** of ix-skills and ix-recipes (the current versions installed), with your need and nothing else. When it concludes that one skill or a manual sequence is enough, the page says so and shows its answer; *Design a recipe anyway* asks again, or start from the blank model.
+1. **Build it yourself in blocks**, Scratch-style: pick skills from a palette of the real catalogue, drop them into the chain, set the stops and the optional steps; *Write the recipe* produces the file at no cost. Or:
+1. **New recipe**: describe the recurring job (what comes in, what must come out, who reads it). One fresh engine call plays `concepteur-recette` over the **real catalogue** of ix-skills and ix-recipes (the current versions installed), with your need and nothing else. It first returns a **proposal**: the chain of steps, shown step by step, that you comment on (per step or overall) and send back for revision as many times as needed; no file is written until you click *Validate the principle and write the recipe*. When it concludes that one skill or a manual sequence is enough, the page says so and shows its answer; *Design a recipe anyway* asks again, or start from the blank model.
 2. **Edit**: the steps and pauses in a readable view, and the recipe file in an editor. Every save is checked like `build.py` checks a recipe of the repository (same rules, in plain French), plus: every skill exists in the catalogue, the id is free.
 3. **Test**: play the draft on a real example in a **test dossier**, kept apart from your dossiers. The default `simulation` engine calls no model and costs nothing: each step names what it received and passes its fields on, so the chain, the context sheet and the pauses can be checked. A real run (Claude, Codex…) only when you pick it, after the page shows the steps and the cost ceiling. Test dossiers are deleted in one click.
 4. **Keep**: *Validate into my recueil* copies the recipe to `~/.ix-recipes/recettes/<id>.md` (the `recettes` folder next to the `parcours` folder of the dossiers; inside it when the dossier folder has another name, such as an older `~/Parcours`). It then appears in *New dossier* marked *Personal* (and in `parcours.py recipes`), and runs like the others. An id already used by the plugin or the catalogue is refused.

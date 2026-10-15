@@ -158,6 +158,16 @@ Un `~/Parcours/recettes` créé avant le passage à `~/.ix-recipes` n'est pas d�
 
 ### 9.3 Concevoir (`recettes.py design`)
 
+**En deux temps, ajouté le 2026-10-15 à la demande d'Amiel** (« montrer visuellement la recette pour permettre de la commenter ; si on valide le principe, on code ») :
+
+1. `design --mode propose` (défaut) : le concepteur rend son verdict et, si une recette se justifie, une **proposition** seulement — un bloc JSON (titre, résumé, rubriques de la fiche de contexte, étapes : id, nom, skill, rôle, entrées, ce qu'elle produit, pause, facultative) —, sans fichier. La page l'affiche comme un enchaînement d'étapes (onglet « Proposition »), avec un commentaire possible par étape et un commentaire sur l'ensemble (gardés dans le navigateur jusqu'à l'envoi). `proposition.json` ; les versions précédentes en `proposition.vN.json`.
+2. « Revoir avec mes commentaires » : `comments` enregistre `commentaires.json`, puis `design --mode revise` envoie la proposition précédente et les commentaires ; la nouvelle version garde `after_comments`, et les commentaires envoyés passent en `commentaires.vN.json`. Autant d'allers-retours qu'il faut, un appel chacun.
+3. « Valider le principe et écrire la recette » : `design --mode write` envoie la proposition validée et demande le fichier complet qui la suit exactement. Refusé tant que la proposition a un défaut que la recette aurait aussi (`proposal_problems` : skill hors du catalogue, entrée impossible, champ non produit plus haut, étape 1 sans `brief`, plus de 6 étapes). Après l'écriture, l'écart entre le fichier et la proposition (étapes, skills, pauses) est relevé (`drift`) et affiché au-dessus des onglets. Le fichier se retouche ensuite dans l'éditeur, comme avant.
+
+Relancer une proposition sur un brouillon qui a déjà son fichier le met de côté (`recipe.vN.md`) : on repart de la chaîne. « Partir du modèle » et « Modifier » (une recette du recueil) passent directement au fichier.
+
+Ce qui suit décrit l'appel lui-même, commun aux trois modes.
+
 Un appel moteur neuf, comme une étape : dossier jetable, message par l'entrée standard, `conception.in.md` écrit avant l'appel, coût compté. Le message contient le texte du skill `ix-recipes:concepteur-recette`, **le catalogue réel** (chaque skill résolu par l'exécuteur avec sa description : `IX_SKILLS_PATH`, dépôt voisin, cache du plugin — **version en cours seulement**, un skill qu'une ancienne version en cache garde encore n'est pas proposé ; ni `concepteur-recette`, ni `suivi-parcours`, ni `configuration-ix`), le modèle de recette comme référence de format, le besoin, et la consigne de sortie : la recette dans un bloc de code ouvert par quatre accents graves, puis un bloc `## VERDICT` (`recipe`, `single_skill`, `manual_sequence`, `catalogue_gap`). Modèle Opus par défaut (un jugement sur tout le travail : la règle de l'étape 1).
 
 - Le bloc dont le contenu commence par `---` devient `recipe.md` (l'ancien gardé en `.vN`) ; la réponse sans ce bloc devient l'« Avis du concepteur ».
@@ -197,6 +207,27 @@ Chaque enregistrement (`save --if-sha`) garde la version précédente et refuse 
 
 Ce qui échoue est dit en clair, sans rien laisser à moitié (la branche locale est retirée si la préparation échoue) : git absent (comment l'installer, ou envoyer le fichier au mainteneur), dépendances de build.py absentes (`pip install -r requirements.txt`, ou `IX_RECIPES_PYTHON`), identité git inconnue (les deux `git config`), envoi refusé (droits d'écriture : forker avec `gh repo fork … --remote`, la branche reste prête), réseau. git tourne sans invite (`GIT_TERMINAL_PROMPT=0`, ssh en `BatchMode`) : il échoue au lieu d'attendre un mot de passe que personne ne tape. Testé contre un dépôt nu jetable ; le chemin GitHub contre un faux `gh`.
 
+### 9.7 bis Organigramme, recettes fournies, copie (retours d'Amiel du 2026-10-15)
+
+- **Organigramme standard** (formes ISO 5807, de haut en bas) partout où une recette s'affiche — recette fournie, recette du recueil, brouillon, proposition : terminateurs Début / Fin, « Votre demande » en entrée (parallélogramme), chaque étape en processus prédéfini (un skill ; pointillés si facultative, trait épais pour la dernière), « Vous validez » en opération manuelle (trapèze), « Vous apportez les réponses » en entrée manuelle, les étapes facultatives derrière un losange de décision (Oui à droite, Non tout droit), le livrable en document. Dessiné par la page (SVG construit élément par élément, textes en `textContent`, aucune bibliothèque). Cliquer une étape affiche sa mission, ce qu'elle reçoit — les étapes d'où ça vient passent en vert — et ce qu'elle transmet ; dans une proposition, c'est là qu'on la commente (un point marque les étapes commentées). Le détail de toutes les étapes reste dépliable sous le schéma.
+- **Page Recettes en trois blocs** : « Recettes fournies » (celles du plugin, lues par `parcours.py recipes`), « Mes recettes » (le recueil, avec un état vide qui invite à copier ou créer) et « Brouillons ».
+- **Une recette fournie** (`#/recettes/f/<id>`, `recettes.py provided <id>`) : son organigramme, « Lancer un dossier » et « Copier pour modifier » (`recettes.py fork <id>`) : un brouillon avec le fichier de la recette sous un id libre (`<id>-perso`, puis `-perso-2`…), libellé « (ma version) », version 0.1.0 ; l'originale ne change pas. Dans le plugin, où seul `recipe.json` est livré, le fichier est reconstruit (`recipe.json` + corps du SKILL.md, `requires` déduit des étapes) : il est valide, et ce qui manque pour le dépôt (description_en, domain…) s'affiche comme d'habitude.
+- **Une recette du recueil** : « Nouveau dossier avec cette recette », « Modifier », comme avant.
+
+### 9.7 ter Cartes et construction en blocs (2026-10-15, « un système à la Scratch »)
+
+Après comparaison avec l'organigramme, Amiel retient les **cartes** comme vue principale (lisibles par un non-spécialiste, texte entier, natives en HTML) et l'organigramme normé comme vue secondaire (bouton « Cartes / Organigramme », mémorisé dans le navigateur). Les cartes reprennent ce que l'organigramme exprime : « Votre demande » en tête, chaque étape en carte (bordure violette pour ix-skills, verte pour ix-recipes), les arrêts en blocs ambrés entre deux cartes, les étapes facultatives dans un bloc en C « Si vous choisissez de les jouer », le livrable cerclé ; un clic ouvre la carte (mission, entrées — les cartes d'où elles viennent s'éclairent — et, dans une proposition, le commentaire).
+
+**Construire en blocs** (onglet « Blocs » d'un brouillon au stade de la proposition ; « Construire moi-même en blocs » sur Nouvelle recette ; « Retravailler en blocs » sur un brouillon qui a déjà son fichier) :
+
+- une **palette** : le catalogue réel (`recettes.py catalogue`, mêmes racines que la conception), rangé en « Raisonnement (ix-skills) » et « Métiers (ix-recipes) », avec recherche ; des blocs « Vous validez », « Réponses d'un tiers » et « Si vous choisissez… » à déposer sur une étape ;
+- on **clique** un skill (il s'ajoute à la fin, ou à l'endroit choisi par un « + ») ou on le **glisse** entre deux cartes ; une carte se déplace (glisser, ou flèches), se retire, se renomme, reçoit sa mission en une phrase, son arrêt, sa case « Facultative » (jamais la première) ; six étapes au plus ;
+- le **câblage des données est automatique** : l'étape 1 lit la demande, chaque suivante reçoit la fiche de contexte, tout ce qu'ont produit les étapes au-dessus d'elle, et les réponses du tiers après une pause « réponses ». En « Réglages avancés », on renomme les champs transmis et on décoche ce qu'une étape ne doit pas voir (elle passe alors en câblage manuel) ;
+- chaque changement est enregistré (`recettes.py proposal`, au fil de l'eau) et vérifié (`proposal_problems`) ;
+- **« Écrire la recette »** (`recettes.py write-file`) produit le fichier sans appel au modèle : en-tête qui suit exactement la chaîne (l'étape 1 produit la fiche et s'arrête toujours ; la dernière étape non facultative donne le livrable ; Opus pour l'étape 1, Sonnet ensuite), corps d'orchestration générique (§4 du format), missions reprises des phrases saisies. Le fichier passe la vérification de build.py (testé). « Faire écrire par le concepteur » reste possible : il rédige en plus les missions.
+
+Une proposition du concepteur se reprend aussi en blocs (« Modifier moi-même en blocs »). Une recette remise en blocs perd au réécrire ses retouches manuelles du corps : la page le dit avant.
+
 ### 9.8 Routes ajoutées
 
 | Méthode | Chemin | Effet |
@@ -204,7 +235,9 @@ Ce qui échoue est dit en clair, sans rien laisser à moitié (la branche locale
 | GET | `/api/recettes` | `recettes.py list` : recueil, brouillons, moteurs de conception |
 | POST | `/api/recettes/brouillons` | `{need, title?, engine?}` → brouillon + conception détachée ; `{template: true}` → brouillon depuis le modèle |
 | GET | `/api/recettes/brouillons/<b>` | `recettes.py show` (+ `essai_engines`) ; `…/log` : journal de la conception |
-| POST | `/api/recettes/brouillons/<b>/<action>` | `design {insist?, engine?}`, `stop`, `save {text, sha?}`, `template`, `promote {replace?}`, `delete`, `essai {text, title?, engine?}`, `essai-delete {slug}` |
+| POST | `/api/recettes/brouillons/<b>/<action>` | `proposal {proposal, replace_file?}`, `to-blocks`, `write-file`, `comments {comments}`, `design {mode?, comments?, insist?, engine?}`, `stop`, `save {text, sha?}`, `template`, `promote {replace?}`, `delete`, `essai {text, title?, engine?}`, `essai-delete {slug}` |
+| GET | `/api/recettes/fournies/<id>` | `recettes.py provided` ; POST `…/fork` : `recettes.py fork` |
+| GET | `/api/recettes/catalogue` | `recettes.py catalogue` : la palette des blocs |
 | GET | `/api/recettes/personnelles/<id>` | `recettes.py personal` |
 | POST | `/api/recettes/personnelles/<id>/<action>` | `edit`, `retire`, `contribute {step: prepare\|push\|cancel\|status, source?}` |
 | GET/POST | `/api/essais/<b>/parcours/…` | les routes des dossiers, sur les essais du brouillon (création par `…/essai` seulement ; action `delete` en plus) |

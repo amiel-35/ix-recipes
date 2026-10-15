@@ -44,16 +44,16 @@
 
 ix-recipes fait avec Claude le travail de fond des métiers du conseil, des RH, du juridique, de la finance et du produit : répondre à un appel d'offres, transformer une demande client floue en brief, écrire une fiche de poste, relire un contrat… Les plus gros travaux sont des **recettes** : une suite d'étapes que vous suivez dans une page sur votre ordinateur, qui s'arrête chaque fois qu'il faut votre avis.
 
-**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page. Prompt pour la version **2.7.0** :
+**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page. Prompt pour la version **2.8.0** :
 
 ```text
-Installe ix-recipes (version 2.7.0 ou plus récente) sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
+Installe ix-recipes (version 2.8.0 ou plus récente) sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
 (https://github.com/amiel-35/ix-recipes). Fais tout toi-même, sans me demander de redémarrer :
 1. Ajoute la marketplace amiel-35/plugins (si ça échoue faute de clé SSH GitHub, utilise
    https://github.com/amiel-35/plugins.git), puis installe ix-skills@amiel-35 et
    ix-recipes@amiel-35. S'ils sont déjà installés, mets-les à jour ; s'ils viennent d'une autre
    marketplace, garde celle-là et ne crée pas de doublon. Vérifie la version installée
-   d'ix-recipes : si elle est plus ancienne que 2.7.0, mets à jour la marketplace et le plugin.
+   d'ix-recipes : si elle est plus ancienne que 2.8.0, mets à jour la marketplace et le plugin.
 2. Vérifie python3 (3.9 ou plus) ; s'il manque, dis-moi quoi installer et arrête-toi.
 3. Lance en arrière-plan le script skills/suivi-parcours/scripts/interface.py du plugin
    ix-recipes installé (sous ~/.claude/plugins/cache/, la version la plus récente) ; il ouvre
@@ -733,9 +733,10 @@ python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours       
 
 ### Vos propres recettes
 
-La page fabrique aussi des recettes, hors du dépôt, sous **Recettes** :
+Sous **Recettes**, la page montre les recettes fournies et les vôtres, chacune en cartes (ou en organigramme standard, à un clic ; cliquer une étape pour sa mission, ses entrées et ses sorties) ; une recette fournie se lance, ou se copie pour en faire votre version. Elle fabrique aussi des recettes, hors du dépôt :
 
-1. **Nouvelle recette** : décrivez le travail qui revient (ce qui arrive, ce qui doit sortir, qui le lit). Un appel moteur neuf joue `concepteur-recette` sur le **catalogue réel** d'ix-skills et d'ix-recipes (les versions installées en cours), avec votre besoin et rien d'autre. S'il conclut qu'un skill seul ou un enchaînement manuel suffit, la page le dit et montre sa réponse ; « Concevoir quand même une recette » redemande, ou l'on part du modèle.
+1. **La construire vous-même en blocs**, à la manière de Scratch : des skills du catalogue réel pris dans une palette, posés dans la chaîne, les arrêts et les étapes facultatives réglés ; « Écrire la recette » produit le fichier sans rien dépenser. Ou bien :
+1. **Nouvelle recette** : décrivez le travail qui revient (ce qui arrive, ce qui doit sortir, qui le lit). Un appel moteur neuf joue `concepteur-recette` sur le **catalogue réel** d'ix-skills et d'ix-recipes (les versions installées en cours), avec votre besoin et rien d'autre. Il rend d'abord une **proposition** : l'enchaînement des étapes, affiché étape par étape, que vous commentez (par étape ou sur l'ensemble) et renvoyez en révision autant de fois qu'il faut ; aucun fichier n'est écrit avant « Valider le principe et écrire la recette ». S'il conclut qu'un skill seul ou un enchaînement manuel suffit, la page le dit et montre sa réponse ; « Concevoir quand même une recette » redemande, ou l'on part du modèle.
 2. **Modifier** : les étapes et les pauses dans une vue lisible, le fichier de la recette dans un éditeur. Chaque enregistrement est vérifié comme `build.py` vérifie une recette du dépôt (mêmes règles, en français), et en plus : chaque skill existe dans le catalogue, l'id est libre.
 3. **Tester** : jouer le brouillon sur un exemple réel dans un **dossier de test**, rangé à part de vos dossiers. Le moteur `simulation`, par défaut, n'appelle aucun modèle et ne coûte rien : chaque étape nomme ce qu'elle a reçu et transmet ses champs, de quoi vérifier l'enchaînement, la fiche de contexte et les pauses. Un essai réel (Claude, Codex…) seulement si vous le choisissez, après affichage des étapes et du plafond de coût. Les dossiers de test se suppriment d'un clic.
 4. **Garder** : « Valider dans mon recueil » copie la recette dans `~/.ix-recipes/recettes/<id>.md` (le dossier `recettes` à côté du dossier `parcours` des dossiers ; dedans quand le dossier des parcours porte un autre nom, comme un ancien `~/Parcours`). Elle apparaît alors dans « Nouveau dossier » avec la mention « Personnelle » (et dans `parcours.py recipes`), et se lance comme les autres. Un id déjà pris par le plugin ou le catalogue est refusé.

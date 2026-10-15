@@ -268,6 +268,10 @@ class RecipeCheckTests(tp.ParcoursTestCase):
         text = recettes.TEMPLATE.replace("cadrage.open_points]", "cadrage.open_points, livrable.deliverable]")
         errors = self.check(text)["errors"]
         self.assertTrue(any("'livrable.deliverable' n'est transmis par aucune étape antérieure" in e for e in errors), errors)
+        text = recettes.TEMPLATE.replace("receives: [brief]", "receives: [meeting_reports]")
+        errors = self.check(text)["errors"]
+        self.assertTrue(any("« meeting_reports » n'est pas une entrée possible" in e and "remplacez sans doute « meeting_reports » par brief" in e
+                            for e in errors), errors)
         text = recettes.TEMPLATE.replace("    - id: livrable", "    - id: Livrable_Final")
         errors = self.check(text)["errors"]
         self.assertTrue(any("minuscules sans accents, chiffres, tirets et soulignés" in e for e in errors), errors)
@@ -517,42 +521,142 @@ class DraftTests(RecettesTestCase):
         self.assertFalse(self.draft_path(slug).exists())
 
 
+PROPOSAL = {
+    "title": "Ouverture de poste", "summary": "D'un mail de manager à un brief.",
+    "context_sheet": ["Objectif", "Contraintes"],
+    "steps": [
+        {"id": "cadrage", "label": "Cadrage", "skill": "ix-skills:cadrage", "role": "Clarifie le besoin.",
+         "receives": ["brief"], "produces": ["need", "constraints", "open_points"], "pause": "validate"},
+        {"id": "livrable", "label": "Livrable", "skill": "ix-skills:brief", "role": "Écrit le brief.",
+         "receives": ["context_sheet", "cadrage.need"], "produces": ["deliverable"], "pause": "none"},
+    ],
+}
+
+
+def proposal_output(proposal=PROPOSAL, verdict="recipe"):
+    return (f"## A. Verdict\n\nUne chaîne se justifie.\n\n```json\n{json.dumps(proposal, ensure_ascii=False, indent=1)}\n```\n\n"
+            f"## Rationale\n\nLe cadrage d'abord.\n\n## VERDICT\n{verdict}\n")
+
+
+WRITTEN = "Voici le fichier.\n\n````markdown\n{recipe}````\n\n## VERDICT\nrecipe\n"
+
+
 class DesignTests(RecettesTestCase):
     def design(self, slug, output, *extra):
         (self.fake / "concepteur-recette.md").write_text(output, encoding="utf-8")
         return self.rok("design", slug, "--engine", "fake", *extra)
 
-    def test_the_designer_gets_the_skill_the_real_catalogue_and_the_need_and_nothing_else(self):
+    def received(self):
+        return (self.fake / "received" / "concepteur-recette.md").read_text(encoding="utf-8")
+
+    def comments(self, slug, data):
+        path = self.tmp / "commentaires.json"
+        path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        return self.rcli("comments", slug, "--file", str(path), "--json")
+
+    def test_the_designer_first_proposes_a_chain_from_the_real_catalogue_and_writes_no_file(self):
         slug = self.draft_with()
-        result = self.design(slug, DESIGN_OUTPUT.format(recipe=recettes.TEMPLATE))
-        self.assertEqual(result["verdict"], "recipe")
-        self.assertTrue(result["has_recipe"])
-        self.assertEqual(result["errors"], [])
-        message = (self.fake / "received" / "concepteur-recette.md").read_text(encoding="utf-8")
+        result = self.design(slug, proposal_output())
+        self.assertEqual((result["mode"], result["verdict"], result["has_recipe"], result["proposal_steps"]), ("propose", "recipe", False, 2))
+        message = self.received()
         self.assertIn("STUB-METHOD-concepteur-recette", message)
         self.assertIn("- `ix-skills:cadrage` — stub", message)
         self.assertIn("- `ix-recipes:analyse-cdc` — stub", message)
         self.assertNotIn("`ix-recipes:concepteur-recette`", message)   # a tool, not a step
         self.assertIn("besoin de recrutement flou", message)
+        self.assertIn("DO NOT write the recipe file", message)
+        self.assertIn("step 1 receives `[brief]`, never names of documents", message)
         self.assertIn("## VERDICT", message)
         self.assertEqual(message, (self.draft_path(slug) / "conception.in.md").read_text(encoding="utf-8"))
-        self.assertEqual((self.draft_path(slug) / "recipe.md").read_text(encoding="utf-8"), recettes.TEMPLATE)
+        self.assertFalse((self.draft_path(slug) / "recipe.md").exists())
         shown = self.rok("show", slug)
-        self.assertEqual(shown["verdict"], "recipe")
+        self.assertEqual(shown["stage"], "proposal")
+        self.assertEqual([s["id"] for s in shown["proposal"]["steps"]], ["cadrage", "livrable"])
+        self.assertEqual((shown["proposal"]["version"], shown["proposal"]["validated"], shown["proposal"]["problems"]), (1, False, []))
         self.assertIn("Le cadrage d'abord", shown["concept"])
-        self.assertNotIn("workflow:", shown["concept"])   # the file is in the editor, not repeated in the answer
-        self.assertEqual(shown["design"]["engine"], "fake")
-        self.assertEqual(shown["design"]["model"], "opus")
+        self.assertIn("onglet « Proposition »", shown["concept"])
+        self.assertNotIn('"steps"', shown["concept"])   # the proposal is shown as steps, not as JSON
+        self.assertEqual((shown["design"]["engine"], shown["design"]["model"]), ("fake", "opus"))
+        self.assertEqual(self.rok("list")["drafts"][0]["stage"], "proposal")
 
-    def test_a_single_skill_verdict_writes_no_recipe_and_insisting_asks_again(self):
+    def test_comments_go_with_the_revision_and_are_kept(self):
+        slug = self.draft_with()
+        self.design(slug, proposal_output())
+        self.assertIn("aucun commentaire", self.rfail("design", slug, "--mode", "revise", "--engine", "fake")["message"])
+        code, out, _ = self.comments(slug, {"steps": {"absente": "x"}})
+        self.assertEqual(code, 1)
+        self.assertIn("absentes de la proposition", out)
+        code, _, _ = self.comments(slug, {"general": "Ajoute une pause pour les réponses du manager",
+                                          "steps": {"livrable": "Plus court", "cadrage": "  "}})
+        self.assertEqual(code, 0)
+        self.assertEqual(self.rok("show", slug)["comments"], {"general": "Ajoute une pause pour les réponses du manager",
+                                                             "steps": {"livrable": "Plus court"}})
+        revised = dict(PROPOSAL, steps=[dict(PROPOSAL["steps"][0], pause="answers"), PROPOSAL["steps"][1]])
+        result = self.design(slug, proposal_output(revised), "--mode", "revise")
+        self.assertEqual(result["mode"], "revise")
+        message = self.received()
+        self.assertIn("=== YOUR PREVIOUS PROPOSAL ===", message)
+        self.assertIn("On the whole chain: Ajoute une pause pour les réponses du manager", message)
+        self.assertIn("On step `livrable`: Plus court", message)
+        shown = self.rok("show", slug)
+        self.assertEqual(shown["proposal"]["version"], 2)
+        self.assertEqual(shown["proposal"]["steps"][0]["pause"], "answers")
+        self.assertEqual(shown["proposal"]["after_comments"]["steps"], {"livrable": "Plus court"})
+        self.assertEqual(shown["comments"], {"general": "", "steps": {}})   # sent, so cleared
+        self.assertTrue((self.draft_path(slug) / "commentaires.v1.json").is_file())
+        self.assertTrue((self.draft_path(slug) / "proposition.v1.json").is_file())
+
+    def test_writing_follows_the_validated_proposal(self):
+        slug = self.draft_with()
+        self.assertIn("aucune proposition", self.rfail("design", slug, "--mode", "write", "--engine", "fake")["message"])
+        self.design(slug, proposal_output())
+        result = self.design(slug, WRITTEN.format(recipe=recettes.TEMPLATE), "--mode", "write")
+        self.assertEqual((result["mode"], result["has_recipe"], result["errors"], result["drift"]), ("write", True, [], []))
+        message = self.received()
+        self.assertIn("=== THE PROPOSAL THE USER VALIDATED ===", message)
+        self.assertIn('"skill": "ix-skills:brief"', message)
+        self.assertNotIn("THE USER'S COMMENTS", message)
+        shown = self.rok("show", slug)
+        self.assertEqual(shown["stage"], "recipe")
+        self.assertTrue(shown["proposal"]["validated"])
+        self.assertEqual(shown["text"], recettes.TEMPLATE)
+        self.assertIn("onglet « Fichier de la recette »", shown["concept"])
+        # a file that departs from the proposal says so
+        other = recettes.TEMPLATE.replace("pause: validate", "pause: answers")
+        result = self.design(slug, WRITTEN.format(recipe=other), "--mode", "write")
+        self.assertEqual(result["drift"], ["« Cadrage » : pause answers au lieu de validate"])
+        self.assertTrue((self.draft_path(slug) / "recipe.v1.md").is_file())
+        # a new proposal puts the file aside: one starts again from the chain
+        self.design(slug, proposal_output())
+        shown = self.rok("show", slug)
+        self.assertEqual((shown["stage"], shown["proposal"]["version"]), ("proposal", 2))
+        self.assertTrue((self.draft_path(slug) / "recipe.v2.md").is_file())
+
+    def test_a_proposal_that_cannot_become_a_recipe_is_not_written(self):
+        slug = self.draft_with()
+        bad = dict(PROPOSAL, steps=[dict(PROPOSAL["steps"][0], receives=["meeting_reports"]),
+                                    dict(PROPOSAL["steps"][1], skill="ix-skills:invented", receives=["cadrage.absent"])])
+        self.design(slug, proposal_output(bad))
+        problems = self.rok("show", slug)["proposal"]["problems"]
+        self.assertEqual(problems, [
+            "« Cadrage » : « meeting_reports » n'est pas une entrée possible (la première étape reçoit brief)",
+            "« Livrable » : le skill « ix-skills:invented » n'existe pas dans le catalogue",
+            "« Livrable » : « cadrage.absent » n'est produit par aucune étape antérieure",
+            "la première étape doit recevoir brief (la demande brute)"])
+        refused = self.rfail("design", slug, "--mode", "write", "--engine", "fake")
+        self.assertIn("Demandez une révision", refused["message"])
+        self.assertFalse((self.draft_path(slug) / "recipe.md").exists())
+
+    def test_a_single_skill_verdict_writes_nothing_and_insisting_asks_again(self):
         slug = self.draft_with()
         result = self.design(slug, SINGLE_SKILL_OUTPUT)
-        self.assertEqual((result["verdict"], result["has_recipe"]), ("single_skill", False))
-        self.assertFalse((self.draft_path(slug) / "recipe.md").exists())
-        self.assertIn("Un skill seul suffit", self.rok("show", slug)["concept"])
-        result = self.design(slug, DESIGN_OUTPUT.format(recipe=recettes.TEMPLATE), "--insist")
-        self.assertEqual(result["verdict"], "recipe")
-        message = (self.fake / "received" / "concepteur-recette.md").read_text(encoding="utf-8")
+        self.assertEqual((result["verdict"], result["has_recipe"], result["proposal_steps"]), ("single_skill", False, 0))
+        shown = self.rok("show", slug)
+        self.assertEqual((shown["stage"], shown["proposal"]), ("start", None))
+        self.assertIn("Un skill seul suffit", shown["concept"])
+        result = self.design(slug, proposal_output(), "--insist")
+        self.assertEqual((result["verdict"], result["proposal_steps"]), ("recipe", 2))
+        message = self.received()
         self.assertIn("THE USER INSISTS", message)
         self.assertIn("Un skill seul suffit", message)   # the previous answer, for reference
         self.assertTrue((self.draft_path(slug) / "conception.v1.md").is_file())
@@ -563,6 +667,8 @@ class DesignTests(RecettesTestCase):
         self.assertEqual(code, 1)
         self.assertEqual(json.loads(out.strip().splitlines()[-1])["error"], "engine")
         self.assertIn("n'existe pas", self.rok("show", slug)["design"]["error"])
+        unreadable = self.design(slug, "Une recette se justifie.\n\n## VERDICT\nrecipe\n")
+        self.assertIn("pas rendu de proposition lisible", unreadable["error"])
         with self.assertRaises(SystemExit):
             with contextlib.redirect_stderr(io.StringIO()):
                 recettes.main(["design", slug, "--engine", "simulation", "--parcours-dir", str(self.pdir)])
@@ -579,6 +685,127 @@ class DesignTests(RecettesTestCase):
         self.assertIn("```text\ninner\n```", recipe)
         self.assertEqual(recettes.parse_design("Use `ix-skills:brief`.\n\n## VERDICT\nmanual_sequence\n")[:2], ("manual_sequence", None))
         self.assertEqual(recettes.parse_design("No block, no verdict")[:2], (None, None))
+        lenient = '```\n{"steps": [{"id": "Étape Un", "skill": "ix-skills:cadrage", "receives": "brief", "pause": "later",},],}\n```'
+        step = recettes.proposal_block(lenient)[2]["steps"][0]
+        self.assertEqual((step["id"], step["receives"], step["pause"], step["optional"]), ("etape-un", ["brief"], "none", False))
+
+
+class ProvidedRecipeTests(RecettesTestCase):
+    def test_a_provided_recipe_is_read_and_copied_under_a_free_id(self):
+        shown = self.rok("provided", "brief-client")
+        steps = shown["recipe"]["steps"]
+        self.assertEqual([s["id"] for s in steps], ["cadrage", "questioning", "explorer", "decision", "brief"])
+        self.assertTrue(steps[0]["produces_context_sheet"])
+        self.assertEqual([s["optional"] for s in steps], [False, False, True, True, False])
+        self.assertEqual(self.rfail("provided", "absente")["error"], "not_found")
+        self.assertEqual(self.rfail("provided", "Bad_Id")["error"], "error")
+        first = self.rok("fork", "brief-client")
+        self.assertEqual((first["id"], first["forked_from"]), ("brief-client-perso", "brief-client"))
+        draft = self.rok("show", first["slug"])
+        self.assertEqual(draft["check"]["errors"], [])
+        self.assertEqual(draft["recipe_label"], "Brief client (ma version)")
+        self.assertIn("version: 0.1.0", draft["text"])
+        self.assertEqual(self.rok("fork", "brief-client")["id"], "brief-client-perso-2")   # the first copy holds the id
+        self.assertIn("Brief client", (parcours.ROOT / "skills" / "brief-client.md").read_text(encoding="utf-8"))   # untouched
+
+    def test_in_the_plugin_the_file_is_rebuilt_from_recipe_json(self):
+        folder = self.tmp / "plugin" / "skills"
+        (folder / "suivi-parcours").mkdir(parents=True)
+        (folder / "suivi-parcours" / "SKILL.md").write_text("---\nname: suivi-parcours\n---\n", encoding="utf-8")
+        fm, body = parcours.parse_recipe_text((REPO / "skills" / "brief-client.md").read_text(encoding="utf-8"))
+        (folder / "brief-client").mkdir()
+        (folder / "brief-client" / "recipe.json").write_text(json.dumps(
+            {k: fm[k] for k in ("id", "label", "version", "summary_fr", "description_fr", "icon", "workflow")}), encoding="utf-8")
+        (folder / "brief-client" / "SKILL.md").write_text("---\nname: brief-client\ndescription: x\n---\n" + body, encoding="utf-8")
+        with mock.patch.object(parcours, "ROOT", folder / "suivi-parcours"):
+            text = recettes.provided_text("brief-client")
+        rebuilt, rebuilt_body = parcours.parse_recipe_text(text)
+        self.assertEqual(rebuilt["workflow"], fm["workflow"])
+        self.assertEqual(rebuilt["requires"], ["ix-skills:cadrage", "ix-skills:questioning", "ix-skills:explorer",
+                                               "ix-skills:decision", "ix-skills:brief"])
+        self.assertEqual(rebuilt["description_fr"], fm["description_fr"])
+        self.assertEqual(parcours.workflow_errors(rebuilt, rebuilt_body, lambda ref: True), [])
+
+
+BUILT = {"title": "Bilan mensuel", "summary": "Des CR au tableau de bord.", "context_sheet": ["Période", "Projets", "Période"],
+         "steps": [
+             {"id": "synthese", "label": "Synthèse", "skill": "ix-skills:cadrage", "role": "Condense les CR.",
+              "receives": ["brief"], "produces": ["resultat"], "pause": "none"},
+             {"id": "questions", "label": "Questions", "skill": "ix-skills:questioning", "receives": ["context_sheet", "synthese.resultat"],
+              "produces": ["resultat"], "pause": "answers"},
+             {"id": "pistes", "label": "Pistes", "skill": "ix-skills:explorer", "optional": True,
+              "receives": ["context_sheet", "synthese.resultat", "questions.resultat", "answers"], "produces": ["resultat"]},
+             {"id": "tableau", "label": "Tableau de bord", "skill": "ix-skills:brief",
+              "receives": ["context_sheet", "synthese.resultat", "questions.resultat", "answers", "pistes.resultat"], "produces": ["resultat"]}]}
+
+
+class BlocksTests(RecettesTestCase):
+    def save_proposal(self, slug, data, *extra):
+        path = self.tmp / "proposition.json"
+        path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        return self.rcli("proposal", slug, "--file", str(path), "--json", *extra)
+
+    def test_from_blocks_to_a_valid_recipe_without_any_call(self):
+        slug = self.rok("draft-new", "--blocks", "--title", "Bilan mensuel")["slug"]
+        shown = self.rok("show", slug)
+        self.assertEqual((shown["stage"], shown["proposal"]["source"], shown["proposal"]["steps"]), ("proposal", "blocks", []))
+        self.assertIn("aucune proposition à écrire", self.rfail("write-file", slug)["message"])
+        code, out, _ = self.save_proposal(slug, BUILT)
+        self.assertEqual(code, 0, out)
+        saved = json.loads(out.strip().splitlines()[-1])
+        self.assertEqual(saved["problems"], [])
+        self.assertTrue(all(s["auto"] for s in saved["steps"]))
+        written = self.rok("write-file", slug)
+        self.assertEqual((written["id"], written["errors"]), ("bilan-mensuel", []))
+        shown = self.rok("show", slug)
+        self.assertEqual(shown["stage"], "recipe")
+        fm, body = parcours.parse_recipe_text(shown["text"])
+        steps = fm["workflow"]["steps"]
+        self.assertEqual([s["pause"] for s in steps], ["validate", "answers", "none", "none"])   # step 1 always stops
+        self.assertTrue(steps[0]["produces_context_sheet"])
+        self.assertTrue(steps[2]["optional"])
+        self.assertEqual(steps[3]["output_field"], "resultat")
+        self.assertEqual(fm["workflow"]["context_sheet"], ["periode", "projets", "periode_2"])
+        self.assertEqual(fm["workflow"]["context_labels"]["periode"], "Période")
+        self.assertEqual(steps[1]["mission"], "Apply the skill to the case, within the step « Questions ».")
+        if yaml:   # the same file passes build.py's own check
+            build = import_build()
+            with mock.patch.object(build, "_skill_exists", lambda ref: True):
+                self.assertEqual(build.validate_workflow(yaml.safe_load(shown["text"].split("---")[1]), body), [])
+        # the recipe is then tested like any draft: the simulation runs it to the end
+        essais = self.draft_path(slug) / parcours.ESSAIS_DIR
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(parcours.main(["new", "bilan-mensuel", "--input", str(self.input_file), "--engine", "simulation",
+                                            "--parcours-dir", str(essais), "--slug", "essai", "--json"]), 0)
+            for command in (["next", "essai", "--yes"], ["validate", "essai"], ["next", "essai", "--yes"],
+                            ["answer", "essai", "--none"], ["next", "essai", "--yes"], ["choose", "essai", "--run", "pistes"],
+                            ["next", "essai", "--yes"]):
+                self.assertEqual(parcours.main(command + ["--parcours-dir", str(essais)]), 0, command)
+        self.assertEqual(json.loads((essais / "essai" / "state.json").read_text())["status"], "completed")
+
+    def test_a_file_goes_back_to_blocks_and_blocks_do_not_overwrite_a_file_silently(self):
+        slug = self.draft_with(recettes.TEMPLATE)
+        code, out, _ = self.save_proposal(slug, BUILT)
+        self.assertEqual(json.loads(out.strip().splitlines()[-1])["error"], "exists")
+        back = self.rok("to-blocks", slug)
+        self.assertEqual([s["skill"] for s in back["steps"]], ["ix-skills:cadrage", "ix-skills:brief"])
+        self.assertEqual(back["recipe_id"], "ma-recette")
+        self.assertEqual(back["context_sheet"], ["Objectif", "Contraintes", "Destinataire", "Échéances"])
+        self.assertFalse(any(s["auto"] for s in back["steps"]))   # the file's own wiring is kept
+        self.assertTrue((self.draft_path(slug) / "recipe.v1.md").is_file())
+        self.assertEqual(self.rok("write-file", slug)["id"], "ma-recette")   # the recipe keeps its id
+        code, _, _ = self.save_proposal(slug, BUILT, "--replace-file")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.rok("show", slug)["stage"], "proposal")
+
+    def test_the_palette_is_the_catalogue(self):
+        skills = self.rok("catalogue")["skills"]
+        refs = [s["ref"] for s in skills]
+        self.assertIn("ix-skills:cadrage", refs)
+        self.assertIn("ix-recipes:analyse-cdc", refs)
+        self.assertNotIn("ix-recipes:concepteur-recette", refs)
+        self.assertNotIn("path", skills[0])
 
 
 class RecueilCommandTests(RecettesTestCase):

@@ -58,7 +58,9 @@ TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,}$")
 FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
 REAL_ENGINES = ("claude", "codex", "agy", "vibe")
 ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun", "archive", "delete")
-DRAFT_ACTIONS = ("design", "stop", "save", "template", "promote", "delete", "essai", "essai-delete")
+DRAFT_ACTIONS = ("design", "comments", "stop", "save", "template", "promote", "delete", "essai", "essai-delete",
+                 "proposal", "to-blocks", "write-file")
+DESIGN_MODES = ("propose", "revise", "write")
 PERSONAL_ACTIONS = ("edit", "retire", "contribute")
 CONTRIBUTE_STEPS = ("prepare", "push", "cancel", "status")
 RECIPE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,59}$")
@@ -531,8 +533,22 @@ class App(Space):
 
     def recipe_book(self):
         data = self.recettes("list")
-        data.update(design_engines=self.design_engines, dev=self.dev)
+        provided = [r for r in self.recipes()["recipes"] if not r.get("personal")]
+        data.update(design_engines=self.design_engines, dev=self.dev, provided=provided)
         return data
+
+    def skills_catalogue(self):
+        return self.recettes("catalogue")
+
+    def provided(self, recipe_id):
+        if not RECIPE_ID_RE.match(recipe_id or ""):
+            raise ApiError(400, "bad_slug", "identifiant de recette invalide")
+        return self.recettes("provided", positionals=[recipe_id])
+
+    def fork(self, recipe_id):
+        if not RECIPE_ID_RE.match(recipe_id or ""):
+            raise ApiError(400, "bad_slug", "identifiant de recette invalide")
+        return dict(self.recettes("fork", positionals=[recipe_id]), ok=True)
 
     def draft(self, draft):
         directory = self.draft_dir(draft)
@@ -555,8 +571,8 @@ class App(Space):
 
     def create_draft(self, body):
         need, title = body.get("need") or "", body.get("title") or ""
-        template = body.get("template") is True
-        if not isinstance(need, str) or (not template and not need.strip()):
+        template, blocks = body.get("template") is True, body.get("blocks") is True
+        if not isinstance(need, str) or (not template and not blocks and not need.strip()):
             raise ApiError(400, "bad_request", "décrivez le besoin : le travail récurrent, ce qui entre, ce qui doit sortir")
         if not isinstance(title, str) or len(title) > MAX_TITLE:
             raise ApiError(400, "bad_request", f"titre invalide ({MAX_TITLE} caractères au plus)")
@@ -566,10 +582,12 @@ class App(Space):
         flags = ["--input", "-"] if need.strip() else []
         if template:
             flags.append("--template")
+        if blocks:
+            flags.append("--blocks")
         if title.strip():
             flags.append(f"--title={title.strip()}")
         data = self.recettes("draft-new", flags, input_text=need if need.strip() else None)
-        if not template:
+        if not template and not blocks:
             data["design"] = self.launch_design(data["slug"], {"engine": engine})
         return data
 
@@ -579,7 +597,10 @@ class App(Space):
         engine = body.get("engine") or "claude"
         if engine not in self.design_engines:
             raise ApiError(400, "bad_engine", f"moteur non proposé : {engine!r}")
-        flags = ["--engine", engine] + (["--insist"] if body.get("insist") is True else [])
+        mode = body.get("mode") or "propose"
+        if mode not in DESIGN_MODES:
+            raise ApiError(400, "bad_request", f"mode de conception inconnu : {mode!r}")
+        flags = ["--engine", engine, "--mode", mode] + (["--insist"] if body.get("insist") is True else [])
         with self.slug_lock("draft:" + draft):
             previous = self.designs.get(draft)
             if (previous and previous.poll() is None) or parcours.is_locked(directory):
@@ -602,10 +623,26 @@ class App(Space):
             interpret(code, log_text, log_text[-300:])
         return {"started": True, "finished": True}
 
+    def save_comments(self, draft, comments):
+        """The user's comments on the proposal: {"general": text, "steps": {step id: text}}."""
+        steps = comments.get("steps") if isinstance(comments, dict) else None
+        if not isinstance(comments, dict) or not isinstance(comments.get("general", ""), str) \
+                or not isinstance(steps or {}, dict) or len(steps or {}) > 50 \
+                or any(not isinstance(k, str) or not STEP_RE.match(k) or not isinstance(v, str) for k, v in (steps or {}).items()) \
+                or len(json.dumps(comments)) > 100_000:
+            raise ApiError(400, "bad_request", "commentaires invalides")
+        with tempfile.TemporaryDirectory(prefix="parcours-ui-") as tmp:
+            path = write_private(tmp, "commentaires.json", json.dumps(comments, ensure_ascii=False))
+            return self.recettes("comments", ["--file", path], [draft])
+
     def draft_act(self, draft, action, body):
         directory = self.draft_dir(draft)
         if action == "design":
+            if body.get("comments") is not None:   # recorded first: the detached call reads them from the draft
+                self.save_comments(draft, body["comments"])
             return dict(self.launch_design(draft, body), ok=True)
+        if action == "comments":
+            return dict(self.save_comments(draft, body.get("comments")), ok=True)
         if action == "stop":
             if not parcours.is_locked(directory):
                 raise ApiError(409, "not_running", "aucune conception en cours sur ce brouillon")
@@ -625,6 +662,18 @@ class App(Space):
             with tempfile.TemporaryDirectory(prefix="parcours-ui-") as tmp:
                 flags = ["--file", write_private(tmp, "recette.md", text)] + ([f"--if-sha={sha}"] if sha else [])
                 return dict(self.recettes("save", flags, [draft]), ok=True)
+        if action == "proposal":
+            proposal = body.get("proposal")
+            if not isinstance(proposal, dict) or not isinstance(proposal.get("steps", []), list) \
+                    or len(proposal.get("steps", [])) > 20 or len(json.dumps(proposal)) > 200_000:
+                raise ApiError(400, "bad_request", "proposition invalide")
+            with tempfile.TemporaryDirectory(prefix="parcours-ui-") as tmp:
+                flags = ["--file", write_private(tmp, "proposition.json", json.dumps(proposal, ensure_ascii=False))]
+                if body.get("replace_file") is True:
+                    flags.append("--replace-file")
+                return dict(self.recettes("proposal", flags, [draft]), ok=True)
+        if action in ("to-blocks", "write-file"):
+            return dict(self.recettes(action, positionals=[draft]), ok=True)
         if action == "template":
             return dict(self.recettes("template", positionals=[draft]), ok=True)
         if action == "promote":
@@ -892,6 +941,17 @@ class Handler(BaseHTTPRequestHandler):
             if len(rest) == 1 and rest[0] in DRAFT_ACTIONS:
                 self.only(method, "POST")
                 return self.send_json(200, app.draft_act(draft, rest[0], self.read_json_body()))
+        if parts == ["catalogue"]:
+            self.only(method, "GET")
+            return self.send_json(200, app.skills_catalogue())
+        if parts[0] == "fournies" and len(parts) in (2, 3):
+            if len(parts) == 2:
+                self.only(method, "GET")
+                return self.send_json(200, app.provided(parts[1]))
+            if parts[2] == "fork":
+                self.only(method, "POST")
+                self.read_json_body()
+                return self.send_json(200, app.fork(parts[1]))
         if parts[0] == "personnelles" and len(parts) >= 2:
             recipe_id, rest = parts[1], parts[2:]
             if not rest:

@@ -11,7 +11,7 @@
   --ink: #1e1d1b; --ink-2: #5d5b55; --ink-3: #8d8b84; --line: rgba(30, 29, 27, .10); --line-2: rgba(30, 29, 27, .18);
   --primary: #1e1d1b; --primary-hover: #3a3936; --on-primary: #ffffff; --accent: #2f5bd3;
   --ok: #2f7d4f; --ok-bg: #e9f3ec; --warn: #855700; --warn-bg: #fbf1dc; --bad: #b23a2e; --bad-bg: #fbe9e6; --run: #2f5bd3; --run-bg: #eaf0fc;
-  --code-bg: #f1f0eb; --shadow: 0 1px 2px rgba(30, 29, 27, .06), 0 8px 24px rgba(30, 29, 27, .06);
+  --warn-dot: #d99a1e; --code-bg: #f1f0eb; --shadow: 0 1px 2px rgba(30, 29, 27, .06), 0 8px 24px rgba(30, 29, 27, .06);
   --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", sans-serif;
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, "Book Antiqua", Georgia, serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -23,7 +23,7 @@
     --ink: #ecebe5; --ink-2: #b3b0a8; --ink-3: #85837c; --line: rgba(255, 255, 255, .09); --line-2: rgba(255, 255, 255, .17);
     --primary: #ecebe5; --primary-hover: #ffffff; --on-primary: #191917; --accent: #8fb0ff;
     --ok: #7bcb99; --ok-bg: #1d3125; --warn: #e6b65c; --warn-bg: #362b15; --bad: #f09186; --bad-bg: #3b201c; --run: #8fb0ff; --run-bg: #1f2a44;
-    --code-bg: #2a2a27; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+    --warn-dot: #e2a93a; --code-bg: #2a2a27; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
   }
 }
 * { box-sizing: border-box; }
@@ -80,11 +80,11 @@ a.card:hover { border-color: var(--line-2); box-shadow: var(--shadow); }
 .card .sub { color: var(--ink-3); font-size: 13px; }
 .card .state { display: flex; align-items: center; gap: 7px; margin: 14px 0 10px; font-size: 13.5px; color: var(--ink-2); }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
-.dot.warn { background: #d99a1e; } .dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); } .dot.run { background: var(--run); animation: pulse 1.4s ease-in-out infinite; }
+.dot.warn { background: var(--warn-dot); } .dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); } .dot.run { background: var(--run); animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .35; } }
 .progress { display: flex; gap: 3px; }
 .progress i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
-.progress i.done { background: var(--ok); } .progress i.now { background: #d99a1e; } .progress i.run { background: var(--run); } .progress i.bad { background: var(--bad); } .progress i.skip { background: var(--line); opacity: .5; }
+.progress i.done { background: var(--ok); } .progress i.now { background: var(--warn-dot); } .progress i.run { background: var(--run); } .progress i.bad { background: var(--bad); } .progress i.skip { background: var(--line); opacity: .5; }
 .card .foot { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12.5px; color: var(--ink-3); }
 .empty { text-align: center; padding: 56px 20px; background: var(--surface); border: 1px dashed var(--line-2); border-radius: var(--r-lg); }
 .empty h2 { margin: 0 0 6px; font-size: 19px; }
@@ -130,7 +130,7 @@ nav.rail .st.warn { color: var(--warn); } nav.rail .st.bad { color: var(--bad); 
 nav.rail li.skipped .nm { text-decoration: line-through; color: var(--ink-3); }
 nav.rail .sep { height: 1px; background: var(--line); margin: 8px 10px; }
 .ic svg { width: 18px; height: 18px; }
-.c-ok { color: var(--ok); } .c-warn { color: #d99a1e; } .c-bad { color: var(--bad); } .c-run { color: var(--run); } .c-mute { color: var(--ink-3); }
+.c-ok { color: var(--ok); } .c-warn { color: var(--warn-dot); } .c-bad { color: var(--bad); } .c-run { color: var(--run); } .c-mute { color: var(--ink-3); }
 
 .action { border-radius: var(--r-lg); padding: 16px 18px; margin: 0 0 18px; border: 1px solid var(--line); background: var(--surface); }
 .action.warn { background: var(--warn-bg); border-color: transparent; }
@@ -234,7 +234,7 @@ dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1
 /* ---- small screens */
 @media (max-width: 860px) {
   .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  nav.rail { position: static; overflow-x: auto; }
+  nav.rail { position: static; overflow-x: auto; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
   nav.rail ol { display: flex; gap: 4px; }
   nav.rail li a { white-space: nowrap; }
   nav.rail .sep { display: none; }
@@ -381,9 +381,21 @@ function stripComments(s) {   // linear: a regex rescans to the end for every un
   }
   return out + s.slice(at);
 }
+function stripOutsideFences(s) {   // comments are dropped from the text, never from a code block
+  var lines = s.split('\n'), out = [], prose = [], fence = null;
+  function flushProse() { if (prose.length) { out.push(stripComments(prose.join('\n'))); prose = []; } }
+  lines.forEach(function (line) {
+    var m = MD_FENCE.exec(line);
+    if (fence) { out.push(line); if (m && m[1][0] === fence[0] && m[1].length >= fence.length && !line.trim().slice(m[1].length).trim()) fence = null; }
+    else if (m) { flushProse(); out.push(line); fence = m[1]; }
+    else prose.push(line);
+  });
+  flushProse();
+  return out.join('\n');
+}
 function renderMarkdown(text) {
   if (String(text).length > MD_MAX) return '<pre class="raw">' + escapeHtml(text) + '</pre>';
-  var source = stripComments(String(text).replace(/\r\n?/g, '\n'));
+  var source = stripOutsideFences(String(text).replace(/\r\n?/g, '\n'));
   var lines = source.split('\n');
   var out = [], i = 0, m;
   while (i < lines.length) {
@@ -863,7 +875,7 @@ function viewNew() {
   if (!dr.recipe && S.recipes.length === 1) dr.recipe = S.recipes[0].id;
   var chosen = S.recipes.filter(function (r) { return r.id === dr.recipe; })[0];
   var text = h('textarea', { class: 'input', id: 'new-text', placeholder: 'Collez ici le mail du client, vos notes de réunion ou le cahier des charges…', value: dr.text, 'aria-label': 'Demande' });
-  text.addEventListener('input', function () { dr.text = text.value; count.textContent = countText(); saveDraft(); });
+  text.addEventListener('input', function () { dr.text = text.value; count.textContent = countText(); saveDraft(); S.formError = null; });
   var count = h('span', { class: 'muted', style: 'font-size:12.5px;color:var(--ink-3)' }, countText());
   var fileInput = h('input', { type: 'file', accept: '.md,.txt,.markdown,text/plain,text/markdown', class: 'sr-only', id: 'new-file', onchange: function (e) { readFile(e.target.files[0]); } });
   var drop = h('div', { class: 'drop' }, icon('file'), h('span', { class: 'grow' }, dr.fileNote || 'Ou importez un fichier texte (.md, .txt). Pour un PDF ou un Word, copiez-collez son texte.'),
@@ -875,15 +887,15 @@ function viewNew() {
   title.addEventListener('input', function () { dr.title = title.value; saveDraft(); });
   return h('div', { class: 'narrow' },
     h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Nouveau dossier'), h('p', null, 'Seule la première étape lit votre texte. Les suivantes travaillent sur une fiche de contexte que vous validerez après cette première étape.'))),
-    h('div', { class: 'field' }, h('div', { class: 'label' }, 'Recette'),
+    h('div', { class: 'field' }, h('div', { class: 'label' }, 'Recette'), fieldError('recipe'),
       h('div', { class: 'choices', role: 'radiogroup', 'aria-label': 'Recette' }, S.recipes.map(function (r) {
         return h('label', { class: 'choice' + (r.id === dr.recipe ? ' on' : '') },
-          h('input', { type: 'radio', name: 'recipe', value: r.id, checked: r.id === dr.recipe, onchange: function () { dr.recipe = r.id; saveDraft(); render(); } }),
+          h('input', { type: 'radio', name: 'recipe', value: r.id, checked: r.id === dr.recipe, onchange: function () { dr.recipe = r.id; S.formError = null; saveDraft(); render(); } }),
           h('div', { class: 'ttl' }, r.label), h('div', { class: 'desc' }, r.summary || firstSentence(r.description)),
           h('div', { class: 'steps' }, plural(r.steps.length, 'étape', 'étapes') + ' · ' + plural(r.steps.filter(function (s) { return s.pause === 'validate' || s.pause === 'answers'; }).length, 'relecture', 'relectures')));
       }))),
     h('div', { class: 'field' }, h('label', null, 'Titre'), h('p', { class: 'hint' }, 'Pour retrouver le dossier dans la liste. Facultatif.'), title),
-    h('div', { class: 'field' }, h('label', { for: 'new-text' }, 'La demande'), h('p', { class: 'hint' }, 'Le texte brut tel que vous l’avez reçu.'), text, h('div', { class: 'row', style: 'margin-top:6px' }, h('span', { class: 'grow' }), count), drop),
+    h('div', { class: 'field' }, h('label', { for: 'new-text' }, 'La demande'), h('p', { class: 'hint' }, 'Le texte brut tel que vous l’avez reçu.'), text, fieldError('text'), h('div', { class: 'row', style: 'margin-top:6px' }, h('span', { class: 'grow' }), count), drop),
     S.tech ? h('div', { class: 'field' }, h('label', null, 'Moteur'), engineSelect(dr.engine || 'claude', S.list ? S.list.engines : ['claude'], function (v) { dr.engine = v; })) : null,
     h('div', { class: 'form-foot' },
       h('button', { class: 'btn primary', type: 'button', 'aria-busy': S.busy ? 'true' : 'false', onclick: createDossier }, S.busy ? h('span', { class: 'spin' }) : null, S.busy || 'Créer et démarrer'),
@@ -893,6 +905,9 @@ function viewNew() {
 var DRAFT_KEY = 'parcours-ui:new';
 function saveDraft() { save('sessionStorage', DRAFT_KEY, JSON.stringify({ recipe: S.draft.recipe, title: S.draft.title, text: S.draft.text })); }
 function loadDraft() { try { var d = JSON.parse(saved('sessionStorage', DRAFT_KEY) || 'null'); if (d) Object.assign(S.draft, d); } catch (e) { /* none */ } }
+function fieldError(field) {
+  return S.formError && S.formError.field === field ? h('div', { class: 'err-inline', role: 'alert', 'data-error': '' }, S.formError.text) : null;
+}
 function firstSentence(s) { s = String(s || ''); var m = /^(.{40,260}?[.!?])(\s|$)/.exec(s); return m ? m[1] : s.slice(0, 260); }
 function countText() { var n = S.draft.text.trim() ? S.draft.text.trim().split(/\s+/).length : 0; return n ? plural(n, 'mot', 'mots') : ''; }
 function readFile(file) {
@@ -911,8 +926,9 @@ function readFile(file) {
 }
 async function createDossier() {
   var dr = S.draft;
-  if (!dr.recipe) { S.error = 'Choisissez une recette.'; renderChrome(); return; }
-  if (!dr.text.trim()) { S.error = 'Collez la demande, ou importez un fichier texte.'; renderChrome(); return; }
+  S.formError = !dr.recipe ? { field: 'recipe', text: 'Choisissez une recette.' }
+    : !dr.text.trim() ? { field: 'text', text: 'Collez la demande, ou importez un fichier texte.' } : null;
+  if (S.formError) { render(); var bad = document.querySelector('[data-error]'); if (bad) bad.scrollIntoView({ block: 'center' }); return; }
   S.busy = 'Création…'; S.error = ''; render();
   try {
     var r = await api('POST', '/api/parcours', { recipe: dr.recipe, title: dr.title.trim(), text: dr.text, engine: dr.engine || undefined }, 60000);
@@ -978,7 +994,8 @@ function seeLink(p, s, selected) {
 function actionCard(p, focus, selected) {
   var k = kindOf(p), idx;
   if (k === 'recipe_error') return h('div', { class: 'action bad' }, h('h2', null, 'Ce dossier ne correspond plus à sa recette'),
-    h('p', { class: 'lead' }, 'La recette a changé depuis la création du dossier : il ne peut plus avancer.'), S.tech ? h('pre', { class: 'raw' }, p.recipe_error) : null);
+    h('p', { class: 'lead' }, 'La recette a changé depuis la création du dossier : il ne peut plus avancer. Ses étapes jouées restent consultables ; pour aller au bout, créez un nouveau dossier avec la même demande.'),
+    h('div', { class: 'btns' }, h('a', { class: 'btn', href: '#/nouveau' }, 'Nouveau dossier')), S.tech ? h('pre', { class: 'raw' }, p.recipe_error) : null);
   if (k === 'stopped') return h('div', { class: 'action' }, h('h2', null, 'Dossier arrêté'), h('p', { class: 'lead' }, 'Vous avez décidé de ne pas aller plus loin. Les étapes jouées restent consultables.'));
   if (k === 'completed') {
     var fin = focus;
@@ -1027,7 +1044,7 @@ function actionCard(p, focus, selected) {
   }
   if (k === 'answers') {
     var a = stepOf(p, p.pending.step); idx = p.steps.indexOf(a);
-    var slug = p.slug, key = 'parcours-ui:draft:' + slug;
+    var slug = p.slug, key = 'parcours-ui:draft:' + slug + ':' + a.id;
     if (S.answers[slug] === undefined) S.answers[slug] = saved('localStorage', key) || '';
     var area = h('textarea', { class: 'input', 'aria-label': 'Réponses reçues', placeholder: 'Collez ici les réponses reçues, en une ou plusieurs fois : le brouillon est gardé dans ce navigateur.', value: S.answers[slug] });
     var timer = null;
@@ -1054,7 +1071,7 @@ function actionCard(p, focus, selected) {
       group.map(function (id) {
         var s = stepOf(p, id);
         return h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: sel.has(id), onchange: function (e) { if (e.target.checked) sel.add(id); else sel.delete(id); render(); } }),
-          h('span', null, h('strong', null, stepName(s)), S.tech && s ? h('span', { style: 'display:block;font-size:12.5px;color:var(--ink-3)' }, s.mission) : null));
+          h('span', null, h('strong', null, stepName(s)), S.tech && s ? h('span', { lang: 'en', style: 'display:block;font-size:12.5px;color:var(--ink-3)' }, s.mission) : null));
       }),
       h('div', { class: 'btns' },
         (function () {
@@ -1145,12 +1162,14 @@ function asText(v) { return typeof v === 'string' ? v : Array.isArray(v) && v.ev
 function ctxDraft(p) {
   var base = JSON.stringify(p.context_sheet), d = S.ctx[p.slug];
   if (!d || d.base !== base) {
+    if (d && ctxDirtyDraft(d)) toast('La fiche a changé entre-temps : vos corrections non validées ont été remplacées par la nouvelle version.');
     var values = {};
     Object.keys(p.context_sheet || {}).forEach(function (k) { values[k] = asText(p.context_sheet[k]); });
     d = S.ctx[p.slug] = { base: base, values: values, errors: {} };
   }
   return d;
 }
+function ctxDirtyDraft(d) { var old = JSON.parse(d.base || '{}'); return Object.keys(d.values).some(function (k) { return d.values[k] !== asText(old[k]); }); }
 function ctxDirty(p) {
   var d = S.ctx[p.slug]; if (!d) return false;
   return Object.keys(d.values).some(function (k) { return d.values[k] !== asText(p.context_sheet[k]); });
@@ -1209,7 +1228,7 @@ function techBlock(p, s) {
       h('dt', null, 'Coût'), h('dd', null, s.cost_usd ? usd(s.cost_usd) : '—'),
       s.started ? [h('dt', null, 'Durée'), h('dd', null, fmtDate(s.started) + (s.ended && s.ended !== s.started ? ' → ' + fmtDate(s.ended) : ''))] : null,
       h('dt', null, 'Pause'), h('dd', null, { validate: 'relecture', answers: 'réponses d’un tiers', none: 'aucune' }[s.pause] || s.pause || '—'),
-      s.mission ? [h('dt', null, 'Mission'), h('dd', null, s.mission)] : null),
+      s.mission ? [h('dt', null, 'Mission'), h('dd', { lang: 'en' }, s.mission)] : null),
     s.error ? subDetails('Erreur', 'err:' + s.id, h('pre', { class: 'raw' }, s.error)) : null,
     s.summary ? subDetails('Résumé transmis', 'sum:' + s.id, mdBox(s.summary, 'compact')) : null,
     s.handoff ? subDetails('Champs transmis aux étapes suivantes (' + Object.keys(s.handoff).length + ')', 'hf:' + s.id,

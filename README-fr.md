@@ -631,18 +631,31 @@ Un workflow enchaîne des skills pour un travail récurrent. Format : [`docs/for
 
 Disponibles : `brief-client`, `reponse-appel-offres` (voir le catalogue). Tous deux testés de bout en bout sur du matériau réel (une transcription de réunion client, un cahier des charges de consultation). `concepteur-recette` en conçoit de nouvelles.
 
-### Exécuter un workflow hors de la conversation
+### Exécuter un workflow hors de la conversation : la page de suivi
 
-Dans une conversation, la recette s'orchestre elle-même par sous-agents. Pour une isolation réelle et une trace qu'on peut reprendre, `scripts/parcours.py` la joue étape par étape, chaque étape dans un **appel neuf** au moteur de ton choix — Claude Code, Codex ou Antigravity — qui ne reçoit que ses entrées. Il s'arrête à chaque pause et refuse toute étape dont le message porterait un passage de la demande brute au-delà de l'étape 1. Spécification : [`docs/executeur.md`](docs/executeur.md).
+Dans une conversation, la recette s'orchestre elle-même par sous-agents. Pour une isolation réelle, une trace qu'on peut reprendre et aucune ligne de commande, utilisez la page de suivi : chaque étape tourne dans un **appel neuf** à un moteur (Claude Code par défaut ; Codex ou Antigravity en mode technique) qui ne reçoit que ses entrées, et la page s'arrête à chaque pause pour vous.
+
+**Prérequis :** ce dépôt et [ix-skills](https://github.com/amiel-35/ix-skills) clonés côte à côte (ou ix-skills installé en plugin), Python 3 avec `pyyaml`, et la CLI Claude Code connectée.
 
 ```bash
 pip install pyyaml
-python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --engine claude
-python3 scripts/parcours.py next ao        # jusqu'à la prochaine pause
-python3 scripts/parcours.py status ao
+python3 scripts/interface.py
 ```
 
-`scripts/interface.py` ouvre une page locale (127.0.0.1, protégée par jeton) pour suivre les parcours, lire la sortie de chaque étape, répondre aux pauses et lancer l'étape suivante : [`docs/interface.md`](docs/interface.md). Mesuré : une réponse complète à un appel d'offres (7 étapes, Claude) a coûté de 0,86 $ à 1,53 $ selon les reprises.
+La page s'ouvre dans votre navigateur (en local seulement, protégée par une clé dans son adresse). On y trouve :
+
+- **Nouveau dossier** : choisir une recette, coller la demande (mail du client, notes, cahier des charges) ou importer un fichier texte, puis « Créer et démarrer ».
+- **Un dossier** : les étapes à gauche ; en haut, la seule chose attendue de vous (« Valider et continuer », « Envoyer les réponses et continuer », « Refaire l'étape »…) ; au centre, le résultat de chaque étape lu comme un document mis en forme, à copier, télécharger ou imprimer en PDF. La fiche de contexte, seule chose que les étapes suivantes savent de votre demande, se vérifie et se corrige champ par champ après la première étape.
+- **Détails techniques** (interrupteur en haut) : moteur et modèle, coût par étape, champs transmis, sorties brutes, messages exacts reçus, journal.
+
+Les dossiers sont rangés dans `~/Parcours` (`--parcours-dir` ou `PARCOURS_DIR` pour changer). Spécifications : [`docs/interface.md`](docs/interface.md), [`docs/executeur.md`](docs/executeur.md). Mesuré : une réponse complète à un appel d'offres (7 étapes, Claude) a coûté de 0,86 $ à 1,53 $ selon les reprises.
+
+Le même exécuteur s'utilise en ligne de commande, pour des scripts :
+
+```bash
+python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/Parcours
+python3 scripts/parcours.py next ao --parcours-dir ~/Parcours        # jusqu'à la prochaine pause
+```
 
 À venir :
 

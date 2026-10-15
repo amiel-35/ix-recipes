@@ -2157,7 +2157,8 @@ def build_parser():
     common.add_argument("--yes", action="store_true", help="ne pas demander confirmation avant de lancer")
     common.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT, help="délai maximal par appel, en secondes")
     common.add_argument("--max-budget-usd", type=float, default=DEFAULT_BUDGET, help="plafond par appel (claude)")
-    common.add_argument("--parcours-dir", default="./parcours", help="dossier des parcours")
+    common.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or "./parcours",
+                        help="dossier des parcours (défaut : $PARCOURS_DIR, sinon ./parcours)")
     common.add_argument("--json", action="store_true",
                         help="sortie lisible par un programme (plan, status) ; erreurs en JSON sur la sortie standard")
     common.add_argument("--json-errors", action="store_true", default=argparse.SUPPRESS,

@@ -631,18 +631,31 @@ A workflow chains skills for a recurring job. Format: [`docs/format-recette.md`]
 
 Available: `brief-client`, `reponse-appel-offres` (see the catalog). Both tested end to end on real material (a client meeting transcript, a tender specification). `concepteur-recette` designs new ones.
 
-### Running a workflow outside the conversation
+### Running a workflow outside the conversation: the tracking page
 
-In a conversation, the recipe orchestrates itself through sub-agents. For real isolation and a trace you can resume, `scripts/parcours.py` plays it step by step, each step in a **fresh call** to an engine of your choice — Claude Code, Codex or Antigravity — that receives only its inputs. It stops at every pause and refuses any step whose message would carry a passage of the raw request beyond step 1. Spec: [`docs/executeur.md`](docs/executeur.md).
+In a conversation, the recipe orchestrates itself through sub-agents. For real isolation, a trace you can resume and no command line, use the tracking page: each step runs in a **fresh call** to an engine (Claude Code by default; Codex or Antigravity in technical mode) that receives only its inputs, and the page stops at every pause for you.
+
+**Prerequisites:** this repository and [ix-skills](https://github.com/amiel-35/ix-skills) cloned side by side (or ix-skills installed as a plugin), Python 3 with `pyyaml`, and the Claude Code CLI signed in.
 
 ```bash
 pip install pyyaml
-python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --engine claude
-python3 scripts/parcours.py next ao        # runs until the next pause
-python3 scripts/parcours.py status ao
+python3 scripts/interface.py
 ```
 
-`scripts/interface.py` opens a local page (127.0.0.1, token-protected) to follow the runs, read each step's output, answer the pauses and launch the next step: [`docs/interface.md`](docs/interface.md). Measured: a full tender response (7 steps, Claude) cost $0.86 to $1.53 depending on reruns.
+The page opens in your browser (local only, protected by a key in its address). There:
+
+- **New dossier**: pick a recipe, paste the request (client email, notes, tender specification) or import a text file, then *Create and start*.
+- **A dossier**: the steps on the left; at the top, the one thing expected from you (*Validate and continue*, *Send the answers and continue*, *Redo the step*…); in the middle, each step's output read as a formatted document, to copy, download or print to PDF. The context sheet, the only thing later steps know of your request, is checked and corrected field by field after step 1.
+- **Technical details** (switch at the top): engine and model, cost per step, transmitted fields, raw outputs, exact messages received, log.
+
+Dossiers live in `~/Parcours` (`--parcours-dir` or `PARCOURS_DIR` to change it). Specs: [`docs/interface.md`](docs/interface.md), [`docs/executeur.md`](docs/executeur.md). Measured: a full tender response (7 steps, Claude) cost $0.86 to $1.53 depending on reruns.
+
+The same runner works from the command line, for scripts:
+
+```bash
+python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/Parcours
+python3 scripts/parcours.py next ao --parcours-dir ~/Parcours        # runs until the next pause
+```
 
 Coming next:
 

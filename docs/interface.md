@@ -20,10 +20,10 @@ Conception v0 du 2026-10-15, révisée après une relecture adverse (Fable) avan
 ## 2. Lancement
 
 ```bash
-python3 scripts/interface.py [--parcours-dir ./parcours] [--port 8765] [--dev] [--no-browser]
+python3 scripts/interface.py [--parcours-dir ~/Parcours] [--port 8765] [--dev] [--no-browser]
 ```
 
-Le serveur affiche l'URL (avec le jeton, `http://127.0.0.1:<port>/#t=…`) et l'ouvre dans le navigateur, sauf `--no-browser`. `--port 0` laisse le système choisir. `--dev` ajoute le moteur `fake` à la liste des moteurs (il lit `PARCOURS_FAKE_DIR`, comme l'exécuteur). Le jeton est dans `<dossier des parcours>/.interface-token` (0600), le même d'une relance à l'autre ; il n'est conservé dans la page que pour l'onglet (sessionStorage) et retiré de la barre d'adresse dès le chargement.
+Les dossiers sont rangés par défaut dans `~/Parcours` (`$PARCOURS_DIR` s'il est défini), quel que soit l'endroit d'où l'on lance la page ; l'exécuteur en ligne de commande garde `./parcours` par défaut (ou `$PARCOURS_DIR`). Le serveur affiche l'URL (avec le jeton, `http://127.0.0.1:<port>/#t=…`) et l'ouvre dans le navigateur, sauf `--no-browser`. `--port 0` laisse le système choisir. `--dev` ajoute le moteur `fake` à la liste des moteurs (il lit `PARCOURS_FAKE_DIR`, comme l'exécuteur). Le jeton est dans `<dossier des parcours>/.interface-token` (0600), le même d'une relance à l'autre ; il n'est conservé dans la page que pour l'onglet (sessionStorage) et retiré de la barre d'adresse dès le chargement.
 
 ## 3. Ce que montre la page (version produit)
 

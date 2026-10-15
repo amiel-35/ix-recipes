@@ -379,6 +379,10 @@ class CreateAndReadTests(InterfaceTestCase):
         self.assertTrue(untitled["slug"].startswith("brief-client"))
         self.assertIsNone(untitled["title"])
 
+    def test_a_lone_surrogate_is_a_clean_refusal(self):
+        status, _, data = self.request("POST", "/api/parcours", None, raw=b'{"recipe": "brief-client", "text": "\\ud800"}')
+        self.assertEqual((status, data["error"]), (400, "bad_json"))
+
     def test_creation_refusals(self):
         for body, status in (({"recipe": "inconnue", "text": "x"}, 404), ({"recipe": "../x", "text": "x"}, 400),
                              ({"recipe": "brief-client", "text": "  "}, 400), ({"recipe": "brief-client", "text": "x", "title": "t" * 121}, 400),
@@ -800,6 +804,8 @@ process.stdout.write(String(worst));"""
         self.assertEqual(self.render("a <!-- x --> b"), "<p>a  b</p>")
         self.assertIn("&lt;!-- jamais fermé", self.render("<!-- jamais fermé"))
         self.assertTrue(self.render("x" * 300001).startswith('<pre class="raw">'))
+        self.assertIn("&lt;!-- gardé --&gt;", self.render("```html\n<!-- gardé -->\n```\n<!-- ôté -->après"))
+        self.assertNotIn("ôté", self.render("```html\n<!-- gardé -->\n```\n<!-- ôté -->après"))
 
     def test_document_niceties(self):
         html = self.render("**Destinataire :** X\n**Prestataire :** Y\n\n- [ ] à faire\n- [x] fait\n\n~~barré~~ et _penché_ "

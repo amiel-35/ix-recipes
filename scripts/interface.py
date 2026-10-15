@@ -9,7 +9,7 @@ positionals, absolute --parcours-dir, --json), so the page does what the command
 line does, with the same checks and the same state.json.
 
 Usage:
-    python3 scripts/interface.py [--parcours-dir ./parcours] [--port 8765] [--dev] [--no-browser]
+    python3 scripts/interface.py [--parcours-dir ~/Parcours] [--port 8765] [--dev] [--no-browser]
 
 Access control (see docs/interface.md §1): a random token kept in
 <parcours-dir>/.interface-token (mode 0600, stable across restarts) goes in the
@@ -60,6 +60,7 @@ ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun")
 MAX_BODY = 4_000_000        # bytes of a POST body (a pasted answer can be long)
 MAX_FILE = 2_000_000        # bytes of a file sent to the page
 MAX_TITLE = 120             # characters of a parcours title
+DEFAULT_DIR = "~/Parcours"  # one place for the dossiers, wherever the page is launched from
 LOG_TAIL = 100_000          # bytes of .next.log sent to the page
 QUICK_WAIT = 2.5            # seconds `next` is watched after launch, to report a refusal at once
 SYNC_TIMEOUT = 120          # seconds for the commands that do not call an engine
@@ -539,6 +540,10 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "bad_json", "corps JSON illisible")
         if not isinstance(body, dict):
             raise ApiError(400, "bad_json", "un objet JSON est attendu")
+        try:
+            json.dumps(body, ensure_ascii=False).encode("utf-8")
+        except UnicodeEncodeError:  # a lone surrogate (\ud800) is valid JSON, not valid text for a file or a pipe
+            raise ApiError(400, "bad_json", "texte illisible (caractère Unicode invalide)")
         return body
 
     # -- routes -----------------------------------------------------------
@@ -623,13 +628,14 @@ def make_server(parcours_dir, port=0, dev=False):
 # ---------------------------------------------------------------------------
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Page de suivi des parcours (voir docs/interface.md)")
-    parser.add_argument("--parcours-dir", default="./parcours", help="dossier des parcours")
+    parser.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or DEFAULT_DIR,
+                        help=f"dossier des parcours (défaut : $PARCOURS_DIR, sinon {DEFAULT_DIR})")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port local (défaut {DEFAULT_PORT}, 0 = au hasard)")
     parser.add_argument("--dev", action="store_true", help="propose aussi le moteur fake (PARCOURS_FAKE_DIR)")
     parser.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
     args = parser.parse_args(argv)
     try:
-        server = make_server(args.parcours_dir, args.port, args.dev)
+        server = make_server(Path(args.parcours_dir).expanduser(), args.port, args.dev)
     except OSError as exc:
         print(f"Erreur : impossible de démarrer le serveur sur le port {args.port} ({exc})", file=sys.stderr)
         return 1

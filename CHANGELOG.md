@@ -15,6 +15,9 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
   mode and phone layout.
 - `scripts/interface.py`: `GET /api/recipes`, `POST /api/parcours` (create from the
   page, request on stdin), `GET …/document/<file>`; titles and step labels in the list.
+  Dossiers in `~/Parcours` by default (`--parcours-dir`, `PARCOURS_DIR`), whatever the
+  folder the page is launched from. README: the page is now the documented way to run a
+  workflow outside a conversation.
 - `scripts/parcours.py`: `recipes --json`, `new --title` / `new --json`, step `label`
   and `mission`, `title`, `recipe_label` and `max_budget_usd` in `status --json`,
   `output_document()`.

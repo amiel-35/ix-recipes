@@ -16,7 +16,8 @@ confirmed).
 Usage:
     python3 scripts/recettes.py list [--json]
     python3 scripts/recettes.py draft-new --input besoin.md [--title T] [--template]
-    python3 scripts/recettes.py design <draft> [--insist] [--engine claude] [--model opus]
+    python3 scripts/recettes.py design <draft> [--mode propose|revise|write] [--insist] [--engine claude] [--model opus]
+    python3 scripts/recettes.py comments <draft> --file commentaires.json   (sent with the next revision)
     python3 scripts/recettes.py show <draft> [--json]
     python3 scripts/recettes.py save <draft> --file recette.md [--if-sha SHA]
     python3 scripts/recettes.py check --file recette.md [--json]
@@ -326,11 +327,16 @@ def draft_summary(args, directory, full=False):
         "in_recueil": bool(promoted and promoted.get("sha256") == sha),
         "essais_count": len(essais),
     }
+    proposal = read_json(directory / PROPOSAL_FILE)
+    summary["stage"] = "recipe" if text is not None else "proposal" if proposal else "start"
+    summary["proposal_steps"] = len((proposal or {}).get("steps") or [])
     if full:
         concept = directory / DESIGN_OUT
         summary.update(
             need=(directory / NEED_FILE).read_text(encoding="utf-8", errors="replace") if (directory / NEED_FILE).is_file() else None,
             text=text, check=check, essais=essais,
+            proposal=dict(proposal, problems=proposal_problems(proposal)) if proposal else None,
+            comments=read_comments(directory),
             concept=design_document(concept.read_text(encoding="utf-8", errors="replace")) if concept.is_file() else None,
             files=P.listed_files(directory),
             recueil=str(recueil(args)),
@@ -547,7 +553,26 @@ def catalogue_block():
     return "\n".join(lines)
 
 
-def design_message(skill, need, insist=False, previous=None):
+PROPOSAL_FILE = "proposition.json"   # the chain proposed by the designer, commented before any file is written
+COMMENTS_FILE = "commentaires.json"  # the user's comments, sent with the next revision
+DESIGN_MODES = ("propose", "revise", "write")
+MAX_STEPS = 6
+SOURCES_RULE = (
+    "`receives` takes ONLY these sources: `brief` (the raw input, all of it, whatever it holds — "
+    "reports, tables, emails: step 1 receives `[brief]`, never names of documents), `context_sheet` "
+    "(from step 2 on), `answers` (after a step with `pause: answers`), or `<step>.<field>` transmitted "
+    "by an earlier step. Any other name is refused.")
+PROPOSAL_SHAPE = (
+    '{"title": "<short French name of the recipe>", "summary": "<one French sentence: from what to what>",\n'
+    ' "context_sheet": ["<French rubric of the context sheet>", "..."],\n'
+    ' "steps": [{"id": "<lower-case id>", "label": "<French name>", "skill": "<namespace:id from the catalogue>",\n'
+    '            "role": "<what the step does, one French sentence>", "receives": ["brief"],\n'
+    '            "produces": ["<field>", "..."], "pause": "none | validate | answers | choose", "optional": false}]}')
+
+
+def design_message(skill, need, mode="propose", insist=False, previous=None, proposal=None, comments=None):
+    """The message of one designer call. `propose` and `revise` ask for the chain only (a JSON
+    proposal the user comments on), `write` for the recipe file implementing a validated proposal."""
     parts = [
         "You are running ONE call of the recipe designer. This message is all you know: you have no "
         "other context, and you need no file and no tool.",
@@ -562,45 +587,69 @@ def design_message(skill, need, insist=False, previous=None):
         "given as a model of the FORMAT only — not of the steps, which depend on the job. Keep every "
         "frontmatter key it has; a `workflow` step may also use `optional: true` (run only if the human "
         "chooses it at the pause before), `verbatim` (step 1 only) and `pause: answers` / `choose`.\n"
-        "`receives` takes ONLY these sources: `brief` (the raw input, all of it, whatever it holds — "
-        "reports, tables, emails: step 1 receives `[brief]`, never names of documents), `context_sheet` "
-        "(from step 2 on), `answers` (after a step with `pause: answers`), or `<step>.<field>` transmitted "
-        "by an earlier step. Any other name is refused.\n"
+        f"{SOURCES_RULE}\n"
         f"````markdown\n{TEMPLATE}````\n=== END FORMAT REFERENCE ===",
         f"=== JOB ===\n{need}\n=== END JOB ===",
     ]
     if insist:
         parts.append(
             "=== THE USER INSISTS ===\nThe user has read a verdict saying that no recipe was needed and "
-            "still wants one. Give verdict `recipe` and the full part B: the shortest defensible chain, "
-            "from the catalogue only. Say in the rationale what a single skill would have done instead."
+            "still wants one. Give verdict `recipe` and the shortest defensible chain, from the catalogue "
+            "only. Say in the rationale what a single skill would have done instead."
             + (f"\n\nYour previous answer, for reference:\n{previous}" if previous else "")
             + "\n=== END THE USER INSISTS ===")
-    parts.append(
-        "=== OUTPUT FORMAT ===\n"
-        "Write for the user in French (verdict, rationale, questions). The recipe file follows the "
-        "skill's language rules: `label`, `summary_fr` and `description_fr` in French, `description_en` "
-        "and the body in English, step missions in English, step `label` in French.\n"
-        "Step ids and field names: lower case without accents, digits, hyphens or underscores.\n"
-        "Give the skill's part A (verdict) and, for a recipe, part B: the recipe file in ONE fenced code "
-        "block opened with four backticks (````markdown) whose first line is `---`, then the rationale and "
-        "the questions. Leave out part C (saving): the page saves the file and checks it.\n"
-        "End with exactly this block, nothing after it, holding one of the four words alone:\n\n"
-        "## VERDICT\nrecipe | single_skill | manual_sequence | catalogue_gap\n"
-        "=== END OUTPUT FORMAT ===")
+    if proposal is not None and mode in ("revise", "write"):
+        shown = {k: proposal.get(k) for k in ("title", "summary", "context_sheet", "steps")}
+        name = "THE PROPOSAL THE USER VALIDATED" if mode == "write" else "YOUR PREVIOUS PROPOSAL"
+        parts.append(f"=== {name} ===\n```json\n{json.dumps(shown, ensure_ascii=False, indent=2)}\n```\n=== END {name} ===")
+    if comments and mode == "revise":
+        lines = []
+        if comments.get("general"):
+            lines.append(f"On the whole chain: {comments['general']}")
+        for step_id, text in (comments.get("steps") or {}).items():
+            lines.append(f"On step `{step_id}`: {text}")
+        parts.append("=== THE USER'S COMMENTS ===\n" + "\n".join(lines) + "\n=== END THE USER'S COMMENTS ===")
+    language = ("Write for the user in French (verdict, rationale, questions). Step ids and field names: lower "
+                "case without accents, digits, hyphens or underscores.\n")
+    verdict_block = ("End with exactly this block, nothing after it, holding one of the four words alone:\n\n"
+                     "## VERDICT\nrecipe | single_skill | manual_sequence | catalogue_gap\n")
+    if mode == "write":
+        parts.append(
+            "=== OUTPUT FORMAT ===\n" + language +
+            "Write the complete recipe file implementing EXACTLY the validated proposal: the same steps in "
+            "the same order, the same skills, pauses and optional steps, the context sheet rubrics as keys "
+            "(with French `context_labels`), each step's `produces` as its `transmits`. Fill in what the "
+            "proposal leaves out (missions in English, models, the body). The file follows the skill's "
+            "language rules: `label`, `summary_fr` and `description_fr` in French, `description_en` and the "
+            "body in English, step `label` in French.\n"
+            "Give the recipe file in ONE fenced code block opened with four backticks (````markdown) whose "
+            "first line is `---`, then, if anything in the proposal could not be kept as is, say so in one "
+            "short paragraph. No rationale, no questions.\n" + verdict_block + "=== END OUTPUT FORMAT ===")
+    else:
+        parts.append(
+            "=== OUTPUT FORMAT ===\n" + language +
+            "Give the skill's part A (verdict). When a recipe is justified, DO NOT write the recipe file: "
+            "the user first comments on the chain. Give instead the PROPOSAL, in ONE ```json code block of "
+            f"exactly this shape:\n{PROPOSAL_SHAPE}\n"
+            f"Sources in `receives` follow the rule above: {SOURCES_RULE} At most {MAX_STEPS} steps.\n"
+            + ("Take every comment into account; when you do not follow one, say why in the rationale.\n"
+               if mode == "revise" else "")
+            + "Then the rationale and the questions to settle (the skill's part B, without the file). Leave "
+            "out part C. When no recipe is justified, give no JSON block.\n" + verdict_block
+            + "=== END OUTPUT FORMAT ===")
     return "\n\n".join(parts) + "\n"
 
 
-def recipe_block(text):
-    """(start line, end line, content) of the first fenced block whose content opens with `---`, else None."""
-    lines = text.splitlines()
-    i = 0
+def fenced_blocks(text):
+    """[(start line, end line, info, content)] of the top-level fenced code blocks."""
+    lines, found, i = text.splitlines(), [], 0
     while i < len(lines):
         match = P.FENCE_RE.match(lines[i])
         if not match:
             i += 1
             continue
         char, size = match.group(1)[0], len(match.group(1))
+        info = lines[i].strip()[size:].strip()
         body, j = [], i + 1
         while j < len(lines):
             close = P.FENCE_RE.match(lines[j])
@@ -608,50 +657,184 @@ def recipe_block(text):
                 break
             body.append(lines[j])
             j += 1
-        content = "\n".join(body).strip("\n")
-        if content.lstrip().startswith("---") and "workflow" in content:
-            return i, j, content.strip() + "\n"
+        found.append((i, j, info, "\n".join(body).strip("\n")))
         i = j + 1
+    return found
+
+
+def recipe_block(text):
+    """(start line, end line, content) of the first fenced block whose content opens with `---`, else None."""
+    for start, end, _, content in fenced_blocks(text):
+        if content.lstrip().startswith("---") and "workflow" in content:
+            return start, end, content.strip() + "\n"
     return None
+
+
+def proposal_block(text):
+    """(start line, end line, normalized proposal) of the first JSON block holding `steps`, else None."""
+    for start, end, _, content in fenced_blocks(text):
+        if "{" not in content or '"steps"' not in content:
+            continue
+        try:
+            data = P.load_json_lenient(content)
+        except ValueError:
+            continue
+        if isinstance(data, dict) and isinstance(data.get("steps"), list):
+            return start, end, normalize_proposal(data)
+    return None
+
+
+def as_strings(value):
+    if isinstance(value, str):
+        value = [value]
+    return [str(v).strip() for v in (value or []) if str(v).strip()] if isinstance(value, list) else []
+
+
+def normalize_proposal(data):
+    steps = []
+    for raw in data.get("steps") or []:
+        if not isinstance(raw, dict):
+            continue
+        sid = re.sub(r"[^a-z0-9_-]+", "-", P.fold_text(str(raw.get("id") or raw.get("label") or "")).strip()).strip("-_")
+        pause = str(raw.get("pause") or "none").strip()
+        steps.append({
+            "id": sid or f"etape-{len(steps) + 1}", "label": str(raw.get("label") or "").strip(),
+            "skill": str(raw.get("skill") or "").strip(), "role": str(raw.get("role") or "").strip(),
+            "receives": as_strings(raw.get("receives")), "produces": as_strings(raw.get("produces")),
+            "pause": pause if pause in P.PAUSES else "none", "optional": raw.get("optional") is True,
+        })
+    return {"title": str(data.get("title") or "").strip(), "summary": str(data.get("summary") or "").strip(),
+            "context_sheet": as_strings(data.get("context_sheet")), "steps": steps}
+
+
+def proposal_problems(proposal, refs=None):
+    """What would make the validated chain an invalid recipe, in French (the rules of workflow_errors
+    that a proposal can already break): unknown skills, sources, step count."""
+    refs = set(P.catalogue()) if refs is None else refs
+    problems, produced, answers_ready, seen = [], {}, False, set()
+    steps = proposal.get("steps") or []
+    if not steps:
+        return ["la proposition n'a aucune étape"]
+    if len(steps) > MAX_STEPS:
+        problems.append(f"{len(steps)} étapes : {MAX_STEPS} au plus")
+    for i, step in enumerate(steps):
+        name = step["label"] or step["id"]
+        if step["id"] in seen:
+            problems.append(f"« {name} » : identifiant en double ({step['id']})")
+        seen.add(step["id"])
+        if step["skill"] not in refs:
+            problems.append(f"« {name} » : le skill « {step['skill'] or '?'} » n'existe pas dans le catalogue")
+        if not step["produces"]:
+            problems.append(f"« {name} » : ne produit rien pour la suite")
+        for source in step["receives"]:
+            if source == "brief":
+                if i:
+                    problems.append(f"« {name} » : seule la première étape lit la demande brute (brief)")
+            elif source == "context_sheet":
+                if not i:
+                    problems.append("la première étape ne peut pas recevoir la fiche de contexte qu'elle produit")
+            elif source == "answers":
+                if not answers_ready:
+                    problems.append(f"« {name} » : reçoit les réponses avant toute pause « answers »")
+            elif "." in source:
+                origin, field = source.split(".", 1)
+                if field not in produced.get(origin, ()):
+                    problems.append(f"« {name} » : « {source} » n'est produit par aucune étape antérieure")
+            else:
+                problems.append(f"« {name} » : « {source} » n'est pas une entrée possible"
+                                + (" (la première étape reçoit brief)" if not i else ""))
+        produced[step["id"]] = set(step["produces"])
+        answers_ready = answers_ready or step["pause"] == "answers"
+    if "brief" not in steps[0]["receives"]:
+        problems.append("la première étape doit recevoir brief (la demande brute)")
+    return problems
+
+
+def verdict_of(text):
+    lines = text.splitlines()
+    cut = next((k for k in range(len(lines) - 1, -1, -1) if re.match(r"^##\s+VERDICT\s*$", lines[k].strip(), re.I)), None)
+    if cut is None:
+        return None, text
+    words = re.findall(r"[a-z_]+", " ".join(lines[cut + 1:]).lower())
+    return next((w for w in words if w in VERDICTS), None), "\n".join(lines[:cut])
 
 
 def parse_design(text):
     """(verdict, recipe text or None, document for the reader)."""
-    verdict, cut = None, None
-    lines = text.splitlines()
-    for k, line in enumerate(lines):
-        if re.match(r"^##\s+VERDICT\s*$", line.strip(), re.I):
-            cut = k
-    if cut is not None:
-        words = re.findall(r"[a-z_]+", " ".join(lines[cut + 1:]).lower())
-        verdict = next((w for w in words if w in VERDICTS), None)
-        lines = lines[:cut]
-    body = "\n".join(lines)
+    verdict, body = verdict_of(text)
     block = recipe_block(body)
     recipe = block[2] if block else None
     if verdict is None:
-        verdict = "recipe" if recipe else None
+        verdict = "recipe" if recipe or proposal_block(body) else None
     return verdict, recipe, design_document(text)
 
 
 def design_document(text):
-    """The designer's answer as the page shows it: the recipe file replaced by a pointer to the editor."""
-    lines = text.splitlines()
-    cut = next((k for k in range(len(lines) - 1, -1, -1) if re.match(r"^##\s+VERDICT\s*$", lines[k].strip(), re.I)), None)
-    if cut is not None:
-        lines = lines[:cut]
-    body = "\n".join(lines)
-    block = recipe_block(body)
-    if block:
-        start, end, _ = block
-        kept = body.splitlines()
-        body = "\n".join(kept[:start] + ["*(Le fichier de la recette proposée est dans l'éditeur, onglet « Recette ».)*"] + kept[end + 1:])
+    """The designer's answer as the page shows it: the recipe file and the JSON proposal replaced by
+    pointers to where the page shows them."""
+    _, body = verdict_of(text)
+    for finder, note in ((recipe_block, "*(Le fichier de la recette est dans l'éditeur, onglet « Fichier de la recette ».)*"),
+                         (proposal_block, "*(La proposition est affichée étape par étape, onglet « Proposition ».)*")):
+        block = finder(body)
+        if block:
+            kept = body.splitlines()
+            body = "\n".join(kept[:block[0]] + [note] + kept[block[1] + 1:])
     return body.strip()
+
+
+def read_comments(directory):
+    data = read_json(directory / COMMENTS_FILE, {}) or {}
+    steps = {k: v for k, v in (data.get("steps") or {}).items() if isinstance(v, str) and v.strip()}
+    return {"general": str(data.get("general") or "").strip(), "steps": steps}
+
+
+def cmd_comments(args):
+    """Record the user's comments on the current proposal (sent with the next `design --mode revise`)."""
+    directory = draft_dir(args, args.draft)
+    try:
+        data = json.loads(P.read_text_arg(args.file))
+    except ValueError as exc:
+        raise P.ParcoursError(f"commentaires illisibles ({exc})")
+    if not isinstance(data, dict):
+        raise P.ParcoursError("commentaires : un objet JSON est attendu")
+    proposal = read_json(directory / PROPOSAL_FILE)
+    ids = {s["id"] for s in (proposal or {}).get("steps", [])}
+    steps = data.get("steps") or {}
+    if not isinstance(steps, dict) or any(not isinstance(k, str) or not isinstance(v, str) for k, v in steps.items()):
+        raise P.ParcoursError("commentaires : « steps » associe un id d'étape à un texte")
+    unknown = [k for k, v in steps.items() if v.strip() and k not in ids]
+    if unknown:
+        raise P.ParcoursError(f"commentaires sur des étapes absentes de la proposition : {', '.join(unknown)}")
+    clean = {"general": str(data.get("general") or "").strip(),
+             "steps": {k: v.strip() for k, v in steps.items() if v.strip()}}
+    with P.parcours_lock(directory):
+        write_json(directory / COMMENTS_FILE, clean)
+    return emit(args, clean, "Commentaires enregistrés.")
+
+
+def step_drift(proposal, recipe_text):
+    """How the written file departs from the validated proposal (steps, order, skills, pauses)."""
+    try:
+        fm, _ = P.parse_recipe_text(recipe_text)
+        written = [s for s in (fm.get("workflow") or {}).get("steps") or [] if isinstance(s, dict)]
+    except P.ParcoursError:
+        return []
+    wanted = proposal.get("steps") or []
+    drift = []
+    if [s.get("skill") for s in written] != [s["skill"] for s in wanted]:
+        drift.append("les étapes ou leurs skills ne suivent pas la proposition : "
+                     + " → ".join(str(s.get("skill")) for s in written))
+    for want, got in zip(wanted, written):
+        pause = got.get("pause", "none")
+        if want["skill"] == got.get("skill") and want["pause"] != pause and not (got.get("produces_context_sheet") and want["pause"] == "none"):
+            drift.append(f"« {want['label'] or want['id']} » : pause {pause} au lieu de {want['pause']}")
+    return drift
 
 
 def cmd_design(args):
     directory = draft_dir(args, args.draft)
     engine = args.engine or "claude"
+    mode = args.mode or "propose"
     if engine not in DESIGN_ENGINES:
         raise P.ParcoursError(f"moteur '{engine}' : la conception se fait avec {', '.join(DESIGN_ENGINES)}")
     need_file = directory / NEED_FILE
@@ -659,21 +842,33 @@ def cmd_design(args):
         raise P.ParcoursError("ce brouillon n'a pas de besoin décrit : la conception n'a rien à lire")
     with P.parcours_lock(directory):
         state = read_json(directory / DRAFT_STATE, {})
+        proposal = read_json(directory / PROPOSAL_FILE)
+        comments = read_comments(directory)
+        if mode in ("revise", "write") and not (proposal and proposal.get("steps")):
+            raise P.ParcoursError("aucune proposition à reprendre : lancez d'abord la conception")
+        if mode == "revise" and not (comments["general"] or comments["steps"] or args.insist):
+            raise P.ParcoursError("aucun commentaire : écrivez ce qu'il faut changer, sur une étape ou sur l'ensemble")
+        if mode == "write":
+            problems = proposal_problems(proposal)
+            if problems:
+                raise P.ParcoursError("la proposition ne peut pas devenir une recette valide : " + " ; ".join(problems[:4])
+                                      + ". Demandez une révision.")
         skill = P.resolve_skill("ix-recipes:concepteur-recette")
         previous = None
         if args.insist and (directory / DESIGN_OUT).is_file():
             previous = design_document((directory / DESIGN_OUT).read_text(encoding="utf-8", errors="replace"))[:8000]
-        message = design_message(skill, need_file.read_text(encoding="utf-8"), args.insist, previous)
+        message = design_message(skill, need_file.read_text(encoding="utf-8"), mode, args.insist, previous,
+                                 proposal, comments)
         model = args.model or DESIGN_MODEL
-        design = {"engine": engine, "model": model, "insist": bool(args.insist), "started": P.now(),
-                  "ended": None, "error": None, "cost_usd": 0.0,
+        design = {"engine": engine, "model": model, "mode": mode, "insist": bool(args.insist), "started": P.now(),
+                  "ended": None, "error": None, "cost_usd": 0.0, "drift": [],
                   "skill": {k: skill[k] for k in ("ref", "version", "sha256")}}
         touch(directory, state, design=design)
         for name in (DESIGN_OUT, DESIGN_TRACE):
             if (directory / name).is_file():
                 (directory / name).rename(P.versioned_name(directory / name))
         P.write_atomic(directory / DESIGN_TRACE, message)
-        P.say(f"Conception : moteur {engine}, modèle {model}, message ≈ {len(message)} caractères")
+        P.say(f"Conception ({mode}) : moteur {engine}, modèle {model}, message ≈ {len(message)} caractères")
         try:
             with P.terminate_as_exit():
                 text, cost = P.call_engine(engine, message, model=model, timeout=args.timeout,
@@ -684,18 +879,43 @@ def cmd_design(args):
             touch(directory, state, design=design)
             raise
         P.write_atomic(directory / DESIGN_OUT, text)
-        verdict, recipe, _ = parse_design(text)
+        verdict, body = verdict_of(text)
         design.update(ended=P.now(), cost_usd=round(cost, 6))
-        if recipe:
-            keep_version(directory / P.DRAFT_FILE)
-            P.write_atomic(directory / P.DRAFT_FILE, recipe)
-        elif verdict == "recipe":
-            design["error"] = "le concepteur annonce une recette mais aucun fichier de recette n'a été trouvé dans sa réponse"
+        recipe, new_proposal = None, None
+        if mode == "write":
+            block = recipe_block(body)
+            recipe = block[2] if block else None
+            if recipe:
+                keep_version(directory / P.DRAFT_FILE)
+                P.write_atomic(directory / P.DRAFT_FILE, recipe)
+                design["drift"] = step_drift(proposal, recipe)
+                proposal.update(validated=True, validated_at=P.now())
+                write_json(directory / PROPOSAL_FILE, proposal)
+            else:
+                design["error"] = "le concepteur n'a pas rendu de fichier de recette lisible : relancez l'écriture"
+            verdict = verdict or ("recipe" if recipe else None)
+        else:
+            block = proposal_block(body)
+            if block:
+                new_proposal = dict(block[2], version=int((proposal or {}).get("version") or 0) + 1,
+                                    created=P.now(), validated=False, after_comments=comments if mode == "revise" else None)
+                if (directory / PROPOSAL_FILE).is_file():
+                    (directory / PROPOSAL_FILE).rename(P.versioned_name(directory / PROPOSAL_FILE))
+                write_json(directory / PROPOSAL_FILE, new_proposal)
+                if (directory / P.DRAFT_FILE).is_file():   # back to the proposal: the old file is kept as recipe.vN.md
+                    (directory / P.DRAFT_FILE).rename(P.versioned_name(directory / P.DRAFT_FILE))
+                verdict = verdict or "recipe"
+            elif verdict == "recipe" or verdict is None:
+                design["error"] = "le concepteur n'a pas rendu de proposition lisible : relancez la conception"
+            if mode == "revise" and (directory / COMMENTS_FILE).is_file():   # sent: kept with the history
+                (directory / COMMENTS_FILE).rename(P.versioned_name(directory / COMMENTS_FILE))
         touch(directory, state, design=design, verdict=verdict)
     check = P.check_recipe_text(recipe) if recipe else None
-    return emit(args, {"verdict": verdict, "has_recipe": bool(recipe), "cost_usd": design["cost_usd"],
-                       "errors": check["errors"] if check else []},
-                f"Verdict : {verdict or 'non lu'} ; recette : {'oui' if recipe else 'non'} ; coût ${design['cost_usd']:.4f}")
+    return emit(args, {"mode": mode, "verdict": verdict, "has_recipe": bool(recipe),
+                       "proposal_steps": len((new_proposal or {}).get("steps") or []),
+                       "cost_usd": design["cost_usd"], "errors": check["errors"] if check else [],
+                       "drift": design["drift"], "error": design["error"]},
+                f"Conception ({mode}) — verdict : {verdict or 'non lu'} ; coût ${design['cost_usd']:.4f}")
 
 
 # ---------------------------------------------------------------------------
@@ -1039,12 +1259,17 @@ def build_parser():
     p.add_argument("--title")
     p.add_argument("--template", action="store_true", help="partir du modèle de recette, sans conception")
     p = add("design", cmd_design, "concevoir la recette (un appel moteur, skill concepteur-recette)", "draft")
+    p.add_argument("--mode", choices=DESIGN_MODES, default="propose",
+                   help="propose : la chaîne à commenter (défaut) ; revise : avec les commentaires ; write : le fichier, "
+                        "d'après la proposition validée")
     p.add_argument("--insist", action="store_true", help="demander une recette même si un skill seul suffit")
     p.add_argument("--engine", choices=DESIGN_ENGINES)
     p.add_argument("--model", choices=sorted(P.WORKFLOW_MODELS))
     p.add_argument("--timeout", type=int, default=P.DEFAULT_TIMEOUT)
     p.add_argument("--max-budget-usd", type=float, default=P.DEFAULT_BUDGET)
     add("show", cmd_show, "un brouillon", "draft")
+    p = add("comments", cmd_comments, "enregistrer les commentaires sur la proposition", "draft")
+    p.add_argument("--file", required=True, help="JSON {\"general\": texte, \"steps\": {id: texte}}")
     p = add("save", cmd_save, "enregistrer le fichier d'un brouillon (vérifié à chaque fois)", "draft")
     p.add_argument("--file", required=True)
     p.add_argument("--if-sha", help="empreinte du fichier ouvert ; refus s'il a changé depuis")

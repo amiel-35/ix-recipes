@@ -934,21 +934,39 @@ class RecipeBookTests(InterfaceTestCase):
         self.assertEqual(plan["ceiling_usd"], 10.0)
         self.assertFalse(list((parcours.recueil_dir(self.pdir) / "brouillons" / slug / "essais" / created["slug"]).glob("01-*")))
 
-    def test_the_design_call_runs_detached_and_its_answer_lands_in_the_editor(self):
-        (self.fake / "concepteur-recette.md").write_text(DESIGNED.format(recipe=recettes.TEMPLATE), encoding="utf-8")
+    def test_propose_comment_revise_then_write_from_the_page(self):
+        proposal = {"title": "Ma recette", "summary": "Un essai.", "context_sheet": ["Objectif"], "steps": [
+            {"id": "cadrage", "label": "Cadrage", "skill": "ix-skills:cadrage", "receives": ["brief"],
+             "produces": ["need", "constraints", "open_points"], "pause": "validate"},
+            {"id": "livrable", "label": "Livrable", "skill": "ix-skills:brief", "receives": ["context_sheet", "cadrage.need"],
+             "produces": ["deliverable"], "pause": "none"}]}
+        canned = "Une chaîne.\n\n```json\n" + json.dumps(proposal) + "\n```\n\n## VERDICT\nrecipe\n"
+        (self.fake / "concepteur-recette.md").write_text(canned, encoding="utf-8")
         data = self.api("POST", "/api/recettes/brouillons", {"need": "Chaque mois, une synthèse des projets.", "engine": "fake"})
         self.assertTrue(data["design"]["started"])
-        shown = self.draft_status(data["slug"])
-        self.assertEqual(shown["verdict"], "recipe")
-        self.assertEqual(shown["text"], recettes.TEMPLATE)
-        self.assertIn("Une recette se justifie", shown["concept"])
-        log = self.api("GET", f"/api/recettes/brouillons/{data['slug']}/log")
-        self.assertIn("Conception : moteur fake", log["log"])
-        # insisting launches a new call; refused while one runs
-        self.api("POST", f"/api/recettes/brouillons/{data['slug']}/design", {"insist": True, "engine": "fake"})
-        self.draft_status(data["slug"])
-        self.assertIn("THE USER INSISTS", (self.fake / "received" / "concepteur-recette.md").read_text(encoding="utf-8"))
-        status, _, err = self.post(f"/api/recettes/brouillons/{data['slug']}/stop", {})
+        slug = data["slug"]
+        shown = self.draft_status(slug)
+        self.assertEqual((shown["stage"], shown["verdict"], shown["text"]), ("proposal", "recipe", None))
+        self.assertEqual(len(shown["proposal"]["steps"]), 2)
+        log = self.api("GET", f"/api/recettes/brouillons/{slug}/log")
+        self.assertIn("Conception (propose) : moteur fake", log["log"])
+        for bad in ({"steps": {"../x": "y"}}, {"general": 3}, "texte", {"steps": {"cadrage": 4}}):
+            status, _, _ = self.post(f"/api/recettes/brouillons/{slug}/design", {"mode": "revise", "comments": bad, "engine": "fake"})
+            self.assertEqual(status, 400, bad)
+        status, _, _ = self.post(f"/api/recettes/brouillons/{slug}/design", {"mode": "rewrite", "engine": "fake"})
+        self.assertEqual(status, 400)
+        self.api("POST", f"/api/recettes/brouillons/{slug}/design",
+                 {"mode": "revise", "engine": "fake", "comments": {"general": "Plus court", "steps": {"livrable": "En tableau"}}})
+        shown = self.draft_status(slug)
+        self.assertEqual(shown["proposal"]["version"], 2)
+        message = (self.fake / "received" / "concepteur-recette.md").read_text(encoding="utf-8")
+        self.assertIn("On step `livrable`: En tableau", message)
+        (self.fake / "concepteur-recette.md").write_text(DESIGNED.format(recipe=recettes.TEMPLATE), encoding="utf-8")
+        self.api("POST", f"/api/recettes/brouillons/{slug}/design", {"mode": "write", "engine": "fake"})
+        shown = self.draft_status(slug)
+        self.assertEqual((shown["stage"], shown["text"], shown["design"]["drift"]), ("recipe", recettes.TEMPLATE, []))
+        self.assertTrue(shown["proposal"]["validated"])
+        status, _, err = self.post(f"/api/recettes/brouillons/{slug}/stop", {})
         self.assertEqual((status, err["error"]), (409, "not_running"))
 
     def test_contribution_arguments_are_checked(self):

@@ -16,6 +16,10 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
   `parcours` folder; inside the dossier folder when it has another name): it
   then shows in "New dossier" marked "Personal" and in `parcours.py recipes`, and runs like the
   others; an id used by the plugin or the catalogue is refused.
+- **Design in two stages**: the designer first returns a proposal (the chain of steps, as JSON
+  shown step by step), which the user comments on per step or overall and sends back for
+  revision; the recipe file is written only after "Validate the principle and write the recipe",
+  and its departures from the validated proposal are flagged.
 - **Propose to the repository**: a branch prepared in a separate working copy of a local clone
   (or of the repository, cloned once), `skills/<id>.md`, its `.mystaffy.json`, `dist/` rebuilt by
   build.py, a local commit and its diff shown; push and `gh pr create` only after the user

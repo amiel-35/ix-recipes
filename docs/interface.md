@@ -158,6 +158,16 @@ Un `~/Parcours/recettes` créé avant le passage à `~/.ix-recipes` n'est pas d�
 
 ### 9.3 Concevoir (`recettes.py design`)
 
+**En deux temps, ajouté le 2026-10-15 à la demande d'Amiel** (« montrer visuellement la recette pour permettre de la commenter ; si on valide le principe, on code ») :
+
+1. `design --mode propose` (défaut) : le concepteur rend son verdict et, si une recette se justifie, une **proposition** seulement — un bloc JSON (titre, résumé, rubriques de la fiche de contexte, étapes : id, nom, skill, rôle, entrées, ce qu'elle produit, pause, facultative) —, sans fichier. La page l'affiche comme un enchaînement d'étapes (onglet « Proposition »), avec un commentaire possible par étape et un commentaire sur l'ensemble (gardés dans le navigateur jusqu'à l'envoi). `proposition.json` ; les versions précédentes en `proposition.vN.json`.
+2. « Revoir avec mes commentaires » : `comments` enregistre `commentaires.json`, puis `design --mode revise` envoie la proposition précédente et les commentaires ; la nouvelle version garde `after_comments`, et les commentaires envoyés passent en `commentaires.vN.json`. Autant d'allers-retours qu'il faut, un appel chacun.
+3. « Valider le principe et écrire la recette » : `design --mode write` envoie la proposition validée et demande le fichier complet qui la suit exactement. Refusé tant que la proposition a un défaut que la recette aurait aussi (`proposal_problems` : skill hors du catalogue, entrée impossible, champ non produit plus haut, étape 1 sans `brief`, plus de 6 étapes). Après l'écriture, l'écart entre le fichier et la proposition (étapes, skills, pauses) est relevé (`drift`) et affiché au-dessus des onglets. Le fichier se retouche ensuite dans l'éditeur, comme avant.
+
+Relancer une proposition sur un brouillon qui a déjà son fichier le met de côté (`recipe.vN.md`) : on repart de la chaîne. « Partir du modèle » et « Modifier » (une recette du recueil) passent directement au fichier.
+
+Ce qui suit décrit l'appel lui-même, commun aux trois modes.
+
 Un appel moteur neuf, comme une étape : dossier jetable, message par l'entrée standard, `conception.in.md` écrit avant l'appel, coût compté. Le message contient le texte du skill `ix-recipes:concepteur-recette`, **le catalogue réel** (chaque skill résolu par l'exécuteur avec sa description : `IX_SKILLS_PATH`, dépôt voisin, cache du plugin — **version en cours seulement**, un skill qu'une ancienne version en cache garde encore n'est pas proposé ; ni `concepteur-recette`, ni `suivi-parcours`, ni `configuration-ix`), le modèle de recette comme référence de format, le besoin, et la consigne de sortie : la recette dans un bloc de code ouvert par quatre accents graves, puis un bloc `## VERDICT` (`recipe`, `single_skill`, `manual_sequence`, `catalogue_gap`). Modèle Opus par défaut (un jugement sur tout le travail : la règle de l'étape 1).
 
 - Le bloc dont le contenu commence par `---` devient `recipe.md` (l'ancien gardé en `.vN`) ; la réponse sans ce bloc devient l'« Avis du concepteur ».

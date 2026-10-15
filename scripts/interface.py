@@ -58,7 +58,8 @@ TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,}$")
 FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
 REAL_ENGINES = ("claude", "codex", "agy", "vibe")
 ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun", "archive", "delete")
-DRAFT_ACTIONS = ("design", "stop", "save", "template", "promote", "delete", "essai", "essai-delete")
+DRAFT_ACTIONS = ("design", "comments", "stop", "save", "template", "promote", "delete", "essai", "essai-delete")
+DESIGN_MODES = ("propose", "revise", "write")
 PERSONAL_ACTIONS = ("edit", "retire", "contribute")
 CONTRIBUTE_STEPS = ("prepare", "push", "cancel", "status")
 RECIPE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,59}$")
@@ -579,7 +580,10 @@ class App(Space):
         engine = body.get("engine") or "claude"
         if engine not in self.design_engines:
             raise ApiError(400, "bad_engine", f"moteur non proposé : {engine!r}")
-        flags = ["--engine", engine] + (["--insist"] if body.get("insist") is True else [])
+        mode = body.get("mode") or "propose"
+        if mode not in DESIGN_MODES:
+            raise ApiError(400, "bad_request", f"mode de conception inconnu : {mode!r}")
+        flags = ["--engine", engine, "--mode", mode] + (["--insist"] if body.get("insist") is True else [])
         with self.slug_lock("draft:" + draft):
             previous = self.designs.get(draft)
             if (previous and previous.poll() is None) or parcours.is_locked(directory):
@@ -602,10 +606,26 @@ class App(Space):
             interpret(code, log_text, log_text[-300:])
         return {"started": True, "finished": True}
 
+    def save_comments(self, draft, comments):
+        """The user's comments on the proposal: {"general": text, "steps": {step id: text}}."""
+        steps = comments.get("steps") if isinstance(comments, dict) else None
+        if not isinstance(comments, dict) or not isinstance(comments.get("general", ""), str) \
+                or not isinstance(steps or {}, dict) or len(steps or {}) > 50 \
+                or any(not isinstance(k, str) or not STEP_RE.match(k) or not isinstance(v, str) for k, v in (steps or {}).items()) \
+                or len(json.dumps(comments)) > 100_000:
+            raise ApiError(400, "bad_request", "commentaires invalides")
+        with tempfile.TemporaryDirectory(prefix="parcours-ui-") as tmp:
+            path = write_private(tmp, "commentaires.json", json.dumps(comments, ensure_ascii=False))
+            return self.recettes("comments", ["--file", path], [draft])
+
     def draft_act(self, draft, action, body):
         directory = self.draft_dir(draft)
         if action == "design":
+            if body.get("comments") is not None:   # recorded first: the detached call reads them from the draft
+                self.save_comments(draft, body["comments"])
             return dict(self.launch_design(draft, body), ok=True)
+        if action == "comments":
+            return dict(self.save_comments(draft, body.get("comments")), ok=True)
         if action == "stop":
             if not parcours.is_locked(directory):
                 raise ApiError(409, "not_running", "aucune conception en cours sur ce brouillon")

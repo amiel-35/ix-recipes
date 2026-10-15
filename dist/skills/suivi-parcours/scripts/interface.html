@@ -290,6 +290,16 @@ pre.raw.diff { max-height: 560px; }
   .editor-wrap { padding: 12px; } .nav a { padding: 5px 7px; }
 }
 
+.chain { list-style: none; margin: 0; padding: 0; }
+.chain-step { border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px 12px; background: var(--surface); }
+.chain-step .mission { color: var(--ink-2); font-size: 14px; margin: 4px 0 8px; }
+.chain-step .kv { font-size: 13.5px; margin-bottom: 6px; }
+.chain-arrow { text-align: center; color: var(--ink-3); line-height: 1; margin: 6px 0; }
+.pause-chip { display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); }
+.comment { margin-top: 10px; } .comment textarea.input { min-height: 60px; }
+.comment-btn { margin-top: 6px; height: 28px; padding: 0 8px; font-size: 13px; }
+.comment-btn .ic svg { width: 14px; height: 14px; }
+
 /* ---- small screens */
 @media (max-width: 860px) {
   .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
@@ -537,7 +547,7 @@ var S = {
   tech: false, down: false, deferred: false, wasOffline: false,
   // personal recipes: the recueil, a draft, a personal recipe, the editor, the test form, the proposal to the repository
   book: null, d: null, pr: null, dlog: null, need: { need: '', title: '', engine: '' }, recipeEdit: {}, essaiForm: {},
-  contrib: {}, contribError: {}, contribSource: {}
+  contrib: {}, contribError: {}, contribSource: {}, comments: {}
 };
 
 function $(sel) { return document.querySelector(sel); }
@@ -680,7 +690,7 @@ function parseRoute() {
   var m;
   if ((m = /^#\/p\/([a-z0-9][a-z0-9-]*)(?:\/([a-z0-9][a-z0-9_-]*|demande))?$/.exec(location.hash))) return { view: 'parcours', slug: m[1], step: m[2] || null };
   if ((m = /^#\/recettes\/b\/([a-z0-9][a-z0-9-]*)\/essais\/([a-z0-9][a-z0-9-]*)(?:\/([a-z0-9][a-z0-9_-]*|demande))?$/.exec(location.hash))) return { view: 'parcours', essai: m[1], slug: m[2], step: m[3] || null };
-  if ((m = /^#\/recettes\/b\/([a-z0-9][a-z0-9-]*)(?:\/(etapes|fichier|essais|avis|besoin))?$/.exec(location.hash))) return { view: 'draft', draft: m[1], tab: m[2] || null };
+  if ((m = /^#\/recettes\/b\/([a-z0-9][a-z0-9-]*)(?:\/(proposition|etapes|fichier|essais|avis|besoin))?$/.exec(location.hash))) return { view: 'draft', draft: m[1], tab: m[2] || null };
   if ((m = /^#\/recettes\/p\/([a-z0-9][a-z0-9-]*)$/.exec(location.hash))) return { view: 'personal', id: m[1] };
   if (location.hash === '#/recettes/nouvelle') return { view: 'recipeNew' };
   if (location.hash === '#/recettes') return { view: 'recipes' };
@@ -1058,7 +1068,8 @@ var ESSAI_ENGINE_FR = { simulation: 'Simulation — gratuite, aucun modèle appe
 function draftTitle(d) { return d.title || d.recipe_label || pretty(d.slug); }
 function draftHash(slug, tab) { return '#/recettes/b/' + slug + (tab ? '/' + tab : ''); }
 function draftState(d) {
-  if (d.locked) return { dot: 'run', text: 'Conception en cours' };
+  if (d.locked) return { dot: 'run', text: d.design && d.design.mode === 'write' ? 'Écriture de la recette' : 'Conception en cours' };
+  if (d.stage === 'proposal') return { dot: 'warn', text: 'Proposition à commenter (' + plural(d.proposal_steps, 'étape', 'étapes') + ')' };
   if (!d.has_recipe && d.design && d.design.error) return { dot: 'bad', text: 'Conception à relancer' };
   if (!d.has_recipe && d.verdict && d.verdict !== 'recipe') return { dot: 'warn', text: 'Avis du concepteur : ' + VERDICT_FR[d.verdict] };
   if (!d.has_recipe) return { dot: '', text: 'Pas encore de recette' };
@@ -1148,16 +1159,23 @@ function viewDraft() {
   var d = S.d;
   if (S.notFound) return h('div', { class: 'narrow' }, h('div', { class: 'empty' }, h('h2', null, 'Brouillon introuvable'), h('p', null, 'Il a peut-être été supprimé.'), h('a', { class: 'btn', href: '#/recettes' }, 'Vos recettes')));
   if (!d || d.slug !== S.route.draft) return h('p', null, 'Chargement…');
-  var tab = S.route.tab || (d.has_recipe ? (d.errors ? 'fichier' : 'etapes') : d.concept ? 'avis' : 'besoin');
-  var tabs = [['etapes', 'Étapes'], ['fichier', 'Fichier de la recette'], ['essais', 'Essais' + (d.essais.length ? ' (' + d.essais.length + ')' : '')]];
+  var proposing = d.stage === 'proposal';
+  var tab = S.route.tab || (proposing ? 'proposition' : d.has_recipe ? (d.errors ? 'fichier' : 'etapes') : d.concept ? 'avis' : 'besoin');
+  var tabs = proposing ? [['proposition', 'Proposition' + (d.proposal.version > 1 ? ' (v' + d.proposal.version + ')' : '')]]
+    : [['etapes', 'Étapes'], ['fichier', 'Fichier de la recette'], ['essais', 'Essais' + (d.essais.length ? ' (' + d.essais.length + ')' : '')]];
+  if (!proposing && d.proposal) tabs.push(['proposition', 'Proposition validée']);
   if (d.concept || d.design) tabs.push(['avis', 'Avis du concepteur']);
   if (d.need) tabs.push(['besoin', 'Votre besoin']);
-  var panel = tab === 'fichier' ? filePanel(d) : tab === 'essais' ? essaisPanel(d) : tab === 'avis' ? avisPanel(d) : tab === 'besoin' ? needPanel(d) : stepsPanel(d.check && d.check.recipe, d.has_recipe);
+  var panel = tab === 'proposition' && d.proposal ? proposalPanel(d) : tab === 'fichier' ? filePanel(d) : tab === 'essais' ? essaisPanel(d)
+    : tab === 'avis' ? avisPanel(d) : tab === 'besoin' ? needPanel(d) : stepsPanel(d.check && d.check.recipe, d.has_recipe);
   return h('div', null,
     h('div', { class: 'dossier-head' }, h('h1', null, draftTitle(d)),
       h('div', { class: 'meta' }, h('span', null, 'Brouillon de recette'), d.recipe_id ? h('span', null, 'id ' + d.recipe_id) : null,
         h('span', null, 'créé ' + ago(d.created)), d.design && d.design.cost_usd ? h('span', null, 'conception ' + usd(d.design.cost_usd)) : null)),
     draftAction(d),
+    d.has_recipe && d.design && d.design.mode === 'write' && d.design.drift && d.design.drift.length && !d.in_recueil
+      ? h('div', { class: 'checks warn', style: 'margin:0 0 18px' }, h('strong', null, 'Le fichier écrit s’écarte de la proposition validée'),
+          h('ul', null, d.design.drift.map(function (x) { return h('li', null, x); })), h('p', null, 'Corrigez le fichier, ou relancez l’écriture depuis l’onglet « Proposition validée ».')) : null,
     h('nav', { class: 'tabs', 'aria-label': 'Brouillon' }, tabs.map(function (t) {
       return h('a', { href: draftHash(d.slug, t[0]), 'aria-current': tab === t[0] ? 'page' : null }, t[1]);
     })),
@@ -1173,12 +1191,30 @@ function recipeBtn(label, cls, onclick, busyLabel, disabled) {
 }
 function draftAction(d) {
   if (d.locked) {
-    return h('div', { class: 'action run' }, h('div', { class: 'row' }, h('span', { class: 'spin c-run' }), h('h2', { class: 'grow' }, 'Conception en cours'),
+    var mode = d.design && d.design.mode || 'propose';
+    return h('div', { class: 'action run' }, h('div', { class: 'row' }, h('span', { class: 'spin c-run' }),
+      h('h2', { class: 'grow' }, { propose: 'Le concepteur prépare sa proposition', revise: 'Le concepteur revoit sa proposition', write: 'Le concepteur écrit la recette' }[mode]),
       d.design && d.design.started ? h('span', { class: 'note', 'data-since': d.design.started, style: 'margin:0' }, elapsed(d.design.started)) : null),
-      h('p', { class: 'lead' }, 'Le concepteur lit votre besoin et le catalogue réel, puis propose une recette — ou conclut qu’un skill suffit. Une à trois minutes en général ; vous pouvez fermer la page.'),
+      h('p', { class: 'lead' }, {
+        propose: 'Il lit votre besoin et le catalogue réel, puis propose un enchaînement d’étapes — ou conclut qu’un skill suffit. Rien n’est écrit avant que vous ayez commenté et validé le principe.',
+        revise: 'Il reprend sa proposition avec vos commentaires.',
+        write: 'Il écrit le fichier complet de la recette d’après la proposition que vous avez validée.' }[mode] + ' Une à trois minutes en général ; vous pouvez fermer la page.'),
       h('div', { class: 'btns' }, h('button', { class: 'btn ghost', type: 'button', disabled: !!S.busy || offline(), onclick: function () { stopDesign(d); } }, 'Interrompre')));
   }
   var model = recipeBtn('Partir du modèle', '', function () { useTemplate(d); }, 'Modèle…');
+  if (d.stage === 'proposal') {
+    var p = d.proposal, writeFailed = d.design && d.design.mode === 'write' && d.design.error;
+    if (writeFailed) return h('div', { class: 'action bad' }, h('h2', null, 'L’écriture de la recette n’a pas abouti'), h('div', { class: 'callout pre' }, d.design.error),
+      h('div', { class: 'btns' }, recipeBtn('Relancer l’écriture', 'primary', function () { writeRecipe(d); }, 'Lancement…')));
+    if (d.design && d.design.error) return h('div', { class: 'action bad' }, h('h2', null, 'La révision n’a pas abouti'), h('div', { class: 'callout pre' }, d.design.error),
+      h('p', { class: 'lead' }, 'La proposition précédente reste affichée ci-dessous : vous pouvez la commenter à nouveau ou la valider.'));
+    if (p.problems.length) return h('div', { class: 'action bad' }, h('h2', null, 'La proposition ne peut pas encore devenir une recette'),
+      h('ul', { class: 'checks bad' }, p.problems.map(function (x) { return h('li', null, x); })),
+      h('p', { class: 'lead' }, 'Commentez-la (par exemple « utilise un skill du catalogue pour l’étape 2 ») et demandez une révision.'));
+    return h('div', { class: 'action warn' }, h('h2', null, 'À vous : commentez la proposition'),
+      h('p', { class: 'lead' }, 'Le concepteur propose ' + plural(p.steps.length, 'étape', 'étapes') + '. Commentez une étape ou l’ensemble, puis demandez une révision — ou validez le principe : il écrira alors le fichier de la recette. Rien n’est écrit avant.'),
+      S.route.tab && S.route.tab !== 'proposition' ? h('div', { class: 'btns' }, h('a', { class: 'btn primary', href: draftHash(d.slug, 'proposition') }, 'Voir la proposition')) : null);
+  }
   if (!d.has_recipe && d.design && d.design.error) {
     return h('div', { class: 'action bad' }, h('h2', null, 'La conception n’a pas abouti'), h('div', { class: 'callout pre' }, d.design.error),
       h('div', { class: 'btns' }, d.need ? recipeBtn('Relancer la conception', 'primary', function () { designAgain(d, false); }, 'Lancement…') : null, model));
@@ -1378,8 +1414,88 @@ async function draftPost(d, action, body, busyLabel, timeout) {
 }
 async function designAgain(d, insist, confirmFirst) {
   if ((confirmFirst || d.has_recipe) && !(await ask(insist ? 'Demander quand même une recette ?' : 'Relancer la conception ?',
-    ['Un nouvel appel au concepteur (modèle Opus, plafond de sécurité 5 $).'].concat(d.has_recipe ? ['La recette proposée remplacera le fichier actuel ; l’ancienne version est conservée à côté.'] : []), 'Lancer'))) return;
-  if (await draftPost(d, 'design', { insist: insist, engine: d.design && d.design.engine || undefined }, 'Lancement…')) go(draftHash(d.slug));
+    ['Un nouvel appel au concepteur (modèle Opus, plafond de sécurité 5 $) : une nouvelle proposition, à commenter.'].concat(d.has_recipe ? ['Le fichier actuel de la recette est mis de côté (sa version est conservée) : vous repartirez de la proposition.'] : []), 'Lancer'))) return;
+  if (await draftPost(d, 'design', { mode: 'propose', insist: insist, engine: d.design && d.design.engine || undefined }, 'Lancement…')) go(draftHash(d.slug));
+}
+
+// ---- the designer's proposal: steps to comment on before any file is written
+var PAUSE_SHORT = { validate: 'Relecture : vous validez', answers: 'Pause : réponses d’un tiers', choose: 'Choix des étapes facultatives' };
+function commentsOf(d) {
+  var key = 'parcours-ui:comments:' + d.slug, c = S.comments[d.slug];
+  if (!c) { try { c = JSON.parse(saved('localStorage', key) || 'null'); } catch (e) { c = null; } }
+  if (!c || c.v !== d.proposal.version) c = { v: d.proposal.version, general: '', steps: {}, open: {} };
+  S.comments[d.slug] = c;
+  return c;
+}
+function keepComments(d) { save('localStorage', 'parcours-ui:comments:' + d.slug, JSON.stringify(S.comments[d.slug])); }
+function pendingComments(c) {
+  var steps = {};
+  Object.keys(c.steps).forEach(function (k) { if (c.steps[k].trim()) steps[k] = c.steps[k].trim(); });
+  return { general: c.general.trim(), steps: steps };
+}
+function hasComments(c) { var p = pendingComments(c); return !!(p.general || Object.keys(p.steps).length); }
+function proposalPanel(d) {
+  var p = d.proposal, editable = d.stage === 'proposal' && !d.locked, c = editable ? commentsOf(d) : null;
+  function commentArea(value, label, onInput) {
+    var area = h('textarea', { class: 'input', rows: '2', 'aria-label': label, value: value, placeholder: 'Votre commentaire' });
+    area.addEventListener('input', function () { onInput(area.value); keepComments(d); });
+    return area;
+  }
+  var cards = [];
+  p.steps.forEach(function (s, i) {
+    if (i) cards.push(h('div', { class: 'chain-arrow', 'aria-hidden': 'true' }, '↓'));
+    var unknown = p.problems.some(function (x) { return x.indexOf('« ' + (s.skill || '?') + ' » n’existe pas') >= 0 || x.indexOf('« ' + (s.skill || '?') + ' » n\'existe pas') >= 0; });
+    var open = editable && (c.open[s.id] || (c.steps[s.id] || '').trim());
+    cards.push(h('li', { class: 'chain-step' },
+      h('div', { class: 'st-head' }, h('strong', null, s.label || pretty(s.id)), s.optional ? h('span', { class: 'badge' }, 'Facultative') : null,
+        h('code', { class: unknown ? 'c-bad' : '' }, s.skill || '?')),
+      s.role ? h('p', { class: 'mission' }, s.role) : null,
+      h('dl', { class: 'kv' },
+        h('dt', null, 'Reçoit'), h('dd', null, s.receives.map(function (r) { return sourceFr(r, p.steps); }).join(', ') || '—'),
+        h('dt', null, 'Produit'), h('dd', null, s.produces.join(', ') || '—')),
+      PAUSE_SHORT[s.pause] ? h('span', { class: 'pause-chip' }, PAUSE_SHORT[s.pause]) : null,
+      editable ? (open ? h('div', { class: 'comment' }, commentArea(c.steps[s.id] || '', 'Commentaire sur « ' + (s.label || s.id) + ' »', function (v) { c.steps[s.id] = v; }))
+        : h('button', { class: 'btn ghost comment-btn', type: 'button', onclick: function () { c.open[s.id] = true; render(); var a = document.querySelector('.chain-step:nth-of-type(' + (i + 1) + ') textarea'); if (a) a.focus(); } }, icon('plus'), 'Commenter cette étape')) : null));
+  });
+  var after = p.after_comments && (p.after_comments.general || Object.keys(p.after_comments.steps || {}).length);
+  return h('div', { class: 'doc-card' },
+    h('div', { class: 'doc-bar' }, h('span', { class: 'ttl' }, p.title || 'Proposition du concepteur'),
+      h('span', { class: 'when' }, (editable ? 'version ' + p.version + ' · à commenter' : 'validée' + (p.validated_at ? ' ' + ago(p.validated_at) : '')) + ' · ' + plural(p.steps.length, 'étape', 'étapes'))),
+    h('div', { class: 'recipe-view' },
+      p.summary ? h('p', { class: 'lead-p' }, p.summary) : null,
+      after ? subDetails('Révisée après vos commentaires', 'after:' + d.slug, h('div', null,
+        p.after_comments.general ? h('p', null, 'Sur l’ensemble : ' + p.after_comments.general) : null,
+        Object.keys(p.after_comments.steps || {}).map(function (k) { return h('p', null, 'Sur « ' + k + ' » : ' + p.after_comments.steps[k]); }))) : null,
+      p.context_sheet.length ? [h('h3', null, 'Fiche de contexte'), h('p', { class: 'hint' }, 'Ce que la première étape tirera de la demande, et que vous validerez : ' + p.context_sheet.join(', ') + '.')] : null,
+      h('h3', null, 'L’enchaînement'),
+      h('ol', { class: 'chain' }, cards),
+      editable ? h('div', { class: 'field', style: 'margin-top:18px' }, h('label', null, 'Commentaire sur l’ensemble'),
+        commentArea(c.general, 'Commentaire sur l’ensemble', function (v) { c.general = v; })) : null,
+      editable ? h('div', { class: 'btns' },
+        recipeBtn('Valider le principe et écrire la recette', 'primary', function () { writeRecipe(d); }, 'Écriture…'),
+        recipeBtn('Revoir avec mes commentaires', '', function () { reviseProposal(d); }, 'Révision…')) : null,
+      !editable && d.stage === 'recipe' && d.need ? h('div', { class: 'btns' },
+        recipeBtn('Réécrire la recette d’après cette proposition', 'ghost', function () { writeRecipe(d, true); }, 'Écriture…')) : null));
+}
+async function reviseProposal(d) {
+  var c = commentsOf(d);
+  if (!hasComments(c)) { S.error = 'Écrivez au moins un commentaire, sur une étape ou sur l’ensemble.'; renderChrome(); return; }
+  if (!(await ask('Revoir la proposition avec vos commentaires ?', ['Un nouvel appel au concepteur (modèle Opus, plafond de sécurité 5 $). La proposition actuelle est conservée à côté (proposition.vN.json).'], 'Revoir'))) return;
+  if (await draftPost(d, 'design', { mode: 'revise', comments: pendingComments(c), engine: d.design && d.design.engine || undefined }, 'Révision…')) {
+    delete S.comments[d.slug]; save('localStorage', 'parcours-ui:comments:' + d.slug, null);
+  }
+}
+async function writeRecipe(d, again) {
+  var c = d.stage === 'proposal' ? commentsOf(d) : null;
+  if (d.proposal.problems.length) { S.error = 'La proposition ne peut pas encore devenir une recette : demandez d’abord une révision.'; renderChrome(); return; }
+  var body = ['Le concepteur écrit le fichier complet de la recette d’après cette proposition (un appel, modèle Opus, plafond de sécurité 5 $). Vous pourrez encore le retoucher, puis le tester.'];
+  if (c && hasComments(c)) body.unshift('Vos commentaires non envoyés ne seront pas pris en compte. Pour qu’ils le soient, choisissez plutôt « Revoir avec mes commentaires ».');
+  if (again) body.push('Le fichier actuel sera remplacé ; l’ancienne version est conservée à côté.');
+  if (!(await ask(again ? 'Réécrire la recette ?' : 'Valider le principe et écrire la recette ?', body, again ? 'Réécrire' : 'Valider et écrire'))) return;
+  if (await draftPost(d, 'design', { mode: 'write', engine: d.design && d.design.engine || undefined }, 'Écriture…')) {
+    delete S.comments[d.slug]; save('localStorage', 'parcours-ui:comments:' + d.slug, null);
+    go(draftHash(d.slug));
+  }
 }
 async function stopDesign(d) {
   if (!(await ask('Interrompre la conception ?', ['L’appel au moteur est coupé ; ce qu’il a déjà coûté reste dû.'], 'Interrompre', true))) return;

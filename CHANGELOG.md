@@ -2,7 +2,7 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
-## Unreleased (branches `theme`, `dossiers`) — themes, many dossiers, setup
+## 2026-10-15 — plugin 2.5.0: Inflexion theme, many dossiers, setup
 
 - Home: filter chips by recipe (with counts) once dossiers mix several recipes; the
   choice is remembered in the browser.

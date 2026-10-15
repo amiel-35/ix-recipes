@@ -44,21 +44,22 @@
 
 ix-recipes does the groundwork of consulting, HR, legal, finance and product jobs with Claude: answering a call for tenders, turning a vague client request into a brief, writing a job description, reviewing a contract… The bigger jobs are **recipes**: a series of steps you follow in a page on your computer, which stops whenever your judgement is needed.
 
-**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page.
+**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.7.0**:
 
 ```text
-Install ix-recipes on this computer and open its tracking page so I can try it
+Install ix-recipes (version 2.7.0 or later) on this computer and open its tracking page so I can try it
 (https://github.com/amiel-35/ix-recipes). Do everything yourself, without asking me to restart:
 1. Add the amiel-35/plugins marketplace (if that fails for lack of a GitHub SSH key, use
    https://github.com/amiel-35/plugins.git), then install ix-skills@amiel-35 and
    ix-recipes@amiel-35. If they are already installed, update them; if they come from another
-   marketplace, keep that one and create no duplicate.
+   marketplace, keep that one and create no duplicate. Check the installed ix-recipes version:
+   if it is older than 2.7.0, update the marketplace and the plugin.
 2. Check python3 (3.9 or later); if it is missing, tell me what to install and stop.
 3. Start, in the background, the script skills/suivi-parcours/scripts/interface.py of the
    installed ix-recipes plugin (under ~/.claude/plugins/cache/, the latest version); it opens
    the page in the browser and prints its address.
-Change nothing else without asking me. Answer in three lines: the page's address, where my
-dossiers are kept, how to stop the page.
+Change nothing else without asking me. Answer in four lines: the installed ix-recipes version,
+the page's address, where my dossiers are kept, how to stop the page.
 ```
 
 **2. Try it.** In the page, pick the "Brief client" recipe, paste a client request, for example this one, and run:

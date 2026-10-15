@@ -44,21 +44,22 @@
 
 ix-recipes fait avec Claude le travail de fond des métiers du conseil, des RH, du juridique, de la finance et du produit : répondre à un appel d'offres, transformer une demande client floue en brief, écrire une fiche de poste, relire un contrat… Les plus gros travaux sont des **recettes** : une suite d'étapes que vous suivez dans une page sur votre ordinateur, qui s'arrête chaque fois qu'il faut votre avis.
 
-**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page.
+**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page. Prompt pour la version **2.7.0** :
 
 ```text
-Installe ix-recipes sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
+Installe ix-recipes (version 2.7.0 ou plus récente) sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
 (https://github.com/amiel-35/ix-recipes). Fais tout toi-même, sans me demander de redémarrer :
 1. Ajoute la marketplace amiel-35/plugins (si ça échoue faute de clé SSH GitHub, utilise
    https://github.com/amiel-35/plugins.git), puis installe ix-skills@amiel-35 et
    ix-recipes@amiel-35. S'ils sont déjà installés, mets-les à jour ; s'ils viennent d'une autre
-   marketplace, garde celle-là et ne crée pas de doublon.
+   marketplace, garde celle-là et ne crée pas de doublon. Vérifie la version installée
+   d'ix-recipes : si elle est plus ancienne que 2.7.0, mets à jour la marketplace et le plugin.
 2. Vérifie python3 (3.9 ou plus) ; s'il manque, dis-moi quoi installer et arrête-toi.
 3. Lance en arrière-plan le script skills/suivi-parcours/scripts/interface.py du plugin
    ix-recipes installé (sous ~/.claude/plugins/cache/, la version la plus récente) ; il ouvre
    la page dans le navigateur et affiche son adresse.
-Ne change rien d'autre sans me demander. Réponds en trois lignes : l'adresse de la page, où sont
-rangés mes dossiers, comment arrêter la page.
+Ne change rien d'autre sans me demander. Réponds en quatre lignes : la version d'ix-recipes
+installée, l'adresse de la page, où sont rangés mes dossiers, comment arrêter la page.
 ```
 
 **2. Essayez.** Dans la page, choisissez la recette « Brief client », collez une demande de client, par exemple celle-ci, et lancez :

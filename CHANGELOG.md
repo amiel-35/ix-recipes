@@ -4,6 +4,8 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
 
 ## 2026-10-15 — plugin 2.7.0: your own recipes
 
+- README: the install prompt names its version (2.7.0), updates an older install and
+  reports the installed version first.
 - **Personal recipes, outside the repository**, from the tracking page ("Recipes"): describe a
   recurring job; one fresh engine call plays `concepteur-recette` over the real catalogue (the
   current version of each installed plugin) and proposes a recipe, or says that one skill is

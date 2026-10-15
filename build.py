@@ -314,6 +314,12 @@ def validate_workflow(fm: dict, body: str) -> list:
         transmitted[sid] = set(st.get("transmits") or [])
         if st.get("pause") == "answers":
             answers_ready = True
+    labels = wf.get("context_labels") or {}
+    if not isinstance(labels, dict) or any(k not in (wf.get("context_sheet") or []) or not isinstance(v, str) or not v.strip()
+                                           for k, v in labels.items()):
+        errs.append("context_labels must map context_sheet keys to non-empty labels (shown to the user, in French)")
+    if "summary_fr" in fm and not (isinstance(fm["summary_fr"], str) and fm["summary_fr"].strip()):
+        errs.append("summary_fr must be a non-empty string (one sentence shown to the user)")
     if not steps[0].get("produces_context_sheet"):
         errs.append("the first step must produce the context sheet (produces_context_sheet: true)")
     return errs

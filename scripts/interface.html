@@ -104,6 +104,8 @@ textarea.input.mono { font: 13px/1.5 var(--mono); }
 .choice:hover { border-color: var(--ink-3); }
 .choice input { position: absolute; opacity: 0; }
 .choice.on { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary) inset; }
+.choice:has(input:focus-visible), .drop:has(input:focus-visible) .btn { outline: 2px solid var(--accent); outline-offset: 2px; }
+.action h2:focus { outline: none; }
 .choice .ttl { font-weight: 600; }
 .choice .desc { color: var(--ink-2); font-size: 13px; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .choice .steps { color: var(--ink-3); font-size: 12.5px; margin-top: 8px; }
@@ -154,6 +156,7 @@ nav.rail .sep { height: 1px; background: var(--line); margin: 8px 10px; }
 .placeholder { padding: 56px 40px; text-align: center; color: var(--ink-2); }
 .placeholder .big { font-size: 16px; color: var(--ink); font-weight: 600; margin-bottom: 4px; }
 .skeleton { padding: 36px 56px; }
+.print-head { display: none; }
 .skeleton i { display: block; height: 12px; border-radius: 6px; background: var(--line); margin: 0 0 14px; animation: pulse 1.6s ease-in-out infinite; }
 
 /* ---- the document itself */
@@ -244,12 +247,16 @@ dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1
   .dossier-head h1 { font-size: 21px; }
   .crumb span.t { max-width: 40vw; }
   .switch .lbl { display: none; }
+  .page-head { flex-direction: column; align-items: flex-start; }
 }
 
 /* ---- print: the document only */
 @media print {
   body { background: #fff; color: #000; }
-  header.bar, #banners, nav.rail, .action, .doc-bar, .tech, .dossier-head, .sheet, #toast { display: none !important; }
+  header.bar, #banners, nav.rail, .action, .doc-bar, .tech, .dossier-head, #toast, .sheet button, .sheet .hint { display: none !important; }
+  .print-head { display: block !important; margin: 0 0 18pt; padding-bottom: 8pt; border-bottom: 1px solid #bbb; font-family: var(--sans); }
+  .print-head .p-title { font-size: 16pt; font-weight: 600; } .print-head .p-sub { font-size: 10pt; color: #555; }
+  .sheet { padding: 0 0 14pt; border: 0; } .doc-bar + .sheet { padding-top: 0; }
   main { padding: 0; max-width: none; }
   .layout { display: block; }
   .doc-card { border: 0; }
@@ -268,7 +275,7 @@ dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1
   <span class="push">
     <span class="conn" id="conn" role="status" aria-live="polite"></span>
     <label class="switch" title="Affiche le moteur, le coût de chaque étape, les champs transmis, les messages reçus et le journal">
-      <input type="checkbox" id="tech-toggle"><span class="lbl">Détails techniques</span>
+      <input type="checkbox" id="tech-toggle" aria-label="Détails techniques"><span class="lbl" aria-hidden="true">Détails techniques</span>
     </label>
   </span>
 </header>
@@ -309,7 +316,7 @@ function inlineMd(text) {
   // code spans first (nothing inside them is touched), then links, then emphasis; all escaped first
   return String(text).split(/(`[^`]+`)/).map(function (part, i) {
     if (i % 2) return '<code>' + escapeHtml(part.slice(1, -1)) + '</code>';
-    var out = '', last = 0, re = /\[([^\]\n]+)\]\((https?:\/\/[^\s)<>"']+)\)/g, m;
+    var out = '', last = 0, re = /\[([^\]\n]{1,500})\]\((https?:\/\/[^\s()<>"'\[\]]{1,2000})\)/g, m;
     while ((m = re.exec(part))) {
       out += inlineSpans(escapeHtml(part.slice(last, m.index)));
       out += '<a href="' + escapeHtml(m[2]) + '" target="_blank" rel="noopener noreferrer">' + inlineSpans(escapeHtml(m[1])) + '</a>';
@@ -364,8 +371,19 @@ function mdList(items) {
   return html;
 }
 
+var MD_MAX = 300000;   // beyond this, an escaped <pre>: the renderer runs on the page's only thread
+function stripComments(s) {   // linear: a regex rescans to the end for every unclosed "<!--"
+  var out = '', at = 0, open;
+  while ((open = s.indexOf('<!--', at)) >= 0) {
+    var close = s.indexOf('-->', open + 4);
+    if (close < 0) break;
+    out += s.slice(at, open); at = close + 3;
+  }
+  return out + s.slice(at);
+}
 function renderMarkdown(text) {
-  var source = String(text).replace(/\r\n?/g, '\n').replace(/<!--[\s\S]*?-->/g, '');
+  if (String(text).length > MD_MAX) return '<pre class="raw">' + escapeHtml(text) + '</pre>';
+  var source = stripComments(String(text).replace(/\r\n?/g, '\n'));
   var lines = source.split('\n');
   var out = [], i = 0, m;
   while (i < lines.length) {
@@ -508,10 +526,10 @@ function save(kind, key, value) { try { if (value === null) store(kind).removeIt
 
 // ---- words
 var ENGINE_FR = { claude: 'Claude', codex: 'Codex', agy: 'Antigravity', vibe: 'Vibe (non testé)', fake: 'fake (dev)' };
-var CONTEXT_FR = {
-  buyer: 'Acheteur', client: 'Client', entities: 'Acteurs', objective: 'Objectif', constraints: 'Contraintes',
-  recipient: 'Destinataire', format: 'Format attendu', deadlines: 'Échéances', named_solutions: 'Solutions déjà nommées'
-};
+// A context sheet key as the reader sees it: the recipe's own label (`context_labels`), else the key.
+function ctxLabel(p, k) { return (p.context_labels && p.context_labels[k]) || pretty(k); }
+// The runner's « absent » marker, in the reader's words.
+function ctxShown(p, v) { var s = asText(v); return p.not_stated && s.trim() === p.not_stated ? 'non indiqué' : s; }
 function pretty(id) { var s = String(id || '').replace(/[-_]+/g, ' ').trim(); return s ? s[0].toUpperCase() + s.slice(1) : ''; }
 function stepName(s) { return (s && (s.label || pretty(s.id))) || ''; }
 function titleOf(x) { return x.title || pretty(x.slug); }
@@ -586,14 +604,14 @@ function go(hash) { if (location.hash === hash) { S.route = parseRoute(); render
 async function poll() {
   if (S.polling || !S.token) return;
   S.polling = true;
-  var route = S.route;
+  var route = S.route, sig = null;
   try {
     if (route.view === 'home' || route.view === 'new') {
       var list = await api('GET', '/api/parcours', undefined, 8000);
       if (route !== S.route) return;
       S.list = list;
       if (!S.recipes && !S.recipesError) await loadRecipes();
-      changed(JSON.stringify([list, S.recipes]));
+      sig = JSON.stringify([list, S.recipes]);
     } else {
       var p = await api('GET', slugPath(route.slug), undefined, 15000);
       if (route !== S.route) return;
@@ -601,15 +619,16 @@ async function poll() {
       S.p = p; S.notFound = false;
       if (S.tech && (p.locked || S.open.has('log'))) await loadLog(route.slug);
       if (moved) S.plan = null;
-      changed(JSON.stringify([p, S.tech ? S.log : null]));
+      sig = JSON.stringify([p, S.tech ? S.log : null]);
     }
     S.lastOk = Date.now(); S.fails = 0; S.authError = false;
   } catch (e) {
     if (e instanceof ApiFail && e.status === 403) { S.authError = true; S.fails = 0; }
     else if (e instanceof ApiFail && e.status === 404 && route.view === 'parcours') { S.notFound = true; S.lastOk = Date.now(); S.fails = 0; }
     else S.fails++;
-    changed('err:' + S.fails + S.authError + S.notFound);
+    sig = 'err:' + S.fails + S.authError + S.notFound;
   } finally { S.polling = false; }
+  if (sig !== null) changed(sig);   // outside the network try: a rendering bug is not a network failure
   updateConn();
 }
 async function loadRecipes() {
@@ -636,15 +655,36 @@ function isEditing() {
 }
 function flush() { if (S.deferred) render(); }
 
+// ---- keyboard focus survives a re-render (the page is rebuilt, not patched)
+function focusKeyOf(el) {
+  if (!el || el === document.body || !$('#app').contains(el)) return null;
+  return el.id || el.getAttribute('data-k') || (el.tagName + '|' + (el.getAttribute('href') || '') + '|' + el.textContent.trim().slice(0, 60));
+}
+function restoreFocus(key) {
+  if (!key) return;
+  var found = null;
+  document.querySelectorAll('#app a, #app button, #app input, #app select, #app textarea, #app summary').forEach(function (el) {
+    if (!found && focusKeyOf(el) === key) found = el;
+  });
+  if (found) found.focus({ preventScroll: true });
+}
+
 function render() {
   if (S.down || isEditing()) { S.deferred = true; return; }
   S.deferred = false;
-  var view;
-  if (!S.token) view = viewNoToken();
-  else if (S.route.view === 'new') view = viewNew();
-  else if (S.route.view === 'parcours') view = viewParcours();
-  else view = viewHome();
+  var view, focusKey = focusKeyOf(document.activeElement);
+  try {
+    if (!S.token) view = viewNoToken();
+    else if (S.route.view === 'new') view = viewNew();
+    else if (S.route.view === 'parcours') view = viewParcours();
+    else view = viewHome();
+  } catch (e) {
+    if (window.console) console.error(e);
+    view = h('div', { class: 'narrow' }, h('div', { class: 'empty' }, h('h2', null, 'Affichage momentanément impossible'),
+      h('p', null, 'La page se remet à jour d’elle-même dans quelques secondes.')));
+  }
   $('#app').replaceChildren(view);
+  restoreFocus(focusKey);
   var current = document.querySelector('nav.rail [aria-current="page"]'), railBox = document.querySelector('nav.rail');
   if (current && railBox && railBox.scrollWidth > railBox.clientWidth) railBox.scrollLeft = current.parentNode.offsetLeft - 16;   // phone: show the current step
   renderChrome();
@@ -693,7 +733,7 @@ function ask(title, body, okLabel, danger) {
         h('button', { class: 'btn ' + (danger ? 'danger' : 'primary'), type: 'button', onclick: function () { done(true); } }, okLabel))));
     dlg.onclose = function () { resolve(false); };
     dlg.showModal();
-    dlg.querySelector('.btn:last-child').focus();
+    dlg.querySelector(danger ? '.btn.ghost' : '.btn:last-child').focus();   // a destructive action is never one Enter away
   });
 }
 
@@ -714,7 +754,10 @@ function kindOf(p) {
 // The step the human should look at now.
 function focusStep(p) {
   var k = kindOf(p);
-  if (k === 'running') return p.steps.filter(function (s) { return s.status === 'running'; })[0] || null;
+  if (k === 'running') {   // the lock is taken a moment before a step is marked running, and released after
+    return p.steps.filter(function (s) { return s.status === 'running'; })[0] ||
+      p.steps.filter(function (s) { return s.status === 'pending' || s.status === 'paused'; })[0] || p.steps[p.steps.length - 1];
+  }
   if (k === 'stuck') return stuckSteps(p)[0];
   if ((k === 'validate' || k === 'answers') && p.pending.step) return stepOf(p, p.pending.step);
   if (k === 'completed' && p.final_output) return p.steps.filter(function (s) { return s.output === p.final_output; })[0];
@@ -779,7 +822,7 @@ function dossierCard(x) {
     h('div', { class: 'ttl' }, titleOf(x)),
     h('div', { class: 'sub' }, x.recipe_label || x.recipe),
     h('div', { class: 'state' }, h('span', { class: 'dot ' + st.dot }), st.text),
-    h('div', { class: 'progress', 'aria-label': x.steps_done + ' étapes sur ' + x.steps_total }, bars),
+    h('div', { class: 'progress', role: 'img', 'aria-label': x.steps_done + ' étapes sur ' + x.steps_total }, bars),
     h('div', { class: 'foot' }, h('span', null, x.steps_done + ' / ' + x.steps_total + ' étapes'), h('span', null, ago(x.updated || x.created))));
 }
 
@@ -787,7 +830,7 @@ function viewHome() {
   var d = S.list;
   if (!d) return h('p', { class: 'muted' }, 'Chargement…');
   var head = h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Vos dossiers'),
-    h('p', null, 'Chaque dossier suit une recette pas à pas ; vous relisez et validez à chaque étape clé.')),
+    h('p', null, 'Une recette est une suite d’étapes guidées ; vous relisez et validez à chaque étape clé.')),
     d.parcours.length ? h('button', { class: 'btn primary', type: 'button', onclick: function () { go('#/nouveau'); } }, icon('plus'), 'Nouveau dossier') : null);
   if (!d.parcours.length) {
     return h('div', null, head, h('div', { class: 'empty' }, h('h2', null, 'Créez votre premier dossier'),
@@ -820,7 +863,7 @@ function viewNew() {
   if (!dr.recipe && S.recipes.length === 1) dr.recipe = S.recipes[0].id;
   var chosen = S.recipes.filter(function (r) { return r.id === dr.recipe; })[0];
   var text = h('textarea', { class: 'input', id: 'new-text', placeholder: 'Collez ici le mail du client, vos notes de réunion ou le cahier des charges…', value: dr.text, 'aria-label': 'Demande' });
-  text.addEventListener('input', function () { dr.text = text.value; count.textContent = countText(); });
+  text.addEventListener('input', function () { dr.text = text.value; count.textContent = countText(); saveDraft(); });
   var count = h('span', { class: 'muted', style: 'font-size:12.5px;color:var(--ink-3)' }, countText());
   var fileInput = h('input', { type: 'file', accept: '.md,.txt,.markdown,text/plain,text/markdown', class: 'sr-only', id: 'new-file', onchange: function (e) { readFile(e.target.files[0]); } });
   var drop = h('div', { class: 'drop' }, icon('file'), h('span', { class: 'grow' }, dr.fileNote || 'Ou importez un fichier texte (.md, .txt). Pour un PDF ou un Word, copiez-collez son texte.'),
@@ -828,15 +871,15 @@ function viewNew() {
   ['dragover', 'dragenter'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); }); });
   ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
   drop.addEventListener('drop', function (e) { if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]); });
-  var title = h('input', { class: 'input', type: 'text', value: dr.title, maxlength: '120', placeholder: chosen ? chosen.label + ' — ' : 'Réponse à la consultation formation', 'aria-label': 'Titre du dossier' });
-  title.addEventListener('input', function () { dr.title = title.value; });
+  var title = h('input', { class: 'input', type: 'text', value: dr.title, maxlength: '120', placeholder: 'Offre formation gestion de projet', 'aria-label': 'Titre du dossier' });
+  title.addEventListener('input', function () { dr.title = title.value; saveDraft(); });
   return h('div', { class: 'narrow' },
-    h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Nouveau dossier'), h('p', null, 'La demande n’est lue que par la première étape ; la suite travaille sur la fiche que vous aurez validée.'))),
+    h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Nouveau dossier'), h('p', null, 'Seule la première étape lit votre texte. Les suivantes travaillent sur une fiche de contexte que vous validerez après cette première étape.'))),
     h('div', { class: 'field' }, h('div', { class: 'label' }, 'Recette'),
       h('div', { class: 'choices', role: 'radiogroup', 'aria-label': 'Recette' }, S.recipes.map(function (r) {
         return h('label', { class: 'choice' + (r.id === dr.recipe ? ' on' : '') },
-          h('input', { type: 'radio', name: 'recipe', value: r.id, checked: r.id === dr.recipe, onchange: function () { dr.recipe = r.id; render(); } }),
-          h('div', { class: 'ttl' }, r.label), h('div', { class: 'desc' }, firstSentence(r.description)),
+          h('input', { type: 'radio', name: 'recipe', value: r.id, checked: r.id === dr.recipe, onchange: function () { dr.recipe = r.id; saveDraft(); render(); } }),
+          h('div', { class: 'ttl' }, r.label), h('div', { class: 'desc' }, r.summary || firstSentence(r.description)),
           h('div', { class: 'steps' }, plural(r.steps.length, 'étape', 'étapes') + ' · ' + plural(r.steps.filter(function (s) { return s.pause === 'validate' || s.pause === 'answers'; }).length, 'relecture', 'relectures')));
       }))),
     h('div', { class: 'field' }, h('label', null, 'Titre'), h('p', { class: 'hint' }, 'Pour retrouver le dossier dans la liste. Facultatif.'), title),
@@ -847,6 +890,9 @@ function viewNew() {
       h('button', { class: 'btn ghost', type: 'button', onclick: function () { go('#/'); } }, 'Annuler'),
       h('span', { class: 'grow' }), chosen ? h('span', { style: 'font-size:12.5px;color:var(--ink-3)' }, 'Première étape : ' + (chosen.steps[0].label || pretty(chosen.steps[0].id))) : null));
 }
+var DRAFT_KEY = 'parcours-ui:new';
+function saveDraft() { save('sessionStorage', DRAFT_KEY, JSON.stringify({ recipe: S.draft.recipe, title: S.draft.title, text: S.draft.text })); }
+function loadDraft() { try { var d = JSON.parse(saved('sessionStorage', DRAFT_KEY) || 'null'); if (d) Object.assign(S.draft, d); } catch (e) { /* none */ } }
 function firstSentence(s) { s = String(s || ''); var m = /^(.{40,260}?[.!?])(\s|$)/.exec(s); return m ? m[1] : s.slice(0, 260); }
 function countText() { var n = S.draft.text.trim() ? S.draft.text.trim().split(/\s+/).length : 0; return n ? plural(n, 'mot', 'mots') : ''; }
 function readFile(file) {
@@ -856,7 +902,7 @@ function readFile(file) {
   reader.onload = function () {
     var t = String(reader.result || '');
     if (/\u0000/.test(t.slice(0, 2000))) { S.draft.fileNote = '« ' + file.name + ' » n’est pas un fichier texte : copiez-collez son contenu.'; render(); return; }
-    S.draft.text = t; S.draft.fileNote = '« ' + file.name + ' » importé.';
+    S.draft.text = t; S.draft.fileNote = '« ' + file.name + ' » importé.'; saveDraft();
     if (!S.draft.title) S.draft.title = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
     render();
   };
@@ -870,12 +916,12 @@ async function createDossier() {
   S.busy = 'Création…'; S.error = ''; render();
   try {
     var r = await api('POST', '/api/parcours', { recipe: dr.recipe, title: dr.title.trim(), text: dr.text, engine: dr.engine || undefined }, 60000);
-    S.draft = { recipe: dr.recipe, title: '', text: '', engine: '', fileNote: '' };
+    S.draft = { recipe: dr.recipe, title: '', text: '', engine: '', fileNote: '' }; save('sessionStorage', DRAFT_KEY, null);
     S.busy = '';
     go('#/p/' + r.slug);
     await refreshNow();
     await continueRun(r.slug);
-  } catch (e) { S.error = e.message; S.busy = ''; render(); }
+  } catch (e) { S.error = friendlyError(e); S.busy = ''; render(); }
 }
 
 // ---- a dossier
@@ -884,12 +930,12 @@ function viewParcours() {
   if (S.notFound) return h('div', { class: 'narrow' }, h('div', { class: 'empty' }, h('h2', null, 'Dossier introuvable'), h('p', null, 'Il a peut-être été déplacé ou supprimé.'), h('a', { class: 'btn', href: '#/' }, 'Vos dossiers')));
   if (!p || p.slug !== S.route.slug) return h('p', null, 'Chargement…');
   var focus = focusStep(p);
-  var selected = S.route.step === 'demande' ? 'demande' : (S.route.step && stepOf(p, S.route.step)) || focus;
+  var selected = S.route.step === 'demande' ? 'demande' : (S.route.step && stepOf(p, S.route.step)) || focus || p.steps[0];
   var done = p.steps.filter(function (s) { return s.status === 'done' || s.status === 'skipped'; }).length;
   return h('div', null,
     h('div', { class: 'dossier-head' }, h('h1', null, titleOf(p)),
-      h('div', { class: 'meta' }, h('span', null, p.recipe_label || p.recipe), h('span', null, done + ' / ' + p.steps.length + ' étapes'),
-        h('span', null, 'créé ' + ago(p.created)), p.cost_usd ? h('span', null, usd(p.cost_usd)) : null)),
+      h('div', { class: 'meta' }, h('span', null, p.recipe_label || p.recipe), h('span', null, plural(done, 'étape', 'étapes') + ' sur ' + p.steps.length),
+        h('span', null, 'créé ' + ago(p.created)), p.cost_usd ? h('span', null, 'coût ' + usd(p.cost_usd)) : null)),
     h('div', { class: 'layout' }, rail(p, selected, focus),
       h('div', null, actionCard(p, focus, selected), selected === 'demande' ? requestPanel(p) : docPanel(p, selected))));
 }
@@ -959,7 +1005,9 @@ function actionCard(p, focus, selected) {
         redoOnly ? null : busyBtn('Reprendre', 'primary', function () { retryAndContinue(p); }, 'Reprise…'),
         busyBtn('Refaire l’étape', redoOnly ? 'primary' : '', function () { rerunAndContinue(p, s); }, 'Relance…'),
         seeLink(p, s, selected)),
-      redoOnly ? null : h('p', { class: 'note' }, '« Reprendre » relit ce que le moteur a déjà rendu, sans nouvel appel ; « Refaire » relance l’étape depuis zéro.'), engineLine(p));
+      redoOnly ? null : h('p', { class: 'note' }, hasRawOutput(p, s)
+        ? '« Reprendre » relit le résultat déjà rendu par le moteur, sans nouvel appel ; « Refaire » relance l’étape depuis zéro.'
+        : 'Aucun résultat n’a été enregistré : « Reprendre » relance l’appel au moteur là où il s’est arrêté ; « Refaire » repart de zéro.'), engineLine(p));
   }
   if (k === 'validate') {
     var v = stepOf(p, p.pending.step); idx = p.steps.indexOf(v);
@@ -967,7 +1015,7 @@ function actionCard(p, focus, selected) {
     return h('div', { class: 'action warn' },
       h('h2', null, v && v.blocking ? 'Point d’attention sur « ' + stepName(v) + ' »' : 'À vous : relisez « ' + stepName(v) + ' »'),
       h('p', { class: 'lead' }, v && v.produces_context_sheet
-        ? 'Vérifiez surtout la fiche de contexte, juste en dessous : c’est elle, et non la demande brute, que liront toutes les étapes suivantes. L’analyse complète suit.'
+        ? 'Vérifiez surtout la fiche de contexte' + (selected === v ? ', juste en dessous' : ' (sur la page de cette étape)') + ' : c’est elle, et non votre texte de départ, que liront toutes les étapes suivantes.'
         : 'Si le résultat vous convient, validez : la suite démarre.'),
       v && v.blocking ? h('div', { class: 'callout' }, mdBox(v.blocking, 'compact')) : null,
       h('div', { class: 'btns' },
@@ -1009,7 +1057,12 @@ function actionCard(p, focus, selected) {
           h('span', null, h('strong', null, stepName(s)), S.tech && s ? h('span', { style: 'display:block;font-size:12.5px;color:var(--ink-3)' }, s.mission) : null));
       }),
       h('div', { class: 'btns' },
-        sel.size ? busyBtn('Jouer ' + plural(sel.size, 'étape', 'étapes') + ' et continuer', 'primary', function () { chooseAndContinue(p, group.filter(function (g) { return sel.has(g); })); }, 'Lancement…') : null,
+        (function () {
+      var b = busyBtn(sel.size ? 'Jouer ' + plural(sel.size, 'étape', 'étapes') + ' et continuer' : 'Jouer les étapes cochées et continuer', 'primary',
+        function () { if (sel.size) chooseAndContinue(p, group.filter(function (g) { return sel.has(g); })); }, 'Lancement…');
+      if (!sel.size) { b.disabled = true; b.title = 'Cochez au moins une étape'; }
+      return b;
+    })(),
         busyBtn('Passer ces étapes', '', function () { chooseAndContinue(p, null); }, 'Suite…')), engineLine(p));
   }
   // run: ready to go on
@@ -1036,6 +1089,7 @@ function refreshPrimary() {
   var b = document.querySelector('[data-primary]');
   if (b && primaryLabel && b.getAttribute('aria-busy') !== 'true') b.textContent = primaryLabel();
 }
+function hasRawOutput(p, s) { return (p.files || []).indexOf(String(s.index).padStart(2, '0') + '-' + s.id + '.md') >= 0; }
 function humanError(text) {
   var t = String(text || '').replace(/`[^`]*`/g, '').replace(/\s+/g, ' ').trim();
   if (/isolation/.test(t)) return 'Le résultat recopie un passage de la demande d’origine, ce que les étapes suivantes ne doivent pas recevoir. Refaites l’étape.';
@@ -1068,6 +1122,7 @@ function docPanel(p, s) {
   var hasDoc = doc && doc.document !== undefined && doc.document.trim();
   var sheetFirst = s.produces_context_sheet && p.context_sheet && sheetEditable(p, s);   // what is validated comes first
   return h('div', { class: 'doc-card' },
+    h('div', { class: 'print-head' }, h('div', { class: 'p-title' }, titleOf(p)), h('div', { class: 'p-sub' }, stepName(s) + (s.ended ? ' · ' + fmtDate(s.ended) : ''))),
     h('div', { class: 'doc-bar' }, h('span', { class: 'ttl' }, stepName(s)), h('span', { class: 'when' }, s.ended && s.status !== 'running' ? fmtDate(s.ended) : st.st),
       h('span', { class: 'tools' },
         hasDoc ? h('button', { class: 'btn ghost icon', type: 'button', title: 'Copier le texte', 'aria-label': 'Copier le texte', onclick: function () { copyDoc(p, s); } }, icon('copy')) : null,
@@ -1113,16 +1168,15 @@ function sheetBlock(p, s) {
     sheetEditable(p, s) && !editing ? h('button', { class: 'btn', type: 'button', onclick: function () { S.ctxEdit[p.slug] = true; render(); } }, 'Corriger la fiche') : null);
   if (!editing) {
     return h('div', { class: 'sheet' }, head, h('dl', null, keys.map(function (k) {
-      return [h('dt', null, CONTEXT_FR[k] || pretty(k)), h('dd', null, asText(sheet[k]))];
+      return [h('dt', null, ctxLabel(p, k)), h('dd', null, ctxShown(p, sheet[k]))];
     })));
   }
   var d = ctxDraft(p);
   return h('div', { class: 'sheet' }, head, keys.map(function (k) {
-    var area = h('textarea', { class: 'input' + (typeof sheet[k] === 'string' || Array.isArray(sheet[k]) ? '' : ' mono'), value: d.values[k], 'aria-label': CONTEXT_FR[k] || k, rows: '2' });
+    var area = h('textarea', { class: 'input' + (typeof sheet[k] === 'string' || Array.isArray(sheet[k]) ? '' : ' mono'), value: d.values[k], 'aria-label': ctxLabel(p, k), rows: '2' });
     area.addEventListener('input', function () { d.values[k] = area.value; delete d.errors[k]; autosize(area); refreshPrimary(); });
     requestAnimationFrame(function () { autosize(area); });
-    area.addEventListener('blur', function () { setTimeout(render, 0); });
-    return h('div', { class: 'edit-row' }, h('label', null, CONTEXT_FR[k] || pretty(k)),
+    return h('div', { class: 'edit-row' }, h('label', null, ctxLabel(p, k)),
       Array.isArray(sheet[k]) ? h('p', { class: 'def' }, 'Un élément par ligne.') : null, area, d.errors[k] ? h('div', { class: 'err-inline' }, d.errors[k]) : null);
   }), h('div', { class: 'row' }, h('span', { class: 'grow', style: 'font-size:12.5px;color:var(--ink-3)' }, 'Les corrections sont enregistrées quand vous validez (cadre du haut). L’ancienne version est conservée.'),
     h('button', { class: 'btn ghost', type: 'button', onclick: function () { delete S.ctx[p.slug]; S.ctxEdit[p.slug] = false; render(); } }, 'Annuler les corrections')));
@@ -1215,7 +1269,7 @@ function wantFiles() {
 }
 async function docText(p, s) {
   var entry = S.docs.get(s.output);
-  if (entry && entry.document !== undefined) return entry.document;
+  if (entry && entry.document !== undefined && entry.fp === p.fingerprint) return entry.document;
   var d = await api('GET', slugPath(p.slug) + '/document/' + encodeURIComponent(s.output), undefined, 20000);
   return d.document;
 }
@@ -1239,67 +1293,117 @@ async function downloadDoc(p, s) {
   } catch (e) { S.error = 'Téléchargement impossible : ' + e.message; renderChrome(); }
 }
 function printDoc(p, s) {
-  if (S.route.step !== s.id) { go('#/p/' + p.slug + '/' + s.id); setTimeout(function () { window.print(); }, 700); }
-  else window.print();
+  if (S.route.step !== s.id) go('#/p/' + p.slug + '/' + s.id);
+  var tries = 0;
+  (function whenReady() {   // never print the loading skeleton
+    var entry = S.docs.get(s.output);
+    if (entry && entry.document !== undefined && document.querySelector('.doc .md')) window.print();
+    else if (++tries < 50) setTimeout(whenReady, 100);
+  })();
 }
 
 // ===========================================================================
 // Actions: each human gesture, then the run up to the next pause
 // ===========================================================================
+var chainDepth = 0;
+// A gesture followed by the launch: the clicked button stays busy, and every other one disabled, until the end.
+async function inChain(label, fn) {
+  if (S.busy) return;
+  if (isEditing()) document.activeElement.blur();
+  chainDepth++; S.busy = label; S.error = ''; render();
+  try { return await fn(); }
+  finally {
+    chainDepth--;
+    if (!chainDepth) {
+      S.busy = ''; await refreshNow();
+      if (document.activeElement === document.body) { var t = document.querySelector('.action h2'); if (t) t.focus({ preventScroll: true }); }
+    }
+  }
+}
 async function post(action, body, busyLabel) {
   var slug = S.route.slug;
   if (isEditing()) document.activeElement.blur();
-  S.busy = busyLabel || '…'; S.error = ''; render();
+  if (!chainDepth) { S.busy = busyLabel || '…'; S.error = ''; render(); }
   try {
     var r = await api('POST', slugPath(slug) + '/' + action, body || {}, 150000);
     if (r && r.notice && r.notice.kind === 'context_stale') toast('Fiche corrigée : les étapes déjà jouées ont reçu l’ancienne version.');
     return r || {};
   } catch (e) {
-    S.error = e.code === 'state_changed' ? 'Le dossier a changé entre-temps : rien n’a été lancé. Réessayez.' : e.message;
+    S.error = friendlyError(e);
     return null;
-  } finally { S.busy = ''; await refreshNow(); }
+  } finally { if (!chainDepth) S.busy = ''; await refreshNow(); }
 }
+// Server refusals in plain words; the original message stays in the console.
+function friendlyError(e) {
+  var code = e && e.code, msg = String(e && e.message || '');
+  if (window.console && msg) console.warn(code, msg);
+  if (code === 'state_changed') return 'Le dossier a changé entre-temps : rien n’a été lancé. Réessayez.';
+  if (code === 'running' || code === 'locked') return 'Une étape tourne déjà sur ce dossier. Attendez qu’elle finisse.';
+  if (code === 'not_owned') return 'Cette étape a été lancée hors de la page : arrêtez-la depuis la fenêtre où elle tourne.';
+  if (code === 'network') return msg;
+  if (/attend une pause|en attente : rien|pas de pause/.test(msg)) return 'Le dossier a avancé entre-temps ; la page vient d’être mise à jour.';
+  if (code === 'leak') return 'Le résultat recopie un passage de la demande d’origine. Refaites l’étape.';
+  if (code === 'interface_bug' || code === 'internal' || code === 'unexpected' || code === 'unreadable')
+    return 'Un problème technique est survenu ; le détail est dans la fenêtre où tourne la page de suivi.';
+  return humanError(msg);
+}
+
 // Launch the steps up to the next pause: plan (fingerprint), then `next`.
 async function continueRun(slug) {
   slug = slug || S.route.slug;
-  S.busy = 'Lancement…'; render();
+  if (!chainDepth) { S.busy = 'Lancement…'; render(); }
   try {
     var engine = S.engine[slug];
     var plan = await api('GET', slugPath(slug) + '/plan' + (engine ? '?engine=' + encodeURIComponent(engine) : ''), undefined, 30000);
-    if (!plan.runnable) { S.busy = ''; await refreshNow(); return; }
+    if (!plan.runnable) return;
     if (plan.agy_over_limit) { S.error = 'Le texte à transmettre dépasse la limite d’Antigravity : choisissez un autre moteur dans les détails techniques.'; return; }
     await api('POST', slugPath(slug) + '/next', { fingerprint: plan.fingerprint, engine: engine }, 30000);
     S.engine[slug] = undefined;
     if (S.tech && plan.warnings && plan.warnings.length) toast(plan.warnings[0]);
   } catch (e) {
-    S.error = e.code === 'state_changed' ? 'Le dossier a changé au moment du lancement : rien n’a été lancé. Réessayez.' : e.message;
-  } finally { S.busy = ''; await refreshNow(); }
+    S.error = friendlyError(e);
+  } finally { if (!chainDepth) S.busy = ''; await refreshNow(); }
 }
 async function validateAndContinue(p, dirty) {
   var body = {};
   if (dirty) { var sheet = sheetFromDraft(p); if (!sheet) return; body.context = sheet; }
-  if (await post('validate', body, 'Validation…')) { delete S.ctx[p.slug]; S.ctxEdit[p.slug] = false; await continueRun(p.slug); }
+  await inChain('Validation…', async function () {
+    if (await post('validate', body)) { delete S.ctx[p.slug]; S.ctxEdit[p.slug] = false; await continueRun(p.slug); }
+  });
 }
 async function answerAndContinue(p, key, none) {
   var text = S.answers[p.slug] || '';
   if (!none && !text.trim()) { S.error = 'Collez les réponses reçues, ou choisissez « Continuer sans réponses ».'; renderChrome(); return; }
-  if (none && !(await ask('Continuer sans réponses ?', ['Les points ouverts resteront des hypothèses pour la suite du dossier.'], 'Continuer sans réponses'))) return;
-  if (ctxDirty(p)) { var sheet = sheetFromDraft(p); if (!sheet || !(await post('validate', { context: sheet }, 'Envoi…'))) return; delete S.ctx[p.slug]; S.ctxEdit[p.slug] = false; }
-  if (await post('answer', none ? { none: true } : { text: text }, none ? 'Suite…' : 'Envoi…')) {
-    delete S.answers[p.slug]; save('localStorage', key, null);
-    await continueRun(p.slug);
-  }
+  if (none && !(await ask('Continuer sans réponses ?', ['Les points ouverts resteront des hypothèses pour la suite du dossier.']
+    .concat(text.trim() ? ['Le texte déjà collé sera ignoré.'] : []), 'Continuer sans réponses'))) return;
+  var sheet = null;
+  if (ctxDirty(p)) { sheet = sheetFromDraft(p); if (!sheet) return; }
+  await inChain(none ? 'Suite…' : 'Envoi…', async function () {
+    if (sheet) { if (!(await post('validate', { context: sheet }))) return; delete S.ctx[p.slug]; S.ctxEdit[p.slug] = false; }
+    if (await post('answer', none ? { none: true } : { text: text })) {
+      delete S.answers[p.slug]; save('localStorage', key, null);
+      await continueRun(p.slug);
+    }
+  });
 }
 async function chooseAndContinue(p, run) {
-  if (await post('choose', run ? { run: run } : { skip: true }, run ? 'Lancement…' : 'Suite…')) await continueRun(p.slug);
+  await inChain(run ? 'Lancement…' : 'Suite…', async function () {
+    if (await post('choose', run ? { run: run } : { skip: true })) await continueRun(p.slug);
+  });
 }
 async function rerunAndContinue(p, s) {
-  if (!(await ask('Refaire « ' + stepName(s) + ' » ?', ['L’étape repart de zéro, avec un nouvel appel au moteur. Les étapes suivantes qui utilisaient son résultat seront refaites aussi.', 'L’ancienne version reste consultable dans les détails techniques.'], 'Refaire l’étape'))) return;
-  var r = await post('rerun', { step: s.id }, 'Relance…');
-  if (r) { go('#/p/' + p.slug + '/' + s.id); await continueRun(p.slug); }
+  var after = p.steps.slice(p.steps.indexOf(s) + 1).filter(function (x) { return ['done', 'paused', 'failed'].indexOf(x.status) >= 0; });
+  var body = ['L’étape repart de zéro, avec un nouvel appel au moteur.'];
+  body.push(after.length ? 'Les étapes suivantes déjà jouées seront refaites aussi : ' + after.map(stepName).join(', ') + ' (' + plural(after.length + 1, 'nouvel appel', 'nouveaux appels') + ' en tout, au fil des relectures).'
+    : 'Aucune autre étape n’est touchée.');
+  body.push('Les anciennes versions restent consultables dans les détails techniques.');
+  if (!(await ask('Refaire « ' + stepName(s) + ' » ?', body, 'Refaire l’étape'))) return;
+  await inChain('Relance…', async function () {
+    if (await post('rerun', { step: s.id })) { go('#/p/' + p.slug + '/' + s.id); await continueRun(p.slug); }
+  });
 }
 async function retryAndContinue(p) {
-  if (await post('retry', {}, 'Reprise…')) await continueRun(p.slug);
+  await inChain('Reprise…', async function () { if (await post('retry', {})) await continueRun(p.slug); });
 }
 async function stopDossier(p) {
   if (!(await ask('Arrêter le dossier ?', ['Vous décidez de ne pas aller plus loin. Le dossier ne pourra plus avancer ; les étapes jouées restent consultables.'], 'Arrêter le dossier', true))) return;
@@ -1328,12 +1432,13 @@ window.addEventListener('hashchange', function () {
   var before = S.route; S.route = parseRoute();
   if (S.route.view !== 'parcours' || before.slug !== S.route.slug) { S.p = null; S.log = null; S.files = new Map(); S.docs = new Map(); }
   if (S.route.view === 'new' && S.recipesError) { S.recipesError = ''; S.recipes = null; }   // try again
-  S.sig = ''; render(); poll(); window.scrollTo(0, 0);
+  S.sig = ''; render(); refreshNow(); window.scrollTo(0, 0);
 });
 $('#tech-toggle').addEventListener('change', function (e) { S.tech = e.target.checked; save('localStorage', TECH_KEY, S.tech ? '1' : null); S.sig = ''; render(); poll(); });
 setInterval(function () { document.querySelectorAll('[data-since]').forEach(function (el) { el.textContent = elapsed(el.getAttribute('data-since')); }); }, 1000);
 
 initToken();
+loadDraft();
 S.tech = saved('localStorage', TECH_KEY) === '1';
 S.route = parseRoute();
 render();

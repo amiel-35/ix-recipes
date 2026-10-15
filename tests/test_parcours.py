@@ -1087,6 +1087,16 @@ class SkillResolutionTests(ParcoursTestCase):
         self.assertEqual(document, "# Offre\nCorps.")
         self.assertEqual(meta, {"status": "draft", "recipient": "comité"})
         self.assertEqual(parcours.output_document("Pas de bloc.\n## HANDOFF\n### a\nA\n"), ("Pas de bloc.", {}))
+        ruled = "---\n\nParagraphe un.\n\n---\n\nParagraphe deux.\n## HANDOFF\n### a\nA\n"
+        self.assertEqual(parcours.output_document(ruled), ("---\n\nParagraphe un.\n\n---\n\nParagraphe deux.", {}))
+
+    def test_a_title_always_gives_a_usable_slug(self):
+        long_title = "Réponse à la consultation de la Fédération nationale pour la formation gestion de projet 2026 et suite"
+        for title in (long_title, "🚀", "—", "-"):
+            created = json.loads(self.ok("new", "brief-client", "--input", str(self.input_file), f"--title={title}",
+                                         f"--slug={title}", "--engine", "fake", "--json"))
+            self.assertRegex(created["slug"], r"^[a-z0-9][a-z0-9-]{0,79}$", title)
+        self.assertFalse(any(p.name.startswith("-") for p in self.pdir.iterdir()))
 
     def test_a_missing_or_binary_input_file_is_a_clean_error(self):
         with self.assertRaises(parcours.ParcoursError) as missing:

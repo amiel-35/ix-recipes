@@ -18,8 +18,12 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
 - `scripts/parcours.py`: `recipes --json`, `new --title` / `new --json`, step `label`
   and `mission`, `title`, `recipe_label` and `max_budget_usd` in `status --json`,
   `output_document()`.
-- Recipe format: optional French `label` per step (validated by `build.py`, both
-  copies); `brief-client` 1.4.0 and `reponse-appel-offres` 1.6.0 carry them.
+- Recipe format: optional French `label` per step, `context_labels` (the context sheet's
+  headings for the reader) and `summary_fr` (one plain sentence for the "new dossier"
+  screen), validated by `build.py` (both copies); `brief-client` 1.4.0 and
+  `reponse-appel-offres` 1.6.0 carry them. The page holds no recipe-specific text any more:
+  tested with a recipe written by an isolated Sonnet from the format alone, and by an
+  invented recipe in the tests.
 - Markdown renderer: line breaks kept, `http(s)` links (new tab, no referrer),
   strikethrough, task lists, ordered list start, HTML comments dropped; headings start
   at h2.

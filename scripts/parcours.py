@@ -240,9 +240,11 @@ def load_recipe(recipe_id):
         "version": str(fm.get("version", "")),
         "label": str(fm.get("label") or recipe_id),
         "description": str(fm.get("description_fr") or ""),
+        "summary": str(fm.get("summary_fr") or ""),
         "icon": str(fm.get("icon") or ""),
         "context_sheet": list(workflow.get("context_sheet") or []),
         "context_definitions": context_definitions(body),
+        "context_labels": {str(k): str(v) for k, v in (workflow.get("context_labels") or {}).items()},
         "steps": steps,
     }
 
@@ -1088,7 +1090,8 @@ def output_body(text):
     return "\n".join(lines[:cut]).strip()
 
 
-FRONT_MATTER_RE = re.compile(r"\A---[ \t]*\n(.*?)\n---[ \t]*(?:\n|\Z)", re.S)
+FRONT_MATTER_RE = re.compile(r"\A---[ \t]*\n(.{0,2000}?)\n---[ \t]*(?:\n|\Z)", re.S)
+META_LINE_RE = re.compile(r"[A-Za-z_][\w-]*[ \t]*:.*")
 
 
 def output_document(text):
@@ -1097,8 +1100,9 @@ def output_document(text):
     returned apart (`status: draft`, `recipient: ...`)."""
     body = output_body(text)
     match = FRONT_MATTER_RE.match(body)
-    if not match:
-        return body, {}
+    lines = [l for l in match.group(1).splitlines() if l.strip()] if match else []
+    if not lines or not all(META_LINE_RE.fullmatch(l.strip()) for l in lines):
+        return body, {}   # a horizontal rule opening the document, not a front matter
     meta = {}
     for line in match.group(1).splitlines():
         key, sep, value = line.partition(":")
@@ -1523,7 +1527,9 @@ def cmd_new(args):
     skills = resolve_recipe_skills(recipe)  # fail early, naming every missing skill
     base = Path(args.parcours_dir)
     base.mkdir(parents=True, exist_ok=True)
-    wanted = slugify(args.slug) if args.slug else default_slug(recipe["id"], text)
+    # a slug stays within the page's whitelist (^[a-z0-9][a-z0-9-]{0,79}$): truncated, and the
+    # default one when nothing ASCII is left (a title such as « 🚀 » or « — »)
+    wanted = (slugify(args.slug)[:60].strip("-") if args.slug else "") or default_slug(recipe["id"], text)
     directory, slug = create_unique_dir(base, wanted)
     title = " ".join((args.title or "").split())[:120] or None
     write_atomic(directory / "input.md", text)
@@ -1546,7 +1552,7 @@ def list_recipes():
             continue  # not a workflow recipe, or unreadable: not offered
         found.append({
             "id": recipe["id"], "label": recipe["label"], "description": recipe["description"],
-            "icon": recipe["icon"], "version": recipe["version"],
+            "icon": recipe["icon"], "version": recipe["version"], "summary": recipe["summary"],
             "steps": [{"id": s["id"], "label": s["label"], "pause": effective_pause(s),
                        "optional": s["optional"]} for s in recipe["steps"]],
         })
@@ -1776,6 +1782,7 @@ def status_report(directory, state, fingerprint):
         "cost_usd": state["cost_usd"], "calls": state["calls"],
         "context_sheet": state["context_sheet"], "context_validated": state["context_validated"],
         "context_fields": list(recipe["context_sheet"]) if recipe else [],
+        "context_labels": dict(recipe["context_labels"]) if recipe else {}, "not_stated": NOT_STATED,
         "answers": state.get("answers"), "pending": state["pending"], "steps": steps,
         "files": files, "final_output": final, "recipe_error": problem,
         "locked": is_locked(directory), "fingerprint": fingerprint, "max_budget_usd": DEFAULT_BUDGET,

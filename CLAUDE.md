@@ -41,7 +41,7 @@ Required: `id` (kebab-case, matches the filename), `label` (French), `version`
 (semver), `description_fr`, `description_en`, `icon`, `domain` (§6),
 `input_types`, `output_types`, `compatible`
 (`[claude-ai, claude-code, cowork, gpt, gemini, mystaffy]`).
-Optional: `category` (mystaffy atom type), `aliases`, `references` (list of `partials/<name>.md` files shipped with the skill, see §3bis).
+Optional: `category` (mystaffy atom type), `aliases`, `summary_fr` (workflow recipes: one plain sentence shown on the tracking page, unlike `description_fr`, which is written to trigger the skill), `references` (list of `partials/<name>.md` files shipped with the skill, see §3bis).
 
 The body is written **entirely in English**.
 

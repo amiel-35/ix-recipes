@@ -396,6 +396,76 @@ class CreateAndReadTests(InterfaceTestCase):
         self.assertEqual(self.request("GET", "/api/parcours/demo/document/absent.md")[0], 404)
 
 
+class UnknownRecipeTests(InterfaceTestCase):
+    """The page knows no recipe: everything it shows comes from the recipe file."""
+
+    RECIPE = """---
+id: recette-inventee
+label: "Recette inventée"
+version: 0.1.0
+summary_fr: "Une phrase écrite pour un humain."
+description_fr: "Déclenche sur des mots-clés qu'un humain n'a pas à lire."
+description_en: "Invented."
+icon: "*"
+domain: ops
+category: production
+input_types: [brief]
+output_types: [markdown]
+compatible: [claude-ai, claude-code, cowork, gpt, gemini, mystaffy]
+requires: [ix-skills:cadrage, ix-skills:deliver]
+workflow:
+  context_sheet: [mandant, enjeu_principal, horizon]
+  context_labels:
+    mandant: "Commanditaire"
+    enjeu_principal: "Enjeu principal"
+  steps:
+    - id: lecture-initiale
+      label: "Lecture initiale"
+      skill: ix-skills:cadrage
+      mission: Read it.
+      receives: [brief]
+      transmits: [points]
+      produces_context_sheet: true
+      pause: validate
+    - id: livrable
+      skill: ix-skills:deliver
+      mission: Write it.
+      receives: [context_sheet, lecture-initiale.points]
+      transmits: [texte]
+      output_field: texte
+      pause: none
+---
+
+# Role
+
+Orchestrates `ix-skills:cadrage` then `ix-skills:deliver`.
+"""
+
+    def test_an_unknown_recipe_is_listed_created_and_read_like_the_others(self):
+        (self.root / "skills" / "recette-inventee.md").write_text(self.RECIPE, encoding="utf-8")
+        listed = next(r for r in self.api("GET", "/api/recipes")["recipes"] if r["id"] == "recette-inventee")
+        self.assertEqual((listed["label"], listed["summary"]), ("Recette inventée", "Une phrase écrite pour un humain."))
+        self.assertEqual([s["label"] for s in listed["steps"]], ["Lecture initiale", None])
+        recipe = tp.parcours.load_recipe("recette-inventee")
+        self.write_fakes("recette-inventee")
+        (self.fake / "lecture-initiale.md").write_text(tp.fake_output(recipe["steps"][0], recipe["context_sheet"]).replace(
+            '"CTX-horizon"', '"not stated"'), encoding="utf-8")
+        slug = self.api("POST", "/api/parcours", {"recipe": "recette-inventee", "text": "une demande", "engine": "fake"})["slug"]
+        self.run_next(slug)
+        status = self.status_of(slug)
+        self.assertEqual(status["recipe_label"], "Recette inventée")
+        self.assertEqual(status["context_labels"], {"mandant": "Commanditaire", "enjeu_principal": "Enjeu principal"})
+        self.assertEqual(status["not_stated"], "not stated")
+        self.assertEqual(status["context_sheet"]["horizon"], "not stated")
+        self.assertEqual(status["pending"]["type"], "validate")
+        self.api("POST", f"/api/parcours/{slug}/validate", {})
+        status = self.run_next(slug)
+        self.assertEqual(status["status"], "completed")
+        doc = self.api("GET", f"/api/parcours/{slug}/document/{status['final_output']}")
+        self.assertIn("Complete analysis written by step livrable.", doc["document"])
+        self.assertNotIn("HANDOFF", doc["document"])
+
+
 # ---------------------------------------------------------------------------
 # A whole brief-client run, through the API only
 # ---------------------------------------------------------------------------
@@ -712,6 +782,24 @@ class RendererTests(unittest.TestCase):
         for expected in ("<h2>Titre</h2>", "<strong>b</strong>", "<ul>", '<ol start="3">', '<div class="tbl"><table>', "<th>x</th>",
                          "<td>2</td>", "<pre class=\"code\">"):
             self.assertIn(expected, html)
+
+    def test_hostile_inputs_render_in_linear_time(self):
+        html = (REPO / "scripts" / "interface.html").read_text(encoding="utf-8")
+        code = re.search(r"// <markdown-renderer>(.*?)// </markdown-renderer>", html, re.S).group(1)
+        script = code + """
+var cases = ['[a](https://b'.repeat(50000), '<!--'.repeat(40000) + 'x', '[' .repeat(100000) + '](https://a',
+             '*a'.repeat(50000), ('| a |\\n').repeat(20000)];
+var worst = 0;
+cases.forEach(function (c) { var t = Date.now(); renderMarkdown(c); worst = Math.max(worst, Date.now() - t); });
+process.stdout.write(String(worst));"""
+        done = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=120)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertLess(int(done.stdout), 1500, "a hostile output freezes the page")
+
+    def test_comments_and_size_limit(self):
+        self.assertEqual(self.render("a <!-- x --> b"), "<p>a  b</p>")
+        self.assertIn("&lt;!-- jamais fermé", self.render("<!-- jamais fermé"))
+        self.assertTrue(self.render("x" * 300001).startswith('<pre class="raw">'))
 
     def test_document_niceties(self):
         html = self.render("**Destinataire :** X\n**Prestataire :** Y\n\n- [ ] à faire\n- [x] fait\n\n~~barré~~ et _penché_ "

@@ -58,7 +58,10 @@ class InterfaceTestCase(tp.ParcoursTestCase):
         self.assertIn("    canned = fixtures /", source)
         source = source.replace("    canned = fixtures /", hook, 1).replace("import tempfile\n", "import tempfile\nimport time\n", 1)
         (scripts / "parcours.py").write_text(source, encoding="utf-8")
-        for target, value in (("PARCOURS_SCRIPT", scripts / "parcours.py"), ("QUICK_WAIT", 0.5), ("STOP_GRACE", 8)):
+        shutil.copy(REPO / "scripts" / "recettes.py", scripts / "recettes.py")
+        self.write_skill(self.root / "dist" / "skills", "concepteur-recette")
+        for target, value in (("PARCOURS_SCRIPT", scripts / "parcours.py"), ("RECETTES_SCRIPT", scripts / "recettes.py"),
+                              ("QUICK_WAIT", 0.5), ("STOP_GRACE", 8)):
             patcher = mock.patch.object(interface, target, value)
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -814,6 +817,154 @@ class CommandLineTests(InterfaceTestCase):
         self.assertEqual(status, 500)
         self.assertEqual(data["error"], "interface_bug")
         self.assertIn("bug de l'interface", data["message"])
+
+
+# ---------------------------------------------------------------------------
+# Personal recipes: the recueil, drafts, test dossiers, the proposal (docs/interface.md §9)
+# ---------------------------------------------------------------------------
+import parcours  # noqa: E402
+import recettes  # noqa: E402
+
+DESIGNED = "Une recette se justifie.\n\n````markdown\n{recipe}````\n\n## VERDICT\nrecipe\n"
+
+
+class RecipeBookTests(InterfaceTestCase):
+    def draft(self, template=True, **body):
+        data = self.api("POST", "/api/recettes/brouillons", dict({"template": template, "title": "Ma recette"}, **body))
+        return data["slug"]
+
+    def draft_status(self, slug):
+        return wait_for(lambda: (lambda d: d if not d["locked"] else None)(self.api("GET", f"/api/recettes/brouillons/{slug}")))
+
+    def test_every_recipe_route_needs_the_token(self):
+        slug = self.draft()
+        for method, path in (("GET", "/api/recettes"), ("GET", f"/api/recettes/brouillons/{slug}"),
+                             ("POST", f"/api/recettes/brouillons/{slug}/save"), ("POST", "/api/recettes/brouillons"),
+                             ("GET", f"/api/essais/{slug}/parcours"), ("GET", "/api/recettes/personnelles/x")):
+            status, _, data = self.request(method, path, {} if method == "POST" else None, token=False)
+            self.assertEqual((status, data["error"]), (403, "bad_token"), path)
+
+    def test_names_and_bodies_are_checked(self):
+        slug = self.draft()
+        for path in ("/api/recettes/brouillons/..", "/api/recettes/brouillons/A", "/api/essais/../parcours"):
+            self.assertIn(self.get(path)[0], (400, 404), path)
+        self.assertEqual(self.get("/api/recettes/brouillons/absent")[0], 404)
+        self.assertEqual(self.get("/api/recettes/personnelles/Pas_Bon")[0], 400)
+        self.assertEqual(self.post("/api/recettes/brouillons", {"need": "  "})[0], 400)
+        self.assertEqual(self.post("/api/recettes/brouillons", {"need": "x", "engine": "fake-ish"})[0], 400)
+        self.assertEqual(self.post(f"/api/recettes/brouillons/{slug}/save", {"text": ""})[0], 400)
+        self.assertEqual(self.post(f"/api/recettes/brouillons/{slug}/save", {"text": "x", "sha": "abc"})[0], 400)
+        self.assertEqual(self.post(f"/api/recettes/brouillons/{slug}/essai-delete", {"slug": "../x"})[0], 400)
+        self.assertEqual(self.post(f"/api/recettes/brouillons/{slug}/unknown", {})[0], 404)
+        self.assertEqual(self.post(f"/api/essais/{slug}/parcours", {"recipe": "ma-recette", "text": "x"})[0], 405)
+
+    def test_from_the_model_to_the_recueil_with_a_test_dossier(self):
+        slug = self.draft()
+        book = self.api("GET", "/api/recettes")
+        self.assertEqual(book["drafts"][0]["slug"], slug)
+        self.assertIn("fake", book["design_engines"])
+        shown = self.api("GET", f"/api/recettes/brouillons/{slug}")
+        self.assertEqual(shown["check"]["errors"], [])
+        self.assertEqual(shown["essai_engines"][0], "simulation")
+        # a save with an error: kept, and the error said plainly
+        broken = shown["text"].replace("pause: validate", "pause: later")
+        saved = self.api("POST", f"/api/recettes/brouillons/{slug}/save", {"text": broken, "sha": shown["sha256"]})
+        self.assertTrue(any("pause" in e for e in saved["check"]["errors"]))
+        status, _, data = self.post(f"/api/recettes/brouillons/{slug}/essai", {"text": tp.INPUT_TEXT})
+        self.assertEqual(status, 422)
+        self.assertIn("corrigez d'abord", data["message"])
+        status, _, data = self.post(f"/api/recettes/brouillons/{slug}/save", {"text": shown["text"], "sha": shown["sha256"]})
+        self.assertEqual((status, data["error"]), (409, "state_changed"))   # the file moved since it was opened
+        self.api("POST", f"/api/recettes/brouillons/{slug}/save", {"text": shown["text"], "sha": saved["sha256"]})
+        # the test dossier: free, apart from the real ones, played through the same routes
+        created = self.api("POST", f"/api/recettes/brouillons/{slug}/essai", {"text": tp.INPUT_TEXT, "title": "Essai 1"})
+        essai = created["slug"]
+        base = f"/api/essais/{slug}/parcours/{essai}"
+        plan = self.api("GET", f"{base}/plan")
+        self.assertEqual(plan["calls"], {"simulation": 1})
+        self.assertEqual(plan["ceiling_usd"], 0.0)
+        self.api("POST", f"{base}/next", {"fingerprint": plan["fingerprint"]})
+        state = wait_for(lambda: (lambda s: s if not s["locked"] and s["pending"] else None)(self.api("GET", base)))
+        self.assertTrue(state["essais"])
+        self.assertEqual(state["pending"]["type"], "validate")
+        self.api("POST", f"{base}/validate", {})
+        plan = self.api("GET", f"{base}/plan")
+        self.api("POST", f"{base}/next", {"fingerprint": plan["fingerprint"]})
+        state = wait_for(lambda: (lambda s: s if s["status"] == "completed" and not s["locked"] else None)(self.api("GET", base)))
+        self.assertTrue(state["recipe_current"])
+        document = self.api("GET", f"{base}/document/02-livrable.md")
+        self.assertIn("sortie simulée", document["document"])
+        self.assertEqual(self.api("GET", "/api/parcours")["parcours"], [])   # the real dossiers are untouched
+        self.assertEqual([p["slug"] for p in self.api("GET", f"/api/essais/{slug}/parcours")["parcours"]], [essai])
+        self.assertTrue(self.api("GET", f"/api/recettes/brouillons/{slug}")["tested"])
+        # to the recueil: listed as personal, offered for a real dossier, not as a dossier folder
+        promoted = self.api("POST", f"/api/recettes/brouillons/{slug}/promote", {})
+        self.assertEqual(promoted["id"], "ma-recette")
+        recipes = self.api("GET", "/api/recipes")["recipes"]
+        self.assertTrue(next(r for r in recipes if r["id"] == "ma-recette")["personal"])
+        self.assertEqual(self.api("GET", "/api/parcours")["without_state"], [])
+        self.write_fakes("brief-client")
+        recipe = parcours.load_recipe("ma-recette", parcours.recipe_places(self.pdir))
+        for defn in recipe["steps"]:
+            ctx = recipe["context_sheet"] if defn["produces_context_sheet"] else None
+            (self.fake / f"{defn['id']}.md").write_text(tp.fake_output(defn, ctx), encoding="utf-8")
+        real = self.api("POST", "/api/parcours", {"recipe": "ma-recette", "text": tp.INPUT_TEXT, "engine": "fake"})["slug"]
+        self.assertEqual(self.run_next(real)["pending"]["type"], "validate")
+        personal = self.api("GET", "/api/recettes/personnelles/ma-recette")
+        self.assertEqual(personal["errors"], [])
+        # the test dossier is deleted from its draft; a real dossier never is
+        self.api("POST", f"{base}/delete", {})
+        self.assertEqual(self.api("GET", f"/api/essais/{slug}/parcours")["parcours"], [])
+        status, _, _ = self.post(f"/api/parcours/{real}/delete", {})
+        self.assertEqual(status, 404)
+        self.assertTrue((self.pdir / real / "state.json").is_file())
+        # edit, then delete the draft
+        edited = self.api("POST", "/api/recettes/personnelles/ma-recette/edit", {})
+        self.assertEqual(edited["slug"], slug)
+        self.api("POST", f"/api/recettes/brouillons/{slug}/delete", {})
+        self.assertEqual(self.get(f"/api/recettes/brouillons/{slug}")[0], 404)
+        self.api("POST", "/api/recettes/personnelles/ma-recette/retire", {})
+        self.assertEqual(self.api("GET", "/api/recettes")["personal"], [])
+
+    def test_a_paying_test_dossier_shows_its_ceiling_before_anything_runs(self):
+        slug = self.draft()
+        created = self.api("POST", f"/api/recettes/brouillons/{slug}/essai", {"text": tp.INPUT_TEXT, "engine": "claude"})
+        plan = self.api("GET", f"/api/essais/{slug}/parcours/{created['slug']}/plan")
+        self.assertEqual(plan["claude_steps"], 1)
+        self.assertEqual(plan["ceiling_usd"], 10.0)
+        self.assertFalse(list((self.pdir / "recettes" / "brouillons" / slug / "essais" / created["slug"]).glob("01-*")))
+
+    def test_the_design_call_runs_detached_and_its_answer_lands_in_the_editor(self):
+        (self.fake / "concepteur-recette.md").write_text(DESIGNED.format(recipe=recettes.TEMPLATE), encoding="utf-8")
+        data = self.api("POST", "/api/recettes/brouillons", {"need": "Chaque mois, une synthèse des projets.", "engine": "fake"})
+        self.assertTrue(data["design"]["started"])
+        shown = self.draft_status(data["slug"])
+        self.assertEqual(shown["verdict"], "recipe")
+        self.assertEqual(shown["text"], recettes.TEMPLATE)
+        self.assertIn("Une recette se justifie", shown["concept"])
+        log = self.api("GET", f"/api/recettes/brouillons/{data['slug']}/log")
+        self.assertIn("Conception : moteur fake", log["log"])
+        # insisting launches a new call; refused while one runs
+        self.api("POST", f"/api/recettes/brouillons/{data['slug']}/design", {"insist": True, "engine": "fake"})
+        self.draft_status(data["slug"])
+        self.assertIn("THE USER INSISTS", (self.fake / "received" / "concepteur-recette.md").read_text(encoding="utf-8"))
+        status, _, err = self.post(f"/api/recettes/brouillons/{data['slug']}/stop", {})
+        self.assertEqual((status, err["error"]), (409, "not_running"))
+
+    def test_contribution_arguments_are_checked(self):
+        (self.pdir / "recettes").mkdir(parents=True, exist_ok=True)
+        (self.pdir / "recettes" / "ma-recette.md").write_text(recettes.TEMPLATE, encoding="utf-8")
+        base = "/api/recettes/personnelles/ma-recette/contribute"
+        for body in ({"step": "rm"}, {"step": "prepare", "source": "--upload-pack=evil"},
+                     {"step": "prepare", "source": "a\nb"}, {"step": "prepare", "source": 3}):
+            status, _, data = self.post(base, body)
+            self.assertEqual(status, 400, body)
+        status, _, data = self.post(base, {"step": "status"})
+        self.assertEqual(status, 200)
+        self.assertIsNone(data["status"])
+        status, _, data = self.post(base, {"step": "push"})
+        self.assertEqual(status, 422)
+        self.assertIn("rien de préparé", data["message"])
 
 
 # ---------------------------------------------------------------------------

@@ -121,3 +121,87 @@ Les erreurs sont `{"error": code, "message": …}` : 400 argument refusé par l'
 - La CSP ajoute `base-uri 'none'; form-action 'none'; frame-ancestors 'none'` à celle de la conception.
 - Le moteur `vibe` est proposé (marqué « non testé ») avec claude, codex et agy.
 - La sonde de verrou (`flock` partagé non bloquant, relâché aussitôt) peut, une fois sur plusieurs milliers, faire échouer au même instant une commande lancée depuis un terminal avec « verrou pris » : il suffit de la relancer.
+
+## 9. Recettes personnelles (ajouté le 2026-10-15)
+
+Demande d'Amiel : créer une recette personnelle depuis la page, hors du dépôt — partir d'un besoin, regarder le catalogue, modifier la recette, la tester, la ranger dans le recueil de l'utilisateur une fois validée, et pouvoir la proposer au dépôt par git. Code : `scripts/recettes.py` (commandes), `scripts/parcours.py` (lecture, vérification, moteur `simulation`), `scripts/interface.py` (routes `/api/recettes`, `/api/essais`), `scripts/interface.html` (écrans « Recettes »). Tests : `tests/test_recettes.py`, `RecipeBookTests` dans `tests/test_interface.py`.
+
+### 9.1 Où sont les fichiers (tranché)
+
+```
+<dossier des parcours>/recettes/            le recueil : vos recettes, hors du dépôt
+  <id>.md                                   une recette validée, au format de skills/<id>.md
+  .versions/<id>.<date>.md                  les versions remplacées ou retirées (rien n'est effacé)
+  brouillons/<brouillon>/                   une recette en cours
+    brouillon.json                          état : titre, verdict du concepteur, conception (moteur, coût, erreur), origine, validation
+    besoin.md                               le besoin collé (lu par le concepteur seulement)
+    conception.in.md, conception.md         le message exact envoyé au concepteur, sa réponse (versions .vN gardées)
+    recipe.md, recipe.vN.md                 le fichier de la recette, ses versions précédentes
+    essais/<slug>/                          les dossiers de test : un dossier des parcours à part entière
+  .contribution/                            les propositions au dépôt : état par recette, copies de travail, clones
+```
+
+Le recueil est le sous-dossier `recettes/` du dossier des parcours (`~/Parcours/recettes` pour la page, `$PARCOURS_DIR/recettes` sinon) : un seul réglage, et `parcours.py` comme la page le trouvent sans option. Le nom `recettes` est réservé : aucun dossier ne le prend (`new --slug recettes` donne `recettes-dossier`), la liste des dossiers l'ignore.
+
+### 9.2 Lire et jouer une recette personnelle
+
+- **Ordre de recherche** (`recipe_origin`) : le dépôt ou le plugin d'abord — une recette personnelle ne masque jamais une recette livrée —, puis le brouillon en essai, puis le recueil. Un fichier du recueil dont l'en-tête porte un autre id est refusé.
+- **Sans pyyaml** : le fichier est lu par un lecteur YAML de la bibliothèque standard (`load_yaml_subset` : correspondances et listes en bloc, listes et objets entre crochets, chaînes simples, entre guillemets ou en bloc `|` `>`, commentaires ; ancres, alias et étiquettes refusés), le même en développement et dans le plugin. Testé contre pyyaml sur tous les en-têtes d'ix-recipes et d'ix-skills. Il sert aussi de repli quand pyyaml manque pour les recettes du dépôt (les 19 tests de l'interface qui échouaient sans pyyaml, `HOME` changé, passent désormais).
+- **Dossier de test** : un dossier des parcours dont le chemin est `<recueil>/brouillons/<b>/essais` voit aussi le brouillon `recipe.md`, sous l'id de son en-tête (`recipe_places`). Ailleurs, le brouillon n'existe pas.
+- `parcours.py recipes [--json]` liste les recettes personnelles avec `personal: true` et `origin` (`plugin`, `personal`, `draft`) ; une recette du recueil illisible, invalide ou masquée n'est pas proposée et figure dans `personal_problems` (id, raison).
+- `state.json` garde `recipe_sha256` (empreinte du fichier joué) et `recipe_origin` ; `status --json` dit `recipe_current` : l'essai a-t-il joué la version actuelle ?
+
+### 9.3 Concevoir (`recettes.py design`)
+
+Un appel moteur neuf, comme une étape : dossier jetable, message par l'entrée standard, `conception.in.md` écrit avant l'appel, coût compté. Le message contient le texte du skill `ix-recipes:concepteur-recette`, **le catalogue réel** (chaque skill résolu par l'exécuteur avec sa description : `IX_SKILLS_PATH`, dépôt voisin, cache du plugin — **version en cours seulement**, un skill qu'une ancienne version en cache garde encore n'est pas proposé ; ni `concepteur-recette`, ni `suivi-parcours`, ni `configuration-ix`), le modèle de recette comme référence de format, le besoin, et la consigne de sortie : la recette dans un bloc de code ouvert par quatre accents graves, puis un bloc `## VERDICT` (`recipe`, `single_skill`, `manual_sequence`, `catalogue_gap`). Modèle Opus par défaut (un jugement sur tout le travail : la règle de l'étape 1).
+
+- Le bloc dont le contenu commence par `---` devient `recipe.md` (l'ancien gardé en `.vN`) ; la réponse sans ce bloc devient l'« Avis du concepteur ».
+- **Un skill seul suffit** : la page l'écrit en tête (« Le concepteur ne propose pas de recette — son avis : un skill seul suffit »), montre la réponse, et propose « Concevoir quand même une recette » (`design --insist` : un nouvel appel qui reçoit sa réponse précédente et la consigne de proposer la chaîne la plus courte) ou « Partir du modèle » (`template`).
+- **Rien n'est inventé** : chaque skill de `requires` doit être dans ce catalogue, sinon l'enregistrement est en erreur (« le skill 'ix-skills:fiche-poste' n'existe pas dans le catalogue »). Constaté le 2026-10-15 sur un vrai besoin : le concepteur, qui voyait encore les anciennes versions en cache, avait cité `ix-skills:fiche-poste` ; d'où la règle « version en cours seulement ».
+- Le moteur `simulation` ne conçoit rien (refusé) ; `fake` (en `--dev`) lit `PARCOURS_FAKE_DIR/concepteur-recette.md`.
+
+### 9.4 Modifier : la même vérification que build.py
+
+`check_recipe_text` (dans `parcours.py`) renvoie `errors` (bloquent l'essai et la validation), `contribution` (ce que le dépôt demande en plus : champs canoniques de CLAUDE.md §3, `version` en x.y.z, `domain` connu, `category: workflow` — bloquent seulement la proposition) et la vue lisible des étapes. Les erreurs :
+
+- syntaxe de l'en-tête, avec la ligne du fichier ;
+- id : minuscules sans accents, chiffres, tirets, et libre — ni recette du plugin, ni skill du catalogue (ix-skills ou ix-recipes) ;
+- `workflow_errors` : **les règles de `validate_workflow` de build.py, une à une** (requires, ids uniques, skill cité dans le corps entre accents graves, mission, label, model, pause, output_field, verbatim, fiche de contexte à l'étape 1 seulement, brief à l'étape 1 seulement, champs reçus transmis par une étape antérieure, answers après une pause answers, context_labels, summary_fr), en français. `build.py` n'est pas modifié : `WorkflowCheckParityTests` compare les deux, sur toutes les recettes du dépôt et vingt variantes cassées de chacune (même nombre d'erreurs) ;
+- ce dont l'exécuteur et la page ont besoin en plus : `transmits` non vide, skill avec son espace de noms, ids d'étape en minuscules, chiffres, tirets ou soulignés, `context_sheet` non vide.
+
+Chaque enregistrement (`save --if-sha`) garde la version précédente et refuse d'écraser un fichier qui a changé depuis son ouverture (une nouvelle conception) : `state_changed`.
+
+### 9.5 Tester
+
+« Lancer l'essai » crée un dossier dans `essais/` (`parcours.py new --parcours-dir <brouillon>/essais`) avec l'exemple collé, puis le joue comme un vrai dossier : mêmes écrans, mêmes routes sous `/api/essais/<brouillon>/parcours/…`, mêmes contrôles d'isolation. Différences :
+
+- **moteur `simulation` par défaut** (proposé seulement aux essais dans la page ; accepté par `parcours.py`) : aucun appel, coût nul, une sortie bien formée par étape — un document qui nomme les entrées reçues (jamais leur contenu, la demande brute ne doit pas voyager), la fiche de contexte, chaque champ à transmettre. On vérifie ainsi l'enchaînement, les pauses, la fiche. `fake` exige des sorties préparées par étape, inutilisable pour une recette neuve : d'où ce moteur ;
+- un **essai réel** (Claude, Codex, agy, Vibe) se choisit dans le formulaire ; avant chaque lancement, la page montre les étapes jusqu'à la prochaine relecture, le moteur et le plafond engagé (`plan --json`, `ceiling_usd`), et attend « Lancer » ;
+- un essai se **supprime** (`recettes.py essai-delete`, action `delete` réservée aux espaces d'essai ; un vrai dossier s'archive, jamais ne s'efface) ; supprimer le brouillon supprime ses essais ;
+- un bandeau rappelle qu'il s'agit d'un essai et si la recette a changé depuis.
+
+### 9.6 Valider : le recueil
+
+« Valider dans mon recueil » (`recettes.py promote`) : refusé tant qu'il reste une erreur ; copie `recipe.md` vers `<recueil>/<id>.md` (version remplacée dans `.versions/`). Si le recueil a déjà ce id et que le brouillon n'en vient pas : refus `exists`, la page demande s'il faut remplacer (`--replace`). Sans essai concluant sur la version actuelle, la page demande confirmation. La recette apparaît dans « Nouveau dossier » avec la mention « Personnelle », se lance comme les autres ; « Modifier » la rouvre en brouillon (le même s'il n'a pas changé), « Retirer du recueil » la range dans `.versions/`. Les dossiers déjà créés avec une recette modifiée suivent la règle commune (`recipe_drift`).
+
+### 9.7 Proposer au dépôt (`recettes.py contribute <id> prepare | push | cancel | status`)
+
+1. **Préparer** (rien ne sort de l'ordinateur) : la recette doit être sans erreur et complète pour le dépôt. Source : le chemin d'un clone local d'ix-recipes, ou une adresse git (défaut : `https://github.com/amiel-35/ix-recipes.git`, clonée une fois dans `.contribution/clones/`) ; la dernière utilisée est retenue. Une **copie de travail à part** (`git worktree add`, dossier nommé `ix-recipes` pour que build.py y lise son espace de noms) sur une branche `recette/<id>` partie de `origin/HEAD` : le clone de l'utilisateur n'est pas touché. Refus si le dépôt a déjà `skills/<id>.md`. On y écrit `skills/<id>.md`, un `skills/<id>.mystaffy.json` minimal (catégorie workflow), on lance `build.py <id> --validate` puis `build.py <id>` (CLAUDE.md §5 et §7 ; un Python qui a pyyaml et jsonschema : `IX_RECIPES_PYTHON`, celui de la page, ou `python3`), on ajoute ces fichiers et `dist/skills/<id>/`, et on commite localement. La page montre le diff complet (`git show`) et le journal de build.
+2. **Envoyer**, après confirmation dans la page : `git push -u origin recette/<id>`, refusé si la branche a bougé depuis le diff affiché ; puis, si l'adresse d'origin est sur GitHub et `gh` installé, `gh pr create` (titre, description qui rappelle que version du plugin, CHANGELOG et README restent au mainteneur). Sinon l'adresse de comparaison GitHub, ou la consigne d'ouvrir la demande à la main.
+3. **Annuler / Terminer** : copie de travail et branche locale supprimées ; une branche déjà poussée reste sur le dépôt distant.
+
+Ce qui échoue est dit en clair, sans rien laisser à moitié (la branche locale est retirée si la préparation échoue) : git absent (comment l'installer, ou envoyer le fichier au mainteneur), dépendances de build.py absentes (`pip install -r requirements.txt`, ou `IX_RECIPES_PYTHON`), identité git inconnue (les deux `git config`), envoi refusé (droits d'écriture : forker avec `gh repo fork … --remote`, la branche reste prête), réseau. git tourne sans invite (`GIT_TERMINAL_PROMPT=0`, ssh en `BatchMode`) : il échoue au lieu d'attendre un mot de passe que personne ne tape. Testé contre un dépôt nu jetable ; le chemin GitHub contre un faux `gh`.
+
+### 9.8 Routes ajoutées
+
+| Méthode | Chemin | Effet |
+|---|---|---|
+| GET | `/api/recettes` | `recettes.py list` : recueil, brouillons, moteurs de conception |
+| POST | `/api/recettes/brouillons` | `{need, title?, engine?}` → brouillon + conception détachée ; `{template: true}` → brouillon depuis le modèle |
+| GET | `/api/recettes/brouillons/<b>` | `recettes.py show` (+ `essai_engines`) ; `…/log` : journal de la conception |
+| POST | `/api/recettes/brouillons/<b>/<action>` | `design {insist?, engine?}`, `stop`, `save {text, sha?}`, `template`, `promote {replace?}`, `delete`, `essai {text, title?, engine?}`, `essai-delete {slug}` |
+| GET | `/api/recettes/personnelles/<id>` | `recettes.py personal` |
+| POST | `/api/recettes/personnelles/<id>/<action>` | `edit`, `retire`, `contribute {step: prepare\|push\|cancel\|status, source?}` |
+| GET/POST | `/api/essais/<b>/parcours/…` | les routes des dossiers, sur les essais du brouillon (création par `…/essai` seulement ; action `delete` en plus) |
+
+Mêmes protections que le reste : jeton exigé partout, noms contrôlés (brouillon et essai : `^[a-z0-9][a-z0-9-]{0,79}$` ; recette : 60 caractères), chemins résolus sans lien symbolique ni sortie du recueil, une source de contribution refusée si elle commence par `-` ou contient un saut de ligne, valeurs passées en argument après `--`, jamais dans un shell. La conception tourne détachée comme `next` (journal `.design.log`, pid `.design.pid`, « en cours » lu sur le verrou du brouillon, « Interrompre » limité au processus lancé par la page). Les ids d'étape et les noms de fichiers acceptent désormais le souligné (`fiche_poste`), que le concepteur emploie volontiers.

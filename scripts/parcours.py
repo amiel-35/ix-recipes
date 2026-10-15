@@ -60,7 +60,8 @@ except ImportError:  # not available on Windows; the lock is then skipped
 # Constants
 # ---------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parent.parent
-ENGINES = ("claude", "codex", "agy", "vibe", "fake")
+ENGINES = ("claude", "codex", "agy", "vibe", "fake", "simulation")
+FREE_ENGINES = ("fake", "simulation")   # no model is called
 DEFAULT_TIMEOUT = 900
 DEFAULT_BUDGET = 5.0
 ARGV_PROMPT_LIMIT = 200_000  # bytes; agy takes the prompt in argv only (visible in `ps`); macOS ARG_MAX is 1 MB
@@ -226,14 +227,496 @@ def split_frontmatter(text):
     match = FRONTMATTER_RE.match(text)
     if not match:
         return {}, text
-    if yaml is None:  # only flat `key: value` front matters are read without pyyaml (SKILL.md files)
-        flat = {}
-        for line in match.group(1).splitlines():
-            key, sep, value = line.partition(":")
-            if sep and re.fullmatch(r"[A-Za-z_][\w-]*", key.strip()):
-                flat[key.strip()] = value.strip().strip('"').strip("'")
-        return flat, text[match.end():]
+    if yaml is None:  # standard library only: the YAML subset of the skills' front matters
+        try:
+            data = load_yaml_subset(match.group(1))
+        except YamlSubsetError:
+            data = None
+        if not isinstance(data, dict):   # last resort, enough for the flat `key: value` of a SKILL.md
+            data = {}
+            for line in match.group(1).splitlines():
+                key, sep, value = line.partition(":")
+                if sep and re.fullmatch(r"[A-Za-z_][\w-]*", key.strip()):
+                    data[key.strip()] = value.strip().strip('"').strip("'")
+        return data, text[match.end():]
     return yaml.safe_load(match.group(1)) or {}, text[match.end():]
+
+
+# ---------------------------------------------------------------------------
+# A YAML subset, standard library only
+# ---------------------------------------------------------------------------
+class YamlSubsetError(ValueError):
+    """A front matter outside the YAML subset read without pyyaml (message in French, with the line)."""
+
+
+YAML_BOOLS = {"yes": True, "true": True, "on": True, "no": False, "false": False, "off": False}
+YAML_INT_RE = re.compile(r"[-+]?(?:0|[1-9][0-9_]*)\Z")
+YAML_FLOAT_RE = re.compile(r"[-+]?(?:[0-9][0-9_]*)\.[0-9_]*(?:[eE][-+][0-9]+)?\Z|\.[0-9_]+(?:[eE][-+][0-9]+)?\Z")
+YAML_DATE_RE = re.compile(r"([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})\Z")
+YAML_ESCAPES = {"0": "\0", "a": "\a", "b": "\b", "t": "\t", "\t": "\t", "n": "\n", "v": "\v", "f": "\f",
+                "r": "\r", "e": "\x1b", " ": " ", '"': '"', "/": "/", "\\": "\\", "N": "\x85", "_": "\xa0"}
+
+
+def yaml_plain(text):
+    """Value of a plain scalar, resolved as pyyaml's SafeLoader does for the common cases."""
+    if text in ("", "~") or text in ("null", "Null", "NULL"):
+        return None
+    if text.lower() in YAML_BOOLS and text in (text.lower(), text.capitalize(), text.upper()):
+        return YAML_BOOLS[text.lower()]
+    if YAML_INT_RE.match(text):
+        return int(text.replace("_", ""))
+    if re.fullmatch(r"0x[0-9a-fA-F_]+", text):
+        return int(text[2:].replace("_", ""), 16)
+    if YAML_FLOAT_RE.match(text):
+        return float(text.replace("_", ""))
+    date = YAML_DATE_RE.match(text)
+    if date:
+        import datetime as _dt
+        with contextlib.suppress(ValueError):
+            return _dt.date(*(int(g) for g in date.groups()))
+    return text
+
+
+class _YamlSubset:
+    """Block mappings and sequences, flow lists and maps, plain, quoted and block scalars, comments.
+
+    Anchors, aliases, tags and multi-document streams are refused (YamlSubsetError): front matters
+    never need them. Tested against pyyaml on every front matter of ix-recipes and ix-skills.
+    """
+
+    def __init__(self, text):
+        self.lines = text.replace("\r\n", "\n").replace("\t", "    ").split("\n")
+        self.i = 0
+
+    def fail(self, message, line=None):
+        raise YamlSubsetError(f"ligne {(self.i if line is None else line) + 1} de l'en-tête : {message}")
+
+    # -- lines ------------------------------------------------------------
+    @staticmethod
+    def blank(line):
+        stripped = line.strip()
+        return not stripped or stripped.startswith("#")
+
+    def next_content(self):
+        """Index of the next line that holds content, or None."""
+        j = self.i
+        while j < len(self.lines) and self.blank(self.lines[j]):
+            j += 1
+        return j if j < len(self.lines) else None
+
+    @staticmethod
+    def indent_of(line):
+        return len(line) - len(line.lstrip(" "))
+
+    @staticmethod
+    def is_dash(content):
+        return content == "-" or content.startswith("- ")
+
+    KEY_RE = re.compile(r"""(?:"((?:[^"\\]|\\.)*)"|'((?:[^']|'')*)'|([^\s#'"\[\]{},&*!|>%@`-][^#]*?|-[^\s#][^#]*?))[ ]*:(?:[ ]+|$)""")
+
+    def split_key(self, content):
+        match = self.KEY_RE.match(content)
+        if not match:
+            return None
+        if match.group(1) is not None:
+            key = self.unescape_double(match.group(1))
+        elif match.group(2) is not None:
+            key = match.group(2).replace("''", "'")
+        else:
+            key = yaml_plain(match.group(3).strip())
+        return key, content[match.end():]
+
+    # -- nodes ------------------------------------------------------------
+    def parse(self):
+        j = self.next_content()
+        if j is None:
+            return None
+        self.i = j
+        if self.lines[j].strip() in ("---", "..."):
+            self.fail("un seul document est attendu")
+        value = self.node(self.indent_of(self.lines[j]))
+        j = self.next_content()
+        if j is not None:
+            self.fail("contenu inattendu (indentation ?)", j)
+        return value
+
+    def node(self, indent):
+        content = self.lines[self.i][indent:]
+        if self.is_dash(content):
+            return self.sequence(indent)
+        if self.split_key(content):
+            return self.mapping(indent)
+        if content.lstrip()[:1] in ("'", '"', "[", "{", "|", ">", "&", "*", "!"):
+            self.i += 1
+            return self.inline(content.strip(), indent - 1)
+        self.i += 1
+        return self.scalar(content, indent - 1)
+
+    def mapping(self, indent):
+        result = {}
+        while True:
+            j = self.next_content()
+            if j is None:
+                break
+            line = self.lines[j]
+            here = self.indent_of(line)
+            if here < indent:
+                break
+            self.i = j
+            if here > indent:
+                self.fail("indentation inattendue")
+            content = line[indent:]
+            if self.is_dash(content):
+                break
+            split = self.split_key(content)
+            if not split:
+                self.fail(f"« clé: valeur » attendu, pas « {content.strip()[:40]} »")
+            key, rest = split
+            try:
+                hash(key)
+            except TypeError:
+                self.fail("clé invalide")
+            self.i += 1
+            result[key] = self.value(rest, indent)
+        return result
+
+    def sequence(self, indent):
+        items = []
+        while True:
+            j = self.next_content()
+            if j is None:
+                break
+            line = self.lines[j]
+            here = self.indent_of(line)
+            if here < indent:
+                break
+            self.i = j
+            if here > indent:
+                self.fail("indentation inattendue")
+            content = line[indent:]
+            if not self.is_dash(content):
+                break
+            rest = content[1:]
+            inner = rest.lstrip(" ")
+            column = indent + 1 + (len(rest) - len(inner))
+            if not inner or inner.startswith("#"):
+                self.i += 1
+                items.append(self.value("", indent))
+            elif self.is_dash(inner) or self.split_key(inner):
+                self.lines[j] = " " * column + inner   # the item is a nested block starting on the dash line
+                items.append(self.node(column))
+            else:
+                self.i += 1
+                items.append(self.inline(inner, indent))
+        return items
+
+    def value(self, rest, indent):
+        """Value after `key:` (or a bare dash), the line already consumed; `indent` is the parent's."""
+        stripped = rest.strip()
+        if not stripped or stripped.startswith("#"):
+            j = self.next_content()
+            if j is None:
+                return None
+            here = self.indent_of(self.lines[j])
+            if here > indent:
+                self.i = j
+                return self.node(here)
+            if here == indent and self.is_dash(self.lines[j][indent:]):
+                self.i = j
+                return self.sequence(indent)
+            return None
+        return self.inline(stripped, indent)
+
+    def inline(self, text, indent):
+        """A value that starts on a line already consumed; it may continue on deeper lines."""
+        first = text[0]
+        if first in "&*!%@`":
+            self.fail(f"« {first} » n'est pas pris en charge (ancre, alias, étiquette)", self.i - 1)
+        if first in "|>":
+            return self.block_scalar(text, indent)
+        if first == '"':
+            return self.quoted(text, indent, '"')
+        if first == "'":
+            return self.quoted(text, indent, "'")
+        if first in "[{":
+            return self.flow_value(text, indent)
+        return self.scalar(text, indent)
+
+    # -- scalars ----------------------------------------------------------
+    @staticmethod
+    def strip_comment(text):
+        match = re.search(r"(^|\s)#", text)
+        return text[:match.start()] if match else text
+
+    def scalar(self, text, indent):
+        """A plain scalar, folded over the following lines indented deeper than `indent` (its first
+        line already consumed)."""
+        start = self.i - 1
+        parts = [self.strip_comment(text).strip()]
+        while self.i < len(self.lines):
+            line = self.lines[self.i]
+            if line.strip() and (self.indent_of(line) <= indent or line.strip().startswith("#")):
+                break
+            if not line.strip():
+                j = self.next_content()
+                if j is None or self.indent_of(self.lines[j]) <= indent:
+                    break
+                parts.append("")
+                self.i += 1
+                continue
+            if self.split_key(line.strip()) or self.is_dash(line.strip()):
+                self.fail("valeur sur plusieurs lignes ambiguë : mettez-la entre guillemets")
+            parts.append(self.strip_comment(line).strip())
+            self.i += 1
+        joined = self.fold(parts)
+        if re.search(r":(\s|$)", joined) or " #" in joined:
+            self.fail("« : » ou « # » dans une valeur sans guillemets : mettez-la entre guillemets", start)
+        if len(parts) == 1:
+            return yaml_plain(joined)
+        return joined
+
+    @staticmethod
+    def fold(parts):
+        out = ""
+        for k, part in enumerate(parts):
+            if k == 0:
+                out = part
+            elif part == "":
+                out += "\n"
+            elif out.endswith("\n") or not out:
+                out += part
+            else:
+                out += " " + part
+        return out
+
+    def unescape_double(self, body):
+        out, k = [], 0
+        while k < len(body):
+            c = body[k]
+            if c != "\\":
+                out.append(c)
+                k += 1
+                continue
+            nxt = body[k + 1] if k + 1 < len(body) else ""
+            if nxt in YAML_ESCAPES:
+                out.append(YAML_ESCAPES[nxt])
+                k += 2
+            elif nxt in "xuU":
+                size = {"x": 2, "u": 4, "U": 8}[nxt]
+                digits = body[k + 2:k + 2 + size]
+                if not re.fullmatch(r"[0-9a-fA-F]{%d}" % size, digits):
+                    self.fail("échappement invalide dans une chaîne entre guillemets")
+                out.append(chr(int(digits, 16)))
+                k += 2 + size
+            else:
+                self.fail("échappement invalide dans une chaîne entre guillemets")
+        return "".join(out)
+
+    def quoted(self, text, indent, quote):
+        """A quoted scalar, possibly over several lines (folded as YAML does)."""
+        segments, rest, start_line = [], text[1:], self.i - 1
+        while True:
+            k, end = 0, None
+            while k < len(rest):
+                if quote == '"' and rest[k] == "\\":
+                    k += 2
+                    continue
+                if rest[k] == quote:
+                    if quote == "'" and rest[k + 1:k + 2] == "'":
+                        k += 2
+                        continue
+                    end = k
+                    break
+                k += 1
+            if end is not None:
+                segments.append(rest[:end])
+                tail = rest[end + 1:].strip()
+                if tail and not tail.startswith("#"):
+                    self.fail("texte après la fin d'une chaîne entre guillemets")
+                break
+            segments.append(rest)
+            if self.i >= len(self.lines):
+                self.fail("guillemet non fermé", start_line)
+            rest = self.lines[self.i]
+            self.i += 1
+        pieces = []
+        for n, seg in enumerate(segments):
+            last = n == len(segments) - 1
+            if n:
+                seg = seg.lstrip(" ")
+            if not last:
+                seg = seg.rstrip(" ") if not (quote == '"' and seg.endswith("\\") and not seg.endswith("\\\\")) else seg
+            pieces.append(seg)
+        body = ""
+        for n, seg in enumerate(pieces):
+            if n == 0:
+                body = seg
+                continue
+            if quote == '"' and body.endswith("\\") and not body.endswith("\\\\"):
+                body = body[:-1] + seg   # an escaped line break joins without a space
+            elif seg == "" and n < len(pieces) - 1:
+                body += "\n"
+            elif body.endswith("\n"):
+                body += seg
+            else:
+                body += " " + seg
+        return self.unescape_double(body) if quote == '"' else body.replace("''", "'")
+
+    def block_scalar(self, header, indent):
+        match = re.fullmatch(r"([|>])([-+]?)([1-9]?)([-+]?)\s*(?:#.*)?", header)
+        if not match:
+            self.fail("en-tête de bloc invalide")
+        literal = match.group(1) == "|"
+        chomp = match.group(2) or match.group(4)
+        explicit = int(match.group(3)) if match.group(3) else None
+        raw = []
+        while self.i < len(self.lines):
+            line = self.lines[self.i]
+            if line.strip() and self.indent_of(line) <= indent:
+                break
+            raw.append(line)
+            self.i += 1
+        while raw and not raw[-1].strip():    # trailing blank lines belong to the chomping, not the text
+            raw.pop()
+            self.i -= 1
+        trailing = 0
+        j = self.i
+        while j < len(self.lines) and not self.lines[j].strip():
+            trailing += 1
+            j += 1
+        if not raw:
+            return ""
+        width = indent + explicit if explicit else next(self.indent_of(l) for l in raw if l.strip())
+        if any(l.strip() and self.indent_of(l) < width for l in raw):
+            self.fail("bloc de texte mal indenté")
+        lines = [l[width:] if l.strip() else "" for l in raw]
+        if literal:
+            text = "\n".join(lines)
+        else:   # folding: a break between two plain lines becomes a space, blank lines stay
+            text, previous, blanks = "", None, 0
+            for line in lines:
+                if line == "":
+                    blanks += 1
+                    continue
+                if previous is None:
+                    text = "\n" * blanks + line
+                elif line.startswith(" ") or previous.startswith(" "):
+                    text += "\n" * (blanks + 1) + line
+                else:
+                    text += ("\n" * blanks if blanks else " ") + line
+                previous, blanks = line, 0
+        if chomp == "-":
+            return text
+        if chomp == "+":
+            return text + "\n" * (1 + trailing)
+        return text + "\n"
+
+    # -- flow collections -------------------------------------------------
+    def flow_value(self, text, indent):
+        """`[a, b]` or `{k: v}`, possibly over several lines."""
+        buffer, depth, quote = text, 0, None
+        while True:
+            depth, quote, end = 0, None, None
+            k = 0
+            while k < len(buffer):
+                c = buffer[k]
+                if quote:
+                    if quote == '"' and c == "\\":
+                        k += 2
+                        continue
+                    if c == quote:
+                        quote = None
+                elif c in "\"'":
+                    quote = c
+                elif c in "[{":
+                    depth += 1
+                elif c in "]}":
+                    depth -= 1
+                    if depth == 0:
+                        end = k
+                        break
+                elif c == "#" and (k == 0 or buffer[k - 1] in " \n"):
+                    nl = buffer.find("\n", k)
+                    buffer = buffer[:k] + (buffer[nl:] if nl != -1 else "")
+                    continue
+                k += 1
+            if end is not None:
+                tail = buffer[end + 1:].strip()
+                if tail and not tail.startswith("#"):
+                    self.fail("texte après la fin d'une liste entre crochets")
+                break
+            if self.i >= len(self.lines):
+                self.fail("crochet ou accolade non fermé")
+            buffer += "\n" + self.lines[self.i]
+            self.i += 1
+        value, pos = self.flow_node(buffer[:end + 1], 0)
+        return value
+
+    def flow_node(self, s, pos):
+        pos = self.skip_space(s, pos)
+        c = s[pos]
+        if c == "[":
+            items, pos = [], pos + 1
+            while True:
+                pos = self.skip_space(s, pos)
+                if s[pos] == "]":
+                    return items, pos + 1
+                item, pos = self.flow_node(s, pos)
+                items.append(item)
+                pos = self.skip_space(s, pos)
+                if s[pos] == ",":
+                    pos += 1
+                elif s[pos] != "]":
+                    self.fail("liste entre crochets mal formée")
+        if c == "{":
+            result, pos = {}, pos + 1
+            while True:
+                pos = self.skip_space(s, pos)
+                if s[pos] == "}":
+                    return result, pos + 1
+                key, pos = self.flow_node(s, pos)
+                pos = self.skip_space(s, pos)
+                if s[pos] != ":":
+                    self.fail("« clé: valeur » attendu entre accolades")
+                value, pos = self.flow_node(s, pos + 1)
+                result[key] = value
+                pos = self.skip_space(s, pos)
+                if s[pos] == ",":
+                    pos += 1
+                elif s[pos] != "}":
+                    self.fail("accolades mal formées")
+        if c in "\"'":
+            k = pos + 1
+            while k < len(s):
+                if c == '"' and s[k] == "\\":
+                    k += 2
+                    continue
+                if s[k] == c:
+                    if c == "'" and s[k + 1:k + 2] == "'":
+                        k += 2
+                        continue
+                    break
+                k += 1
+            body = " ".join(part.strip() for part in s[pos + 1:k].split("\n"))
+            return (self.unescape_double(body) if c == '"' else body.replace("''", "'")), k + 1
+        match = re.match(r"[^,\[\]{}\n]*?(?=\s*(?:[,\]}]|:\s|$))", s[pos:])
+        if not match or not match.group(0).strip():
+            self.fail("valeur vide ou mal formée entre crochets")
+        return yaml_plain(match.group(0).strip()), pos + match.end()
+
+    @staticmethod
+    def skip_space(s, pos):
+        while pos < len(s) and s[pos] in " \n":
+            pos += 1
+        return pos
+
+
+def load_yaml_subset(text):
+    """Parse a front matter without pyyaml; raises YamlSubsetError (in French, with the line)."""
+    try:
+        return _YamlSubset(text).parse()
+    except IndexError:
+        raise YamlSubsetError("en-tête YAML incomplet (crochet, guillemet ou valeur manquante)") from None
 
 
 def bundled():
@@ -242,47 +725,337 @@ def bundled():
     return (ROOT / "SKILL.md").is_file() and not (ROOT / "skills").is_dir()
 
 
-def recipe_source(recipe_id):
-    """(front matter, body) of a recipe: skills/<id>.md in the repository, or, in the plugin,
-    <skills>/<id>/recipe.json (written by build.py) with the body of <skills>/<id>/SKILL.md."""
+RECIPE_ID_RE = re.compile(r"[a-z0-9][a-z0-9-]{0,59}")
+RECUEIL_DIR = "recettes"      # <parcours-dir>/recettes/: the user's own recipes, outside the repository
+DRAFTS_DIR = "brouillons"     # <recueil>/brouillons/<draft>/: a recipe being designed, edited or tested
+DRAFT_FILE = "recipe.md"      # <draft>/recipe.md: the draft itself, same format as skills/<id>.md
+ESSAIS_DIR = "essais"         # <draft>/essais/: the test dossiers of a draft, apart from the real ones
+RESERVED_SLUGS = {RECUEIL_DIR}
+
+
+def recipe_places(parcours_dir):
+    """Where personal recipes are found for a parcours folder: {"recueil": folder, "draft": file or None}.
+
+    The recueil is <parcours-dir>/recettes. A draft's test folder (<recueil>/brouillons/<draft>/essais)
+    also sees the draft itself, under the id of its front matter: that is how a draft is tested
+    with the same runner, before it joins the recueil.
+    """
+    pdir = Path(parcours_dir).expanduser().resolve()
+    if pdir.name == ESSAIS_DIR and pdir.parent.parent.name == DRAFTS_DIR and (pdir.parent / DRAFT_FILE).is_file():
+        return {"recueil": pdir.parent.parent.parent, "draft": pdir.parent / DRAFT_FILE}
+    return {"recueil": pdir / RECUEIL_DIR, "draft": None}
+
+
+PLACES = {"recueil": None, "draft": None}   # set by main() from --parcours-dir
+
+
+def parse_recipe_text(text):
+    """(front matter, body) of a personal recipe file, read without pyyaml whatever is installed:
+    the page and the plugin read it the same way. Raises ParcoursError with the line at fault."""
+    match = FRONTMATTER_RE.match(text.replace("\r\n", "\n"))
+    if not match:
+        raise ParcoursError("en-tête manquant : le fichier doit commencer par une ligne « --- », "
+                            "l'en-tête YAML, puis une autre ligne « --- »")
+    try:
+        fm = load_yaml_subset(match.group(1))
+    except YamlSubsetError as exc:   # the line as the editor counts it: the opening `---` is line 1
+        raise ParcoursError(re.sub(r"^ligne (\d+) de l'en-tête", lambda m: f"ligne {int(m.group(1)) + 1} du fichier",
+                                   str(exc))) from None
+    if not isinstance(fm, dict):
+        raise ParcoursError("l'en-tête doit être une suite de « clé: valeur »")
+    return fm, text.replace("\r\n", "\n")[match.end():]
+
+
+def plugin_recipe(recipe_id):
+    """(front matter, body, path) of a recipe of the repository or of the plugin, else None."""
     path = ROOT / "skills" / f"{recipe_id}.md"
     if path.is_file():
-        return split_frontmatter(path.read_text(encoding="utf-8"))
+        return (*split_frontmatter(path.read_text(encoding="utf-8")), path)
     folder = ROOT.parent / recipe_id
-    if bundled() and re.fullmatch(r"[a-z0-9][a-z0-9-]*", recipe_id) and (folder / "recipe.json").is_file():
+    if bundled() and RECIPE_ID_RE.fullmatch(recipe_id) and (folder / "recipe.json").is_file():
         try:
             fm = json.loads((folder / "recipe.json").read_text(encoding="utf-8"))
         except ValueError as exc:
             raise ParcoursError(f"recette illisible : {folder / 'recipe.json'} ({exc})")
         _, body = split_frontmatter((folder / "SKILL.md").read_text(encoding="utf-8"))
-        return fm, body
+        return fm, body, folder / "recipe.json"
+    return None
+
+
+def draft_id(draft):
+    """The id in a draft's front matter, or None when it cannot be read."""
+    try:
+        fm, _ = parse_recipe_text(Path(draft).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, ParcoursError):
+        return None
+    value = fm.get("id")
+    return value if isinstance(value, str) else None
+
+
+def recipe_origin(recipe_id, places=None):
+    """(front matter, body, origin, path): the repository or the plugin first (a personal recipe never
+    shadows them), then the draft under test, then the user's recueil."""
+    places = places or PLACES
+    found = plugin_recipe(recipe_id)
+    if found:
+        return found[0], found[1], "plugin", found[2]
+    if RECIPE_ID_RE.fullmatch(recipe_id or ""):
+        draft = places.get("draft")
+        if draft and draft_id(draft) == recipe_id:
+            fm, body = parse_recipe_text(Path(draft).read_text(encoding="utf-8"))
+            return fm, body, "draft", Path(draft)
+        if places.get("recueil"):
+            path = Path(places["recueil"]) / f"{recipe_id}.md"
+            if path.is_file() and not path.is_symlink():
+                fm, body = parse_recipe_text(path.read_text(encoding="utf-8"))
+                if fm.get("id") != recipe_id:
+                    raise ParcoursError(f"recette personnelle {path.name} : son en-tête porte l'id '{fm.get('id')}'")
+                return fm, body, "personal", path
     raise ParcoursError(f"recette introuvable : {recipe_id}")
 
 
-def recipe_ids():
+def recipe_source(recipe_id, places=None):
+    """(front matter, body) of a recipe: skills/<id>.md in the repository, or, in the plugin,
+    <skills>/<id>/recipe.json (written by build.py) with the body of <skills>/<id>/SKILL.md;
+    then a personal recipe (see recipe_origin)."""
+    fm, body, _, _ = recipe_origin(recipe_id, places)
+    return fm, body
+
+
+def plugin_recipe_ids():
     ids = {p.stem for p in (ROOT / "skills").glob("*.md")}
     if bundled():
         ids |= {p.parent.name for p in ROOT.parent.glob("*/recipe.json")}
-    return sorted(ids)
+    return ids
 
 
-def load_recipe(recipe_id):
-    fm, body = recipe_source(recipe_id)
+def personal_recipe_ids(places=None):
+    """Ids of the recueil's files (<id>.md), and of the draft under test."""
+    places = places or PLACES
+    ids = set()
+    if places.get("recueil") and Path(places["recueil"]).is_dir():
+        ids |= {p.stem for p in Path(places["recueil"]).glob("*.md")
+                if RECIPE_ID_RE.fullmatch(p.stem) and not p.is_symlink()}
+    if places.get("draft"):
+        found = draft_id(places["draft"])
+        if found and RECIPE_ID_RE.fullmatch(found):
+            ids.add(found)
+    return ids
+
+
+def recipe_ids(places=None):
+    return sorted(plugin_recipe_ids() | personal_recipe_ids(places))
+
+
+def load_recipe(recipe_id, places=None):
+    fm, body, origin, path = recipe_origin(recipe_id, places)
     workflow = fm.get("workflow") or {}
-    if not workflow.get("steps"):
+    if not isinstance(workflow, dict) or not workflow.get("steps"):
         raise ParcoursError(f"'{recipe_id}' n'a pas de bloc workflow")
+    if not isinstance(workflow["steps"], list) or not all(isinstance(s, dict) for s in workflow["steps"]):
+        raise ParcoursError(f"'{recipe_id}' : les étapes doivent être une liste de « clé: valeur »")
     steps = [normalize_step(raw, i) for i, raw in enumerate(workflow["steps"])]
     return {
         "id": recipe_id,
+        "origin": origin,
+        "source_sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest(),
         "version": str(fm.get("version", "")),
         "label": str(fm.get("label") or recipe_id),
         "description": str(fm.get("description_fr") or ""),
         "summary": str(fm.get("summary_fr") or ""),
         "icon": str(fm.get("icon") or ""),
-        "context_sheet": list(workflow.get("context_sheet") or []),
+        "context_sheet": [str(k) for k in (workflow.get("context_sheet") or [])],
         "context_definitions": context_definitions(body),
         "context_labels": {str(k): str(v) for k, v in (workflow.get("context_labels") or {}).items()},
         "steps": steps,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Checking a recipe file (the workflow checks of build.py, standard library only)
+# ---------------------------------------------------------------------------
+WORKFLOW_PAUSES = {"none", "validate", "answers", "choose"}
+WORKFLOW_MODELS = {"sonnet", "opus", "haiku"}
+STEP_ID_RE = re.compile(r"[a-z0-9][a-z0-9_-]{0,79}")
+DOMAINS = ("rh", "sales", "finance", "legal", "ops", "data", "fondateur")
+CANONICAL_FIELDS = ("id", "label", "version", "description_fr", "description_en", "icon", "domain",
+                    "input_types", "output_types", "compatible")
+
+
+def workflow_errors(fm, body, skill_exists=None):
+    """The mechanical checks of build.py's validate_workflow (docs/format-recette.md §2), in French.
+
+    `skill_exists(ref)` answers True, False, or None when it cannot tell (then no error). Kept
+    rule for rule in step with build.py: tests/test_recettes.py compares both on every recipe of
+    the repository and on broken variants of them. Returns a list of messages, empty when valid.
+    """
+    wf = fm.get("workflow")
+    if not wf:
+        return []
+    if not isinstance(wf, dict):
+        return ["le bloc workflow doit être une suite de « clé: valeur »"]
+    skill_exists = skill_exists or catalogue_has
+    errs = []
+    requires = fm.get("requires") or []
+    if not isinstance(requires, list):
+        errs.append("requires doit être une liste")
+        requires = []
+    for ref in requires:
+        if skill_exists(str(ref)) is False:
+            errs.append(f"requires : le skill '{ref}' n'existe pas dans le catalogue")
+    steps = wf.get("steps") or []
+    if not isinstance(steps, list) or not all(isinstance(s, dict) for s in steps):
+        return errs + ["les étapes (steps) doivent être une liste de « clé: valeur »"]
+    if not steps:
+        return errs + ["le workflow n'a aucune étape"]
+    seen, transmitted, answers_ready = set(), {}, False
+    for i, st in enumerate(steps):
+        sid = st.get("id")
+        if not sid or sid in seen:
+            errs.append(f"étape {i + 1} : id manquant ou en double ('{sid}')")
+        seen.add(sid)
+        skill = st.get("skill")
+        if skill not in requires:
+            errs.append(f"étape '{sid}' : le skill '{skill}' ne figure pas dans requires")
+        if skill and f"`{skill}`" not in body:
+            errs.append(f"étape '{sid}' : le skill '{skill}' n'est pas cité dans le corps (entre accents graves)")
+        if not st.get("mission"):
+            errs.append(f"étape '{sid}' : pas de mission")
+        if "label" in st and not (isinstance(st["label"], str) and st["label"].strip()):
+            errs.append(f"étape '{sid}' : label doit être un texte non vide (affiché en français)")
+        if st.get("model", "sonnet") not in WORKFLOW_MODELS:
+            errs.append(f"étape '{sid}' : model doit valoir {', '.join(sorted(WORKFLOW_MODELS))}")
+        if st.get("pause", "none") not in WORKFLOW_PAUSES:
+            errs.append(f"étape '{sid}' : pause doit valoir {', '.join(sorted(WORKFLOW_PAUSES))}")
+        transmits = st.get("transmits") or []
+        if st.get("output_field") and st["output_field"] not in transmits:
+            errs.append(f"étape '{sid}' : output_field '{st['output_field']}' ne figure pas dans transmits")
+        verbatim = st.get("verbatim") or []
+        if verbatim and i != 0:
+            errs.append(f"étape '{sid}' : seule la première étape peut déclarer des champs verbatim (elle seule lit la demande)")
+        for field in verbatim:
+            if field not in transmits:
+                errs.append(f"étape '{sid}' : le champ verbatim '{field}' ne figure pas dans transmits")
+        if st.get("produces_context_sheet") and i != 0:
+            errs.append(f"étape '{sid}' : seule la première étape produit la fiche de contexte")
+        for src in st.get("receives") or []:
+            if src == "brief":
+                if i != 0:
+                    errs.append(f"étape '{sid}' : seule la première étape reçoit la demande brute (brief)")
+            elif src == "context_sheet":
+                if i == 0:
+                    errs.append("la première étape ne peut pas recevoir la fiche de contexte qu'elle produit")
+            elif src == "answers":
+                if not answers_ready:
+                    errs.append(f"étape '{sid}' : reçoit answers avant toute étape dont la pause vaut 'answers'")
+            elif "." in str(src):
+                prev, field = str(src).split(".", 1)
+                if field not in transmitted.get(prev, ()):
+                    errs.append(f"étape '{sid}' : '{src}' n'est transmis par aucune étape antérieure")
+            else:
+                errs.append(f"étape '{sid}' : source inconnue '{src}'")
+        transmitted[sid] = set(transmits)
+        if st.get("pause") == "answers":
+            answers_ready = True
+    labels = wf.get("context_labels") or {}
+    if not isinstance(labels, dict) or any(k not in (wf.get("context_sheet") or []) or not isinstance(v, str) or not v.strip()
+                                           for k, v in labels.items()):
+        errs.append("context_labels doit associer des clés de context_sheet à des libellés non vides (en français)")
+    if "summary_fr" in fm and not (isinstance(fm["summary_fr"], str) and fm["summary_fr"].strip()):
+        errs.append("summary_fr doit être un texte non vide (une phrase affichée à l'utilisateur)")
+    if not steps[0].get("produces_context_sheet"):
+        errs.append("la première étape doit produire la fiche de contexte (produces_context_sheet: true)")
+    return errs
+
+
+def runner_errors(fm):
+    """What the runner itself needs beyond build.py's checks (normalize_step, the page's step ids)."""
+    errs = []
+    for i, st in enumerate((fm.get("workflow") or {}).get("steps") or []):
+        if not isinstance(st, dict):
+            continue
+        sid = st.get("id")
+        if sid and not STEP_ID_RE.fullmatch(str(sid)):
+            errs.append(f"étape {i + 1} : l'id '{sid}' doit tenir en minuscules sans accents, chiffres, tirets et soulignés")
+        if not st.get("transmits") or not isinstance(st.get("transmits"), list):
+            errs.append(f"étape '{sid or i + 1}' : transmits doit lister au moins un champ")
+        if st.get("skill") and ":" not in str(st["skill"]):
+            errs.append(f"étape '{sid}' : le skill '{st['skill']}' doit porter son espace de noms (ix-skills:… ou ix-recipes:…)")
+    sheet = (fm.get("workflow") or {}).get("context_sheet")
+    if not isinstance(sheet, list) or not sheet:
+        errs.append("workflow.context_sheet doit lister les rubriques de la fiche de contexte")
+    return errs
+
+
+def contribution_gaps(fm):
+    """What the repository asks of a skill file (CLAUDE.md §3) that a personal recipe may lack."""
+    gaps = [f"champ '{k}' manquant" for k in CANONICAL_FIELDS if fm.get(k) in (None, "", [])]
+    if fm.get("version") and not re.fullmatch(r"\d+\.\d+\.\d+", str(fm["version"])):
+        gaps.append("version doit être de la forme 1.0.0")
+    if fm.get("domain") and fm["domain"] not in DOMAINS:
+        gaps.append(f"domain doit valoir {', '.join(DOMAINS)}")
+    if fm.get("category") != "workflow":
+        gaps.append("category doit valoir workflow")
+    for key in ("input_types", "output_types", "compatible"):
+        if fm.get(key) not in (None, "", []) and not isinstance(fm[key], list):
+            gaps.append(f"{key} doit être une liste")
+    return gaps
+
+
+def check_recipe_text(text, places=None, exists=None):
+    """Everything the page shows about a recipe file: {"errors", "contribution", "recipe", "id"}.
+
+    `errors` block a test run and the move to the recueil; `contribution` only blocks the proposal
+    to the repository. `exists(ref)` defaults to the catalogue the runner resolves skills from.
+    """
+    try:
+        return _check_recipe_text(text, places, exists)
+    except (TypeError, AttributeError, ValueError) as exc:   # a value of an unexpected shape (a list for a text…)
+        return {"errors": [f"structure inattendue dans l'en-tête ({type(exc).__name__}: {exc})"],
+                "contribution": [], "recipe": None, "id": None}
+
+
+def _check_recipe_text(text, places, exists):
+    result = {"errors": [], "contribution": [], "recipe": None, "id": None}
+    try:
+        fm, body = parse_recipe_text(text)
+    except ParcoursError as exc:
+        result["errors"].append(str(exc))
+        return result
+    refs = set(catalogue())
+    exists = exists or (lambda ref: ref in refs)
+    rid = fm.get("id")
+    result["id"] = rid if isinstance(rid, str) else None
+    if not isinstance(rid, str) or not RECIPE_ID_RE.fullmatch(rid):
+        result["errors"].append("id manquant ou invalide : minuscules sans accents, chiffres et tirets (60 caractères au plus)")
+    elif rid in plugin_recipe_ids() or f"ix-recipes:{rid}" in refs or f"ix-skills:{rid}" in refs:
+        result["errors"].append(f"l'id '{rid}' est déjà pris par un skill ou une recette du catalogue : choisissez-en un autre")
+    if not fm.get("workflow"):
+        result["errors"].append("pas de bloc workflow : ce fichier n'est pas une recette-workflow")
+        return result
+    result["errors"] += workflow_errors(fm, body, exists) + runner_errors(fm)
+    result["contribution"] = contribution_gaps(fm)
+    if not result["errors"]:
+        try:
+            result["recipe"] = recipe_view(fm, body)
+        except ParcoursError as exc:
+            result["errors"].append(str(exc))
+    return result
+
+
+def recipe_view(fm, body):
+    """A readable summary of a recipe's steps for the page."""
+    wf = fm["workflow"]
+    steps = [normalize_step(raw, i) for i, raw in enumerate(wf["steps"])]
+    labels = {str(k): str(v) for k, v in (wf.get("context_labels") or {}).items()}
+    return {
+        "id": fm.get("id"), "label": str(fm.get("label") or fm.get("id")), "version": str(fm.get("version") or ""),
+        "summary": str(fm.get("summary_fr") or ""), "description": str(fm.get("description_fr") or ""),
+        "context_sheet": [{"key": str(k), "label": labels.get(str(k)), "definition": context_definitions(body).get(str(k))}
+                          for k in wf.get("context_sheet") or []],
+        "steps": [{"id": s["id"], "label": s["label"], "skill": s["skill"], "mission": s["mission"],
+                   "receives": s["receives"], "transmits": s["transmits"], "pause": effective_pause(s),
+                   "model": s["model"], "optional": s["optional"], "output_field": s["output_field"]} for s in steps],
     }
 
 
@@ -402,6 +1175,41 @@ def resolve_skill(ref):
     raise ParcoursError(f"skill introuvable : {ref} (cherché dans : {searched})")
 
 
+def catalogue_roots(namespace):
+    """The roots of resolve_skill, with only the current version of a cached plugin: a skill that
+    an older cached version still holds (moved to the other repository since) is not offered."""
+    roots = skill_search_roots(namespace)
+    cached = [r for r in roots if ".claude" in Path(r).parts and "cache" in Path(r).parts]
+    return [r for r in roots if r not in cached[1:]]
+
+
+def catalogue():
+    """The skills a new recipe may draw on, {ref: {"ref", "id", "namespace", "description", "path"}}:
+    the same roots and order as resolve_skill, current versions only (catalogue_roots)."""
+    found = {}
+    for namespace in ("ix-skills", "ix-recipes"):
+        for root in catalogue_roots(namespace):
+            if not Path(root).is_dir():
+                continue
+            for folder in sorted(Path(root).iterdir()):
+                ref = f"{namespace}:{folder.name}"
+                path = folder / "SKILL.md"
+                if ref in found or not path.is_file():
+                    continue
+                try:
+                    fm, _ = split_frontmatter(path.read_text(encoding="utf-8"))
+                except (OSError, UnicodeDecodeError, ValueError):
+                    fm = {}
+                found[ref] = {"ref": ref, "id": folder.name, "namespace": namespace, "path": str(path),
+                              "description": " ".join(str(fm.get("description") or "").split())}
+    return found
+
+
+def catalogue_has(ref, refs=None):
+    """True when `ref` (namespace:id) is in the catalogue (`refs`: an already computed set of its refs)."""
+    return ref in (refs if refs is not None else catalogue())
+
+
 def skill_record(skill):
     """What state.json keeps of a skill: where it is, which text (sha256), which version."""
     return {k: skill[k] for k in ("ref", "path", "version", "version_source", "sha256")}
@@ -458,6 +1266,8 @@ def new_state(recipe, slug, engine, engine_steps, skills, title=None):
     return {
         "recipe": recipe["id"],
         "recipe_version": recipe["version"],
+        "recipe_sha256": recipe.get("source_sha256"),
+        "recipe_origin": recipe.get("origin"),
         "slug": slug,
         "title": title,
         "created": now(),
@@ -1300,10 +2110,42 @@ def fake_engine(step_id, kind, message):
     return canned.read_text(encoding="utf-8"), 0.0
 
 
-def call_engine(engine, message, *, model, timeout, budget, skill, step_id, kind):
+SIMULATED = "(simulé)"
+
+
+def simulation_engine(step_id, kind, message, expected):
+    """A free engine for testing a recipe's chain: no model, an output built from what the step must
+    transmit (`expected`: fields, context keys, output field). It names the inputs the step received,
+    never their contents (the raw request must not travel further)."""
+    expected = expected or {}
+    received = re.findall(r"^=== INPUT: (.+?) ===$", message, re.M)
+    if "=== CONTEXT SHEET ===" in message:
+        received.insert(0, "context_sheet")
+    parts = []
+    if kind != "retry":
+        parts.append(
+            f"# Étape « {step_id} » — sortie simulée\n\n"
+            "Aucun modèle n'a été appelé : ce texte tient la place du livrable de l'étape, pour vérifier "
+            "l'enchaînement de la recette (ce que l'étape reçoit, ce qu'elle transmet, les pauses).\n\n"
+            "## Entrées reçues\n\n" + ("\n".join(f"- `{name}`" for name in received) or "- (aucune)") + "\n")
+        if expected.get("output_field"):
+            parts.append(f"Ce document serait transmis tel quel comme `{expected['output_field']}`.\n")
+    if expected.get("context"):
+        sheet = {key: f"{SIMULATED} {key}" for key in expected["context"]}
+        parts.append("## CONTEXT SHEET\n```json\n" + json.dumps(sheet, ensure_ascii=False, indent=2) + "\n```\n")
+    parts.append("## HANDOFF\n")
+    for field in expected.get("fields", []):
+        parts.append(f"### {field}\n{SIMULATED} « {field} » transmis par l'étape « {step_id} ».\n")
+    parts.append(f"## SUMMARY\nSortie simulée de l'étape « {step_id} » (aucun appel à un modèle).\n")
+    return "\n".join(parts), 0.0
+
+
+def call_engine(engine, message, *, model, timeout, budget, skill, step_id, kind, expected=None):
     """One engine call in a throwaway folder holding only the skill's references/."""
     if engine == "fake":
         return fake_engine(step_id, kind, message)
+    if engine == "simulation":
+        return simulation_engine(step_id, kind, message, expected)
     tmp = Path(tempfile.mkdtemp(prefix="parcours-"))
     try:
         work, out_file = tmp / "work", tmp / "last-message.txt"
@@ -1343,14 +2185,14 @@ def engine_for(state, step_id):
     return state["engine_steps"].get(step_id, state["engine"])
 
 
-def invoke(directory, state, step, engine, message, opts, kind, skill, model):
+def invoke(directory, state, step, engine, message, opts, kind, skill, model, expected=None):
     """Engine call with its accounting (call count, cost), saved as soon as the call returns."""
     state["calls"][engine] = state["calls"].get(engine, 0) + 1
     text, cost = None, 0.0
     try:
         text, cost = call_engine(
             engine, message, model=model, timeout=opts.timeout, budget=opts.max_budget_usd,
-            skill=skill, step_id=step["id"], kind=kind,
+            skill=skill, step_id=step["id"], kind=kind, expected=expected,
         )
     except EngineError as exc:
         cost = exc.cost  # a failed claude call still reports what it cost
@@ -1398,12 +2240,14 @@ def produce_output(directory, state, recipe, idx, skill, message, opts, retried=
     engine, model = engine_for(state, defn["id"]), defn["model"]
     context_fields = recipe["context_sheet"] if defn["produces_context_sheet"] else None
     out_path = directory / output_name(idx, defn["id"])
+    expected = {"fields": [f for f in defn["transmits"] if f != defn.get("output_field")],
+                "context": context_fields, "output_field": defn.get("output_field")}
 
     existing = reuse_existing_output(out_path, defn, retried, context_fields)
     if existing:
         return existing
     write_trace(directory, idx, defn["id"], "main", message)
-    text = invoke(directory, state, step, engine, message, opts, "main", skill, model)
+    text = invoke(directory, state, step, engine, message, opts, "main", skill, model, expected)
     write_atomic(out_path, text)
     try:
         return parse_step_output(text, defn["transmits"], context_fields, defn.get("output_field"))
@@ -1413,7 +2257,7 @@ def produce_output(directory, state, recipe, idx, skill, message, opts, retried=
         ensure_isolated(retry, directory, idx, admitted=admitted_text(state, recipe, idx))
         warn(f"étape '{defn['id']}' : {first} ; une relance sur la sortie produite")
         write_trace(directory, idx, defn["id"], "retry", retry)
-        retry_text = invoke(directory, state, step, engine, retry, opts, "retry", skill, model)
+        retry_text = invoke(directory, state, step, engine, retry, opts, "retry", skill, model, expected)
         write_atomic(out_path, f"{text}\n\n{RETRY_MARKER}\n{retry_text}\n")
         if defn.get("output_field"):
             retry_text = f"{output_body(text)}\n\n{retry_text}"  # the document comes from the first answer
@@ -1570,6 +2414,8 @@ def cmd_new(args):
     # a slug stays within the page's whitelist (^[a-z0-9][a-z0-9-]{0,79}$): truncated, and the
     # default one when nothing ASCII is left (a title such as « 🚀 » or « — »)
     wanted = (slugify(args.slug)[:60].strip("-") if args.slug else "") or default_slug(recipe["id"], text)
+    if wanted in RESERVED_SLUGS:   # <parcours-dir>/recettes is the user's recueil, never a dossier
+        wanted += "-dossier"
     directory, slug = create_unique_dir(base, wanted)
     title = " ".join((args.title or "").split())[:120] or None
     write_atomic(directory / "input.md", text)
@@ -1582,18 +2428,32 @@ def cmd_new(args):
     return 0
 
 
-def list_recipes():
-    """The workflow recipes of this repo, for a page that creates parcours (`recipes --json`)."""
+def list_recipes(places=None, problems=None):
+    """The workflow recipes of this repo, then the user's own (`personal`: true), for a page that
+    creates parcours (`recipes --json`). A personal recipe that the runner cannot play, or that a
+    recipe of the plugin shadows, is not offered: it goes to `problems` ([{id, message}]) instead."""
     found = []
     unreadable = (ParcoursError, OSError, ValueError) + ((yaml.YAMLError,) if yaml else ())
-    for recipe_id in recipe_ids():
+    plugin_ids, personal_ids = plugin_recipe_ids(), personal_recipe_ids(places)
+    for recipe_id in sorted(plugin_ids | personal_ids):
         try:
-            recipe = load_recipe(recipe_id)
-        except unreadable:
+            recipe = load_recipe(recipe_id, places)
+            if recipe["origin"] != "plugin":
+                fm, body, _, _ = recipe_origin(recipe_id, places)
+                errors = workflow_errors(fm, body) + runner_errors(fm)
+                if errors:
+                    raise ParcoursError("; ".join(errors))
+        except unreadable as exc:
+            if recipe_id in personal_ids and recipe_id not in plugin_ids and problems is not None:
+                problems.append({"id": recipe_id, "message": str(exc)})
             continue  # not a workflow recipe, or unreadable: not offered
+        if recipe_id in personal_ids and recipe["origin"] == "plugin" and problems is not None:
+            problems.append({"id": recipe_id, "message": "une recette du plugin porte le même id : "
+                                                         "la vôtre est masquée, renommez-la"})
         found.append({
             "id": recipe["id"], "label": recipe["label"], "description": recipe["description"],
             "icon": recipe["icon"], "version": recipe["version"], "summary": recipe["summary"],
+            "origin": recipe["origin"], "personal": recipe["origin"] != "plugin",
             "steps": [{"id": s["id"], "label": s["label"], "pause": effective_pause(s),
                        "optional": s["optional"]} for s in recipe["steps"]],
         })
@@ -1601,12 +2461,17 @@ def list_recipes():
 
 
 def cmd_recipes(args):
-    recipes = list_recipes()
+    problems = []
+    recipes = list_recipes(problems=problems)
     if args.json:
-        emit_json({"recipes": recipes})
+        emit_json({"recipes": recipes, "personal_problems": problems,
+                   "recueil": str(PLACES["recueil"]) if PLACES.get("recueil") else None})
         return 0
     for r in recipes:
-        say(f"{r['id']} — {r['label']} ({len(r['steps'])} étapes)")
+        mark = " [personnelle]" if r["personal"] else ""
+        say(f"{r['id']} — {r['label']} ({len(r['steps'])} étapes){mark}")
+    for problem in problems:
+        say(f"{problem['id']} — écartée : {problem['message']}")
     return 0
 
 
@@ -1818,6 +2683,9 @@ def status_report(directory, state, fingerprint):
     return {
         "slug": state["slug"], "title": state.get("title"), "recipe": state["recipe"],
         "recipe_version": state["recipe_version"], "recipe_label": recipe["label"] if recipe else state["recipe"],
+        "recipe_origin": recipe["origin"] if recipe else state.get("recipe_origin"),
+        "recipe_sha256": state.get("recipe_sha256"),
+        "recipe_current": bool(recipe and state.get("recipe_sha256") == recipe.get("source_sha256")),
         "created": state.get("created"), "status": state["status"],
         "engine": state["engine"], "engine_steps": state["engine_steps"],
         "cost_usd": state["cost_usd"], "calls": state["calls"],
@@ -1904,7 +2772,7 @@ def cmd_plan(args):
         runnable=True, steps=rows, calls=calls, claude_steps=claude_steps,
         # one claude call per step, plus the single retry on a failed extraction
         ceiling_usd=round(claude_steps * args.max_budget_usd * 2, 6),
-        subscription_calls=sum(n for e, n in calls.items() if e not in ("claude", "fake")),
+        subscription_calls=sum(n for e, n in calls.items() if e not in ("claude",) + FREE_ENGINES),
         agy_argv_warning=any(r["engine"] == "agy" for r in rows),
         agy_over_limit=any(r["engine"] == "agy" and r["bytes"] > ARGV_PROMPT_LIMIT for r in rows),
         warnings=skill_changes(state, recipe),
@@ -2312,6 +3180,7 @@ def build_parser():
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
+    PLACES.update(recipe_places(args.parcours_dir))
     as_json = args.json or args.json_errors
     try:
         return args.func(args)

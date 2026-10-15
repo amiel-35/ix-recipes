@@ -90,6 +90,7 @@ Contrôle avant chaque appel à partir de l'étape 2 : le message ne doit conten
 | `agy` | `agy --disable-slash-commands -p=<message>` dans le dossier jetable (le message est dans l'argument, pas sur l'entrée standard) | modèle par défaut d'Antigravity (`--model` possible) | abonnement : on compte les appels |
 | `vibe` | `vibe -p --output text` dans le dossier jetable | modèle par défaut de Vibe | non testé (pas de crédit) |
 | `fake` | aucun appel : sorties préparées par étape, dont un cas de HANDOFF malformé pour tester la relance | — | 0 — pour les tests |
+| `simulation` | aucun appel : une sortie bien formée construite à partir de ce que l'étape doit transmettre (document qui nomme les entrées reçues, fiche de contexte, champs) | — | 0 — pour tester une recette neuve (essais de la page, [interface.md](interface.md) §9.5) |
 
 Sans `--setting-sources ""` ni `--disable-slash-commands`, Claude chargerait CLAUDE.md, la mémoire et les plugins installés, et pourrait invoquer la version plugin du skill au lieu du texte transmis. Seul l'outil `Read` est laissé, pour les `references/` copiées.
 
@@ -106,7 +107,7 @@ Le moteur se choisit pour tout le parcours (`--engine`) ou par étape (`--engine
 ```bash
 python3 scripts/parcours.py new brief-client --input demande.md [--slug …] [--title "…"] [--engine claude]   # --input - : stdin
 python3 scripts/parcours.py archive <slug> | unarchive <slug> | archives [--json]   # sortir un parcours de la liste (.archives/), l'y remettre, les lister
-python3 scripts/parcours.py recipes [--json]               # les recettes-workflows disponibles, avec libellés et étapes
+python3 scripts/parcours.py recipes [--json]               # les recettes-workflows disponibles (celles du recueil personnel marquées), avec libellés et étapes
 python3 scripts/parcours.py next <slug> [--yes] [--if-state <empreinte>]   # joue jusqu'à la prochaine pause
 python3 scripts/parcours.py plan <slug> --json           # le plan de ce que ferait `next`, sans rien écrire
 python3 scripts/parcours.py status <slug> [--json]
@@ -136,6 +137,10 @@ python3 scripts/parcours.py handoff <slug> <étape> --file champs.md          # 
   - **SIGTERM pendant `next`** devient une sortie propre : l'appel au moteur en cours (groupe de processus à part) est tué, l'étape reste `running` (`retry` la reprend) et le verrou se libère.
 
 Avant de lancer des étapes, `next` affiche ce qu'il va faire — étapes, moteur, modèle, taille des entrées — et demande confirmation (sauf `--yes`) : les abonnements Codex et Antigravity sont petits.
+
+### Recettes personnelles
+
+Une recette se cherche dans le dépôt ou le plugin, puis — jamais à leur place — dans le recueil de l'utilisateur, `<--parcours-dir>/recettes/<id>.md`, et, pour un dossier de test, dans le brouillon qu'il essaie ([interface.md](interface.md) §9). Le fichier se lit sans pyyaml (lecteur YAML de la bibliothèque standard, aussi utilisé en repli pour les recettes du dépôt). `recipes --json` les marque `personal: true` et liste à part celles qu'il écarte (`personal_problems`) ; `state.json` garde `recipe_sha256` et `recipe_origin`, `status --json` dit `recipe_current`. Le dossier `recettes` n'est jamais un parcours (`new --slug recettes` → `recettes-dossier`).
 
 ## 6. Règles reprises du format
 

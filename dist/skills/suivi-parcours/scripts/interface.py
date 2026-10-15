@@ -39,24 +39,32 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
-import parcours  # reads only: is_locked() (the probe of `status --json`), load_recipe() labels, output_document()
+import parcours  # reads only: is_locked() (the probe of `status --json`), load_recipe() labels, output_document(), check_recipe_text()
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 HERE = Path(__file__).resolve().parent
 PARCOURS_SCRIPT = HERE / "parcours.py"
+RECETTES_SCRIPT = HERE / "recettes.py"
 PAGE = HERE / "interface.html"
 DEFAULT_PORT = 8765
 TOKEN_FILE = ".interface-token"
 TOKEN_HEADER = "X-Parcours-Token"
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,79}$")          # slugs are made by slugify(): letters, digits, hyphens
-STEP_RE = SLUG_RE                                            # step ids are kebab-case in the recipes
-FILE_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{0,79}$")          # no leading dot: neither .lock nor temporary files
+STEP_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,79}$")          # step ids: lower case, digits, hyphens, underscores
+FILE_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")         # no leading dot: neither .lock nor temporary files
 TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,}$")
 FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
 REAL_ENGINES = ("claude", "codex", "agy", "vibe")
-ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun", "archive")
+ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun", "archive", "delete")
+DRAFT_ACTIONS = ("design", "stop", "save", "template", "promote", "delete", "essai", "essai-delete")
+PERSONAL_ACTIONS = ("edit", "retire", "contribute")
+CONTRIBUTE_STEPS = ("prepare", "push", "cancel", "status")
+RECIPE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,59}$")
+SHA_RE = FINGERPRINT_RE
+MAX_SOURCE = 1000           # characters of a clone path or a git address
+CONTRIBUTE_TIMEOUT = 900    # seconds: a clone, two builds, a push
 MAX_BODY = 4_000_000        # bytes of a POST body (a pasted answer can be long)
 MAX_FILE = 2_000_000        # bytes of a file sent to the page
 MAX_TITLE = 120             # characters of a parcours title
@@ -108,25 +116,34 @@ def load_or_create_token(directory):
 # ---------------------------------------------------------------------------
 # Application: what the handlers do
 # ---------------------------------------------------------------------------
-class App:
-    def __init__(self, parcours_dir, dev=False, theme=None):
-        self.theme = Path(theme).expanduser().resolve() if theme else None
-        if self.theme and not (self.theme / "theme.css").is_file():
-            raise OSError(f"thème sans theme.css : {self.theme}")
+def space_engines(essais, dev):
+    """Engines offered in the page; a test dossier runs free by default (`simulation` calls no model)."""
+    return (["simulation"] if essais else []) + list(REAL_ENGINES) + (["fake"] if dev else [])
+
+
+class Space:
+    """A folder of parcours and what the page does with them: the real dossiers (the App itself),
+    or the test dossiers of a draft recipe (<recueil>/brouillons/<draft>/essais, `essais=True`)."""
+
+    def __init__(self, parcours_dir, dev=False, essais=False):
         self.dir = Path(parcours_dir).resolve()
         self.dir.mkdir(parents=True, exist_ok=True)
         self.dev = dev
-        self.token = load_or_create_token(self.dir)
+        self.essais = essais
         self.summaries = {}             # slug -> (mtime_ns, size, summary): state.json is reread only when it changes
         self.list_lock = threading.Lock()   # two tabs polling at once share the cache
         self.launches = {}              # slug -> Popen of the `next` this server started
         self.slug_locks = {}            # slug -> threading.Lock (one launch at a time)
         self.registry = threading.Lock()
 
+    @property
+    def places(self):
+        return parcours.recipe_places(self.dir)
+
     # -- helpers ----------------------------------------------------------
     @property
     def engines(self):
-        return list(REAL_ENGINES) + (["fake"] if self.dev else [])
+        return space_engines(self.essais, self.dev)
 
     def slug_lock(self, slug):
         with self.registry:
@@ -179,12 +196,11 @@ class App:
             raise ApiError(500, "unreadable", "réponse illisible de parcours.py")
 
     # -- reads ------------------------------------------------------------
-    @staticmethod
-    def recipe_labels(recipe_id, cache):
+    def recipe_labels(self, recipe_id, cache):
         """(recipe label, {step id: label}) for the list page; the ids if the recipe is unreadable."""
         if recipe_id not in cache:
             try:
-                recipe = parcours.load_recipe(recipe_id)
+                recipe = parcours.load_recipe(recipe_id, self.places)
                 cache[recipe_id] = (recipe["label"], {s["id"]: s["label"] for s in recipe["steps"]})
             except Exception:  # a broken recipe must not break the list
                 cache[recipe_id] = (recipe_id, {})
@@ -198,6 +214,8 @@ class App:
         items, without_state, broken, labels = [], [], [], {}
         for entry in sorted(self.dir.iterdir()):
             if not entry.is_dir() or entry.is_symlink() or not SLUG_RE.match(entry.name):
+                continue
+            if not self.essais and entry.name in parcours.RESERVED_SLUGS:   # the recueil of personal recipes
                 continue
             state_file = entry / "state.json"
             if not state_file.is_file():
@@ -238,12 +256,12 @@ class App:
         archives = self.dir / parcours.ARCHIVES
         archived = sum(1 for e in archives.iterdir() if e.is_dir()) if archives.is_dir() else 0
         return {"parcours": items, "without_state": without_state, "broken": broken, "archived": archived,
-                "engines": self.engines, "dev": self.dev, "parcours_dir": str(self.dir)}
+                "engines": self.engines, "dev": self.dev, "parcours_dir": str(self.dir), "essais": self.essais}
 
     def status(self, slug):
         self.parcours_dir(slug)
         data = self.run_json("status", positionals=[slug])
-        data.update(engines=self.engines, dev=self.dev, parcours_dir=str(self.dir))
+        data.update(engines=self.engines, dev=self.dev, parcours_dir=str(self.dir), essais=self.essais)
         return data
 
     def plan(self, slug, engine=None):
@@ -328,6 +346,10 @@ class App:
             if parcours.is_locked(self.dir / slug):
                 raise ApiError(409, "running", "une étape est en cours sur ce parcours")
             return self.done(*self.run("archive", positionals=[slug]))
+        if action == "delete" and self.essais:   # a test dossier only: a real one is archived, never deleted
+            draft = self.dir.parent.name
+            return self.done(*run_script(RECETTES_SCRIPT, self.dir.parent.parent.parent.parent, "essai-delete",
+                                         positionals=[draft, slug]))
         raise ApiError(404, "not_found", f"action inconnue : {action}")
 
     @staticmethod
@@ -388,21 +410,21 @@ class App:
         return not parcours.is_locked(directory)
 
     @staticmethod
-    def owned_group(directory, slug):
+    def owned_group(directory, slug, script="parcours.py", pid_file=".next.pid"):
         """Process group of the `next` this interface started, checked before anything is killed.
 
         The lock is held (checked by the caller); the pid file must name a live process that leads
         its own group and whose command line is parcours.py next <slug>: a recycled pid is refused.
         """
         try:
-            pid = int((directory / ".next.pid").read_text(encoding="utf-8").strip())
+            pid = int((directory / pid_file).read_text(encoding="utf-8").strip())
             os.kill(pid, 0)
             leads_group = os.getpgid(pid) == pid
             command = subprocess.run(["ps", "-o", "command=", "-p", str(pid)], capture_output=True,
                                      text=True, timeout=10).stdout
         except (OSError, ValueError, subprocess.SubprocessError):
             leads_group, command = False, ""
-        if not leads_group or "parcours.py" not in command or slug not in command.split():
+        if not leads_group or script not in command or slug not in command.split():
             raise ApiError(409, "not_owned", "le verrou est tenu par un processus que cette interface n'a pas "
                                              "lancé : l'arrêter depuis le terminal qui l'a démarré")
         return pid
@@ -459,6 +481,216 @@ class App:
         return self.done(out, err, {"kind": "rerun", "steps": requeued})
 
 
+class App(Space):
+    """The real dossiers (a Space), the access token and theme, the test spaces of the drafts, and the
+    user's recipes: every recipe action calls scripts/recettes.py, as every parcours action calls parcours.py."""
+
+    def __init__(self, parcours_dir, dev=False, theme=None):
+        self.theme = Path(theme).expanduser().resolve() if theme else None
+        if self.theme and not (self.theme / "theme.css").is_file():
+            raise OSError(f"thème sans theme.css : {self.theme}")
+        super().__init__(parcours_dir, dev=dev)
+        self.token = load_or_create_token(self.dir)
+        self.spaces = {}                # draft -> Space of its test dossiers
+        self.designs = {}               # draft -> Popen of the design call this server started
+
+    # -- the recueil and its drafts ----------------------------------------
+    @property
+    def recueil(self):
+        return self.dir / parcours.RECUEIL_DIR
+
+    @property
+    def design_engines(self):
+        return list(REAL_ENGINES) + (["fake"] if self.dev else [])
+
+    def draft_dir(self, draft):
+        """Folder of an existing draft; the name is checked, the folder must hold its state."""
+        if not isinstance(draft, str) or not SLUG_RE.match(draft):
+            raise ApiError(400, "bad_slug", "identifiant de brouillon invalide")
+        base = self.recueil / parcours.DRAFTS_DIR
+        directory = base / draft
+        if directory.is_symlink() or not (directory / "brouillon.json").is_file():
+            raise ApiError(404, "not_found", f"brouillon introuvable : {draft}")
+        if directory.resolve().parent != base.resolve():
+            raise ApiError(400, "bad_slug", "identifiant de brouillon invalide")
+        return directory
+
+    def essais_space(self, draft):
+        directory = self.draft_dir(draft)
+        with self.registry:
+            space = self.spaces.get(draft)
+            if space is None or not space.dir.is_dir():
+                space = self.spaces[draft] = Space(directory / parcours.ESSAIS_DIR, dev=self.dev, essais=True)
+        return space
+
+    def recettes(self, command, flags=(), positionals=(), timeout=SYNC_TIMEOUT, input_text=None):
+        return run_script_json(RECETTES_SCRIPT, self.dir, command, flags, positionals, timeout, input_text)
+
+    def recipe_book(self):
+        data = self.recettes("list")
+        data.update(design_engines=self.design_engines, dev=self.dev)
+        return data
+
+    def draft(self, draft):
+        directory = self.draft_dir(draft)
+        data = self.recettes("show", positionals=[draft])
+        data.update(design_engines=self.design_engines, essai_engines=space_engines(True, self.dev), dev=self.dev,
+                    design_log=(directory / ".design.log").is_file())
+        return data
+
+    def draft_log(self, draft):
+        path = self.draft_dir(draft) / ".design.log"
+        if not path.is_file():
+            return {"exists": False, "log": "", "truncated": False}
+        raw = path.read_bytes()
+        return {"exists": True, "log": raw[-LOG_TAIL:].decode("utf-8", errors="replace"), "truncated": len(raw) > LOG_TAIL}
+
+    def personal(self, recipe_id):
+        if not RECIPE_ID_RE.match(recipe_id or ""):
+            raise ApiError(400, "bad_slug", "identifiant de recette invalide")
+        return self.recettes("personal", positionals=[recipe_id])
+
+    def create_draft(self, body):
+        need, title = body.get("need") or "", body.get("title") or ""
+        template = body.get("template") is True
+        if not isinstance(need, str) or (not template and not need.strip()):
+            raise ApiError(400, "bad_request", "décrivez le besoin : le travail récurrent, ce qui entre, ce qui doit sortir")
+        if not isinstance(title, str) or len(title) > MAX_TITLE:
+            raise ApiError(400, "bad_request", f"titre invalide ({MAX_TITLE} caractères au plus)")
+        engine = body.get("engine") or "claude"
+        if engine not in self.design_engines:
+            raise ApiError(400, "bad_engine", f"moteur non proposé : {engine!r}")
+        flags = ["--input", "-"] if need.strip() else []
+        if template:
+            flags.append("--template")
+        if title.strip():
+            flags.append(f"--title={title.strip()}")
+        data = self.recettes("draft-new", flags, input_text=need if need.strip() else None)
+        if not template:
+            data["design"] = self.launch_design(data["slug"], {"engine": engine})
+        return data
+
+    def launch_design(self, draft, body):
+        """The design call, detached like `next`: output in <draft>/.design.log, running read from the lock."""
+        directory = self.draft_dir(draft)
+        engine = body.get("engine") or "claude"
+        if engine not in self.design_engines:
+            raise ApiError(400, "bad_engine", f"moteur non proposé : {engine!r}")
+        flags = ["--engine", engine] + (["--insist"] if body.get("insist") is True else [])
+        with self.slug_lock("draft:" + draft):
+            previous = self.designs.get(draft)
+            if (previous and previous.poll() is None) or parcours.is_locked(directory):
+                raise ApiError(409, "running", "une conception est déjà en cours sur ce brouillon")
+            with open(directory / ".design.log", "wb") as log:
+                proc = subprocess.Popen(
+                    [sys.executable, str(RECETTES_SCRIPT), "design", *flags, "--parcours-dir", str(self.dir),
+                     "--json", "--", draft],
+                    stdin=subprocess.DEVNULL, stdout=log, stderr=log, cwd=str(directory),
+                    env=dict(self.child_env(), PYTHONUNBUFFERED="1"), start_new_session=True)
+            (directory / ".design.pid").write_text(f"{proc.pid}\n", encoding="utf-8")
+            self.designs[draft] = proc
+            threading.Thread(target=proc.wait, daemon=True).start()
+            try:
+                code = proc.wait(timeout=QUICK_WAIT)
+            except subprocess.TimeoutExpired:
+                return {"started": True, "finished": False}
+        if code != 0:
+            log_text = (directory / ".design.log").read_text(encoding="utf-8", errors="replace")
+            interpret(code, log_text, log_text[-300:])
+        return {"started": True, "finished": True}
+
+    def draft_act(self, draft, action, body):
+        directory = self.draft_dir(draft)
+        if action == "design":
+            return dict(self.launch_design(draft, body), ok=True)
+        if action == "stop":
+            if not parcours.is_locked(directory):
+                raise ApiError(409, "not_running", "aucune conception en cours sur ce brouillon")
+            pgid = self.owned_group(directory, draft, "recettes.py", ".design.pid")
+            os.killpg(pgid, signal.SIGTERM)
+            if not self.wait_unlocked(directory, STOP_GRACE):
+                with contextlib.suppress(ProcessLookupError, PermissionError):
+                    os.killpg(pgid, signal.SIGKILL)
+                self.wait_unlocked(directory, 3)
+            return {"ok": True, "stopped": True}
+        if action == "save":
+            text, sha = body.get("text"), body.get("sha")
+            if not isinstance(text, str) or not text.strip():
+                raise ApiError(400, "bad_request", "le fichier de la recette est vide")
+            if sha is not None and (not isinstance(sha, str) or not SHA_RE.match(sha)):
+                raise ApiError(400, "bad_request", "empreinte invalide")
+            with tempfile.TemporaryDirectory(prefix="parcours-ui-") as tmp:
+                flags = ["--file", write_private(tmp, "recette.md", text)] + ([f"--if-sha={sha}"] if sha else [])
+                return dict(self.recettes("save", flags, [draft]), ok=True)
+        if action == "template":
+            return dict(self.recettes("template", positionals=[draft]), ok=True)
+        if action == "promote":
+            flags = ["--replace"] if body.get("replace") is True else []
+            return dict(self.recettes("promote", flags, [draft]), ok=True)
+        if action == "delete":
+            data = self.recettes("delete-draft", positionals=[draft])
+            with self.registry:
+                self.spaces.pop(draft, None)
+            return dict(data, ok=True)
+        if action == "essai":
+            recipe_file = directory / parcours.DRAFT_FILE
+            if not recipe_file.is_file():
+                raise ApiError(422, "error", "ce brouillon n'a pas encore de fichier de recette")
+            check = parcours.check_recipe_text(recipe_file.read_text(encoding="utf-8", errors="replace"))
+            if check["errors"]:
+                raise ApiError(422, "error", "corrigez d'abord la recette : " + " ; ".join(check["errors"][:3]))
+            space = self.essais_space(draft)
+            engine = body.get("engine") or "simulation"
+            return space.create({"recipe": check["id"], "text": body.get("text"), "title": body.get("title"),
+                                 "engine": engine})
+        if action == "essai-delete":
+            slug = body.get("slug")
+            if not isinstance(slug, str) or not SLUG_RE.match(slug):
+                raise ApiError(400, "bad_slug", "identifiant d'essai invalide")
+            return dict(self.recettes("essai-delete", positionals=[draft, slug]), ok=True)
+        raise ApiError(404, "not_found", f"action inconnue : {action}")
+
+    def personal_act(self, recipe_id, action, body):
+        if not RECIPE_ID_RE.match(recipe_id or ""):
+            raise ApiError(400, "bad_slug", "identifiant de recette invalide")
+        if action in ("edit", "retire"):
+            return dict(self.recettes(action, positionals=[recipe_id]), ok=True)
+        if action == "contribute":
+            step, source = body.get("step"), body.get("source")
+            if step not in CONTRIBUTE_STEPS:
+                raise ApiError(400, "bad_request", f"étape de proposition inconnue : {step!r}")
+            flags = []
+            if source is not None and step == "prepare":
+                if not isinstance(source, str) or not source.strip() or len(source) > MAX_SOURCE \
+                        or any(c in source for c in "\n\r\0") or source.strip().startswith("-"):
+                    raise ApiError(400, "bad_request", "source invalide : chemin d'un clone local ou adresse git")
+                flags.append(f"--source={source.strip()}")
+            return dict(self.recettes("contribute", flags, [recipe_id, step], timeout=CONTRIBUTE_TIMEOUT), ok=True)
+        raise ApiError(404, "not_found", f"action inconnue : {action}")
+
+
+def run_script(script, parcours_dir, command, flags=(), positionals=(), timeout=SYNC_TIMEOUT, input_text=None):
+    """Run a script of this folder (recettes.py) like App.run runs parcours.py; returns (stdout, stderr)."""
+    argv = [sys.executable, str(script), command, *flags, "--parcours-dir", str(parcours_dir), "--json",
+            *(["--", *positionals] if positionals else [])]
+    stdin = {"input": input_text} if input_text is not None else {"stdin": subprocess.DEVNULL}
+    try:
+        done = subprocess.run(argv, capture_output=True, **stdin, text=True, encoding="utf-8", errors="replace",
+                              timeout=timeout, env=Space.child_env())
+    except subprocess.TimeoutExpired:
+        raise ApiError(504, "timeout", f"{script.name} n'a pas répondu en {timeout} s")
+    interpret(done.returncode, done.stdout, done.stderr)
+    return done.stdout, done.stderr
+
+
+def run_script_json(script, parcours_dir, command, flags=(), positionals=(), timeout=SYNC_TIMEOUT, input_text=None):
+    out, _ = run_script(script, parcours_dir, command, flags, positionals, timeout, input_text)
+    try:
+        return json.loads(out.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        raise ApiError(500, "unreadable", f"réponse illisible de {script.name}")
+
+
 def write_private(directory, name, text):
     """A file in a private temporary folder, for the commands that take a file argument."""
     path = Path(directory) / name
@@ -484,7 +716,7 @@ def interpret(code, stdout, stderr):
             except ValueError:
                 continue
             if isinstance(data, dict) and "error" in data:
-                status = {"not_found": 404, "locked": 409, "state_changed": 409}.get(data["error"], 422)
+                status = {"not_found": 404, "locked": 409, "state_changed": 409, "exists": 409}.get(data["error"], 422)
                 raise ApiError(status, str(data["error"]), str(data.get("message", "")))
         raise ApiError(500, "unreadable", f"erreur sans message lisible de parcours.py : {tail or stdout[-300:]}")
     if code == 2:
@@ -588,11 +820,11 @@ class Handler(BaseHTTPRequestHandler):
 
     # -- routes -----------------------------------------------------------
     def route(self, method, parts, query):
-        if parts == ["parcours"]:
-            if method == "POST":
-                return self.send_json(200, self.app.create(self.read_json_body()))
-            self.only(method, "GET")
-            return self.send_json(200, self.app.list_parcours())
+        if parts and parts[0] == "recettes":
+            return self.route_recettes(method, parts[1:])
+        if len(parts) >= 3 and parts[0] == "essais" and parts[2] == "parcours":
+            # the test dossiers of a draft: the same routes as the real ones, over its essais/ folder
+            return self.route_parcours(self.app.essais_space(parts[1]), method, parts[2:], query)
         if parts == ["archives"]:
             self.only(method, "GET")
             return self.send_json(200, self.app.archives())
@@ -603,26 +835,68 @@ class Handler(BaseHTTPRequestHandler):
         if parts == ["recipes"]:
             self.only(method, "GET")
             return self.send_json(200, self.app.recipes())
-        if len(parts) >= 2 and parts[0] == "parcours":
+        if parts and parts[0] == "parcours":
+            return self.route_parcours(self.app, method, parts, query)
+        raise ApiError(404, "not_found", "introuvable")
+
+    def route_parcours(self, space, method, parts, query):
+        """/parcours and /parcours/<slug>/… of a space (the real dossiers, or a draft's test dossiers)."""
+        if parts == ["parcours"]:
+            if method == "POST" and not space.essais:   # a test dossier is created from its draft
+                return self.send_json(200, space.create(self.read_json_body()))
+            self.only(method, "GET")
+            return self.send_json(200, space.list_parcours())
+        if len(parts) >= 2:
             slug, rest = parts[1], parts[2:]
             if not rest:
                 self.only(method, "GET")
-                return self.send_json(200, self.app.status(slug))
+                return self.send_json(200, space.status(slug))
             if rest[0] == "file" and len(rest) == 2:
                 self.only(method, "GET")
-                return self.send_json(200, self.app.read_file(slug, rest[1]))
+                return self.send_json(200, space.read_file(slug, rest[1]))
             if rest[0] == "document" and len(rest) == 2:
                 self.only(method, "GET")
-                return self.send_json(200, self.app.read_document(slug, rest[1]))
+                return self.send_json(200, space.read_document(slug, rest[1]))
             if rest == ["plan"]:
                 self.only(method, "GET")
-                return self.send_json(200, self.app.plan(slug, (query.get("engine") or [None])[0]))
+                return self.send_json(200, space.plan(slug, (query.get("engine") or [None])[0]))
             if rest == ["log"]:
                 self.only(method, "GET")
-                return self.send_json(200, self.app.read_log(slug))
+                return self.send_json(200, space.read_log(slug))
             if len(rest) == 1 and rest[0] in ACTIONS:
                 self.only(method, "POST")
-                return self.send_json(200, self.app.act(slug, rest[0], self.read_json_body()))
+                return self.send_json(200, space.act(slug, rest[0], self.read_json_body()))
+        raise ApiError(404, "not_found", "introuvable")
+
+    def route_recettes(self, method, parts):
+        """/recettes: the recueil, its drafts (design, file, test dossiers, move to the recueil) and
+        the proposal of a personal recipe to the repository."""
+        app = self.app
+        if not parts:
+            self.only(method, "GET")
+            return self.send_json(200, app.recipe_book())
+        if parts[0] == "brouillons":
+            if len(parts) == 1:
+                self.only(method, "POST")
+                return self.send_json(200, app.create_draft(self.read_json_body()))
+            draft, rest = parts[1], parts[2:]
+            if not rest:
+                self.only(method, "GET")
+                return self.send_json(200, app.draft(draft))
+            if rest == ["log"]:
+                self.only(method, "GET")
+                return self.send_json(200, app.draft_log(draft))
+            if len(rest) == 1 and rest[0] in DRAFT_ACTIONS:
+                self.only(method, "POST")
+                return self.send_json(200, app.draft_act(draft, rest[0], self.read_json_body()))
+        if parts[0] == "personnelles" and len(parts) >= 2:
+            recipe_id, rest = parts[1], parts[2:]
+            if not rest:
+                self.only(method, "GET")
+                return self.send_json(200, app.personal(recipe_id))
+            if len(rest) == 1 and rest[0] in PERSONAL_ACTIONS:
+                self.only(method, "POST")
+                return self.send_json(200, app.personal_act(recipe_id, rest[0], self.read_json_body()))
         raise ApiError(404, "not_found", "introuvable")
 
     @staticmethod

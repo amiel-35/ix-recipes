@@ -83,6 +83,7 @@ Une fois Claude Code redémarré : `/ix-recipes:suivi-parcours` (ou « lance la 
 | plugin **ix-recipes** | les skills métier et les recettes-workflows qui enchaînent les atomes | idem |
 | **page de suivi** (`suivi-parcours`) | crée et suit les dossiers d'une recette, étape par étape | Claude Code sur votre ordinateur : un serveur local, Python 3.9+, la CLI Claude connectée — pas Cowork |
 | **dossiers** | un dossier par demande traitée : sorties, traces, état | `~/Parcours` (ou `$PARCOURS_DIR`) ; les terminés s'archivent dans `.archives/` |
+| **vos recettes** | les recettes-workflows que vous concevez dans la page, rangées hors du dépôt ; brouillons et dossiers de test à côté | `~/Parcours/recettes/` (le dossier `recettes` du dossier des parcours) |
 | **thème** | l'habillage de la page : la charte Inflexion par défaut (livrée avec la page, polices sous licence OFL), `none` pour l'apparence neutre, ou le dossier d'une autre charte | `$PARCOURS_THEME` ou `--theme` |
 
 Pour une équipe : chacun colle le prompt ci-dessus ; une autre charte se partage comme un dossier de thème (un `theme.css` et ses polices), activé par `configuration-ix`.
@@ -631,7 +632,7 @@ Des recettes qui enchaînent plusieurs skills, chaque étape isolée dans son pr
 
 #### `suivi-parcours` — Ouvrir la page de suivi
 
-**Ce qu'il fait :** Démarre la page de suivi locale embarquée dans le plugin et t'en donne l'adresse : créer un dossier en collant la demande, relire et valider chaque étape, lire le livrable comme un document. Voir [Exécuter un workflow hors de la conversation](#exécuter-un-workflow-hors-de-la-conversation--la-page-de-suivi).
+**Ce qu'il fait :** Démarre la page de suivi locale embarquée dans le plugin et t'en donne l'adresse : créer un dossier en collant la demande, relire et valider chaque étape, lire le livrable comme un document ; concevoir, tester et garder ses propres recettes. Voir [Exécuter un workflow hors de la conversation](#exécuter-un-workflow-hors-de-la-conversation--la-page-de-suivi) et [Vos propres recettes](#vos-propres-recettes).
 
 **Ce qu'il ne fait pas :** Ne joue aucune étape et ne lit aucun dossier lui-même. Pas depuis Cowork : la page tourne sur ton ordinateur.
 
@@ -701,6 +702,7 @@ La page s'ouvre dans votre navigateur (en local seulement, protégée par une cl
 - **Nouveau dossier** : choisir une recette, coller la demande (mail du client, notes, cahier des charges) ou importer un fichier texte, puis « Créer et démarrer ».
 - **Un dossier** : les étapes à gauche ; en haut, la seule chose attendue de vous (« Valider et continuer », « Envoyer les réponses et continuer », « Refaire l'étape »…) ; au centre, le résultat de chaque étape lu comme un document mis en forme, à copier, télécharger ou imprimer en PDF. La fiche de contexte, seule chose que les étapes suivantes savent de votre demande, se vérifie et se corrige champ par champ après la première étape.
 - **Détails techniques** (interrupteur en haut) : moteur et modèle, coût par étape, champs transmis, sorties brutes, messages exacts reçus, journal.
+- **Recettes** (lien en haut) : vos propres recettes — voir [Vos propres recettes](#vos-propres-recettes).
 
 Les dossiers sont rangés dans `~/Parcours` (`--parcours-dir` ou `PARCOURS_DIR` pour changer). Spécifications : [`docs/interface.md`](docs/interface.md), [`docs/executeur.md`](docs/executeur.md). Mesuré : une réponse complète à un appel d'offres (7 étapes, Claude) a coûté de 0,86 $ à 1,53 $ selon les reprises.
 
@@ -710,6 +712,18 @@ Le même exécuteur s'utilise en ligne de commande, pour des scripts :
 python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/Parcours
 python3 scripts/parcours.py next ao --parcours-dir ~/Parcours        # jusqu'à la prochaine pause
 ```
+
+### Vos propres recettes
+
+La page fabrique aussi des recettes, hors du dépôt, sous **Recettes** :
+
+1. **Nouvelle recette** : décrivez le travail qui revient (ce qui arrive, ce qui doit sortir, qui le lit). Un appel moteur neuf joue `concepteur-recette` sur le **catalogue réel** d'ix-skills et d'ix-recipes (les versions installées en cours), avec votre besoin et rien d'autre. S'il conclut qu'un skill seul ou un enchaînement manuel suffit, la page le dit et montre sa réponse ; « Concevoir quand même une recette » redemande, ou l'on part du modèle.
+2. **Modifier** : les étapes et les pauses dans une vue lisible, le fichier de la recette dans un éditeur. Chaque enregistrement est vérifié comme `build.py` vérifie une recette du dépôt (mêmes règles, en français), et en plus : chaque skill existe dans le catalogue, l'id est libre.
+3. **Tester** : jouer le brouillon sur un exemple réel dans un **dossier de test**, rangé à part de vos dossiers. Le moteur `simulation`, par défaut, n'appelle aucun modèle et ne coûte rien : chaque étape nomme ce qu'elle a reçu et transmet ses champs, de quoi vérifier l'enchaînement, la fiche de contexte et les pauses. Un essai réel (Claude, Codex…) seulement si vous le choisissez, après affichage des étapes et du plafond de coût. Les dossiers de test se suppriment d'un clic.
+4. **Garder** : « Valider dans mon recueil » copie la recette dans `~/Parcours/recettes/<id>.md`. Elle apparaît alors dans « Nouveau dossier » avec la mention « Personnelle » (et dans `parcours.py recipes`), et se lance comme les autres. Un id déjà pris par le plugin ou le catalogue est refusé.
+5. **Proposer au dépôt** : la page prépare une branche depuis un clone local d'ix-recipes (une copie de travail à part, votre clone n'est pas modifié) ou depuis l'adresse du dépôt (cloné une fois dans le recueil) : `skills/<id>.md`, son `.mystaffy.json`, `dist/` reconstruit par `build.py` (qui demande `pyyaml` et `jsonschema`), un commit. Elle montre le diff ; **rien ne quitte votre ordinateur avant votre confirmation**. Puis `git push` et, sur GitHub avec `gh` installé, la demande de fusion. Sans git, `gh` ou droits d'écriture, la page dit quoi faire.
+
+La même chose en ligne de commande : `python3 scripts/recettes.py list | draft-new | design | save | promote | contribute …` (voir [`docs/interface.md`](docs/interface.md) §9).
 
 À venir :
 

@@ -2,6 +2,34 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-15 — plugin 2.6.0: your own recipes
+
+- **Personal recipes, outside the repository**, from the tracking page ("Recipes"): describe a
+  recurring job; one fresh engine call plays `concepteur-recette` over the real catalogue (the
+  current version of each installed plugin) and proposes a recipe, or says that one skill is
+  enough ("Design a recipe anyway" asks again; or start from the blank model). Edit the file
+  with a readable view of the steps and pauses; every save is checked with build.py's workflow
+  rules (ported rule for rule, in French, compared with build.py by a test) plus: every skill in
+  the catalogue, a free id. Test it on a real example in a test dossier kept apart, with the
+  new free `simulation` engine by default (a real run only on request, after the plan and the
+  cost ceiling). Validate it into the user's recueil, `<dossier folder>/recettes/<id>.md`: it
+  then shows in "New dossier" marked "Personal" and in `parcours.py recipes`, and runs like the
+  others; an id used by the plugin or the catalogue is refused.
+- **Propose to the repository**: a branch prepared in a separate working copy of a local clone
+  (or of the repository, cloned once), `skills/<id>.md`, its `.mystaffy.json`, `dist/` rebuilt by
+  build.py, a local commit and its diff shown; push and `gh pr create` only after the user
+  confirms in the page. Missing git, build dependencies, git identity or write access are said
+  plainly.
+- `scripts/recettes.py` (new, standard library): `list`, `draft-new`, `design`, `show`, `save`,
+  `check`, `template`, `promote`, `edit`, `personal`, `retire`, `delete-draft`, `essai-delete`,
+  `contribute`. Bundled with the page in the plugin (`suivi-parcours` 1.2.0).
+- `parcours.py`: a standard-library YAML reader (tested against pyyaml on every front matter of
+  ix-recipes and ix-skills), used for personal recipes and as the fallback without pyyaml — the
+  19 page tests that failed without pyyaml now pass; `recipe_sha256` / `recipe_origin` in the
+  state, `recipe_current` in `status --json`; the `recettes` folder is never a dossier.
+- Step ids and file names may hold underscores (`fiche_poste`).
+- `build.py` unchanged.
+
 ## 2026-10-15 — plugin 2.5.0: Inflexion theme, many dossiers, setup
 
 - Home: filter chips by recipe (with counts) once dossiers mix several recipes; the

@@ -1,9 +1,9 @@
 ---
 id: suivi-parcours
 label: Suivi des parcours
-version: 1.1.0
-description_fr: "Démarre sur cet ordinateur la page de suivi des parcours ix-recipes — une page web locale (pas un artifact claude.ai) qui liste vos dossiers de recettes-workflows (réponse à appel d'offres, brief client…), en crée un à partir d'une demande collée, fait tourner chaque étape isolée et affiche le livrable comme un document à valider, corriger ou refaire. Déclenche sur \"ouvre la page de suivi\", \"lance la page de suivi des parcours\", \"ouvre mes dossiers ix-recipes\", \"démarre un dossier appel d'offres dans la page\", \"reprends mon dossier dans l'interface\". Ne joue aucune étape lui-même : il lance la page et en donne l'adresse. Nécessite Claude Code sur l'ordinateur (pas Cowork, d'où la page serait injoignable)."
-description_en: "Starts the ix-recipes tracking page on this computer — a local web page (not a claude.ai artifact) listing your workflow-recipe dossiers (tender response, client brief…), creating one from a pasted request, running each step isolated and showing the deliverable as a document to validate, correct or redo. Triggers on \"open the tracking page\", \"start the parcours tracking page\", \"open my ix-recipes dossiers\", \"start a tender response dossier in the page\", \"resume my dossier in the interface\". Runs no step itself: it starts the page and gives its address. Needs Claude Code on the computer (not Cowork, from which the page would be unreachable)."
+version: 1.2.0
+description_fr: "Démarre sur cet ordinateur la page de suivi des parcours ix-recipes — une page web locale (pas un artifact claude.ai) qui liste vos dossiers de recettes-workflows (réponse à appel d'offres, brief client…), en crée un à partir d'une demande collée, fait tourner chaque étape isolée et affiche le livrable comme un document à valider, corriger ou refaire ; on y conçoit aussi ses propres recettes, qu'on teste et garde dans son recueil personnel avant de pouvoir les proposer au dépôt. Déclenche sur \"ouvre la page de suivi\", \"lance la page de suivi des parcours\", \"ouvre mes dossiers ix-recipes\", \"démarre un dossier appel d'offres dans la page\", \"reprends mon dossier dans l'interface\", \"crée une recette personnelle dans la page\". Ne joue aucune étape lui-même : il lance la page et en donne l'adresse. Nécessite Claude Code sur l'ordinateur (pas Cowork, d'où la page serait injoignable)."
+description_en: "Starts the ix-recipes tracking page on this computer — a local web page (not a claude.ai artifact) listing your workflow-recipe dossiers (tender response, client brief…), creating one from a pasted request, running each step isolated and showing the deliverable as a document to validate, correct or redo; you also design your own recipes there, test them and keep them in your personal recueil before proposing them to the repository. Triggers on \"open the tracking page\", \"start the parcours tracking page\", \"open my ix-recipes dossiers\", \"start a tender response dossier in the page\", \"resume my dossier in the interface\", \"create my own recipe in the page\". Runs no step itself: it starts the page and gives its address. Needs Claude Code on the computer (not Cowork, from which the page would be unreachable)."
 icon: ▤
 domain: ops
 category: production
@@ -20,6 +20,7 @@ compatible:
 - mystaffy
 scripts:
 - scripts/parcours.py
+- scripts/recettes.py
 - scripts/interface.py
 - scripts/interface.html
 - themes/inflexion
@@ -40,7 +41,7 @@ You start the local tracking page of the ix-recipes workflow recipes and hand it
 1. **Where the files are.** The page and its runner are in the `scripts/` folder next to this file (the skill's base directory). Check that `scripts/interface.py`, `scripts/parcours.py` and `scripts/interface.html` exist there.
 2. **Prerequisites.** `python3` must exist (Python 3.9 or later; the standard library is enough). The steps call the `claude` command line, which must be installed and signed in; the ix-skills plugin must be installed too (the recipes chain its skills). Check `python3 --version` and `claude --version`; if one is missing, say what to install and stop.
 3. **Start the page in the background**, so the conversation goes on: `python3 "<base>/scripts/interface.py"` (add `--parcours-dir <folder>` only if the user names one; the default is `$PARCOURS_DIR`, else `~/Parcours`). It prints two lines: the dossier folder and `Page de suivi : http://127.0.0.1:<port>/#t=…`, then opens the browser itself.
-4. **Answer in a few lines:** the page is open (or the address to open), dossiers are kept in the folder printed, and how to stop the page (stop the background command, or close the terminal). Mention that a step uses paid engine calls (a full tender response cost about one to two dollars in tests).
+4. **Answer in a few lines:** the page is open (or the address to open), dossiers are kept in the folder printed (the user's own recipes in its `recettes/` subfolder, under "Recettes" in the page), and how to stop the page (stop the background command, or close the terminal). Mention that a step uses paid engine calls (a full tender response cost about one to two dollars in tests).
 
 # If something fails
 

@@ -82,6 +82,7 @@ Once Claude Code has restarted: `/ix-recipes:suivi-parcours` (or "start the ix-r
 | **ix-recipes** plugin | domain skills and the workflow recipes chaining the atoms | same |
 | **tracking page** (`suivi-parcours`) | creates and follows a recipe's dossiers, step by step | Claude Code on your computer: a local server, Python 3.9+, the signed-in Claude CLI — not Cowork |
 | **dossiers** | one folder per request handled: outputs, traces, state | `~/Parcours` (or `$PARCOURS_DIR`); finished ones are archived in `.archives/` |
+| **your recipes** | the workflow recipes you design in the page, kept outside the repository; drafts and their test dossiers alongside | `~/Parcours/recettes/` (the `recettes` folder of the dossier folder) |
 | **theme** | the page's look: the Inflexion brand by default (shipped with the page, fonts under the OFL), `none` for the neutral look, or another brand's folder | `$PARCOURS_THEME` or `--theme` |
 
 For a team: everyone pastes the prompt above; another brand is shared as a theme folder (a `theme.css` and its fonts), turned on by `configuration-ix`.
@@ -630,7 +631,7 @@ Recipes that chain several skills, each step isolated in its own context, with p
 
 #### `suivi-parcours` — Open the tracking page
 
-**What it does:** Starts the local tracking page bundled in the plugin and gives you its address: create a dossier by pasting the request, review and validate each step, read the deliverable as a document. See [Running a workflow outside the conversation](#running-a-workflow-outside-the-conversation-the-tracking-page).
+**What it does:** Starts the local tracking page bundled in the plugin and gives you its address: create a dossier by pasting the request, review and validate each step, read the deliverable as a document; design, test and keep your own recipes. See [Running a workflow outside the conversation](#running-a-workflow-outside-the-conversation-the-tracking-page) and [Your own recipes](#your-own-recipes).
 
 **What it doesn't do:** Runs no step and reads no dossier itself. Not from Cowork: the page runs on your computer.
 
@@ -700,6 +701,7 @@ The page opens in your browser (local only, protected by a key in its address). 
 - **New dossier**: pick a recipe, paste the request (client email, notes, tender specification) or import a text file, then *Create and start*.
 - **A dossier**: the steps on the left; at the top, the one thing expected from you (*Validate and continue*, *Send the answers and continue*, *Redo the step*…); in the middle, each step's output read as a formatted document, to copy, download or print to PDF. The context sheet, the only thing later steps know of your request, is checked and corrected field by field after step 1.
 - **Technical details** (switch at the top): engine and model, cost per step, transmitted fields, raw outputs, exact messages received, log.
+- **Recipes** (link at the top): your own recipes — see [Your own recipes](#your-own-recipes).
 
 Dossiers live in `~/Parcours` (`--parcours-dir` or `PARCOURS_DIR` to change it). Specs: [`docs/interface.md`](docs/interface.md), [`docs/executeur.md`](docs/executeur.md). Measured: a full tender response (7 steps, Claude) cost $0.86 to $1.53 depending on reruns.
 
@@ -709,6 +711,18 @@ The same runner works from the command line, for scripts:
 python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/Parcours
 python3 scripts/parcours.py next ao --parcours-dir ~/Parcours        # runs until the next pause
 ```
+
+### Your own recipes
+
+The page also makes recipes, outside the repository, under **Recipes**:
+
+1. **New recipe**: describe the recurring job (what comes in, what must come out, who reads it). One fresh engine call plays `concepteur-recette` over the **real catalogue** of ix-skills and ix-recipes (the current versions installed), with your need and nothing else. When it concludes that one skill or a manual sequence is enough, the page says so and shows its answer; *Design a recipe anyway* asks again, or start from the blank model.
+2. **Edit**: the steps and pauses in a readable view, and the recipe file in an editor. Every save is checked like `build.py` checks a recipe of the repository (same rules, in plain French), plus: every skill exists in the catalogue, the id is free.
+3. **Test**: play the draft on a real example in a **test dossier**, kept apart from your dossiers. The default `simulation` engine calls no model and costs nothing: each step names what it received and passes its fields on, so the chain, the context sheet and the pauses can be checked. A real run (Claude, Codex…) only when you pick it, after the page shows the steps and the cost ceiling. Test dossiers are deleted in one click.
+4. **Keep**: *Validate into my recueil* copies the recipe to `~/Parcours/recettes/<id>.md`. It then appears in *New dossier* marked *Personal* (and in `parcours.py recipes`), and runs like the others. An id already used by the plugin or the catalogue is refused.
+5. **Propose to the repository**: the page prepares a branch from a local clone of ix-recipes (a separate working copy, your checkout is untouched) or from the repository address (cloned once into the recueil): `skills/<id>.md`, its `.mystaffy.json`, `dist/` rebuilt by `build.py` (which needs `pyyaml` and `jsonschema`), a commit. It shows the diff; **nothing leaves your computer before you confirm**. Then `git push` and, on GitHub with `gh` installed, the pull request. Without git, `gh` or write access, the page says what to do.
+
+The same from the command line: `python3 scripts/recettes.py list | draft-new | design | save | promote | contribute …` (see [`docs/interface.md`](docs/interface.md) §9).
 
 Coming next:
 

@@ -2,7 +2,12 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
-## Unreleased (branches `theme`, `dossiers`) — themes, many dossiers
+## Unreleased (branches `theme`, `dossiers`) — themes, many dossiers, setup
+
+- README: an install prompt to paste into Claude Code or Cowork, and a table of what gets
+  deployed (plugins, tracking page, dossiers, theme). `configuration-ix` 1.0.0: checks the
+  plugins (present, up to date, not duplicated), the page's prerequisites, the dossier
+  folder, the theme and the optional engines; proposes each change, applies it once agreed.
 
 - Many dossiers: what waits for you or runs is always shown; finished ones fold beyond
   the six most recent; a search field past 12 dossiers; `parcours.py archive` /

@@ -43,7 +43,7 @@
 
 Domain recipes on top of [ix-skills](https://github.com/amiel-35/ix-skills) — portable across Claude, GPT, Gemini, and mystaffy.
 
-51 skills in 9 families, including 2 workflows, a workflow designer and the tracking page. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
+52 skills in 9 families, including 2 workflows, a workflow designer, the tracking page and its setup. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
 
 - **domain skills** — they rely on domain knowledge that can be wrong or go stale (labour law, GDPR, HR practice, financial formulas, product methods), or produce an artefact a profession defines (PRD, NDA, job description, TCO);
 - **workflows** — chains of ix-skills atoms for a recurring job, a designer for new ones, and a runner with a local tracking page (see [Workflows](#workflows)).
@@ -53,6 +53,38 @@ ix-recipes depends on ix-skills, never the other way round: a recipe may point t
 ---
 
 ## Quick start
+
+### In one go: the install prompt
+
+Paste this into Claude Code (or into Cowork, which will guide you through the clicks):
+
+```text
+Install and set up ix-recipes for me (https://github.com/amiel-35/ix-recipes).
+1. If you can run commands: add the amiel-35/plugins marketplace and install
+   ix-skills@amiel-35 then ix-recipes@amiel-35 (update them if already there). If either is
+   already installed from another marketplace, do not create a duplicate: tell me and offer
+   to keep a single source. If you cannot run commands (Cowork, claude.ai), tell me exactly
+   where to click to add amiel-35/ix-recipes and amiel-35/ix-skills from a repository.
+2. Check python3 (3.9 or later) and the claude CLI: the recipes' tracking page needs them.
+   Change nothing else without asking me.
+3. End with what works, what is missing, and what I should do next.
+```
+
+Once Claude Code has restarted: "open the tracking page" starts the recipes' page, and "configure ix" (`configuration-ix` skill) checks and sets up the rest — updates, dossier folder, the page's theme, Codex and Antigravity engines.
+
+### What gets deployed
+
+| Piece | Role | Where it runs |
+|---|---|---|
+| **ix-skills** plugin | the cognitive atoms (scoping, decision, critique…) | wherever skills load (Claude Code, Cowork, Codex, Antigravity) |
+| **ix-recipes** plugin | domain skills and the workflow recipes chaining the atoms | same |
+| **tracking page** (`suivi-parcours`) | creates and follows a recipe's dossiers, step by step | Claude Code on your computer: a local server, Python 3.9+, the signed-in Claude CLI — not Cowork |
+| **dossiers** | one folder per request handled: outputs, traces, state | `~/Parcours` (or `$PARCOURS_DIR`); finished ones are archived in `.archives/` |
+| **theme** (optional) | the page's look, a company brand for instance | a separate folder named by `$PARCOURS_THEME` — never in this repository |
+
+For a team: everyone pastes the prompt above; the company's brand is shared as a theme folder (a `theme.css` and its fonts), turned on by `configuration-ix`.
+
+### Command by command
 
 Install both plugins in Claude Code — ix-recipes builds on ix-skills atoms:
 
@@ -558,7 +590,7 @@ Read a market and a business model with numbers — competition, SaaS metrics, K
 </details>
 
 <details>
-<summary><b>⇢ Workflows</b> — 4 skills</summary>
+<summary><b>⇢ Workflows</b> — 5 skills</summary>
 
 Recipes that chain several skills, each step isolated in its own context, with pauses where the human validates, answers or chooses. Format: [`docs/format-recette.md`](docs/format-recette.md).
 
@@ -601,6 +633,16 @@ Recipes that chain several skills, each step isolated in its own context, with p
 **What it doesn't do:** Runs no step and reads no dossier itself. Not from Cowork: the page runs on your computer.
 
 **Use when:** You want to run a recipe step by step, with pauses, outside a conversation.
+
+---
+
+#### `configuration-ix` — Check and set up the installation
+
+**What it does:** Checks the ix-skills and ix-recipes plugins (present, up to date, not duplicated), the tracking page's prerequisites, the dossier folder, the page's theme and the optional engines; proposes each change with its command and applies it once you agree.
+
+**What it doesn't do:** Never handles credentials or subscriptions; runs no recipe.
+
+**Use when:** After installing, after an update, or to turn a theme on.
 
 </details>
 

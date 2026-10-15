@@ -214,6 +214,20 @@ Ce qui échoue est dit en clair, sans rien laisser à moitié (la branche locale
 - **Une recette fournie** (`#/recettes/f/<id>`, `recettes.py provided <id>`) : son organigramme, « Lancer un dossier » et « Copier pour modifier » (`recettes.py fork <id>`) : un brouillon avec le fichier de la recette sous un id libre (`<id>-perso`, puis `-perso-2`…), libellé « (ma version) », version 0.1.0 ; l'originale ne change pas. Dans le plugin, où seul `recipe.json` est livré, le fichier est reconstruit (`recipe.json` + corps du SKILL.md, `requires` déduit des étapes) : il est valide, et ce qui manque pour le dépôt (description_en, domain…) s'affiche comme d'habitude.
 - **Une recette du recueil** : « Nouveau dossier avec cette recette », « Modifier », comme avant.
 
+### 9.7 ter Cartes et construction en blocs (2026-10-15, « un système à la Scratch »)
+
+Après comparaison avec l'organigramme, Amiel retient les **cartes** comme vue principale (lisibles par un non-spécialiste, texte entier, natives en HTML) et l'organigramme normé comme vue secondaire (bouton « Cartes / Organigramme », mémorisé dans le navigateur). Les cartes reprennent ce que l'organigramme exprime : « Votre demande » en tête, chaque étape en carte (bordure violette pour ix-skills, verte pour ix-recipes), les arrêts en blocs ambrés entre deux cartes, les étapes facultatives dans un bloc en C « Si vous choisissez de les jouer », le livrable cerclé ; un clic ouvre la carte (mission, entrées — les cartes d'où elles viennent s'éclairent — et, dans une proposition, le commentaire).
+
+**Construire en blocs** (onglet « Blocs » d'un brouillon au stade de la proposition ; « Construire moi-même en blocs » sur Nouvelle recette ; « Retravailler en blocs » sur un brouillon qui a déjà son fichier) :
+
+- une **palette** : le catalogue réel (`recettes.py catalogue`, mêmes racines que la conception), rangé en « Raisonnement (ix-skills) » et « Métiers (ix-recipes) », avec recherche ; des blocs « Vous validez », « Réponses d'un tiers » et « Si vous choisissez… » à déposer sur une étape ;
+- on **clique** un skill (il s'ajoute à la fin, ou à l'endroit choisi par un « + ») ou on le **glisse** entre deux cartes ; une carte se déplace (glisser, ou flèches), se retire, se renomme, reçoit sa mission en une phrase, son arrêt, sa case « Facultative » (jamais la première) ; six étapes au plus ;
+- le **câblage des données est automatique** : l'étape 1 lit la demande, chaque suivante reçoit la fiche de contexte, tout ce qu'ont produit les étapes au-dessus d'elle, et les réponses du tiers après une pause « réponses ». En « Réglages avancés », on renomme les champs transmis et on décoche ce qu'une étape ne doit pas voir (elle passe alors en câblage manuel) ;
+- chaque changement est enregistré (`recettes.py proposal`, au fil de l'eau) et vérifié (`proposal_problems`) ;
+- **« Écrire la recette »** (`recettes.py write-file`) produit le fichier sans appel au modèle : en-tête qui suit exactement la chaîne (l'étape 1 produit la fiche et s'arrête toujours ; la dernière étape non facultative donne le livrable ; Opus pour l'étape 1, Sonnet ensuite), corps d'orchestration générique (§4 du format), missions reprises des phrases saisies. Le fichier passe la vérification de build.py (testé). « Faire écrire par le concepteur » reste possible : il rédige en plus les missions.
+
+Une proposition du concepteur se reprend aussi en blocs (« Modifier moi-même en blocs »). Une recette remise en blocs perd au réécrire ses retouches manuelles du corps : la page le dit avant.
+
 ### 9.8 Routes ajoutées
 
 | Méthode | Chemin | Effet |
@@ -221,8 +235,9 @@ Ce qui échoue est dit en clair, sans rien laisser à moitié (la branche locale
 | GET | `/api/recettes` | `recettes.py list` : recueil, brouillons, moteurs de conception |
 | POST | `/api/recettes/brouillons` | `{need, title?, engine?}` → brouillon + conception détachée ; `{template: true}` → brouillon depuis le modèle |
 | GET | `/api/recettes/brouillons/<b>` | `recettes.py show` (+ `essai_engines`) ; `…/log` : journal de la conception |
-| POST | `/api/recettes/brouillons/<b>/<action>` | `design {insist?, engine?}`, `stop`, `save {text, sha?}`, `template`, `promote {replace?}`, `delete`, `essai {text, title?, engine?}`, `essai-delete {slug}` |
+| POST | `/api/recettes/brouillons/<b>/<action>` | `proposal {proposal, replace_file?}`, `to-blocks`, `write-file`, `comments {comments}`, `design {mode?, comments?, insist?, engine?}`, `stop`, `save {text, sha?}`, `template`, `promote {replace?}`, `delete`, `essai {text, title?, engine?}`, `essai-delete {slug}` |
 | GET | `/api/recettes/fournies/<id>` | `recettes.py provided` ; POST `…/fork` : `recettes.py fork` |
+| GET | `/api/recettes/catalogue` | `recettes.py catalogue` : la palette des blocs |
 | GET | `/api/recettes/personnelles/<id>` | `recettes.py personal` |
 | POST | `/api/recettes/personnelles/<id>/<action>` | `edit`, `retire`, `contribute {step: prepare\|push\|cancel\|status, source?}` |
 | GET/POST | `/api/essais/<b>/parcours/…` | les routes des dossiers, sur les essais du brouillon (création par `…/essai` seulement ; action `delete` en plus) |

@@ -58,7 +58,8 @@ TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,}$")
 FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
 REAL_ENGINES = ("claude", "codex", "agy", "vibe")
 ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun", "archive", "delete")
-DRAFT_ACTIONS = ("design", "comments", "stop", "save", "template", "promote", "delete", "essai", "essai-delete")
+DRAFT_ACTIONS = ("design", "comments", "stop", "save", "template", "promote", "delete", "essai", "essai-delete",
+                 "proposal", "to-blocks", "write-file")
 DESIGN_MODES = ("propose", "revise", "write")
 PERSONAL_ACTIONS = ("edit", "retire", "contribute")
 CONTRIBUTE_STEPS = ("prepare", "push", "cancel", "status")
@@ -536,6 +537,9 @@ class App(Space):
         data.update(design_engines=self.design_engines, dev=self.dev, provided=provided)
         return data
 
+    def skills_catalogue(self):
+        return self.recettes("catalogue")
+
     def provided(self, recipe_id):
         if not RECIPE_ID_RE.match(recipe_id or ""):
             raise ApiError(400, "bad_slug", "identifiant de recette invalide")
@@ -567,8 +571,8 @@ class App(Space):
 
     def create_draft(self, body):
         need, title = body.get("need") or "", body.get("title") or ""
-        template = body.get("template") is True
-        if not isinstance(need, str) or (not template and not need.strip()):
+        template, blocks = body.get("template") is True, body.get("blocks") is True
+        if not isinstance(need, str) or (not template and not blocks and not need.strip()):
             raise ApiError(400, "bad_request", "décrivez le besoin : le travail récurrent, ce qui entre, ce qui doit sortir")
         if not isinstance(title, str) or len(title) > MAX_TITLE:
             raise ApiError(400, "bad_request", f"titre invalide ({MAX_TITLE} caractères au plus)")
@@ -578,10 +582,12 @@ class App(Space):
         flags = ["--input", "-"] if need.strip() else []
         if template:
             flags.append("--template")
+        if blocks:
+            flags.append("--blocks")
         if title.strip():
             flags.append(f"--title={title.strip()}")
         data = self.recettes("draft-new", flags, input_text=need if need.strip() else None)
-        if not template:
+        if not template and not blocks:
             data["design"] = self.launch_design(data["slug"], {"engine": engine})
         return data
 
@@ -656,6 +662,18 @@ class App(Space):
             with tempfile.TemporaryDirectory(prefix="parcours-ui-") as tmp:
                 flags = ["--file", write_private(tmp, "recette.md", text)] + ([f"--if-sha={sha}"] if sha else [])
                 return dict(self.recettes("save", flags, [draft]), ok=True)
+        if action == "proposal":
+            proposal = body.get("proposal")
+            if not isinstance(proposal, dict) or not isinstance(proposal.get("steps", []), list) \
+                    or len(proposal.get("steps", [])) > 20 or len(json.dumps(proposal)) > 200_000:
+                raise ApiError(400, "bad_request", "proposition invalide")
+            with tempfile.TemporaryDirectory(prefix="parcours-ui-") as tmp:
+                flags = ["--file", write_private(tmp, "proposition.json", json.dumps(proposal, ensure_ascii=False))]
+                if body.get("replace_file") is True:
+                    flags.append("--replace-file")
+                return dict(self.recettes("proposal", flags, [draft]), ok=True)
+        if action in ("to-blocks", "write-file"):
+            return dict(self.recettes(action, positionals=[draft]), ok=True)
         if action == "template":
             return dict(self.recettes("template", positionals=[draft]), ok=True)
         if action == "promote":
@@ -923,6 +941,9 @@ class Handler(BaseHTTPRequestHandler):
             if len(rest) == 1 and rest[0] in DRAFT_ACTIONS:
                 self.only(method, "POST")
                 return self.send_json(200, app.draft_act(draft, rest[0], self.read_json_body()))
+        if parts == ["catalogue"]:
+            self.only(method, "GET")
+            return self.send_json(200, app.skills_catalogue())
         if parts[0] == "fournies" and len(parts) in (2, 3):
             if len(parts) == 2:
                 self.only(method, "GET")

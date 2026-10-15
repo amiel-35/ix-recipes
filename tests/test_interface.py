@@ -982,6 +982,26 @@ class RecipeBookTests(InterfaceTestCase):
         self.assertEqual(self.api("GET", f"/api/recettes/brouillons/{copy['slug']}")["check"]["errors"], [])
         self.assertEqual(self.request("GET", "/api/recettes/fournies/brief-client/fork")[0], 405)
 
+    def test_build_in_blocks_from_the_page(self):
+        data = self.api("POST", "/api/recettes/brouillons", {"blocks": True, "title": "En blocs"})
+        slug = data["slug"]
+        self.assertNotIn("design", data)   # no engine call
+        palette = self.api("GET", "/api/recettes/catalogue")["skills"]
+        self.assertIn("ix-skills:cadrage", [s["ref"] for s in palette])
+        proposal = {"title": "En blocs", "steps": [
+            {"id": "cadrage", "label": "Cadrage", "skill": "ix-skills:cadrage", "receives": ["brief"], "produces": ["resultat"]},
+            {"id": "brief", "label": "Brief", "skill": "ix-skills:brief", "receives": ["context_sheet", "cadrage.resultat"], "produces": ["resultat"]}]}
+        for bad in ({"proposal": "x"}, {"proposal": {"steps": "x"}}, {"proposal": {"steps": [{}] * 21}}):
+            self.assertEqual(self.post(f"/api/recettes/brouillons/{slug}/proposal", bad)[0], 400, bad)
+        saved = self.api("POST", f"/api/recettes/brouillons/{slug}/proposal", {"proposal": proposal})
+        self.assertEqual(saved["problems"], [])
+        written = self.api("POST", f"/api/recettes/brouillons/{slug}/write-file", {})
+        self.assertEqual((written["id"], written["errors"]), ("en-blocs", []))
+        shown = self.api("GET", f"/api/recettes/brouillons/{slug}")
+        self.assertEqual(shown["stage"], "recipe")
+        back = self.api("POST", f"/api/recettes/brouillons/{slug}/to-blocks", {})
+        self.assertEqual(len(back["steps"]), 2)
+
     def test_contribution_arguments_are_checked(self):
         parcours.recueil_dir(self.pdir).mkdir(parents=True, exist_ok=True)
         (parcours.recueil_dir(self.pdir) / "ma-recette.md").write_text(recettes.TEMPLATE, encoding="utf-8")

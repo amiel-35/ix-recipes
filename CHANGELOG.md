@@ -24,6 +24,11 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
   clicking a step shows its mission, inputs (their sources light up) and outputs, and in a proposal
   takes its comment. The Recipes page lists "Supplied recipes", "My recipes" and "Drafts"; a supplied
   recipe can be launched or copied ("Copy to modify", `recettes.py fork`) into a draft of one's own.
+- **Cards and blocks**: recipes read as cards by default (the flowchart one click away), and are built
+  like Scratch: a palette of the real catalogue, steps clicked or dragged into the chain, stops and
+  optional steps dropped onto a step, inputs wired automatically (by hand in advanced settings);
+  "Write the recipe" produces a valid file with no engine call (`recettes.py proposal`, `write-file`,
+  `to-blocks`, `catalogue`).
 - **Propose to the repository**: a branch prepared in a separate working copy of a local clone
   (or of the repository, cloned once), `skills/<id>.md`, its `.mystaffy.json`, `dist/` rebuilt by
   build.py, a local commit and its diff shown; push and `gh pr create` only after the user

@@ -1064,6 +1064,16 @@ class SkillResolutionTests(ParcoursTestCase):
         tail = {"handoff": {"offer": " ".join(f"autre{i}" for i in range(80))}, "context_sheet": None}
         self.assertIsNotNone(parcours.leak_in_parsed(raw, tail, (), admitted))
 
+    def test_a_missing_or_binary_input_file_is_a_clean_error(self):
+        with self.assertRaises(parcours.ParcoursError) as missing:
+            parcours.read_text_arg(str(self.tmp / "absent.md"))
+        self.assertIn("introuvable", str(missing.exception))
+        binary = self.tmp / "cdc.pdf"
+        binary.write_bytes(b"%PDF-1.7\xff\xfe\x00")
+        with self.assertRaises(parcours.ParcoursError) as unreadable:
+            parcours.read_text_arg(str(binary))
+        self.assertIn("UTF-8", str(unreadable.exception))
+
     def test_only_a_short_no_blocking_opening_is_neutral(self):
         self.assertFalse(parcours.is_blocking("Aucun blocage pour la suite."))
         self.assertFalse(parcours.is_blocking("No blocking issue."))

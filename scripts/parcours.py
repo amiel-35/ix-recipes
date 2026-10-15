@@ -1476,7 +1476,17 @@ def parse_engine_steps(pairs, recipe):
 
 
 def read_text_arg(path):
-    text = sys.stdin.read() if path == "-" else Path(path).read_text(encoding="utf-8")
+    if path == "-":
+        text = sys.stdin.read()
+    else:
+        try:
+            text = Path(path).read_text(encoding="utf-8")
+        except FileNotFoundError:
+            raise ParcoursError(f"fichier introuvable : {Path(path).resolve()}") from None
+        except IsADirectoryError:
+            raise ParcoursError(f"c'est un dossier, pas un fichier : {path}") from None
+        except UnicodeDecodeError:
+            raise ParcoursError(f"fichier illisible en UTF-8 (texte attendu, pas un PDF ni un .docx) : {path}") from None
     if not text.strip():
         raise ParcoursError(f"fichier vide : {path}")
     return text

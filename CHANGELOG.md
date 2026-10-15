@@ -2,6 +2,26 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-15 — plugin 2.8.0: recipes shown as cards, built in blocks
+
+- README: the install prompt names version 2.8.0.
+- **Design in two stages**: the designer first returns a proposal (the chain of steps, as JSON
+  shown step by step), which the user comments on per step or overall and sends back for
+  revision; the recipe file is written only after "Validate the principle and write the recipe",
+  and its departures from the validated proposal are flagged.
+- **Recipes as standard flowcharts** (ISO 5807 shapes, top to bottom) wherever a recipe is shown;
+  clicking a step shows its mission, inputs (their sources light up) and outputs, and in a proposal
+  takes its comment. The Recipes page lists "Supplied recipes", "My recipes" and "Drafts"; a supplied
+  recipe can be launched or copied ("Copy to modify", `recettes.py fork`) into a draft of one's own.
+- **Cards and blocks**: recipes read as cards by default (the flowchart one click away), and are built
+  like Scratch: a palette of the real catalogue, steps clicked or dragged into the chain, stops and
+  optional steps dropped onto a step, inputs wired automatically (by hand in advanced settings);
+  "Write the recipe" produces a valid file with no engine call (`recettes.py proposal`, `write-file`,
+  `to-blocks`, `catalogue`).
+- Designer: step 1 receives `brief` only (the designer is told so), and an unknown input says
+  how to fix it (« replace it with brief »).
+- `suivi-parcours` 1.3.0 (the page and its scripts).
+
 ## 2026-10-15 — plugin 2.7.0: your own recipes
 
 - README: the install prompt names its version (2.7.0), updates an older install and
@@ -18,19 +38,6 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
   `parcours` folder; inside the dossier folder when it has another name): it
   then shows in "New dossier" marked "Personal" and in `parcours.py recipes`, and runs like the
   others; an id used by the plugin or the catalogue is refused.
-- **Design in two stages**: the designer first returns a proposal (the chain of steps, as JSON
-  shown step by step), which the user comments on per step or overall and sends back for
-  revision; the recipe file is written only after "Validate the principle and write the recipe",
-  and its departures from the validated proposal are flagged.
-- **Recipes as standard flowcharts** (ISO 5807 shapes, top to bottom) wherever a recipe is shown;
-  clicking a step shows its mission, inputs (their sources light up) and outputs, and in a proposal
-  takes its comment. The Recipes page lists "Supplied recipes", "My recipes" and "Drafts"; a supplied
-  recipe can be launched or copied ("Copy to modify", `recettes.py fork`) into a draft of one's own.
-- **Cards and blocks**: recipes read as cards by default (the flowchart one click away), and are built
-  like Scratch: a palette of the real catalogue, steps clicked or dragged into the chain, stops and
-  optional steps dropped onto a step, inputs wired automatically (by hand in advanced settings);
-  "Write the recipe" produces a valid file with no engine call (`recettes.py proposal`, `write-file`,
-  `to-blocks`, `catalogue`).
 - **Propose to the repository**: a branch prepared in a separate working copy of a local clone
   (or of the repository, cloned once), `skills/<id>.md`, its `.mystaffy.json`, `dist/` rebuilt by
   build.py, a local commit and its diff shown; push and `gh pr create` only after the user

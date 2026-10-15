@@ -9,7 +9,7 @@ positionals, absolute --parcours-dir, --json), so the page does what the command
 line does, with the same checks and the same state.json.
 
 Usage:
-    python3 scripts/interface.py [--parcours-dir ~/Parcours] [--port 8765] [--dev] [--no-browser]
+    python3 scripts/interface.py [--parcours-dir ~/.ix-recipes/parcours] [--port 8765] [--dev] [--no-browser]
 
 Access control (see docs/interface.md §1): a random token kept in
 <parcours-dir>/.interface-token (mode 0600, stable across restarts) goes in the
@@ -68,7 +68,8 @@ CONTRIBUTE_TIMEOUT = 900    # seconds: a clone, two builds, a push
 MAX_BODY = 4_000_000        # bytes of a POST body (a pasted answer can be long)
 MAX_FILE = 2_000_000        # bytes of a file sent to the page
 MAX_TITLE = 120             # characters of a parcours title
-DEFAULT_DIR = "~/Parcours"  # one place for the dossiers, wherever the page is launched from
+DEFAULT_DIR = "~/.ix-recipes/parcours"  # one hidden place for the dossiers, wherever the page is launched from
+LEGACY_DIR = "~/Parcours"              # default before 2.6.0, still used while it holds dossiers
 # The Inflexion theme ships with the page: themes/inflexion in the repository, scripts/themes/inflexion in the plugin.
 DEFAULT_THEMES = (HERE / "themes" / "inflexion", HERE.parent / "themes" / "inflexion")
 THEME_ASSET_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\[\],-]{0,99}\.(ttf|otf|woff2?|svg|png)$")
@@ -125,8 +126,9 @@ class Space:
     """A folder of parcours and what the page does with them: the real dossiers (the App itself),
     or the test dossiers of a draft recipe (<recueil>/brouillons/<draft>/essais, `essais=True`)."""
 
-    def __init__(self, parcours_dir, dev=False, essais=False):
+    def __init__(self, parcours_dir, dev=False, essais=False, main_dir=None):
         self.dir = Path(parcours_dir).resolve()
+        self.main_dir = Path(main_dir).resolve() if main_dir else self.dir   # the real dossiers' folder (recettes.py)
         self.dir.mkdir(parents=True, exist_ok=True)
         self.dev = dev
         self.essais = essais
@@ -348,7 +350,7 @@ class Space:
             return self.done(*self.run("archive", positionals=[slug]))
         if action == "delete" and self.essais:   # a test dossier only: a real one is archived, never deleted
             draft = self.dir.parent.name
-            return self.done(*run_script(RECETTES_SCRIPT, self.dir.parent.parent.parent.parent, "essai-delete",
+            return self.done(*run_script(RECETTES_SCRIPT, self.main_dir, "essai-delete",
                                          positionals=[draft, slug]))
         raise ApiError(404, "not_found", f"action inconnue : {action}")
 
@@ -497,7 +499,7 @@ class App(Space):
     # -- the recueil and its drafts ----------------------------------------
     @property
     def recueil(self):
-        return self.dir / parcours.RECUEIL_DIR
+        return parcours.recueil_dir(self.dir)
 
     @property
     def design_engines(self):
@@ -520,7 +522,8 @@ class App(Space):
         with self.registry:
             space = self.spaces.get(draft)
             if space is None or not space.dir.is_dir():
-                space = self.spaces[draft] = Space(directory / parcours.ESSAIS_DIR, dev=self.dev, essais=True)
+                space = self.spaces[draft] = Space(directory / parcours.ESSAIS_DIR, dev=self.dev, essais=True,
+                                                   main_dir=self.dir)
         return space
 
     def recettes(self, command, flags=(), positionals=(), timeout=SYNC_TIMEOUT, input_text=None):
@@ -979,9 +982,17 @@ def theme_folder(choice):
     return Path(choice).expanduser()
 
 
+def default_dir():
+    """The hidden default, unless the pre-2.6.0 ~/Parcours still holds dossiers and the new one does not exist."""
+    new, old = Path(DEFAULT_DIR).expanduser(), Path(LEGACY_DIR).expanduser()
+    if not new.exists() and old.is_dir() and (any(old.glob("*/state.json")) or (old / ".archives").is_dir()):
+        return str(old)
+    return DEFAULT_DIR
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Page de suivi des parcours (voir docs/interface.md)")
-    parser.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or DEFAULT_DIR,
+    parser.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or default_dir(),
                         help=f"dossier des parcours (défaut : $PARCOURS_DIR, sinon {DEFAULT_DIR})")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port local (défaut {DEFAULT_PORT}, 0 = au hasard)")
     parser.add_argument("--dev", action="store_true", help="propose aussi le moteur fake (PARCOURS_FAKE_DIR)")
@@ -997,6 +1008,8 @@ def main(argv=None):
         return 1
     url = f"http://127.0.0.1:{server.server_address[1]}/#t={server.app.token}"
     print(f"Dossier des parcours : {server.app.dir}", flush=True)
+    if server.app.dir == Path(LEGACY_DIR).expanduser().resolve() and not os.environ.get("PARCOURS_DIR"):
+        print(f"(ancien emplacement : déplacez-le vers {DEFAULT_DIR} pour libérer votre dossier personnel)", flush=True)
     print(f"Page de suivi : {url}", flush=True)
     print("Ctrl-C pour arrêter (une étape en cours continue sans le serveur).", flush=True)
     if not args.no_browser:

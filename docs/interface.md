@@ -20,10 +20,10 @@ Conception v0 du 2026-10-15, révisée après une relecture adverse (Fable) avan
 ## 2. Lancement
 
 ```bash
-python3 scripts/interface.py [--parcours-dir ~/Parcours] [--port 8765] [--theme <dossier>] [--dev] [--no-browser]
+python3 scripts/interface.py [--parcours-dir ~/.ix-recipes/parcours] [--port 8765] [--theme <dossier>] [--dev] [--no-browser]
 ```
 
-**Depuis le plugin installé**, sans clone : `build.py` copie `scripts/parcours.py`, `interface.py` et `interface.html` dans `dist/skills/suivi-parcours/scripts/` (champ `scripts` du skill) et écrit à côté de chaque recette son `recipe.json` (le bloc `workflow`, l'id, le libellé, la version, `summary_fr`) ; l'exécuteur ainsi embarqué lit les recettes dans les dossiers voisins et tourne sur la bibliothèque standard seule (`pyyaml` est facultatif). Le skill `suivi-parcours` démarre la page quand on le demande à Claude. Testé avec le Python 3.9 de macOS, `yaml` bloqué. **Thème** (`--theme <dossier>` ou `$PARCOURS_THEME`) : le dossier contient un `theme.css`, ajouté après les styles de la page (il redéfinit ses variables `--bg`, `--primary`, `--sans`… et peut restyler ses classes), et ses polices ou images (`.ttf`, `.otf`, `.woff`, `.woff2`, `.svg`, `.png`), servies sous `/theme/<fichier>` sans jeton (une feuille de style ne peut pas en envoyer), noms contrôlés, sans sortir du dossier ; la CSP ajoute alors `font-src 'self'; img-src 'self'`. Par défaut, la page prend le thème **Inflexion** livré avec elle (`themes/inflexion/`, copié dans le plugin sous `scripts/themes/inflexion/` ; polices Archivo, Source Sans 3 et IBM Plex Mono sous SIL OFL 1.1, licences jointes) ; `--theme none` (ou `PARCOURS_THEME=none`) rend l'apparence neutre, et un autre dossier de thème remplace Inflexion. Les dossiers sont rangés par défaut dans `~/Parcours` (`$PARCOURS_DIR` s'il est défini), quel que soit l'endroit d'où l'on lance la page ; l'exécuteur en ligne de commande garde `./parcours` par défaut (ou `$PARCOURS_DIR`). Le serveur affiche l'URL (avec le jeton, `http://127.0.0.1:<port>/#t=…`) et l'ouvre dans le navigateur, sauf `--no-browser`. `--port 0` laisse le système choisir. `--dev` ajoute le moteur `fake` à la liste des moteurs (il lit `PARCOURS_FAKE_DIR`, comme l'exécuteur). Le jeton est dans `<dossier des parcours>/.interface-token` (0600), le même d'une relance à l'autre ; il n'est conservé dans la page que pour l'onglet (sessionStorage) et retiré de la barre d'adresse dès le chargement.
+**Depuis le plugin installé**, sans clone : `build.py` copie `scripts/parcours.py`, `interface.py` et `interface.html` dans `dist/skills/suivi-parcours/scripts/` (champ `scripts` du skill) et écrit à côté de chaque recette son `recipe.json` (le bloc `workflow`, l'id, le libellé, la version, `summary_fr`) ; l'exécuteur ainsi embarqué lit les recettes dans les dossiers voisins et tourne sur la bibliothèque standard seule (`pyyaml` est facultatif). Le skill `suivi-parcours` démarre la page quand on le demande à Claude. Testé avec le Python 3.9 de macOS, `yaml` bloqué. **Thème** (`--theme <dossier>` ou `$PARCOURS_THEME`) : le dossier contient un `theme.css`, ajouté après les styles de la page (il redéfinit ses variables `--bg`, `--primary`, `--sans`… et peut restyler ses classes), et ses polices ou images (`.ttf`, `.otf`, `.woff`, `.woff2`, `.svg`, `.png`), servies sous `/theme/<fichier>` sans jeton (une feuille de style ne peut pas en envoyer), noms contrôlés, sans sortir du dossier ; la CSP ajoute alors `font-src 'self'; img-src 'self'`. Par défaut, la page prend le thème **Inflexion** livré avec elle (`themes/inflexion/`, copié dans le plugin sous `scripts/themes/inflexion/` ; polices Archivo, Source Sans 3 et IBM Plex Mono sous SIL OFL 1.1, licences jointes) ; `--theme none` (ou `PARCOURS_THEME=none`) rend l'apparence neutre, et un autre dossier de thème remplace Inflexion. Les dossiers sont rangés par défaut dans `~/.ix-recipes/parcours`, un dossier caché qui n'encombre pas le dossier personnel (`$PARCOURS_DIR` s'il est défini ; l'ancien défaut `~/Parcours` reste utilisé tant qu'il contient des dossiers et que le nouveau n'existe pas, et la page invite alors à le déplacer), quel que soit l'endroit d'où l'on lance la page ; l'exécuteur en ligne de commande garde `./parcours` par défaut (ou `$PARCOURS_DIR`). Le serveur affiche l'URL (avec le jeton, `http://127.0.0.1:<port>/#t=…`) et l'ouvre dans le navigateur, sauf `--no-browser`. `--port 0` laisse le système choisir. `--dev` ajoute le moteur `fake` à la liste des moteurs (il lit `PARCOURS_FAKE_DIR`, comme l'exécuteur). Le jeton est dans `<dossier des parcours>/.interface-token` (0600), le même d'une relance à l'autre ; il n'est conservé dans la page que pour l'onglet (sessionStorage) et retiré de la barre d'adresse dès le chargement.
 
 ## 3. Ce que montre la page (version produit)
 
@@ -129,7 +129,7 @@ Demande d'Amiel : créer une recette personnelle depuis la page, hors du dépôt
 ### 9.1 Où sont les fichiers (tranché)
 
 ```
-<dossier des parcours>/recettes/            le recueil : vos recettes, hors du dépôt
+~/.ix-recipes/recettes/                     le recueil : vos recettes, hors du dépôt
   <id>.md                                   une recette validée, au format de skills/<id>.md
   .versions/<id>.<date>.md                  les versions remplacées ou retirées (rien n'est effacé)
   brouillons/<brouillon>/                   une recette en cours
@@ -141,7 +141,12 @@ Demande d'Amiel : créer une recette personnelle depuis la page, hors du dépôt
   .contribution/                            les propositions au dépôt : état par recette, copies de travail, clones
 ```
 
-Le recueil est le sous-dossier `recettes/` du dossier des parcours (`~/Parcours/recettes` pour la page, `$PARCOURS_DIR/recettes` sinon) : un seul réglage, et `parcours.py` comme la page le trouvent sans option. Le nom `recettes` est réservé : aucun dossier ne le prend (`new --slug recettes` donne `recettes-dossier`), la liste des dossiers l'ignore.
+Le recueil se déduit du dossier des parcours (`recueil_dir`), sans réglage de plus : `parcours.py`, `recettes.py` et la page le trouvent sans option. Tranché le 2026-10-15, avec le passage des dossiers dans `~/.ix-recipes/parcours` (« rien de visible dans le dossier personnel ») :
+
+- dossier des parcours nommé `parcours` → le recueil est **à côté** : `~/.ix-recipes/parcours` → `~/.ix-recipes/recettes` (défaut de la page), `./parcours` → `./recettes` (défaut de la ligne de commande ; ignoré par git) ;
+- autre nom (un ancien `~/Parcours` encore utilisé, un `$PARCOURS_DIR` choisi) → **dedans** : `<dossier>/recettes`, pour ne rien créer dans un dossier que l'utilisateur n'a pas choisi. Le nom `recettes` y est alors réservé : aucun dossier ne le prend (`new --slug recettes` donne `recettes-dossier`), la liste des dossiers l'ignore.
+
+Un `~/Parcours/recettes` créé avant le passage à `~/.ix-recipes` n'est pas déplacé : il reste lu tant que la page sert `~/Parcours`.
 
 ### 9.2 Lire et jouer une recette personnelle
 

@@ -932,7 +932,7 @@ class RecipeBookTests(InterfaceTestCase):
         plan = self.api("GET", f"/api/essais/{slug}/parcours/{created['slug']}/plan")
         self.assertEqual(plan["claude_steps"], 1)
         self.assertEqual(plan["ceiling_usd"], 10.0)
-        self.assertFalse(list((self.pdir / "recettes" / "brouillons" / slug / "essais" / created["slug"]).glob("01-*")))
+        self.assertFalse(list((parcours.recueil_dir(self.pdir) / "brouillons" / slug / "essais" / created["slug"]).glob("01-*")))
 
     def test_the_design_call_runs_detached_and_its_answer_lands_in_the_editor(self):
         (self.fake / "concepteur-recette.md").write_text(DESIGNED.format(recipe=recettes.TEMPLATE), encoding="utf-8")
@@ -952,8 +952,8 @@ class RecipeBookTests(InterfaceTestCase):
         self.assertEqual((status, err["error"]), (409, "not_running"))
 
     def test_contribution_arguments_are_checked(self):
-        (self.pdir / "recettes").mkdir(parents=True, exist_ok=True)
-        (self.pdir / "recettes" / "ma-recette.md").write_text(recettes.TEMPLATE, encoding="utf-8")
+        parcours.recueil_dir(self.pdir).mkdir(parents=True, exist_ok=True)
+        (parcours.recueil_dir(self.pdir) / "ma-recette.md").write_text(recettes.TEMPLATE, encoding="utf-8")
         base = "/api/recettes/personnelles/ma-recette/contribute"
         for body in ({"step": "rm"}, {"step": "prepare", "source": "--upload-pack=evil"},
                      {"step": "prepare", "source": "a\nb"}, {"step": "prepare", "source": 3}):
@@ -965,6 +965,37 @@ class RecipeBookTests(InterfaceTestCase):
         status, _, data = self.post(base, {"step": "push"})
         self.assertEqual(status, 422)
         self.assertIn("rien de préparé", data["message"])
+
+
+# ---------------------------------------------------------------------------
+# The default dossier folder
+# ---------------------------------------------------------------------------
+class DefaultDirTests(unittest.TestCase):
+    """The hidden default, and the pre-2.6.0 ~/Parcours kept while it holds dossiers."""
+
+    def setUp(self):
+        self.home = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.home)
+        patcher = mock.patch.dict(os.environ, {"HOME": str(self.home)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_hidden_default(self):
+        self.assertEqual(interface.default_dir(), "~/.ix-recipes/parcours")
+
+    def test_empty_legacy_folder_is_ignored(self):
+        (self.home / "Parcours" / "themes").mkdir(parents=True)
+        self.assertEqual(interface.default_dir(), "~/.ix-recipes/parcours")
+
+    def test_legacy_folder_with_dossiers_is_kept(self):
+        (self.home / "Parcours" / "ao").mkdir(parents=True)
+        (self.home / "Parcours" / "ao" / "state.json").write_text("{}")
+        self.assertEqual(interface.default_dir(), str(self.home / "Parcours"))
+
+    def test_new_folder_wins_once_it_exists(self):
+        (self.home / "Parcours" / ".archives").mkdir(parents=True)
+        (self.home / ".ix-recipes" / "parcours").mkdir(parents=True)
+        self.assertEqual(interface.default_dir(), "~/.ix-recipes/parcours")
 
 
 # ---------------------------------------------------------------------------

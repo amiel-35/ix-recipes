@@ -293,7 +293,7 @@ class RecipeCheckTests(tp.ParcoursTestCase):
 class RecueilTests(tp.ParcoursTestCase):
     def setUp(self):
         super().setUp()
-        self.recueil = self.pdir / parcours.RECUEIL_DIR
+        self.recueil = parcours.recueil_dir(self.pdir)
         self.recueil.mkdir(parents=True)
 
     def recipes_json(self, pdir=None):
@@ -347,6 +347,13 @@ class RecueilTests(tp.ParcoursTestCase):
         self.assertIn("illisible", problems)
         self.assertIn("son en-tête porte l'id", problems["autre-id"])
 
+    def test_where_the_recueil_is(self):
+        self.assertEqual(self.recueil, self.tmp / "recettes")   # next to a folder named parcours
+        home = self.tmp / "home"
+        self.assertEqual(parcours.recueil_dir(home / ".ix-recipes" / "parcours"), (home / ".ix-recipes" / "recettes").resolve())
+        self.assertEqual(parcours.recueil_dir(home / "Parcours"), (home / "Parcours" / "recettes").resolve())   # an older folder
+        self.assertEqual(parcours.recipe_places(self.pdir)["recueil"], self.recueil)
+
     def test_the_recueil_folder_is_never_a_dossier(self):
         self.ok("new", "brief-client", "--input", str(self.input_file), "--slug", "recettes", "--engine", "fake")
         self.assertTrue((self.pdir / "recettes-dossier" / "state.json").is_file())
@@ -399,7 +406,7 @@ class RecettesTestCase(tp.ParcoursTestCase):
     def setUp(self):
         super().setUp()
         self.write_skill(self.root / "dist" / "skills", "concepteur-recette")
-        self.recueil = self.pdir / parcours.RECUEIL_DIR
+        self.recueil = parcours.recueil_dir(self.pdir)
 
     def rcli(self, *argv):
         out, err = io.StringIO(), io.StringIO()

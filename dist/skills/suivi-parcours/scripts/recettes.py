@@ -3,7 +3,8 @@
 recettes.py — the user's own workflow recipes (spec: docs/interface.md §9).
 
 A personal recipe lives outside the repository, in the user's recueil
-(<parcours-dir>/recettes/<id>.md, same format as skills/<id>.md). It is born as a
+(~/.ix-recipes/recettes/<id>.md next to the page's ~/.ix-recipes/parcours, see
+parcours.recueil_dir; same format as skills/<id>.md). It is born as a
 draft (<recueil>/brouillons/<draft>/): a need pasted by the user, a fresh engine call
 playing the `concepteur-recette` skill over the real catalogue, a recipe file the
 user edits (every save is checked like build.py checks a workflow), test dossiers
@@ -76,7 +77,7 @@ class GitError(P.ParcoursError):
 # Folders
 # ---------------------------------------------------------------------------
 def recueil(args):
-    return Path(args.parcours_dir).expanduser().resolve() / P.RECUEIL_DIR
+    return P.recueil_dir(args.parcours_dir)
 
 
 def drafts_dir(args):
@@ -1016,7 +1017,7 @@ def emit(args, data, text):
 def build_parser():
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or "./parcours",
-                        help="dossier des parcours ; le recueil est son sous-dossier recettes/")
+                        help="dossier des parcours ; le recueil est le dossier recettes/ à côté s'il s'appelle parcours, dedans sinon")
     common.add_argument("--json", action="store_true", help="sortie JSON ; erreurs en {\"error\", \"message\"}")
     parser = argparse.ArgumentParser(description="Recettes personnelles (voir docs/interface.md §9)")
     sub = parser.add_subparsers(dest="command", required=True)

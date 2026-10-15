@@ -7,5 +7,6 @@ __pycache__/
 # Python venv local (uv venv)
 .venv/
 
-# Runs of scripts/parcours.py (client material)
+# Runs of scripts/parcours.py (client material), and the personal recipes next to them
 parcours/
+recettes/

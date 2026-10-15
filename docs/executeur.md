@@ -140,7 +140,7 @@ Avant de lancer des étapes, `next` affiche ce qu'il va faire — étapes, moteu
 
 ### Recettes personnelles
 
-Une recette se cherche dans le dépôt ou le plugin, puis — jamais à leur place — dans le recueil de l'utilisateur, `<--parcours-dir>/recettes/<id>.md`, et, pour un dossier de test, dans le brouillon qu'il essaie ([interface.md](interface.md) §9). Le fichier se lit sans pyyaml (lecteur YAML de la bibliothèque standard, aussi utilisé en repli pour les recettes du dépôt). `recipes --json` les marque `personal: true` et liste à part celles qu'il écarte (`personal_problems`) ; `state.json` garde `recipe_sha256` et `recipe_origin`, `status --json` dit `recipe_current`. Le dossier `recettes` n'est jamais un parcours (`new --slug recettes` → `recettes-dossier`).
+Une recette se cherche dans le dépôt ou le plugin, puis — jamais à leur place — dans le recueil de l'utilisateur, `recettes/<id>.md` à côté du dossier des parcours s'il s'appelle `parcours` (`~/.ix-recipes/recettes` pour la page), dedans sinon, et, pour un dossier de test, dans le brouillon qu'il essaie ([interface.md](interface.md) §9). Le fichier se lit sans pyyaml (lecteur YAML de la bibliothèque standard, aussi utilisé en repli pour les recettes du dépôt). `recipes --json` les marque `personal: true` et liste à part celles qu'il écarte (`personal_problems`) ; `state.json` garde `recipe_sha256` et `recipe_origin`, `status --json` dit `recipe_current`. Le dossier `recettes` n'est jamais un parcours (`new --slug recettes` → `recettes-dossier`).
 
 ## 6. Règles reprises du format
 

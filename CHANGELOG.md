@@ -2,7 +2,7 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
-## 2026-10-15 — plugin 2.6.0: your own recipes
+## 2026-10-15 — plugin 2.7.0: your own recipes
 
 - **Personal recipes, outside the repository**, from the tracking page ("Recipes"): describe a
   recurring job; one fresh engine call plays `concepteur-recette` over the real catalogue (the
@@ -12,7 +12,8 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
   rules (ported rule for rule, in French, compared with build.py by a test) plus: every skill in
   the catalogue, a free id. Test it on a real example in a test dossier kept apart, with the
   new free `simulation` engine by default (a real run only on request, after the plan and the
-  cost ceiling). Validate it into the user's recueil, `<dossier folder>/recettes/<id>.md`: it
+  cost ceiling). Validate it into the user's recueil, `~/.ix-recipes/recettes/<id>.md` (next to the
+  `parcours` folder; inside the dossier folder when it has another name): it
   then shows in "New dossier" marked "Personal" and in `parcours.py recipes`, and runs like the
   others; an id used by the plugin or the catalogue is refused.
 - **Propose to the repository**: a branch prepared in a separate working copy of a local clone
@@ -29,6 +30,16 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
   state, `recipe_current` in `status --json`; the `recettes` folder is never a dossier.
 - Step ids and file names may hold underscores (`fiche_poste`).
 - `build.py` unchanged.
+
+## 2026-10-15 — plugin 2.6.0: a README you can try in one prompt, a hidden dossier folder
+
+- README (FR and EN): it opens on a short description, a single prompt to paste into Claude
+  Code that installs both plugins and opens the tracking page without a restart, and a sample
+  client request to try the "Brief client" recipe; installation details, catalogue and
+  contribution come after, for those who want them.
+- The tracking page keeps its dossiers in `~/.ix-recipes/parcours` (hidden) instead of
+  `~/Parcours`; an existing `~/Parcours` that holds dossiers stays in use until it is moved,
+  and the page says so. `suivi-parcours` 1.1.1, `configuration-ix` 1.0.1.
 
 ## 2026-10-15 — plugin 2.5.0: Inflexion theme, many dossiers, setup
 

@@ -726,24 +726,33 @@ def bundled():
 
 
 RECIPE_ID_RE = re.compile(r"[a-z0-9][a-z0-9-]{0,59}")
-RECUEIL_DIR = "recettes"      # <parcours-dir>/recettes/: the user's own recipes, outside the repository
+RECUEIL_DIR = "recettes"      # the user's own recipes, outside the repository (see recueil_dir)
 DRAFTS_DIR = "brouillons"     # <recueil>/brouillons/<draft>/: a recipe being designed, edited or tested
 DRAFT_FILE = "recipe.md"      # <draft>/recipe.md: the draft itself, same format as skills/<id>.md
 ESSAIS_DIR = "essais"         # <draft>/essais/: the test dossiers of a draft, apart from the real ones
 RESERVED_SLUGS = {RECUEIL_DIR}
 
 
+def recueil_dir(parcours_dir):
+    """The user's recueil of recipes for a parcours folder: next to it when the folder is named
+    `parcours` (~/.ix-recipes/parcours -> ~/.ix-recipes/recettes, the page's default; ./parcours ->
+    ./recettes), inside it otherwise (an older ~/Parcours, a $PARCOURS_DIR of another name), so that
+    nothing new appears in a folder the user did not choose."""
+    pdir = Path(parcours_dir).expanduser().resolve()
+    return pdir.parent / RECUEIL_DIR if pdir.name == "parcours" else pdir / RECUEIL_DIR
+
+
 def recipe_places(parcours_dir):
     """Where personal recipes are found for a parcours folder: {"recueil": folder, "draft": file or None}.
 
-    The recueil is <parcours-dir>/recettes. A draft's test folder (<recueil>/brouillons/<draft>/essais)
+    The recueil is recueil_dir(parcours_dir). A draft's test folder (<recueil>/brouillons/<draft>/essais)
     also sees the draft itself, under the id of its front matter: that is how a draft is tested
     with the same runner, before it joins the recueil.
     """
     pdir = Path(parcours_dir).expanduser().resolve()
     if pdir.name == ESSAIS_DIR and pdir.parent.parent.name == DRAFTS_DIR and (pdir.parent / DRAFT_FILE).is_file():
         return {"recueil": pdir.parent.parent.parent, "draft": pdir.parent / DRAFT_FILE}
-    return {"recueil": pdir / RECUEIL_DIR, "draft": None}
+    return {"recueil": recueil_dir(pdir), "draft": None}
 
 
 PLACES = {"recueil": None, "draft": None}   # set by main() from --parcours-dir
@@ -2414,7 +2423,7 @@ def cmd_new(args):
     # a slug stays within the page's whitelist (^[a-z0-9][a-z0-9-]{0,79}$): truncated, and the
     # default one when nothing ASCII is left (a title such as « 🚀 » or « — »)
     wanted = (slugify(args.slug)[:60].strip("-") if args.slug else "") or default_slug(recipe["id"], text)
-    if wanted in RESERVED_SLUGS:   # <parcours-dir>/recettes is the user's recueil, never a dossier
+    if wanted in RESERVED_SLUGS:   # <parcours-dir>/recettes may be the user's recueil, never a dossier
         wanted += "-dossier"
     directory, slug = create_unique_dir(base, wanted)
     title = " ".join((args.title or "").split())[:120] or None

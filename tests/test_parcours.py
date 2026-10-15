@@ -24,6 +24,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -1080,6 +1081,37 @@ class SkillResolutionTests(ParcoursTestCase):
         self.assertTrue(status["steps"][0]["mission"])
         self.assertEqual(status["max_budget_usd"], parcours.DEFAULT_BUDGET)
 
+    def test_the_plugin_bundles_the_current_scripts(self):
+        bundle = REPO / "dist" / "skills" / "suivi-parcours" / "scripts"
+        for name in ("parcours.py", "interface.py", "interface.html"):
+            self.assertEqual((bundle / name).read_bytes(), (REPO / "scripts" / name).read_bytes(),
+                             f"dist/…/scripts/{name} is stale: python3 build.py --target agentskills")
+
+    def test_the_runner_bundled_in_the_plugin_works_without_the_repo_or_pyyaml(self):
+        """dist/skills/suivi-parcours/scripts/parcours.py, recipes as <skills>/<id>/recipe.json + SKILL.md."""
+        if not (REPO / "dist" / "skills" / "suivi-parcours" / "scripts" / "parcours.py").is_file():
+            self.skipTest("dist not built")
+        plugin = self.tmp / "plugin"
+        shutil.copytree(REPO / "dist", plugin)
+        script = plugin / "skills" / "suivi-parcours" / "scripts" / "parcours.py"
+        guard = ("import runpy, sys; sys.modules['yaml'] = None; sys.argv = sys.argv[1:]; "
+                 "runpy.run_path(sys.argv[0], run_name='__main__')")
+        env = dict(os.environ, IX_SKILLS_PATH=str(self.tmp / "ix-skills" / "dist" / "skills"), PYTHONUTF8="1")
+
+        def run(*argv):
+            done = subprocess.run([sys.executable, "-c", guard, str(script), *argv, "--parcours-dir", str(self.tmp / "d")],
+                                  capture_output=True, text=True, env=env, timeout=60)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+            return done.stdout
+
+        ids = [r["id"] for r in json.loads(run("recipes", "--json"))["recipes"]]
+        self.assertIn("brief-client", ids)
+        self.assertIn("reponse-appel-offres", ids)
+        self.assertEqual(json.loads(run("new", "brief-client", "--input", str(self.input_file), "--slug", "b", "--json"))["slug"], "b")
+        status = json.loads(run("status", "b", "--json"))
+        self.assertEqual(status["steps"][0]["label"], "Cadrage de la demande")
+        self.assertTrue(json.loads(run("plan", "b", "--json"))["runnable"])
+
     def test_output_document_drops_closing_blocks_and_front_matter(self):
         text = ("---\nstatus: draft\nrecipient: comité\n---\n\n# Offre\nCorps.\n\n## CONTEXT SHEET\n```json\n{}\n```\n"
                 "## HANDOFF\n### offer\nX\n## SUMMARY\nS\n")
@@ -1087,6 +1119,8 @@ class SkillResolutionTests(ParcoursTestCase):
         self.assertEqual(document, "# Offre\nCorps.")
         self.assertEqual(meta, {"status": "draft", "recipient": "comité"})
         self.assertEqual(parcours.output_document("Pas de bloc.\n## HANDOFF\n### a\nA\n"), ("Pas de bloc.", {}))
+        after_title = "# Questions\n\n---\nstatus: draft\nskill: questioning\n---\n\n## Scope\nX\n## HANDOFF\n### a\nA\n"
+        self.assertEqual(parcours.output_document(after_title), ("# Questions\n\n## Scope\nX", {"status": "draft", "skill": "questioning"}))
         ruled = "---\n\nParagraphe un.\n\n---\n\nParagraphe deux.\n## HANDOFF\n### a\nA\n"
         self.assertEqual(parcours.output_document(ruled), ("---\n\nParagraphe un.\n\n---\n\nParagraphe deux.", {}))
 

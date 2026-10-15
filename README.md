@@ -43,7 +43,7 @@
 
 Domain recipes on top of [ix-skills](https://github.com/amiel-35/ix-skills) — portable across Claude, GPT, Gemini, and mystaffy.
 
-50 skills in 9 families, including 2 workflows and a workflow designer. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
+51 skills in 9 families, including 2 workflows, a workflow designer and the tracking page. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
 
 - **domain skills** — they rely on domain knowledge that can be wrong or go stale (labour law, GDPR, HR practice, financial formulas, product methods), or produce an artefact a profession defines (PRD, NDA, job description, TCO);
 - **workflows** — chains of ix-skills atoms for a recurring job, a designer for new ones, and a runner with a local tracking page (see [Workflows](#workflows)).
@@ -558,7 +558,7 @@ Read a market and a business model with numbers — competition, SaaS metrics, K
 </details>
 
 <details>
-<summary><b>⇢ Workflows</b> — 3 skills</summary>
+<summary><b>⇢ Workflows</b> — 4 skills</summary>
 
 Recipes that chain several skills, each step isolated in its own context, with pauses where the human validates, answers or chooses. Format: [`docs/format-recette.md`](docs/format-recette.md).
 
@@ -591,6 +591,16 @@ Recipes that chain several skills, each step isolated in its own context, with p
 **What it doesn't do:** Does not run the recipe and writes no file: it proposes, you save. Never invents a skill.
 
 **Use when:** You do the same multi-step job often and wonder whether it deserves a recipe.
+
+---
+
+#### `suivi-parcours` — Open the tracking page
+
+**What it does:** Starts the local tracking page bundled in the plugin and gives you its address: create a dossier by pasting the request, review and validate each step, read the deliverable as a document. See [Running a workflow outside the conversation](#running-a-workflow-outside-the-conversation-the-tracking-page).
+
+**What it doesn't do:** Runs no step and reads no dossier itself. Not from Cowork: the page runs on your computer.
+
+**Use when:** You want to run a recipe step by step, with pauses, outside a conversation.
 
 </details>
 
@@ -635,14 +645,13 @@ Available: `brief-client`, `reponse-appel-offres` (see the catalog). Both tested
 
 In a conversation, the recipe orchestrates itself through sub-agents. For real isolation, a trace you can resume and no command line, use the tracking page: each step runs in a **fresh call** to an engine (Claude Code by default; Codex or Antigravity in technical mode) that receives only its inputs, and the page stops at every pause for you.
 
-**Prerequisites:** this repository and [ix-skills](https://github.com/amiel-35/ix-skills) cloned side by side (or ix-skills installed as a plugin), Python 3 with `pyyaml`, and the Claude Code CLI signed in.
+**With the plugins installed** (ix-recipes and ix-skills, in Claude Code on your computer), ask Claude: *"open the tracking page"*. The `suivi-parcours` skill starts it from the plugin itself: Python 3.9+ and the signed-in Claude Code CLI are all it needs. **From a clone** of this repository (ix-skills cloned alongside, or installed as a plugin):
 
 ```bash
-pip install pyyaml
 python3 scripts/interface.py
 ```
 
-The page opens in your browser (local only, protected by a key in its address). There:
+The page opens in your browser (local only, protected by a key in its address). Not from Cowork: the page runs on your computer, out of reach of a remote sandbox. There:
 
 - **New dossier**: pick a recipe, paste the request (client email, notes, tender specification) or import a text file, then *Create and start*.
 - **A dossier**: the steps on the left; at the top, the one thing expected from you (*Validate and continue*, *Send the answers and continue*, *Redo the step*…); in the middle, each step's output read as a formatted document, to copy, download or print to PDF. The context sheet, the only thing later steps know of your request, is checked and corrected field by field after step 1.

@@ -1,0 +1,14 @@
+{
+  "metier": ["transverse"],
+  "category": "production",
+  "params": {},
+  "ui": {"simple_fields": [], "advanced_fields": []},
+  "execution": {"supports_async": false, "supports_review_gate": false, "max_input_artifacts": 0, "max_estimated_tokens": 4000},
+  "color": "#4F6D8A",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

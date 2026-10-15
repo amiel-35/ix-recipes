@@ -46,7 +46,10 @@ import unicodedata
 from datetime import datetime
 from pathlib import Path
 
-import yaml
+try:
+    import yaml
+except ImportError:  # the copy bundled in the plugin runs on the standard library alone
+    yaml = None
 
 try:
     import fcntl
@@ -223,14 +226,48 @@ def split_frontmatter(text):
     match = FRONTMATTER_RE.match(text)
     if not match:
         return {}, text
+    if yaml is None:  # only flat `key: value` front matters are read without pyyaml (SKILL.md files)
+        flat = {}
+        for line in match.group(1).splitlines():
+            key, sep, value = line.partition(":")
+            if sep and re.fullmatch(r"[A-Za-z_][\w-]*", key.strip()):
+                flat[key.strip()] = value.strip().strip('"').strip("'")
+        return flat, text[match.end():]
     return yaml.safe_load(match.group(1)) or {}, text[match.end():]
 
 
-def load_recipe(recipe_id):
+def bundled():
+    """True when this file runs from the copy bundled in the plugin: ROOT is then the skill
+    folder (dist/skills/suivi-parcours) and the recipes are its sibling folders."""
+    return (ROOT / "SKILL.md").is_file() and not (ROOT / "skills").is_dir()
+
+
+def recipe_source(recipe_id):
+    """(front matter, body) of a recipe: skills/<id>.md in the repository, or, in the plugin,
+    <skills>/<id>/recipe.json (written by build.py) with the body of <skills>/<id>/SKILL.md."""
     path = ROOT / "skills" / f"{recipe_id}.md"
-    if not path.is_file():
-        raise ParcoursError(f"recette introuvable : {path}")
-    fm, body = split_frontmatter(path.read_text(encoding="utf-8"))
+    if path.is_file():
+        return split_frontmatter(path.read_text(encoding="utf-8"))
+    folder = ROOT.parent / recipe_id
+    if bundled() and re.fullmatch(r"[a-z0-9][a-z0-9-]*", recipe_id) and (folder / "recipe.json").is_file():
+        try:
+            fm = json.loads((folder / "recipe.json").read_text(encoding="utf-8"))
+        except ValueError as exc:
+            raise ParcoursError(f"recette illisible : {folder / 'recipe.json'} ({exc})")
+        _, body = split_frontmatter((folder / "SKILL.md").read_text(encoding="utf-8"))
+        return fm, body
+    raise ParcoursError(f"recette introuvable : {recipe_id}")
+
+
+def recipe_ids():
+    ids = {p.stem for p in (ROOT / "skills").glob("*.md")}
+    if bundled():
+        ids |= {p.parent.name for p in ROOT.parent.glob("*/recipe.json")}
+    return sorted(ids)
+
+
+def load_recipe(recipe_id):
+    fm, body = recipe_source(recipe_id)
     workflow = fm.get("workflow") or {}
     if not workflow.get("steps"):
         raise ParcoursError(f"'{recipe_id}' n'a pas de bloc workflow")
@@ -320,7 +357,7 @@ def skill_search_roots(namespace):
         env = [Path(p) for p in os.environ.get("IX_SKILLS_PATH", "").split(os.pathsep) if p]
         return env + [ROOT.parent / "ix-skills" / "dist" / "skills"] + cache_skill_roots("ix-skills")
     if namespace == "ix-recipes":
-        return [ROOT / "dist" / "skills"] + cache_skill_roots("ix-recipes")
+        return [ROOT / "dist" / "skills"] + ([ROOT.parent] if bundled() else []) + cache_skill_roots("ix-recipes")
     raise ParcoursError(f"espace de noms de skill inconnu : '{namespace}'")
 
 
@@ -1099,16 +1136,19 @@ def output_document(text):
     (output_body), without a leading YAML front matter, whose simple `key: value` lines are
     returned apart (`status: draft`, `recipient: ...`)."""
     body = output_body(text)
-    match = FRONT_MATTER_RE.match(body)
+    # the skills' status block (`status: draft`, `skill: …`) opens the document, or follows its title
+    title = re.match(r"#[^\n]*\n\s*\n?", body)
+    head, rest = (body[:title.end()], body[title.end():]) if title else ("", body)
+    match = FRONT_MATTER_RE.match(rest)
     lines = [l for l in match.group(1).splitlines() if l.strip()] if match else []
     if not lines or not all(META_LINE_RE.fullmatch(l.strip()) for l in lines):
-        return body, {}   # a horizontal rule opening the document, not a front matter
+        return body, {}   # a horizontal rule, not a status block
     meta = {}
     for line in match.group(1).splitlines():
         key, sep, value = line.partition(":")
         if sep and re.fullmatch(r"[A-Za-z_][\w-]*", key.strip()):
             meta[key.strip()] = value.strip()
-    return body[match.end():].strip(), meta
+    return (head.rstrip() + "\n\n" + rest[match.end():].lstrip()).strip(), meta
 
 
 def parse_step_output(text, transmits, context_fields=None, output_field=None):
@@ -1545,10 +1585,11 @@ def cmd_new(args):
 def list_recipes():
     """The workflow recipes of this repo, for a page that creates parcours (`recipes --json`)."""
     found = []
-    for path in sorted((ROOT / "skills").glob("*.md")):
+    unreadable = (ParcoursError, OSError, ValueError) + ((yaml.YAMLError,) if yaml else ())
+    for recipe_id in recipe_ids():
         try:
-            recipe = load_recipe(path.stem)
-        except (ParcoursError, yaml.YAMLError, OSError):
+            recipe = load_recipe(recipe_id)
+        except unreadable:
             continue  # not a workflow recipe, or unreadable: not offered
         found.append({
             "id": recipe["id"], "label": recipe["label"], "description": recipe["description"],

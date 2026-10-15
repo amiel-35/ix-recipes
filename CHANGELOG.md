@@ -27,6 +27,11 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
   `reponse-appel-offres` 1.6.0 carry them. The page holds no recipe-specific text any more:
   tested with a recipe written by an isolated Sonnet from the format alone, and by an
   invented recipe in the tests.
+- Installable from the plugin alone: `suivi-parcours` 1.0.0 bundles the runner and the
+  page (`scripts` field, copied by `build.py` into `dist/skills/suivi-parcours/scripts/`);
+  each workflow recipe ships a `recipe.json` next to its SKILL.md; the bundled runner
+  needs no `pyyaml` (tested with macOS's Python 3.9, `yaml` blocked). Ask Claude to
+  "open the tracking page".
 - Markdown renderer: line breaks kept, `http(s)` links (new tab, no referrer),
   strikethrough, task lists, ordered list start, HTML comments dropped; headings start
   at h2.

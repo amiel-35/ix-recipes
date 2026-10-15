@@ -400,6 +400,27 @@ class CreateAndReadTests(InterfaceTestCase):
         self.assertEqual(self.request("GET", "/api/parcours/demo/document/absent.md")[0], 404)
 
 
+class ManyDossiersTests(InterfaceTestCase):
+    def test_archive_from_the_page_and_restore(self):
+        self.new()
+        self.new(slug="autre")
+        self.api("POST", "/api/parcours/demo/archive", {})
+        listed = self.api("GET", "/api/parcours")
+        self.assertEqual(([p["slug"] for p in listed["parcours"]], listed["archived"]), (["autre"], 1))
+        self.assertEqual([a["slug"] for a in self.api("GET", "/api/archives")["archives"]], ["demo"])
+        self.assertEqual(self.api("POST", "/api/archives/demo/restore", {})["restored"], "demo")
+        self.assertEqual(self.api("GET", "/api/parcours")["archived"], 0)
+        self.assertEqual(self.request("POST", "/api/archives/..%2Fx/restore", {})[0], 400)
+
+    def test_the_list_cache_follows_every_change(self):
+        self.new()
+        first = self.api("GET", "/api/parcours")["parcours"][0]
+        self.assertEqual(first["steps_done"], 0)
+        self.run_next()
+        again = self.api("GET", "/api/parcours")["parcours"][0]
+        self.assertEqual((again["pending"]["type"], again["calls"]), ("validate", {"fake": 1}))
+
+
 class ThemeTests(InterfaceTestCase):
     def themed(self):
         theme = self.tmp / "theme"

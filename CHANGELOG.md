@@ -2,7 +2,12 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
-## Unreleased (branch `theme`) — themes for the tracking page
+## Unreleased (branches `theme`, `dossiers`) — themes, many dossiers
+
+- Many dossiers: what waits for you or runs is always shown; finished ones fold beyond
+  the six most recent; a search field past 12 dossiers; `parcours.py archive` /
+  `unarchive` / `archives` and the page's "Archive" and "Archived dossiers"; the list is
+  cached by state.json date and size (300 dossiers listed in about 10 ms).
 
 - `scripts/interface.py --theme <folder>` (or `PARCOURS_THEME`): a `theme.css` added after
   the page's styles, its fonts and images served under `/theme/`. The page stays neutral

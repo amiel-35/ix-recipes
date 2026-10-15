@@ -1124,6 +1124,23 @@ class SkillResolutionTests(ParcoursTestCase):
         ruled = "---\n\nParagraphe un.\n\n---\n\nParagraphe deux.\n## HANDOFF\n### a\nA\n"
         self.assertEqual(parcours.output_document(ruled), ("---\n\nParagraphe un.\n\n---\n\nParagraphe deux.", {}))
 
+    def test_archive_and_restore(self):
+        self.new()
+        self.new(slug="autre")
+        self.assertEqual(json.loads(self.ok("archive", "demo", "--json")), {"archived": "demo"})
+        self.assertFalse((self.pdir / "demo").exists())
+        self.assertTrue((self.pdir / ".archives" / "demo" / "state.json").is_file())
+        self.assertEqual([a["slug"] for a in json.loads(self.ok("archives", "--json"))["archives"]], ["demo"])
+        self.new()                                                     # the slug is free again
+        restored = json.loads(self.ok("unarchive", "demo", "--json"))["restored"]
+        self.assertEqual(restored, "demo-2")                           # never over a parcours of the list
+        self.assertEqual(self.state("demo-2")["slug"], "demo-2")
+        self.assertEqual(json.loads(self.ok("archives", "--json"))["archives"], [])
+        code, out, _ = self.cli("unarchive", "absent", "--json")
+        self.assertEqual(code, 1)
+        code, out, _ = self.cli("archive", ".archives", "--json")
+        self.assertEqual(code, 1)
+
     def test_a_title_always_gives_a_usable_slug(self):
         long_title = "Réponse à la consultation de la Fédération nationale pour la formation gestion de projet 2026 et suite"
         for title in (long_title, "🚀", "—", "-"):

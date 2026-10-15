@@ -56,7 +56,7 @@ FILE_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{0,79}$")          # no leading dot: n
 TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,}$")
 FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
 REAL_ENGINES = ("claude", "codex", "agy", "vibe")
-ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun")
+ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun", "archive")
 MAX_BODY = 4_000_000        # bytes of a POST body (a pasted answer can be long)
 MAX_FILE = 2_000_000        # bytes of a file sent to the page
 MAX_TITLE = 120             # characters of a parcours title
@@ -115,6 +115,8 @@ class App:
         self.dir.mkdir(parents=True, exist_ok=True)
         self.dev = dev
         self.token = load_or_create_token(self.dir)
+        self.summaries = {}             # slug -> (mtime_ns, size, summary): state.json is reread only when it changes
+        self.list_lock = threading.Lock()   # two tabs polling at once share the cache
         self.launches = {}              # slug -> Popen of the `next` this server started
         self.slug_locks = {}            # slug -> threading.Lock (one launch at a time)
         self.registry = threading.Lock()
@@ -187,6 +189,10 @@ class App:
         return cache[recipe_id]
 
     def list_parcours(self):
+        with self.list_lock:
+            return self._list_parcours()
+
+    def _list_parcours(self):
         items, without_state, broken, labels = [], [], [], {}
         for entry in sorted(self.dir.iterdir()):
             if not entry.is_dir() or entry.is_symlink() or not SLUG_RE.match(entry.name):
@@ -196,6 +202,11 @@ class App:
                 without_state.append(entry.name)  # creation interrupted: listed apart, not an error
                 continue
             try:
+                stat = state_file.stat()
+                cached = self.summaries.get(entry.name)
+                if cached and cached[:2] == (stat.st_mtime_ns, stat.st_size):
+                    items.append(dict(cached[2], locked=parcours.is_locked(entry)))
+                    continue
                 state = json.loads(state_file.read_text(encoding="utf-8"))
                 steps = state["steps"]
                 pending = state.get("pending")
@@ -216,10 +227,15 @@ class App:
                     "steps_done": sum(1 for s in steps if s["status"] in ("done", "skipped")),
                     "locked": parcours.is_locked(entry),
                 })
+                self.summaries[entry.name] = (stat.st_mtime_ns, stat.st_size, items[-1])
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 broken.append({"slug": entry.name, "message": f"state.json illisible : {exc}"})
-        items.sort(key=lambda i: i.get("created") or "", reverse=True)
-        return {"parcours": items, "without_state": without_state, "broken": broken,
+        for gone in set(self.summaries) - {i["slug"] for i in items}:   # archived or deleted
+            del self.summaries[gone]
+        items.sort(key=lambda i: i.get("updated") or i.get("created") or "", reverse=True)
+        archives = self.dir / parcours.ARCHIVES
+        archived = sum(1 for e in archives.iterdir() if e.is_dir()) if archives.is_dir() else 0
+        return {"parcours": items, "without_state": without_state, "broken": broken, "archived": archived,
                 "engines": self.engines, "dev": self.dev, "parcours_dir": str(self.dir)}
 
     def status(self, slug):
@@ -249,6 +265,14 @@ class App:
         data = self.read_file(slug, name)
         document, meta = parcours.output_document(data["text"])
         return {"name": name, "document": document, "meta": meta, "truncated": data["truncated"]}
+
+    def archives(self):
+        return self.run_json("archives")
+
+    def restore(self, slug):
+        if not SLUG_RE.match(slug):
+            raise ApiError(400, "bad_slug", "identifiant de parcours invalide")
+        return self.run_json("unarchive", positionals=[slug])
 
     def recipes(self):
         return self.run_json("recipes")
@@ -298,6 +322,10 @@ class App:
             return self.done(*self.run("retry", positionals=[slug]))
         if action == "rerun":
             return self.action_rerun(slug, body)
+        if action == "archive":
+            if parcours.is_locked(self.dir / slug):
+                raise ApiError(409, "running", "une étape est en cours sur ce parcours")
+            return self.done(*self.run("archive", positionals=[slug]))
         raise ApiError(404, "not_found", f"action inconnue : {action}")
 
     @staticmethod
@@ -563,6 +591,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(200, self.app.create(self.read_json_body()))
             self.only(method, "GET")
             return self.send_json(200, self.app.list_parcours())
+        if parts == ["archives"]:
+            self.only(method, "GET")
+            return self.send_json(200, self.app.archives())
+        if len(parts) == 3 and parts[0] == "archives" and parts[2] == "restore":
+            self.only(method, "POST")
+            self.read_json_body()
+            return self.send_json(200, self.app.restore(parts[1]))
         if parts == ["recipes"]:
             self.only(method, "GET")
             return self.send_json(200, self.app.recipes())

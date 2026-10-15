@@ -406,10 +406,11 @@ def _write_recipe_json(fm: dict, out_dir: Path, dry_run: bool) -> None:
 
 def _write_bundled_scripts(fm: dict, out_dir: Path, dry_run: bool) -> None:
     """Copy the repository files a skill lists in `scripts` into <out_dir>/scripts/ (rebuilt
-    from scratch): an Agent Skill may bundle the code it runs."""
+    from scratch): an Agent Skill may bundle the code it runs. A file lands under its own
+    name; a folder (a theme, say `themes/inflexion`) keeps its path below scripts/."""
     names = fm.get("scripts") or []
     for name in names:
-        if not Path(name).is_file():
+        if not Path(name).exists():
             raise FileNotFoundError(f"script '{name}' not found")
     if dry_run:
         return
@@ -419,7 +420,10 @@ def _write_bundled_scripts(fm: dict, out_dir: Path, dry_run: bool) -> None:
     if names:
         folder.mkdir(parents=True)
         for name in names:
-            shutil.copy2(name, folder / Path(name).name)
+            if Path(name).is_dir():
+                shutil.copytree(name, folder / name)
+            else:
+                shutil.copy2(name, folder / Path(name).name)
 
 
 def _write_references(fm: dict, out_dir: Path, dry_run: bool) -> list:

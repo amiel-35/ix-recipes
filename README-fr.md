@@ -43,7 +43,7 @@
 
 Recettes métier construites sur [ix-skills](https://github.com/amiel-35/ix-skills) — portables sur Claude, GPT, Gemini, mystaffy.
 
-51 skills en 9 familles, dont 2 workflows, un concepteur de workflows et la page de suivi. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
+52 skills en 9 familles, dont 2 workflows, un concepteur de workflows, la page de suivi et sa configuration. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
 
 - **des skills métier** — ils reposent sur une connaissance de domaine qui peut être fausse ou périmée (droit du travail, RGPD, pratiques RH, formules financières, méthodes produit), ou produisent un artefact qu'une profession définit (PRD, NDA, fiche de poste, TCO) ;
 - **des workflows** — des enchaînements d'atomes ix-skills pour un travail récurrent, un concepteur pour en créer, et un exécuteur avec une page de suivi locale (voir [Workflows](#workflows)).
@@ -53,6 +53,41 @@ ix-recipes dépend d'ix-skills, jamais l'inverse : une recette peut renvoyer ver
 ---
 
 ## Démarrage rapide
+
+### En une phrase : le prompt d'installation
+
+Copiez ce texte dans Claude Code (ou dans Cowork, qui vous guidera pour les clics) :
+
+```text
+Installe et configure ix-recipes pour moi (https://github.com/amiel-35/ix-recipes).
+1. Si tu peux lancer des commandes : ajoute la marketplace amiel-35/plugins et installe
+   ix-skills@amiel-35 puis ix-recipes@amiel-35 (mets-les à jour s'ils sont déjà là ; si l'ajout
+   de la marketplace échoue faute de clé SSH GitHub, réessaie avec
+   https://github.com/amiel-35/plugins.git). Si l'un
+   d'eux est déjà installé depuis une autre marketplace, ne crée pas de doublon : dis-le-moi
+   et propose de n'en garder qu'une source. Si tu ne peux pas lancer de commandes (Cowork,
+   claude.ai), dis-moi exactement où cliquer pour ajouter amiel-35/ix-recipes et
+   amiel-35/ix-skills depuis un dépôt.
+2. Vérifie python3 (3.9 ou plus) et la CLI claude : la page de suivi des recettes en a besoin.
+   Ne change rien d'autre sans me demander.
+3. Termine par ce qui marche, ce qui manque, et ce que je dois faire ensuite.
+```
+
+Une fois Claude Code redémarré : `/ix-recipes:suivi-parcours` (ou « lance la page de suivi ix-recipes ») ouvre la page des recettes, et « configure ix » (skill `configuration-ix`) vérifie et règle le reste — mises à jour, dossier des parcours, thème de la page, moteurs Codex et Antigravity.
+
+### Ce qui se déploie
+
+| Brique | Rôle | Où elle tourne |
+|---|---|---|
+| plugin **ix-skills** | les atomes cognitifs (cadrage, décision, critique…) | partout où les skills se chargent (Claude Code, Cowork, Codex, Antigravity) |
+| plugin **ix-recipes** | les skills métier et les recettes-workflows qui enchaînent les atomes | idem |
+| **page de suivi** (`suivi-parcours`) | crée et suit les dossiers d'une recette, étape par étape | Claude Code sur votre ordinateur : un serveur local, Python 3.9+, la CLI Claude connectée — pas Cowork |
+| **dossiers** | un dossier par demande traitée : sorties, traces, état | `~/Parcours` (ou `$PARCOURS_DIR`) ; les terminés s'archivent dans `.archives/` |
+| **thème** | l'habillage de la page : la charte Inflexion par défaut (livrée avec la page, polices sous licence OFL), `none` pour l'apparence neutre, ou le dossier d'une autre charte | `$PARCOURS_THEME` ou `--theme` |
+
+Pour une équipe : chacun colle le prompt ci-dessus ; une autre charte se partage comme un dossier de thème (un `theme.css` et ses polices), activé par `configuration-ix`.
+
+### Commande par commande
 
 Installer les deux plugins dans Claude Code — ix-recipes s'appuie sur les atomes d'ix-skills :
 
@@ -558,7 +593,7 @@ Lire un marché et un modèle économique avec des chiffres — concurrence, mé
 </details>
 
 <details>
-<summary><b>⇢ Workflows</b> — 4 skills</summary>
+<summary><b>⇢ Workflows</b> — 5 skills</summary>
 
 Des recettes qui enchaînent plusieurs skills, chaque étape isolée dans son propre contexte, avec des pauses où l'humain valide, répond ou choisit. Format : [`docs/format-recette.md`](docs/format-recette.md).
 
@@ -601,6 +636,16 @@ Des recettes qui enchaînent plusieurs skills, chaque étape isolée dans son pr
 **Ce qu'il ne fait pas :** Ne joue aucune étape et ne lit aucun dossier lui-même. Pas depuis Cowork : la page tourne sur ton ordinateur.
 
 **Quand l'utiliser :** Tu veux jouer une recette étape par étape, avec ses pauses, hors d'une conversation.
+
+---
+
+#### `configuration-ix` — Vérifier et régler l'installation
+
+**Ce qu'il fait :** Vérifie les plugins ix-skills et ix-recipes (présents, à jour, sans doublon), les prérequis de la page de suivi, le dossier des parcours, le thème de la page et les moteurs facultatifs ; propose chaque réglage avec sa commande et ne l'applique qu'après ton accord.
+
+**Ce qu'il ne fait pas :** Ne touche jamais aux identifiants ni aux abonnements ; ne lance aucune recette.
+
+**Quand l'utiliser :** Après l'installation, après une mise à jour, ou pour activer un thème.
 
 </details>
 
@@ -645,7 +690,7 @@ Disponibles : `brief-client`, `reponse-appel-offres` (voir le catalogue). Tous d
 
 Dans une conversation, la recette s'orchestre elle-même par sous-agents. Pour une isolation réelle, une trace qu'on peut reprendre et aucune ligne de commande, utilisez la page de suivi : chaque étape tourne dans un **appel neuf** à un moteur (Claude Code par défaut ; Codex ou Antigravity en mode technique) qui ne reçoit que ses entrées, et la page s'arrête à chaque pause pour vous.
 
-**Avec les plugins installés** (ix-recipes et ix-skills, dans Claude Code sur votre ordinateur), demandez à Claude : « ouvre la page de suivi ». Le skill `suivi-parcours` la lance depuis le plugin lui-même : il suffit de Python 3.9 ou plus et de la CLI Claude Code connectée. **Depuis un clone** de ce dépôt (ix-skills cloné à côté, ou installé en plugin) :
+**Avec les plugins installés** (ix-recipes et ix-skills, dans Claude Code sur votre ordinateur), tapez `/ix-recipes:suivi-parcours` ou demandez « lance la page de suivi ix-recipes ». Le skill `suivi-parcours` la lance depuis le plugin lui-même : il suffit de Python 3.9 ou plus et de la CLI Claude Code connectée. **Depuis un clone** de ce dépôt (ix-skills cloné à côté, ou installé en plugin) :
 
 ```bash
 python3 scripts/interface.py

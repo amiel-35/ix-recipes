@@ -1,0 +1,87 @@
+/* Thème Inflexion pour la page de suivi des parcours.
+   Valeurs reprises du design system Inflexion (tokens.json, brand book « Fondations visuelles ») :
+   neutres froids, blue-medium pour le cliquable, blue-deep pour la structure, un seul porteur
+   de gold (le filet haut de la carte d'action), filets plutôt qu'ombres, rayons de 4 px,
+   pairing B (Archivo + Source Sans 3). Un seul thème clair : le système n'a pas de mode sombre.
+   Polices sous SIL OFL 1.1 : Archivo, Source Sans 3, IBM Plex Mono, licences dans ce dossier (OFL-*.txt). */
+
+@font-face { font-family: "Archivo"; src: url("/theme/Archivo.ttf") format("truetype"); font-weight: 100 900; font-stretch: 62% 125%; }
+@font-face { font-family: "Source Sans 3"; src: url("/theme/SourceSans3.ttf") format("truetype"); font-weight: 200 900; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/theme/IBMPlexMono-Regular.ttf") format("truetype"); font-weight: 400; }
+
+:root {
+  --bg: #f8f9fc; --surface: #ffffff; --surface-2: #f3f4f7; --hover: #f3f4f7; --selected: #e8f0fa;
+  --ink: #1e2a3a; --ink-2: #5f6d82; --ink-3: #8c9baf; --line: #e5e7ec; --line-2: #c8ccd6;
+  --primary: #295294; --primary-hover: #1f4179; --on-primary: #ffffff; --accent: #295294;
+  --ok: #2a8f8f; --ok-bg: #eef6f6; --warn: #19376d; --warn-bg: #ffffff; --bad: #c45a3c; --bad-bg: #fbf1ee;
+  --run: #295294; --run-bg: #e8f0fa; --warn-dot: #295294; --code-bg: #f3f4f7; --shadow: none;
+  --sans: "Source Sans 3", -apple-system, "Segoe UI", sans-serif;
+  --serif: "Source Sans 3", -apple-system, "Segoe UI", sans-serif;
+  --display: "Archivo", -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --r: 4px; --r-lg: 4px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #f8f9fc; --surface: #ffffff; --surface-2: #f3f4f7; --hover: #f3f4f7; --selected: #e8f0fa;
+    --ink: #1e2a3a; --ink-2: #5f6d82; --ink-3: #8c9baf; --line: #e5e7ec; --line-2: #c8ccd6;
+    --primary: #295294; --primary-hover: #1f4179; --on-primary: #ffffff; --accent: #295294;
+    --ok: #2a8f8f; --ok-bg: #eef6f6; --warn: #19376d; --warn-bg: #ffffff; --bad: #c45a3c; --bad-bg: #fbf1ee;
+    --run: #295294; --run-bg: #e8f0fa; --warn-dot: #295294; --code-bg: #f3f4f7; --shadow: none;
+  }
+}
+
+body { font-size: 16px; }
+:focus-visible { outline-color: #4a7bc7; }
+
+/* chrome: a white bar on a rule, no blur */
+header.bar { background: #ffffff; backdrop-filter: none; border-bottom-color: #e5e7ec; }
+.brand { font-family: var(--display); font-weight: 700; color: #19376d; letter-spacing: -0.01em; }
+.brand .mark { width: 16px; height: 16px; border-radius: 0; background: #c49a3c; border: 2px solid #1e2a3a; box-shadow: 3px 3px 0 #19376d; color: transparent; font-size: 0; margin-right: 3px; }
+
+/* titles: assertions in Archivo, blue-deep */
+.page-head h1, .dossier-head h1, .empty h2, dialog h2 { font-family: var(--display); color: #19376d; font-weight: 600; letter-spacing: -0.015em; }
+.group-title { text-transform: uppercase; letter-spacing: 0.14em; font-size: 12px; color: #5f6d82; }
+.card .ttl, .choice .ttl, .doc-bar .ttl { font-family: var(--display); font-weight: 600; color: #19376d; }
+
+/* buttons: blue-medium is the only clickable colour; transitions on colours only */
+.btn { border-radius: 4px; transition: background 120ms cubic-bezier(.2,0,.2,1), border-color 120ms cubic-bezier(.2,0,.2,1), color 120ms cubic-bezier(.2,0,.2,1); }
+.btn.primary:active { background: #19376d; border-color: #19376d; }
+.btn.ghost { color: #295294; }
+
+/* cards: a rule, no shadow; the home progress in the system's colours */
+a.card:hover { box-shadow: none; border-color: #c8ccd6; }
+.progress i.done { background: #2a8f8f; } .progress i.now { background: #295294; } .progress i.run { background: #4a7bc7; }
+
+/* the action card: the one gold carrier of the screen, on its top edge */
+.action { border-radius: 4px; }
+.action.warn { background: #ffffff; border: 1px solid #e5e7ec; border-top: 3px solid #c49a3c; }
+.action.warn h2 { color: #19376d; font-family: var(--display); }
+.action.run { background: #e8f0fa; }
+.action.ok { background: #ffffff; border: 1px solid #e5e7ec; border-top: 3px solid #2a8f8f; }
+.action.ok h2 { color: #19376d; font-family: var(--display); }
+.action.bad { background: #ffffff; border: 1px solid #e5e7ec; border-left: 3px solid #c45a3c; border-radius: 0 4px 4px 0; }
+.action.bad h2 { color: #c45a3c; }
+.action h2 { font-family: var(--display); }
+
+/* the steps rail */
+nav.rail li a[aria-current="page"] { background: #e8f0fa; color: #19376d; }
+nav.rail .st.warn { color: #295294; }
+.c-ok { color: #2a8f8f; } .c-warn { color: #295294; }
+
+/* the document: Source Sans 3 body, Archivo headings in blue-deep, tables with a blue-deep header */
+.md { font-size: 17px; line-height: 1.6; color: #1e2a3a; }
+.md h2, .md h3, .md h4, .md h5, .md h6 { font-family: var(--display); color: #19376d; letter-spacing: -0.015em; }
+.md h2 { font-weight: 600; }
+.md strong { font-weight: 600; color: #0f1923; }
+.md blockquote { border-left-color: #c8ccd6; }
+.md .tbl { border-radius: 4px; border-color: #e5e7ec; }
+.md th { background: #19376d; color: #ffffff; font-family: var(--sans); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 12.5px; }
+.md td { font-variant-numeric: tabular-nums; }
+.sheet dt { background: #f3f4f7; color: #3d4756; }
+.doc-card, .tech, details.sub, .sheet dl, .input, .choice, .card, .empty { border-radius: 4px; }
+.choice.on { border-color: #295294; box-shadow: 0 0 0 1px #295294 inset; }
+.switch input:checked { background: #295294; }
+#toast { background: #19376d; }
+.btn.ghost.danger { color: #c45a3c; }

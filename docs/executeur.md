@@ -105,6 +105,7 @@ Le moteur se choisit pour tout le parcours (`--engine`) ou par étape (`--engine
 
 ```bash
 python3 scripts/parcours.py new brief-client --input demande.md [--slug …] [--title "…"] [--engine claude]   # --input - : stdin
+python3 scripts/parcours.py archive <slug> | unarchive <slug> | archives [--json]   # sortir un parcours de la liste (.archives/), l'y remettre, les lister
 python3 scripts/parcours.py recipes [--json]               # les recettes-workflows disponibles, avec libellés et étapes
 python3 scripts/parcours.py next <slug> [--yes] [--if-state <empreinte>]   # joue jusqu'à la prochaine pause
 python3 scripts/parcours.py plan <slug> --json           # le plan de ce que ferait `next`, sans rien écrire

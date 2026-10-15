@@ -56,11 +56,16 @@ FILE_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{0,79}$")          # no leading dot: n
 TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{32,}$")
 FINGERPRINT_RE = re.compile(r"^[0-9a-f]{64}$")
 REAL_ENGINES = ("claude", "codex", "agy", "vibe")
-ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun")
+ACTIONS = ("next", "stop", "validate", "answer", "choose", "retry", "rerun", "archive")
 MAX_BODY = 4_000_000        # bytes of a POST body (a pasted answer can be long)
 MAX_FILE = 2_000_000        # bytes of a file sent to the page
 MAX_TITLE = 120             # characters of a parcours title
 DEFAULT_DIR = "~/Parcours"  # one place for the dossiers, wherever the page is launched from
+# The Inflexion theme ships with the page: themes/inflexion in the repository, scripts/themes/inflexion in the plugin.
+DEFAULT_THEMES = (HERE / "themes" / "inflexion", HERE.parent / "themes" / "inflexion")
+THEME_ASSET_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\[\],-]{0,99}\.(ttf|otf|woff2?|svg|png)$")
+THEME_TYPES = {"ttf": "font/ttf", "otf": "font/otf", "woff": "font/woff", "woff2": "font/woff2",
+               "svg": "image/svg+xml", "png": "image/png"}
 LOG_TAIL = 100_000          # bytes of .next.log sent to the page
 QUICK_WAIT = 2.5            # seconds `next` is watched after launch, to report a refusal at once
 SYNC_TIMEOUT = 120          # seconds for the commands that do not call an engine
@@ -104,11 +109,16 @@ def load_or_create_token(directory):
 # Application: what the handlers do
 # ---------------------------------------------------------------------------
 class App:
-    def __init__(self, parcours_dir, dev=False):
+    def __init__(self, parcours_dir, dev=False, theme=None):
+        self.theme = Path(theme).expanduser().resolve() if theme else None
+        if self.theme and not (self.theme / "theme.css").is_file():
+            raise OSError(f"thème sans theme.css : {self.theme}")
         self.dir = Path(parcours_dir).resolve()
         self.dir.mkdir(parents=True, exist_ok=True)
         self.dev = dev
         self.token = load_or_create_token(self.dir)
+        self.summaries = {}             # slug -> (mtime_ns, size, summary): state.json is reread only when it changes
+        self.list_lock = threading.Lock()   # two tabs polling at once share the cache
         self.launches = {}              # slug -> Popen of the `next` this server started
         self.slug_locks = {}            # slug -> threading.Lock (one launch at a time)
         self.registry = threading.Lock()
@@ -181,6 +191,10 @@ class App:
         return cache[recipe_id]
 
     def list_parcours(self):
+        with self.list_lock:
+            return self._list_parcours()
+
+    def _list_parcours(self):
         items, without_state, broken, labels = [], [], [], {}
         for entry in sorted(self.dir.iterdir()):
             if not entry.is_dir() or entry.is_symlink() or not SLUG_RE.match(entry.name):
@@ -190,6 +204,11 @@ class App:
                 without_state.append(entry.name)  # creation interrupted: listed apart, not an error
                 continue
             try:
+                stat = state_file.stat()
+                cached = self.summaries.get(entry.name)
+                if cached and cached[:2] == (stat.st_mtime_ns, stat.st_size):
+                    items.append(dict(cached[2], locked=parcours.is_locked(entry)))
+                    continue
                 state = json.loads(state_file.read_text(encoding="utf-8"))
                 steps = state["steps"]
                 pending = state.get("pending")
@@ -210,10 +229,15 @@ class App:
                     "steps_done": sum(1 for s in steps if s["status"] in ("done", "skipped")),
                     "locked": parcours.is_locked(entry),
                 })
+                self.summaries[entry.name] = (stat.st_mtime_ns, stat.st_size, items[-1])
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 broken.append({"slug": entry.name, "message": f"state.json illisible : {exc}"})
-        items.sort(key=lambda i: i.get("created") or "", reverse=True)
-        return {"parcours": items, "without_state": without_state, "broken": broken,
+        for gone in set(self.summaries) - {i["slug"] for i in items}:   # archived or deleted
+            del self.summaries[gone]
+        items.sort(key=lambda i: i.get("updated") or i.get("created") or "", reverse=True)
+        archives = self.dir / parcours.ARCHIVES
+        archived = sum(1 for e in archives.iterdir() if e.is_dir()) if archives.is_dir() else 0
+        return {"parcours": items, "without_state": without_state, "broken": broken, "archived": archived,
                 "engines": self.engines, "dev": self.dev, "parcours_dir": str(self.dir)}
 
     def status(self, slug):
@@ -243,6 +267,14 @@ class App:
         data = self.read_file(slug, name)
         document, meta = parcours.output_document(data["text"])
         return {"name": name, "document": document, "meta": meta, "truncated": data["truncated"]}
+
+    def archives(self):
+        return self.run_json("archives")
+
+    def restore(self, slug):
+        if not SLUG_RE.match(slug):
+            raise ApiError(400, "bad_slug", "identifiant de parcours invalide")
+        return self.run_json("unarchive", positionals=[slug])
 
     def recipes(self):
         return self.run_json("recipes")
@@ -292,6 +324,10 @@ class App:
             return self.done(*self.run("retry", positionals=[slug]))
         if action == "rerun":
             return self.action_rerun(slug, body)
+        if action == "archive":
+            if parcours.is_locked(self.dir / slug):
+                raise ApiError(409, "running", "une étape est en cours sur ce parcours")
+            return self.done(*self.run("archive", positionals=[slug]))
         raise ApiError(404, "not_found", f"action inconnue : {action}")
 
     @staticmethod
@@ -509,6 +545,10 @@ class Handler(BaseHTTPRequestHandler):
             if method != "GET":
                 raise ApiError(405, "method_not_allowed", "méthode refusée")
             return self.send_page()
+        if path.startswith("/theme/"):  # fonts and images of the theme: no token (a stylesheet cannot send one)
+            if method != "GET":
+                raise ApiError(405, "method_not_allowed", "méthode refusée")
+            return self.send_theme_asset(unquote(path[len("/theme/"):]))
         if path != "/api" and not path.startswith("/api/"):
             raise ApiError(404, "not_found", "introuvable")
         self.check_token()
@@ -553,6 +593,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(200, self.app.create(self.read_json_body()))
             self.only(method, "GET")
             return self.send_json(200, self.app.list_parcours())
+        if parts == ["archives"]:
+            self.only(method, "GET")
+            return self.send_json(200, self.app.archives())
+        if len(parts) == 3 and parts[0] == "archives" and parts[2] == "restore":
+            self.only(method, "POST")
+            self.read_json_body()
+            return self.send_json(200, self.app.restore(parts[1]))
         if parts == ["recipes"]:
             self.only(method, "GET")
             return self.send_json(200, self.app.recipes())
@@ -600,11 +647,34 @@ class Handler(BaseHTTPRequestHandler):
         if self.command != "HEAD":
             self.wfile.write(payload)
 
+    def send_theme_asset(self, name):
+        folder = self.app.theme
+        if not folder or not THEME_ASSET_RE.match(name):
+            raise ApiError(404, "not_found", "introuvable")
+        path = folder / name
+        if path.is_symlink() or not path.is_file() or path.resolve().parent != folder:
+            raise ApiError(404, "not_found", "introuvable")
+        data = path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", THEME_TYPES[name.rsplit(".", 1)[1]])
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "max-age=3600")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'none'")
+        self.end_headers()
+        self.wfile.write(data)
+
     def send_page(self):
         nonce = secrets.token_hex(16)
-        html = PAGE.read_text(encoding="utf-8").replace("{{NONCE}}", nonce).encode("utf-8")
+        theme = ""
+        if self.app.theme:  # a theme only overrides the page's tokens and styles; its fonts and images come from /theme/
+            css = (self.app.theme / "theme.css").read_text(encoding="utf-8").replace("</", "<\\/")
+            theme = f'<style nonce="{nonce}">\n{css}\n</style>'
+        html = (PAGE.read_text(encoding="utf-8").replace("{{THEME}}", theme)
+                .replace("{{NONCE}}", nonce).encode("utf-8"))
+        assets = "; font-src 'self'; img-src 'self'" if self.app.theme else ""
         csp = (f"default-src 'none'; script-src 'nonce-{nonce}'; style-src 'nonce-{nonce}'; "
-               "connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+               f"connect-src 'self'{assets}; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
         self.send_response(200)
         self.send_common_headers("text/html; charset=utf-8", len(html), csp)
         self.wfile.write(html)
@@ -619,13 +689,22 @@ class Server(ThreadingHTTPServer):
         self.app = app
 
 
-def make_server(parcours_dir, port=0, dev=False):
-    return Server(App(parcours_dir, dev=dev), port)
+def make_server(parcours_dir, port=0, dev=False, theme=None):
+    return Server(App(parcours_dir, dev=dev, theme=theme), port)
 
 
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+def theme_folder(choice):
+    """None for the neutral look, the bundled Inflexion theme by name, or a folder."""
+    if not choice or choice == "none":
+        return None
+    if choice == "inflexion":
+        return next((t for t in DEFAULT_THEMES if (t / "theme.css").is_file()), None)
+    return Path(choice).expanduser()
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Page de suivi des parcours (voir docs/interface.md)")
     parser.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or DEFAULT_DIR,
@@ -633,9 +712,12 @@ def main(argv=None):
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port local (défaut {DEFAULT_PORT}, 0 = au hasard)")
     parser.add_argument("--dev", action="store_true", help="propose aussi le moteur fake (PARCOURS_FAKE_DIR)")
     parser.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
+    parser.add_argument("--theme", default=os.environ.get("PARCOURS_THEME") or "inflexion",
+                        help="dossier d'un thème (theme.css + polices et images servies sous /theme/), "
+                             "« inflexion » (défaut) ou « none » pour l'apparence neutre ; défaut : $PARCOURS_THEME")
     args = parser.parse_args(argv)
     try:
-        server = make_server(Path(args.parcours_dir).expanduser(), args.port, args.dev)
+        server = make_server(Path(args.parcours_dir).expanduser(), args.port, args.dev, theme_folder(args.theme))
     except OSError as exc:
         print(f"Erreur : impossible de démarrer le serveur sur le port {args.port} ({exc})", file=sys.stderr)
         return 1

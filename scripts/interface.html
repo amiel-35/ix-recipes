@@ -86,6 +86,18 @@ a.card:hover { border-color: var(--line-2); box-shadow: var(--shadow); }
 .progress i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
 .progress i.done { background: var(--ok); } .progress i.now { background: var(--warn-dot); } .progress i.run { background: var(--run); } .progress i.bad { background: var(--bad); } .progress i.skip { background: var(--line); opacity: .5; }
 .card .foot { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12.5px; color: var(--ink-3); }
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin: 0 0 6px; }
+.search { max-width: 320px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 13px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface); color: var(--ink-2); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.chip:hover { border-color: var(--ink-3); color: var(--ink); }
+.chip.on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.chip .n { font-variant-numeric: tabular-nums; opacity: .75; }
+.more { margin-top: 10px; }
+.archives-link { margin-top: 30px; font-size: 13.5px; }
+.archive-row { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.archive-row:last-child { border-bottom: 0; }
+.archive-row .ttl { font-weight: 600; } .archive-row .sub { color: var(--ink-3); font-size: 13px; }
 .empty { text-align: center; padding: 56px 20px; background: var(--surface); border: 1px dashed var(--line-2); border-radius: var(--r-lg); }
 .empty h2 { margin: 0 0 6px; font-size: 19px; }
 .empty p { color: var(--ink-2); margin: 0 0 18px; }
@@ -267,6 +279,7 @@ dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1
   .md table, .md pre { break-inside: avoid; }
 }
 </style>
+{{THEME}}
 </head>
 <body>
 <header class="bar">
@@ -468,7 +481,7 @@ var S = {
   lastOk: 0, fails: 0, polling: false, authError: false, notFound: false,
   busy: '', error: '', notices: {}, open: new Set(), docs: new Map(), files: new Map(),
   ctx: {}, ctxEdit: {}, answers: {}, chooseSel: {}, engine: {}, log: null, plan: null,
-  draft: { recipe: '', title: '', text: '', engine: '', fileNote: '' },
+  draft: { recipe: '', title: '', text: '', engine: '', fileNote: '' }, search: '', archives: null, recipeFilter: '',
   tech: false, down: false, deferred: false, wasOffline: false
 };
 
@@ -606,6 +619,7 @@ function parseRoute() {
   var m;
   if ((m = /^#\/p\/([a-z0-9][a-z0-9-]*)(?:\/([a-z0-9][a-z0-9-]*|demande))?$/.exec(location.hash))) return { view: 'parcours', slug: m[1], step: m[2] || null };
   if (location.hash === '#/nouveau') return { view: 'new' };
+  if (location.hash === '#/archives') return { view: 'archives' };
   return { view: 'home' };
 }
 function go(hash) { if (location.hash === hash) { S.route = parseRoute(); render(); } else location.hash = hash; }
@@ -618,7 +632,7 @@ async function poll() {
   S.polling = true;
   var route = S.route, sig = null;
   try {
-    if (route.view === 'home' || route.view === 'new') {
+    if (route.view === 'home' || route.view === 'new' || route.view === 'archives') {
       var list = await api('GET', '/api/parcours', undefined, 8000);
       if (route !== S.route) return;
       S.list = list;
@@ -689,6 +703,7 @@ function render() {
     if (!S.token) view = viewNoToken();
     else if (S.route.view === 'new') view = viewNew();
     else if (S.route.view === 'parcours') view = viewParcours();
+    else if (S.route.view === 'archives') view = viewArchives();
     else view = viewHome();
   } catch (e) {
     if (window.console) console.error(e);
@@ -708,6 +723,7 @@ function renderChrome() {
   var crumb = $('#crumb'), parts = [];
   if (S.route.view === 'parcours' && S.p && S.p.slug === S.route.slug) parts = [h('span', null, '/'), h('span', { class: 't' }, titleOf(S.p))];
   else if (S.route.view === 'new') parts = [h('span', null, '/'), h('span', { class: 't' }, 'Nouveau dossier')];
+  else if (S.route.view === 'archives') parts = [h('span', null, '/'), h('span', { class: 't' }, 'Dossiers archivés')];
   crumb.replaceChildren.apply(crumb, parts);
   $('#tech-toggle').checked = S.tech;
   var banners = $('#banners'), msgs = [];
@@ -724,7 +740,7 @@ function pageTitle() {
     var k = kindOf(S.p), mark = { validate: 'À valider', answers: 'Réponses attendues', choose: 'Choix à faire', stuck: 'À reprendre', running: 'En cours' }[k];
     return (mark ? '(' + mark + ') ' : '') + titleOf(S.p) + ' — Parcours';
   }
-  return S.route.view === 'new' ? 'Nouveau dossier — Parcours' : 'Vos dossiers — Parcours';
+  return S.route.view === 'new' ? 'Nouveau dossier — Parcours' : S.route.view === 'archives' ? 'Dossiers archivés — Parcours' : 'Vos dossiers — Parcours';
 }
 
 var toastTimer = null;
@@ -849,19 +865,82 @@ function viewHome() {
       h('p', null, 'Choisissez une recette, collez la demande ou le cahier des charges : la première étape démarre aussitôt.'),
       h('button', { class: 'btn primary', type: 'button', onclick: function () { go('#/nouveau'); } }, icon('plus'), 'Nouveau dossier')), techFooter(d));
   }
-  var groups = [['À traiter', []], ['En cours', []], ['Terminés', []], ['Arrêtés', []]];
-  d.parcours.forEach(function (x) {
+  var q = S.search.trim().toLowerCase(), shown = d.parcours;
+  var byRecipe = {};
+  d.parcours.forEach(function (x) { byRecipe[x.recipe] = byRecipe[x.recipe] || { label: x.recipe_label || x.recipe, n: 0 }; byRecipe[x.recipe].n++; });
+  if (S.recipeFilter && !byRecipe[S.recipeFilter]) S.recipeFilter = '';
+  if (S.recipeFilter) shown = shown.filter(function (x) { return x.recipe === S.recipeFilter; });
+  var chips = Object.keys(byRecipe).length > 1 ? h('div', { class: 'chips', role: 'group', 'aria-label': 'Filtrer par recette' },
+    [['', 'Toutes', d.parcours.length]].concat(Object.keys(byRecipe).sort(function (a, b) { return byRecipe[b].n - byRecipe[a].n; })
+      .map(function (k) { return [k, byRecipe[k].label, byRecipe[k].n]; })).map(function (c) {
+      return h('button', { class: 'chip' + (S.recipeFilter === c[0] ? ' on' : ''), type: 'button', 'aria-pressed': S.recipeFilter === c[0] ? 'true' : 'false',
+        onclick: function () { S.recipeFilter = c[0]; save('localStorage', 'parcours-ui:recipe', c[0] || null); render(); } }, c[1], h('span', { class: 'n' }, String(c[2])));
+    })) : null;
+  if (q) shown = shown.filter(function (x) { return (titleOf(x) + ' ' + (x.recipe_label || x.recipe)).toLowerCase().indexOf(q) >= 0; });
+  // what waits for you or runs is always shown; finished dossiers fold beyond the most recent ones
+  var groups = [['À traiter', [], false], ['En cours', [], false], ['Terminés', [], true], ['Arrêtés', [], true]];
+  shown.forEach(function (x) {
     var st = listState(x);
     groups[x.locked ? 1 : x.status === 'completed' ? 2 : x.status === 'stopped' ? 3 : st.you ? 0 : 1][1].push(x);
   });
-  return h('div', null, head,
+  var search = null;
+  if (d.parcours.length > 12) {
+    search = h('input', { class: 'input search', type: 'search', placeholder: 'Rechercher un dossier', value: S.search, 'aria-label': 'Rechercher un dossier' });
+    search.addEventListener('input', function () { S.search = search.value; clearTimeout(searchTimer); searchTimer = setTimeout(function () { S.sig = ''; renderKeepingSearch(); }, 150); });
+  }
+  return h('div', null, head, h('div', { class: 'filters' }, search, chips),
+    q && !shown.length ? h('p', { style: 'color:var(--ink-2)' }, 'Aucun dossier ne correspond à « ' + S.search.trim() + ' ».') : null,
     groups.filter(function (g) { return g[1].length; }).map(function (g) {
-      return h('section', null, h('h2', { class: 'group-title' }, g[0] + ' · ' + g[1].length), h('div', { class: 'cards' }, g[1].map(dossierCard)));
+      var key = 'more:' + g[0], all = q || !g[2] || S.open.has(key) || g[1].length <= FOLD_AT;
+      var cards = all ? g[1] : g[1].slice(0, FOLD_AT);
+      return h('section', null, h('h2', { class: 'group-title' }, g[0] + ' · ' + g[1].length), h('div', { class: 'cards' }, cards.map(dossierCard)),
+        all ? null : h('div', { class: 'more' }, h('button', { class: 'btn ghost', type: 'button', onclick: function () { S.open.add(key); render(); } },
+          'Voir les ' + (g[1].length - FOLD_AT) + ' autres')));
     }),
+    d.archived ? h('p', { class: 'archives-link' }, h('a', { href: '#/archives' }, plural(d.archived, 'dossier archivé', 'dossiers archivés'))) : null,
     d.broken.length ? h('section', null, h('h2', { class: 'group-title' }, 'Dossiers illisibles'),
       h('div', { class: 'banner warn' }, d.broken.map(function (b) { return b.slug; }).join(', ') + ' : leur fichier d’état est illisible.')) : null,
     techFooter(d));
 }
+var FOLD_AT = 6, searchTimer = null;
+// The search field keeps the focus while the list under it is rebuilt.
+function renderKeepingSearch() {
+  var el = document.querySelector('.search'), at = el ? el.selectionStart : null;
+  S.down = false; S.deferred = false;
+  var active = document.activeElement; if (active === el) active.blur();
+  render();
+  var again = document.querySelector('.search');
+  if (again && at !== null) { again.focus(); again.setSelectionRange(at, at); }
+}
+
+// ---- archives
+function viewArchives() {
+  var a = S.archives;
+  var head = h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Dossiers archivés'),
+    h('p', null, 'Sortis de la liste, rien n’est effacé. Restaurer un dossier le remet dans « Vos dossiers ».')),
+    h('a', { class: 'btn', href: '#/' }, 'Vos dossiers'));
+  if (!a) return h('div', null, head, h('p', null, 'Chargement…'));
+  if (!a.length) return h('div', null, head, h('div', { class: 'empty' }, h('h2', null, 'Aucun dossier archivé'), h('p', null, 'Un dossier terminé s’archive depuis sa page.')));
+  return h('div', null, head, h('div', { class: 'doc-card' }, a.map(function (x) {
+    return h('div', { class: 'archive-row' }, h('div', { class: 'grow' }, h('div', { class: 'ttl' }, x.title || pretty(x.slug)),
+      h('div', { class: 'sub' }, (x.status === 'completed' ? 'Terminé' : x.status === 'stopped' ? 'Arrêté' : 'Inachevé') + ' · archivé ' + ago(x.archived))),
+      h('button', { class: 'btn', type: 'button', disabled: !!S.busy, onclick: function () { restore(x); } }, 'Restaurer'));
+  })));
+}
+async function loadArchives() {
+  try { S.archives = (await api('GET', '/api/archives', undefined, 15000)).archives; } catch (e) { S.error = friendlyError(e); }
+  render();
+}
+async function restore(x) {
+  S.busy = 'Restauration…'; render();
+  try { var r = await api('POST', '/api/archives/' + encodeURIComponent(x.slug) + '/restore', {}, 30000); S.busy = ''; toast('Dossier restauré'); go('#/p/' + r.restored); }
+  catch (e) { S.error = friendlyError(e); S.busy = ''; loadArchives(); }
+}
+async function archiveDossier(p) {
+  if (!(await ask('Archiver « ' + titleOf(p) + ' » ?', ['Le dossier sort de la liste ; rien n’est effacé. Vous le retrouverez dans « Dossiers archivés ».'], 'Archiver'))) return;
+  if (await post('archive', {}, 'Archivage…')) { toast('Dossier archivé'); go('#/'); }
+}
+
 function techFooter(d) {
   if (!S.tech) return null;
   return h('p', { class: 'muted', style: 'margin-top:32px;font-size:12.5px;color:var(--ink-3)' }, 'Dossier des parcours : ' + d.parcours_dir +
@@ -996,14 +1075,16 @@ function actionCard(p, focus, selected) {
   if (k === 'recipe_error') return h('div', { class: 'action bad' }, h('h2', null, 'Ce dossier ne correspond plus à sa recette'),
     h('p', { class: 'lead' }, 'La recette a changé depuis la création du dossier : il ne peut plus avancer. Ses étapes jouées restent consultables ; pour aller au bout, créez un nouveau dossier avec la même demande.'),
     h('div', { class: 'btns' }, h('a', { class: 'btn', href: '#/nouveau' }, 'Nouveau dossier')), S.tech ? h('pre', { class: 'raw' }, p.recipe_error) : null);
-  if (k === 'stopped') return h('div', { class: 'action' }, h('h2', null, 'Dossier arrêté'), h('p', { class: 'lead' }, 'Vous avez décidé de ne pas aller plus loin. Les étapes jouées restent consultables.'));
+  if (k === 'stopped') return h('div', { class: 'action' }, h('h2', null, 'Dossier arrêté'), h('p', { class: 'lead' }, 'Vous avez décidé de ne pas aller plus loin. Les étapes jouées restent consultables.'),
+    h('div', { class: 'btns' }, busyBtn('Archiver', 'ghost', function () { archiveDossier(p); }, 'Archivage…')));
   if (k === 'completed') {
     var fin = focus;
     return h('div', { class: 'action ok' }, h('h2', null, 'Votre livrable est prêt'),
       h('p', { class: 'lead' }, fin ? '« ' + stepName(fin) + ' » est la dernière étape : relisez-le, puis téléchargez-le ou imprimez-le en PDF.' : 'Toutes les étapes sont jouées.'),
       fin ? h('div', { class: 'btns' }, selected !== fin ? h('a', { class: 'btn primary', href: '#/p/' + p.slug + '/' + fin.id }, 'Ouvrir le livrable') : null,
         h('button', { class: 'btn' + (selected === fin ? ' primary' : ''), type: 'button', onclick: function () { downloadDoc(p, fin); } }, icon('download'), 'Télécharger'),
-        h('button', { class: 'btn', type: 'button', onclick: function () { printDoc(p, fin); } }, icon('print'), 'Imprimer ou PDF')) : null);
+        h('button', { class: 'btn', type: 'button', onclick: function () { printDoc(p, fin); } }, icon('print'), 'Imprimer ou PDF'),
+        busyBtn('Archiver', 'ghost', function () { archiveDossier(p); }, 'Archivage…')) : null);
   }
   if (k === 'running') {
     var running = focus;
@@ -1451,6 +1532,7 @@ window.addEventListener('hashchange', function () {
   var before = S.route; S.route = parseRoute();
   if (S.route.view !== 'parcours' || before.slug !== S.route.slug) { S.p = null; S.log = null; S.files = new Map(); S.docs = new Map(); }
   if (S.route.view === 'new' && S.recipesError) { S.recipesError = ''; S.recipes = null; }   // try again
+  if (S.route.view === 'archives') { S.archives = null; loadArchives(); }
   S.sig = ''; render(); refreshNow(); window.scrollTo(0, 0);
 });
 $('#tech-toggle').addEventListener('change', function (e) { S.tech = e.target.checked; save('localStorage', TECH_KEY, S.tech ? '1' : null); S.sig = ''; render(); poll(); });
@@ -1458,6 +1540,7 @@ setInterval(function () { document.querySelectorAll('[data-since]').forEach(func
 
 initToken();
 loadDraft();
+S.recipeFilter = saved('localStorage', 'parcours-ui:recipe') || '';
 S.tech = saved('localStorage', TECH_KEY) === '1';
 S.route = parseRoute();
 render();

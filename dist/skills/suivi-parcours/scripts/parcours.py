@@ -2127,6 +2127,68 @@ def consumers(state, recipe, idx):
     return found
 
 
+ARCHIVES = ".archives"   # hidden: never listed as a parcours, never a valid slug
+
+
+def cmd_archive(args):
+    """Move a parcours out of the list (<dir>/.archives/<slug>), not while a step runs."""
+    directory = parcours_path(args)
+    target_dir = Path(args.parcours_dir) / ARCHIVES
+    target_dir.mkdir(exist_ok=True)
+    with parcours_lock(directory):
+        target, slug = create_unique_dir(target_dir, directory.name)
+        target.rmdir()
+        directory.rename(target)
+    if args.json:
+        emit_json({"archived": slug})
+    else:
+        say(f"Parcours archivé : {slug} ({target})")
+    return 0
+
+
+def cmd_unarchive(args):
+    """Bring an archived parcours back into the list, under a free slug."""
+    slug = args.slug
+    if not slug or "/" in slug or slug.startswith("."):
+        raise ParcoursError(f"identifiant de parcours invalide : '{slug}'")
+    source = Path(args.parcours_dir) / ARCHIVES / slug
+    if not (source / "state.json").is_file():
+        raise NotFound(f"archive introuvable : {source}")
+    target, restored = create_unique_dir(Path(args.parcours_dir), slug)
+    target.rmdir()
+    source.rename(target)
+    if restored != slug:   # the parcours keeps the slug of its folder
+        state = load_state(target)
+        state["slug"] = restored
+        save_state(target, state)
+    if args.json:
+        emit_json({"restored": restored})
+    else:
+        say(f"Parcours restauré : {restored}")
+    return 0
+
+
+def cmd_archives(args):
+    """The archived parcours, most recent first (title, recipe, status, dates)."""
+    base = Path(args.parcours_dir) / ARCHIVES
+    items = []
+    for entry in sorted(base.iterdir()) if base.is_dir() else []:
+        try:
+            state = json.loads((entry / "state.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        items.append({"slug": entry.name, "title": state.get("title"), "recipe": state.get("recipe"),
+                      "status": state.get("status"), "created": state.get("created"),
+                      "archived": datetime.fromtimestamp(entry.stat().st_mtime).isoformat(timespec="seconds")})
+    items.sort(key=lambda i: i["archived"], reverse=True)
+    if args.json:
+        emit_json({"archives": items})
+    else:
+        for i in items:
+            say(f"{i['slug']} — {i['title'] or i['recipe']} ({i['status']})")
+    return 0
+
+
 def cmd_retry(args):
     directory = parcours_path(args)
     with parcours_lock(directory):
@@ -2240,6 +2302,9 @@ def build_parser():
     p = add("rerun", cmd_rerun, "relancer une étape", "slug", "step")
     p.add_argument("--extra", action="append", metavar="STEP.FIELD", help="champ supplémentaire (répétable)")
     add("retry", cmd_retry, "reprendre une étape restée running ou failed", "slug")
+    add("archive", cmd_archive, "sortir un parcours de la liste (dossier .archives/)", "slug")
+    add("unarchive", cmd_unarchive, "remettre un parcours archivé dans la liste", "slug")
+    add("archives", cmd_archives, "les parcours archivés")
     p = add("handoff", cmd_handoff, "fournir ou corriger les champs à la main (étape en échec, terminée ou en pause)", "slug", "step")
     p.add_argument("--file", required=True)
     return parser

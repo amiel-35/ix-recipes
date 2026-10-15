@@ -61,6 +61,9 @@ MAX_BODY = 4_000_000        # bytes of a POST body (a pasted answer can be long)
 MAX_FILE = 2_000_000        # bytes of a file sent to the page
 MAX_TITLE = 120             # characters of a parcours title
 DEFAULT_DIR = "~/Parcours"  # one place for the dossiers, wherever the page is launched from
+THEME_ASSET_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\[\],-]{0,99}\.(ttf|otf|woff2?|svg|png)$")
+THEME_TYPES = {"ttf": "font/ttf", "otf": "font/otf", "woff": "font/woff", "woff2": "font/woff2",
+               "svg": "image/svg+xml", "png": "image/png"}
 LOG_TAIL = 100_000          # bytes of .next.log sent to the page
 QUICK_WAIT = 2.5            # seconds `next` is watched after launch, to report a refusal at once
 SYNC_TIMEOUT = 120          # seconds for the commands that do not call an engine
@@ -104,7 +107,10 @@ def load_or_create_token(directory):
 # Application: what the handlers do
 # ---------------------------------------------------------------------------
 class App:
-    def __init__(self, parcours_dir, dev=False):
+    def __init__(self, parcours_dir, dev=False, theme=None):
+        self.theme = Path(theme).expanduser().resolve() if theme else None
+        if self.theme and not (self.theme / "theme.css").is_file():
+            raise OSError(f"thème sans theme.css : {self.theme}")
         self.dir = Path(parcours_dir).resolve()
         self.dir.mkdir(parents=True, exist_ok=True)
         self.dev = dev
@@ -509,6 +515,10 @@ class Handler(BaseHTTPRequestHandler):
             if method != "GET":
                 raise ApiError(405, "method_not_allowed", "méthode refusée")
             return self.send_page()
+        if path.startswith("/theme/"):  # fonts and images of the theme: no token (a stylesheet cannot send one)
+            if method != "GET":
+                raise ApiError(405, "method_not_allowed", "méthode refusée")
+            return self.send_theme_asset(unquote(path[len("/theme/"):]))
         if path != "/api" and not path.startswith("/api/"):
             raise ApiError(404, "not_found", "introuvable")
         self.check_token()
@@ -600,11 +610,34 @@ class Handler(BaseHTTPRequestHandler):
         if self.command != "HEAD":
             self.wfile.write(payload)
 
+    def send_theme_asset(self, name):
+        folder = self.app.theme
+        if not folder or not THEME_ASSET_RE.match(name):
+            raise ApiError(404, "not_found", "introuvable")
+        path = folder / name
+        if path.is_symlink() or not path.is_file() or path.resolve().parent != folder:
+            raise ApiError(404, "not_found", "introuvable")
+        data = path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", THEME_TYPES[name.rsplit(".", 1)[1]])
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "max-age=3600")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", "default-src 'none'")
+        self.end_headers()
+        self.wfile.write(data)
+
     def send_page(self):
         nonce = secrets.token_hex(16)
-        html = PAGE.read_text(encoding="utf-8").replace("{{NONCE}}", nonce).encode("utf-8")
+        theme = ""
+        if self.app.theme:  # a theme only overrides the page's tokens and styles; its fonts and images come from /theme/
+            css = (self.app.theme / "theme.css").read_text(encoding="utf-8").replace("</", "<\\/")
+            theme = f'<style nonce="{nonce}">\n{css}\n</style>'
+        html = (PAGE.read_text(encoding="utf-8").replace("{{THEME}}", theme)
+                .replace("{{NONCE}}", nonce).encode("utf-8"))
+        assets = "; font-src 'self'; img-src 'self'" if self.app.theme else ""
         csp = (f"default-src 'none'; script-src 'nonce-{nonce}'; style-src 'nonce-{nonce}'; "
-               "connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+               f"connect-src 'self'{assets}; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
         self.send_response(200)
         self.send_common_headers("text/html; charset=utf-8", len(html), csp)
         self.wfile.write(html)
@@ -619,8 +652,8 @@ class Server(ThreadingHTTPServer):
         self.app = app
 
 
-def make_server(parcours_dir, port=0, dev=False):
-    return Server(App(parcours_dir, dev=dev), port)
+def make_server(parcours_dir, port=0, dev=False, theme=None):
+    return Server(App(parcours_dir, dev=dev, theme=theme), port)
 
 
 # ---------------------------------------------------------------------------
@@ -633,9 +666,11 @@ def main(argv=None):
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port local (défaut {DEFAULT_PORT}, 0 = au hasard)")
     parser.add_argument("--dev", action="store_true", help="propose aussi le moteur fake (PARCOURS_FAKE_DIR)")
     parser.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
+    parser.add_argument("--theme", default=os.environ.get("PARCOURS_THEME") or None,
+                        help="dossier d'un thème : theme.css (+ polices, images servies sous /theme/) ; défaut : $PARCOURS_THEME")
     args = parser.parse_args(argv)
     try:
-        server = make_server(Path(args.parcours_dir).expanduser(), args.port, args.dev)
+        server = make_server(Path(args.parcours_dir).expanduser(), args.port, args.dev, args.theme)
     except OSError as exc:
         print(f"Erreur : impossible de démarrer le serveur sur le port {args.port} ({exc})", file=sys.stderr)
         return 1

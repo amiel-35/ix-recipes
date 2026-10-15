@@ -400,6 +400,45 @@ class CreateAndReadTests(InterfaceTestCase):
         self.assertEqual(self.request("GET", "/api/parcours/demo/document/absent.md")[0], 404)
 
 
+class ThemeTests(InterfaceTestCase):
+    def themed(self):
+        theme = self.tmp / "theme"
+        theme.mkdir()
+        (theme / "theme.css").write_text(":root { --primary: #295294; } /* </style><script>x</script> */", encoding="utf-8")
+        (theme / "Font.ttf").write_bytes(b"\x00\x01fake font")
+        (self.tmp / "secret.ttf").write_bytes(b"outside")
+        server = interface.make_server(self.pdir, 0, dev=True, theme=theme)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        return server.server_address[1]
+
+    def test_a_theme_adds_its_styles_and_serves_its_fonts(self):
+        port = self.themed()
+        self.port = port
+        status, headers, html = self.get("/", token=False)
+        self.assertEqual(status, 200)
+        self.assertIn("--primary: #295294", html)
+        theme_block = html[html.index("--primary: #295294"):]
+        self.assertNotIn("</", theme_block[:theme_block.index("</style>")])   # the theme cannot close its style element
+        self.assertEqual(html.count("</style>"), 2)
+        self.assertIn("font-src 'self'", headers["content-security-policy"])
+        status, headers, body = self.get("/theme/Font.ttf", token=False)
+        self.assertEqual((status, headers["content-type"]), (200, "font/ttf"))
+        for bad in ("/theme/..%2Fsecret.ttf", "/theme/theme.css", "/theme/absent.ttf", "/theme/.hidden.ttf"):
+            self.assertEqual(self.get(bad, token=False)[0], 404, bad)
+
+    def test_without_a_theme_nothing_changes(self):
+        status, headers, html = self.get("/", token=False)
+        self.assertNotIn("{{THEME}}", html)
+        self.assertNotIn("font-src", headers["content-security-policy"])
+        self.assertEqual(self.get("/theme/Font.ttf", token=False)[0], 404)
+
+    def test_a_theme_folder_needs_its_stylesheet(self):
+        with self.assertRaises(OSError):
+            interface.make_server(self.pdir, 0, theme=self.tmp)
+
+
 class UnknownRecipeTests(InterfaceTestCase):
     """The page knows no recipe: everything it shows comes from the recipe file."""
 

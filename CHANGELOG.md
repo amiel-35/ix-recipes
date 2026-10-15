@@ -2,6 +2,12 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## Unreleased (branch `theme`) — themes for the tracking page
+
+- `scripts/interface.py --theme <folder>` (or `PARCOURS_THEME`): a `theme.css` added after
+  the page's styles, its fonts and images served under `/theme/`. The page stays neutral
+  by default; a company's brand lives in its own folder, outside this public repository.
+
 ## 2026-10-15 — plugin 2.4.0: the tracking page becomes a product
 
 - `scripts/interface.html` rewritten: "Your dossiers" grouped by what they wait for,

@@ -962,7 +962,11 @@ def workflow_errors(fm, body, skill_exists=None):
                 if field not in transmitted.get(prev, ()):
                     errs.append(f"étape '{sid}' : '{src}' n'est transmis par aucune étape antérieure")
             else:
-                errs.append(f"étape '{sid}' : source inconnue '{src}'")
+                errs.append(
+                    f"étape '{sid}' : « {src} » n'est pas une entrée possible. Une étape reçoit brief (la demande "
+                    "brute : tout ce que l'utilisateur colle, étape 1 seulement), context_sheet, answers, ou "
+                    "<étape>.<champ> transmis plus haut"
+                    + (f" — ici, remplacez sans doute « {src} » par brief" if i == 0 else ""))
         transmitted[sid] = set(transmits)
         if st.get("pause") == "answers":
             answers_ready = True

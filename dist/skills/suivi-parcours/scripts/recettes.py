@@ -562,6 +562,10 @@ def design_message(skill, need, insist=False, previous=None):
         "given as a model of the FORMAT only — not of the steps, which depend on the job. Keep every "
         "frontmatter key it has; a `workflow` step may also use `optional: true` (run only if the human "
         "chooses it at the pause before), `verbatim` (step 1 only) and `pause: answers` / `choose`.\n"
+        "`receives` takes ONLY these sources: `brief` (the raw input, all of it, whatever it holds — "
+        "reports, tables, emails: step 1 receives `[brief]`, never names of documents), `context_sheet` "
+        "(from step 2 on), `answers` (after a step with `pause: answers`), or `<step>.<field>` transmitted "
+        "by an earlier step. Any other name is refused.\n"
         f"````markdown\n{TEMPLATE}````\n=== END FORMAT REFERENCE ===",
         f"=== JOB ===\n{need}\n=== END JOB ===",
     ]

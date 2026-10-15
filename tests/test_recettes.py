@@ -268,6 +268,10 @@ class RecipeCheckTests(tp.ParcoursTestCase):
         text = recettes.TEMPLATE.replace("cadrage.open_points]", "cadrage.open_points, livrable.deliverable]")
         errors = self.check(text)["errors"]
         self.assertTrue(any("'livrable.deliverable' n'est transmis par aucune étape antérieure" in e for e in errors), errors)
+        text = recettes.TEMPLATE.replace("receives: [brief]", "receives: [meeting_reports]")
+        errors = self.check(text)["errors"]
+        self.assertTrue(any("« meeting_reports » n'est pas une entrée possible" in e and "remplacez sans doute « meeting_reports » par brief" in e
+                            for e in errors), errors)
         text = recettes.TEMPLATE.replace("    - id: livrable", "    - id: Livrable_Final")
         errors = self.check(text)["errors"]
         self.assertTrue(any("minuscules sans accents, chiffres, tirets et soulignés" in e for e in errors), errors)
@@ -535,6 +539,7 @@ class DesignTests(RecettesTestCase):
         self.assertNotIn("`ix-recipes:concepteur-recette`", message)   # a tool, not a step
         self.assertIn("besoin de recrutement flou", message)
         self.assertIn("## VERDICT", message)
+        self.assertIn("step 1 receives `[brief]`, never names of documents", message)
         self.assertEqual(message, (self.draft_path(slug) / "conception.in.md").read_text(encoding="utf-8"))
         self.assertEqual((self.draft_path(slug) / "recipe.md").read_text(encoding="utf-8"), recettes.TEMPLATE)
         shown = self.rok("show", slug)

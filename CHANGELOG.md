@@ -2,6 +2,28 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## Unreleased (branch `ihm-produit`) — the tracking page becomes a product
+
+- `scripts/interface.html` rewritten: "Your dossiers" grouped by what they wait for,
+  a "New dossier" screen (pick a recipe, paste or import the request, create and
+  start), and a dossier screen with the steps on the left, one action card ("Validate
+  and continue", "Send the answers and continue", "Redo the step", "Resume", "Stop"),
+  and each step's output read as a formatted document (no HANDOFF / SUMMARY blocks,
+  copy, download, print to PDF). The context sheet is a readable table, editable field
+  by field when it is validated. Engines, per-step cost, transmitted fields, raw
+  outputs, exact messages and the log sit behind a "Technical details" switch. Dark
+  mode and phone layout.
+- `scripts/interface.py`: `GET /api/recipes`, `POST /api/parcours` (create from the
+  page, request on stdin), `GET …/document/<file>`; titles and step labels in the list.
+- `scripts/parcours.py`: `recipes --json`, `new --title` / `new --json`, step `label`
+  and `mission`, `title`, `recipe_label` and `max_budget_usd` in `status --json`,
+  `output_document()`.
+- Recipe format: optional French `label` per step (validated by `build.py`, both
+  copies); `brief-client` 1.4.0 and `reponse-appel-offres` 1.6.0 carry them.
+- Markdown renderer: line breaks kept, `http(s)` links (new tab, no referrer),
+  strikethrough, task lists, ordered list start, HTML comments dropped; headings start
+  at h2.
+
 ## 2026-10-15 — plugin 2.3.0: the runner, the tracking page, the recipe designer
 
 ### Added

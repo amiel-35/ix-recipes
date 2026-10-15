@@ -1064,6 +1064,30 @@ class SkillResolutionTests(ParcoursTestCase):
         tail = {"handoff": {"offer": " ".join(f"autre{i}" for i in range(80))}, "context_sheet": None}
         self.assertIsNotNone(parcours.leak_in_parsed(raw, tail, (), admitted))
 
+    def test_recipes_title_and_labels_for_a_page(self):
+        listed = json.loads(self.ok("recipes", "--json"))["recipes"]
+        self.assertEqual([r["id"] for r in listed], ["brief-client", "reponse-appel-offres"])
+        brief = listed[0]
+        self.assertEqual(brief["label"], "Brief client")
+        self.assertEqual(brief["steps"][0], {"id": "cadrage", "label": "Cadrage de la demande", "pause": "validate", "optional": False})
+        self.assertTrue(brief["description"])
+        created = json.loads(self.ok("new", "brief-client", "--input", str(self.input_file), "--title", "  Offre   formation  ",
+                                     "--slug", "Offre formation", "--engine", "fake", "--json"))
+        self.assertEqual(created, {"slug": "offre-formation", "title": "Offre formation"})
+        status = json.loads(self.ok("status", "offre-formation", "--json"))
+        self.assertEqual((status["title"], status["recipe_label"]), ("Offre formation", "Brief client"))
+        self.assertEqual(status["steps"][0]["label"], "Cadrage de la demande")
+        self.assertTrue(status["steps"][0]["mission"])
+        self.assertEqual(status["max_budget_usd"], parcours.DEFAULT_BUDGET)
+
+    def test_output_document_drops_closing_blocks_and_front_matter(self):
+        text = ("---\nstatus: draft\nrecipient: comité\n---\n\n# Offre\nCorps.\n\n## CONTEXT SHEET\n```json\n{}\n```\n"
+                "## HANDOFF\n### offer\nX\n## SUMMARY\nS\n")
+        document, meta = parcours.output_document(text)
+        self.assertEqual(document, "# Offre\nCorps.")
+        self.assertEqual(meta, {"status": "draft", "recipient": "comité"})
+        self.assertEqual(parcours.output_document("Pas de bloc.\n## HANDOFF\n### a\nA\n"), ("Pas de bloc.", {}))
+
     def test_a_missing_or_binary_input_file_is_a_clean_error(self):
         with self.assertRaises(parcours.ParcoursError) as missing:
             parcours.read_text_arg(str(self.tmp / "absent.md"))

@@ -220,18 +220,20 @@ class AccessTests(InterfaceTestCase):
         self.assertNotIn("{{NONCE}}", html)
         _, headers2, _ = self.get("/", token=False)
         self.assertNotEqual(headers2["content-security-policy"], csp)
-        self.assertIsNone(re.search(r"(?i)https?://|\bsrc\s*=|<link\b|@import|\bwss?://", html))
+        code = html.replace("var SVG_NS = 'http://www.w3.org/2000/svg';", "")   # an XML namespace name, never fetched
+        self.assertIsNone(re.search(r"(?i)https?://|\bsrc\s*=|<link\b|@import|\bwss?://", code))
         self.assertIsNone(re.search(r"\bon[a-z]+\s*=\s*[\"']", html), "inline event handler (blocked by the CSP anyway)")
         self.assertIsNone(re.search(r"<[^>]+\bstyle\s*=", html), "inline style attribute (blocked by the CSP)")
         self.assertEqual(html.count("</script"), 1, "a stray closing tag inside the script would cut it short")
-        self.assertEqual(html.count("innerHTML"), 3)  # comment x2 + the single use, in mdBox()
+        self.assertEqual(html.count("innerHTML"), 2)  # its comment + the single use, in mdBox()
+        self.assertIn("box.innerHTML = safeRender(text);", html)
 
     def test_unknown_routes_and_wrong_methods(self):
         self.new()
         self.assertEqual(self.get("/nope", token=False)[0], 404)
         self.assertEqual(self.get("/api/nope")[0], 404)
         self.assertEqual(self.get("/api/parcours/demo/next")[0], 405)       # an action is a POST
-        self.assertEqual(self.post("/api/parcours")[0], 405)
+        self.assertEqual(self.post("/api/recipes")[0], 405)
         self.assertEqual(self.post("/api/parcours/demo/plan")[0], 405)
         self.assertEqual(self.post("/api/parcours/demo/frobnicate")[0], 404)
         self.assertEqual(self.post("/")[0], 405)
@@ -356,6 +358,40 @@ class ReadTests(InterfaceTestCase):
                      "/api/parcours/demo/file/input.md"):
             self.api("GET", path)
         self.assertEqual(sorted((p.name, p.read_bytes()) for p in (self.pdir / "demo").iterdir()), before)
+
+
+class CreateAndReadTests(InterfaceTestCase):
+    def test_recipes_and_creation_from_the_page(self):
+        recipes = self.api("GET", "/api/recipes")["recipes"]
+        self.assertEqual([r["id"] for r in recipes], ["brief-client", "reponse-appel-offres"])
+        created = self.api("POST", "/api/parcours", {"recipe": "brief-client", "title": "Offre formation",
+                                                     "text": "Une demande\nsur deux lignes.", "engine": "fake"})
+        self.assertEqual(created["slug"], "offre-formation")
+        self.assertEqual((self.pdir / "offre-formation" / "input.md").read_text(encoding="utf-8"), "Une demande\nsur deux lignes.")
+        status = self.status_of("offre-formation")
+        self.assertEqual((status["title"], status["recipe_label"], status["engine"]), ("Offre formation", "Brief client", "fake"))
+        listed = next(p for p in self.api("GET", "/api/parcours")["parcours"] if p["slug"] == "offre-formation")
+        self.assertEqual((listed["title"], listed["recipe_label"]), ("Offre formation", "Brief client"))
+        self.assertEqual(listed["current"], {"id": "cadrage", "label": "Cadrage de la demande", "status": "pending"})
+        untitled = self.api("POST", "/api/parcours", {"recipe": "brief-client", "text": "autre demande"})
+        self.assertTrue(untitled["slug"].startswith("brief-client"))
+        self.assertIsNone(untitled["title"])
+
+    def test_creation_refusals(self):
+        for body, status in (({"recipe": "inconnue", "text": "x"}, 404), ({"recipe": "../x", "text": "x"}, 400),
+                             ({"recipe": "brief-client", "text": "  "}, 400), ({"recipe": "brief-client", "text": "x", "title": "t" * 121}, 400),
+                             ({"recipe": "brief-client", "text": "x", "engine": "rm"}, 400), ({"recipe": "brief-client", "text": 3}, 400)):
+            self.assertEqual(self.request("POST", "/api/parcours", body)[0], status, body)
+        self.assertEqual(sorted(p.name for p in self.pdir.iterdir() if not p.name.startswith(".")), [])
+
+    def test_document_of_a_step(self):
+        self.new()
+        self.run_next()
+        doc = self.api("GET", "/api/parcours/demo/document/01-cadrage.md")
+        self.assertEqual(doc["document"], "Complete analysis written by step cadrage.")
+        self.assertNotIn("HANDOFF", doc["document"])
+        self.assertEqual(self.request("GET", "/api/parcours/demo/document/..%2Fstate.json")[0], 400)
+        self.assertEqual(self.request("GET", "/api/parcours/demo/document/absent.md")[0], 404)
 
 
 # ---------------------------------------------------------------------------
@@ -652,21 +688,39 @@ class RendererTests(unittest.TestCase):
     def test_every_special_character_is_escaped(self):
         self.assertEqual(self.render("<b>&\"'"), "<p>&lt;b&gt;&amp;&quot;&#39;</p>")
 
-    def test_no_raw_html_no_image_no_link(self):
+    ALLOWED = r"<(?!/?(p|br|h[2-6]|ul|ol|li|strong|em|del|code|pre|table|thead|tbody|tr|th|td|blockquote|hr|div|span|a)\b)"
+
+    def test_no_raw_html_no_image_no_script_link(self):
         for hostile in ("<script>alert(1)</script>", "<img src=x onerror=alert(1)>", "[x](javascript:alert(1))",
-                        "![y](http://evil/a.png)", "```\n<script>x</script>\n```", "| <i> |\n|---|\n| <u> |",
-                        "# <h1>", "- <li>", "> <q>", "**<b>**", "`<code>`"):
+                        "[x](data:text/html,<script>)", "[x](https://a.b/\" onmouseover=\"alert(1))", "![y](http://evil/a.png)",
+                        "```\n<script>x</script>\n```", "| <i> |\n|---|\n| <u> |", "# <h1>", "- <li>", "> <q>", "**<b>**",
+                        "`<code>`", "<!-- x --><b>", "- [x] <i>", "~~<s>~~", "_<u>_"):
             html = self.render(hostile)
-            self.assertIsNone(re.search(r"<(?!/?(p|h[3-6]|ul|ol|li|strong|em|code|pre|table|thead|tbody|tr|th|td|blockquote|hr)\b)", html), html)
-            self.assertNotIn("<a ", html)
+            self.assertIsNone(re.search(self.ALLOWED, html), html)
+            for link in re.findall(r"<a [^>]*>", html):
+                self.assertRegex(link, r'^<a href="https?://[^"<>]*" target="_blank" rel="noopener noreferrer">$')
+            self.assertEqual(set(re.findall(r"<div[^>]*>", html)) - {'<div class="tbl">'}, set(), html)
+            self.assertEqual(set(re.findall(r"<span[^>]*>", html)) - {'<span class="task">'}, set(), html)
             self.assertNotIn("<img", html)
             self.assertNotIn("<script", html)
-            self.assertNotRegex(html, r"<[a-z0-9]+ [^>]*on\w+=")
+            self.assertNotRegex(html, r"<[a-z0-9]+ [^>]*\son\w+=")
 
     def test_basic_structures(self):
-        html = self.render("# Titre\n\n- a **b**\n  - c\n\n1. un\n\n| x | y |\n|---|---|\n| 1 | 2 |\n\n```\ncode\n```\n")
-        for expected in ("<h3>Titre</h3>", "<strong>b</strong>", "<ul>", "<ol>", "<table>", "<th>x</th>", "<td>2</td>", "<pre class=\"code\">"):
+        html = self.render("# Titre\n\n- a **b**\n  - c\n\n3. trois\n\n| x | y |\n|---|---|\n| 1 | 2 |\n\n```\ncode\n```\n")
+        for expected in ("<h2>Titre</h2>", "<strong>b</strong>", "<ul>", '<ol start="3">', '<div class="tbl"><table>', "<th>x</th>",
+                         "<td>2</td>", "<pre class=\"code\">"):
             self.assertIn(expected, html)
+
+    def test_document_niceties(self):
+        html = self.render("**Destinataire :** X\n**Prestataire :** Y\n\n- [ ] à faire\n- [x] fait\n\n~~barré~~ et _penché_ "
+                           "[lien](https://example.org/a?b=1&c=2)\n<!-- retry output -->")
+        self.assertIn("<strong>Destinataire :</strong> X<br><strong>Prestataire :</strong> Y", html)
+        self.assertIn('<span class="task">\u2610</span>à faire', html)
+        self.assertIn("<del>barré</del>", html)
+        self.assertIn("<em>penché</em>", html)
+        self.assertIn('<a href="https://example.org/a?b=1&amp;c=2" target="_blank" rel="noopener noreferrer">lien</a>', html)
+        self.assertNotIn("retry", html)
+        self.assertNotIn("<em>", self.render("snake_case_name et mot_composé"))
 
 
 if __name__ == "__main__":

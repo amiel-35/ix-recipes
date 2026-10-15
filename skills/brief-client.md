@@ -1,7 +1,7 @@
 ---
 id: brief-client
 label: Brief client
-version: 1.3.0
+version: 1.4.0
 description_fr: "Transforme une demande client floue (mail, notes, transcription de réunion) en brief exploitable, en enchaînant cadrage, questions au client et brief — chaque étape isolée, le brief brut lu seulement par la première, une fiche de contexte validée par l'humain pour la suite, et une pause pour les réponses du client. Déclenche quand une demande client est trop floue pour être chiffrée ou produite telle quelle. Déclenche sur \"mon client m'a envoyé un brief dégueulasse\", \"aide-moi à cadrer cette demande client\", \"quelles questions poser au client avant de répondre\", \"transforme ces notes de réunion client en brief\". Ne rédige pas l'offre — voir `offre-commerciale` — et ne lit pas un cahier des charges formel de consultation — voir `analyse-cdc`."
 description_en: "Turns a vague client request (email, notes, meeting transcript) into an actionable brief by chaining scoping, questions to the client and a brief — each step isolated, the raw brief read only by the first, a human-validated context sheet for the rest, and a pause for the client's answers. Triggers when a client request is too vague to price or produce as is. Triggers on \"my client sent me a messy brief\", \"help me scope this client request\", \"what should I ask the client before answering\", \"turn these client meeting notes into a brief\". Does not write the offer — see `offre-commerciale` — and does not read a formal tender specification — see `analyse-cdc`."
 icon: ⇢
@@ -26,6 +26,7 @@ workflow:
   context_sheet: [client, objective, constraints, recipient, format, deadlines, named_solutions]
   steps:
     - id: cadrage
+      label: "Cadrage de la demande"
       skill: ix-skills:cadrage
       mission: Clarify the client's need from the raw request — the goal behind it, constraints, hypotheses, named solutions — and stop at clarification.
       receives: [brief]
@@ -34,6 +35,7 @@ workflow:
       pause: validate
       model: opus
     - id: questioning
+      label: "Questions au client"
       skill: ix-skills:questioning
       mission: Turn the open points and unvalidated hypotheses into the questions to send the client, most blocking first.
       receives: [context_sheet, cadrage.need, cadrage.hypotheses, cadrage.open_points]
@@ -41,6 +43,7 @@ workflow:
       pause: answers
       model: sonnet
     - id: explorer
+      label: "Pistes possibles"
       skill: ix-skills:explorer
       optional: true
       mission: Open the distinct ways of meeting the need that the client's answers still leave possible.
@@ -49,6 +52,7 @@ workflow:
       pause: none
       model: sonnet
     - id: decision
+      label: "Choix de la piste"
       skill: ix-skills:decision
       optional: true
       mission: Recommend one of the options against the client's objective and constraints, with visible trade-offs.
@@ -57,6 +61,7 @@ workflow:
       pause: validate
       model: sonnet
     - id: brief
+      label: "Brief final"
       skill: ix-skills:brief
       mission: Write the actionable brief — objective, scope, constraints, acceptance criteria, out of scope, remaining hypotheses — from the scoped need and the client's answers.
       receives: [context_sheet, cadrage.need, cadrage.constraints, cadrage.hypotheses, answers, decision.chosen_direction]

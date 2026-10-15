@@ -279,6 +279,8 @@ def validate_workflow(fm: dict, body: str) -> list:
             errs.append(f"step '{sid}': skill '{skill}' is not cited in the body")
         if not st.get("mission"):
             errs.append(f"step '{sid}': no mission")
+        if "label" in st and not (isinstance(st["label"], str) and st["label"].strip()):
+            errs.append(f"step '{sid}': label must be a non-empty string (shown to the user, in French)")
         if st.get("model", "sonnet") not in MODELS:
             errs.append(f"step '{sid}': model must be one of {sorted(MODELS)}")
         if st.get("pause", "none") not in PAUSES:

@@ -238,6 +238,9 @@ def load_recipe(recipe_id):
     return {
         "id": recipe_id,
         "version": str(fm.get("version", "")),
+        "label": str(fm.get("label") or recipe_id),
+        "description": str(fm.get("description_fr") or ""),
+        "icon": str(fm.get("icon") or ""),
         "context_sheet": list(workflow.get("context_sheet") or []),
         "context_definitions": context_definitions(body),
         "steps": steps,
@@ -271,6 +274,7 @@ def normalize_step(raw, index):
         raise ParcoursError(f"étape '{raw['id']}' : pause '{pause}' inconnue")
     return {
         "id": raw["id"],
+        "label": str(raw.get("label") or "").strip() or None,
         "skill": raw["skill"],
         "mission": str(raw["mission"]).strip(),
         "receives": list(raw.get("receives") or []),
@@ -411,11 +415,12 @@ def save_state(directory, state):
     write_atomic(directory / "state.json", json.dumps(state, indent=2, ensure_ascii=False) + "\n")
 
 
-def new_state(recipe, slug, engine, engine_steps, skills):
+def new_state(recipe, slug, engine, engine_steps, skills, title=None):
     return {
         "recipe": recipe["id"],
         "recipe_version": recipe["version"],
         "slug": slug,
+        "title": title,
         "created": now(),
         "status": "active",
         "engine": engine,
@@ -1083,6 +1088,25 @@ def output_body(text):
     return "\n".join(lines[:cut]).strip()
 
 
+FRONT_MATTER_RE = re.compile(r"\A---[ \t]*\n(.*?)\n---[ \t]*(?:\n|\Z)", re.S)
+
+
+def output_document(text):
+    """(document, meta) of a step output, for a reader: the body before the closing blocks
+    (output_body), without a leading YAML front matter, whose simple `key: value` lines are
+    returned apart (`status: draft`, `recipient: ...`)."""
+    body = output_body(text)
+    match = FRONT_MATTER_RE.match(body)
+    if not match:
+        return body, {}
+    meta = {}
+    for line in match.group(1).splitlines():
+        key, sep, value = line.partition(":")
+        if sep and re.fullmatch(r"[A-Za-z_][\w-]*", key.strip()):
+            meta[key.strip()] = value.strip()
+    return body[match.end():].strip(), meta
+
+
 def parse_step_output(text, transmits, context_fields=None, output_field=None):
     """Parse an engine output; raise ParseError when a transmitted field is missing.
 
@@ -1501,10 +1525,41 @@ def cmd_new(args):
     base.mkdir(parents=True, exist_ok=True)
     wanted = slugify(args.slug) if args.slug else default_slug(recipe["id"], text)
     directory, slug = create_unique_dir(base, wanted)
+    title = " ".join((args.title or "").split())[:120] or None
     write_atomic(directory / "input.md", text)
-    save_state(directory, new_state(recipe, slug, args.engine or "claude", engine_steps, skills))
+    save_state(directory, new_state(recipe, slug, args.engine or "claude", engine_steps, skills, title))
+    if args.json:
+        emit_json({"slug": slug, "title": title})
+        return 0
     say(f"Parcours créé : {slug} ({directory})")
     say(f"Suite : parcours.py next {slug}")
+    return 0
+
+
+def list_recipes():
+    """The workflow recipes of this repo, for a page that creates parcours (`recipes --json`)."""
+    found = []
+    for path in sorted((ROOT / "skills").glob("*.md")):
+        try:
+            recipe = load_recipe(path.stem)
+        except (ParcoursError, yaml.YAMLError, OSError):
+            continue  # not a workflow recipe, or unreadable: not offered
+        found.append({
+            "id": recipe["id"], "label": recipe["label"], "description": recipe["description"],
+            "icon": recipe["icon"], "version": recipe["version"],
+            "steps": [{"id": s["id"], "label": s["label"], "pause": effective_pause(s),
+                       "optional": s["optional"]} for s in recipe["steps"]],
+        })
+    return found
+
+
+def cmd_recipes(args):
+    recipes = list_recipes()
+    if args.json:
+        emit_json({"recipes": recipes})
+        return 0
+    for r in recipes:
+        say(f"{r['id']} — {r['label']} ({len(r['steps'])} étapes)")
     return 0
 
 
@@ -1703,6 +1758,7 @@ def status_report(directory, state, fingerprint):
             "blocking": step.get("blocking"), "error": step.get("error"),
             "cost_usd": step.get("cost_usd", 0.0), "started": step.get("started"), "ended": step.get("ended"),
             "skill": {k: (step.get("skill") or {}).get(k) for k in ("ref", "version")},
+            "label": defn["label"] if defn else None, "mission": defn["mission"] if defn else None,
         }
         for key, kind in (("trace", "main"), ("retry_trace", "retry")):
             name = trace_name(idx, step["id"], kind)
@@ -1713,7 +1769,8 @@ def status_report(directory, state, fingerprint):
         last = next((s for s in reversed(state["steps"]) if s["status"] == "done"), None)
         final = last["output"] if last else None
     return {
-        "slug": state["slug"], "recipe": state["recipe"], "recipe_version": state["recipe_version"],
+        "slug": state["slug"], "title": state.get("title"), "recipe": state["recipe"],
+        "recipe_version": state["recipe_version"], "recipe_label": recipe["label"] if recipe else state["recipe"],
         "created": state.get("created"), "status": state["status"],
         "engine": state["engine"], "engine_steps": state["engine_steps"],
         "cost_usd": state["cost_usd"], "calls": state["calls"],
@@ -1721,7 +1778,7 @@ def status_report(directory, state, fingerprint):
         "context_fields": list(recipe["context_sheet"]) if recipe else [],
         "answers": state.get("answers"), "pending": state["pending"], "steps": steps,
         "files": files, "final_output": final, "recipe_error": problem,
-        "locked": is_locked(directory), "fingerprint": fingerprint,
+        "locked": is_locked(directory), "fingerprint": fingerprint, "max_budget_usd": DEFAULT_BUDGET,
         "updated": datetime.fromtimestamp((Path(directory) / "state.json").stat().st_mtime).isoformat(timespec="seconds"),
     }
 
@@ -2113,6 +2170,8 @@ def build_parser():
     p = add("new", cmd_new, "créer un parcours", "recipe")
     p.add_argument("--input", required=True, help="demande brute (fichier, ou - pour stdin)")
     p.add_argument("--slug")
+    p.add_argument("--title", help="titre lisible du parcours (affiché par la page de suivi)")
+    add("recipes", cmd_recipes, "les recettes-workflows disponibles")
     p = add("next", cmd_next, "jouer jusqu'à la prochaine pause", "slug")
     p.add_argument("--if-state", metavar="FINGERPRINT",
                    help="empreinte de l'état (donnée par `plan --json`) ; refusé sous le verrou si l'état a changé")

@@ -27,6 +27,7 @@ workflow:
   context_sheet: [entities, objective, constraints, recipient, format, deadlines, named_solutions]
   steps:
     - id: cadrage                 # identifiant unique de l'étape
+      label: "Cadrage de la demande"   # nom affiché à l'utilisateur, en français (facultatif ; l'id sinon)
       skill: ix-skills:cadrage    # skill exécuté, avec son espace de noms ; doit figurer dans requires
       mission: Clarify the need…  # mission locale, en une ou deux phrases
       receives: [brief]           # brief (étape 1 seulement), context_sheet, answers, ou <étape>.<champ>
@@ -48,7 +49,8 @@ workflow:
 - les ids d'étape sont uniques ;
 - seule la première étape reçoit `brief`, et c'est elle qui porte `produces_context_sheet` ; sa pause vaut `validate` ou `answers` ;
 - `verbatim` n'est déclaré que sur la première étape et ne nomme que des champs de ses `transmits` ;
-- `output_field`, s'il est donné, fait partie des `transmits`.
+- `output_field`, s'il est donné, fait partie des `transmits` ;
+- `label`, s'il est donné, est une chaîne non vide.
 - chaque `<étape>.<champ>` reçu existe dans les `transmits` d'une étape **antérieure** ;
 - `answers` n'est reçu qu'après une étape dont la pause vaut `answers` ;
 - chaque `skill` est cité dans le corps du SKILL.md (le corps et le frontmatter ne divergent pas) ;

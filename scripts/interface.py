@@ -532,8 +532,19 @@ class App(Space):
 
     def recipe_book(self):
         data = self.recettes("list")
-        data.update(design_engines=self.design_engines, dev=self.dev)
+        provided = [r for r in self.recipes()["recipes"] if not r.get("personal")]
+        data.update(design_engines=self.design_engines, dev=self.dev, provided=provided)
         return data
+
+    def provided(self, recipe_id):
+        if not RECIPE_ID_RE.match(recipe_id or ""):
+            raise ApiError(400, "bad_slug", "identifiant de recette invalide")
+        return self.recettes("provided", positionals=[recipe_id])
+
+    def fork(self, recipe_id):
+        if not RECIPE_ID_RE.match(recipe_id or ""):
+            raise ApiError(400, "bad_slug", "identifiant de recette invalide")
+        return dict(self.recettes("fork", positionals=[recipe_id]), ok=True)
 
     def draft(self, draft):
         directory = self.draft_dir(draft)
@@ -912,6 +923,14 @@ class Handler(BaseHTTPRequestHandler):
             if len(rest) == 1 and rest[0] in DRAFT_ACTIONS:
                 self.only(method, "POST")
                 return self.send_json(200, app.draft_act(draft, rest[0], self.read_json_body()))
+        if parts[0] == "fournies" and len(parts) in (2, 3):
+            if len(parts) == 2:
+                self.only(method, "GET")
+                return self.send_json(200, app.provided(parts[1]))
+            if parts[2] == "fork":
+                self.only(method, "POST")
+                self.read_json_body()
+                return self.send_json(200, app.fork(parts[1]))
         if parts[0] == "personnelles" and len(parts) >= 2:
             recipe_id, rest = parts[1], parts[2:]
             if not rest:

@@ -732,7 +732,7 @@ python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours       
 
 ### Vos propres recettes
 
-La page fabrique aussi des recettes, hors du dépôt, sous **Recettes** :
+Sous **Recettes**, la page montre les recettes fournies et les vôtres, chacune en organigramme standard (cliquer une étape pour sa mission, ses entrées et ses sorties) ; une recette fournie se lance, ou se copie pour en faire votre version. Elle fabrique aussi des recettes, hors du dépôt :
 
 1. **Nouvelle recette** : décrivez le travail qui revient (ce qui arrive, ce qui doit sortir, qui le lit). Un appel moteur neuf joue `concepteur-recette` sur le **catalogue réel** d'ix-skills et d'ix-recipes (les versions installées en cours), avec votre besoin et rien d'autre. Il rend d'abord une **proposition** : l'enchaînement des étapes, affiché étape par étape, que vous commentez (par étape ou sur l'ensemble) et renvoyez en révision autant de fois qu'il faut ; aucun fichier n'est écrit avant « Valider le principe et écrire la recette ». S'il conclut qu'un skill seul ou un enchaînement manuel suffit, la page le dit et montre sa réponse ; « Concevoir quand même une recette » redemande, ou l'on part du modèle.
 2. **Modifier** : les étapes et les pauses dans une vue lisible, le fichier de la recette dans un éditeur. Chaque enregistrement est vérifié comme `build.py` vérifie une recette du dépôt (mêmes règles, en français), et en plus : chaque skill existe dans le catalogue, l'id est libre.

@@ -250,6 +250,9 @@ dialog p { margin: 0 0 8px; color: var(--ink-2); }
 dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 
 /* ---- personal recipes */
+.badge.mine { background: var(--ok-bg); color: var(--ok); }
+.empty.small { padding: 22px 20px; text-align: left; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.empty.small p { margin: 0; flex: 1; min-width: 220px; }
 .badge { display: inline-block; font: 600 11px/1.6 var(--sans); letter-spacing: .02em; padding: 0 7px; border-radius: 999px; background: var(--run-bg); color: var(--run); margin-left: 8px; vertical-align: 2px; }
 .tabs { display: flex; gap: 2px; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin: 0 0 18px; }
 .tabs a { padding: 8px 12px; font-size: 14px; color: var(--ink-2); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
@@ -299,6 +302,45 @@ pre.raw.diff { max-height: 560px; }
 .comment { margin-top: 10px; } .comment textarea.input { min-height: 60px; }
 .comment-btn { margin-top: 6px; height: 28px; padding: 0 8px; font-size: 13px; }
 .comment-btn .ic svg { width: 14px; height: 14px; }
+
+
+/* ---- the flowchart (standard shapes) */
+.fc-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; align-items: start; }
+.fc-svg svg { width: 100%; max-width: 640px; height: auto; display: block; }
+.fc-side { position: sticky; top: 76px; display: grid; gap: 14px; }
+.fc-detail { border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; background: var(--surface-2); font-size: 13.5px; }
+.fc-detail .mission { color: var(--ink-2); margin: 6px 0 8px; }
+.fc-detail .st-head code { margin-left: 0; }
+.fc-hint { margin: 0; }
+.flow .fc-t, .flow .fc-tb { fill: var(--ink); font: 13px var(--sans); }
+.flow .fc-tb { font-weight: 600; }
+.flow .fc-ts { fill: var(--ink-3); font: 11.5px var(--mono); }
+.flow .fc-line { stroke: var(--ink-3); stroke-width: 1.2; }
+.flow .fc-arrowhead { stroke: var(--ink-3); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.flow .fc-neutral { fill: var(--surface); stroke: var(--ink-3); stroke-width: 1; }
+.flow .fc-human { fill: var(--warn-bg); stroke: var(--warn-dot); stroke-width: 1.2; }
+.flow .fc-box { fill: var(--surface); stroke: var(--accent); stroke-width: 1.2; }
+.flow .fc-bar { stroke: var(--accent); stroke-width: 1; }
+.flow .fc-step { cursor: pointer; }
+.flow .fc-step:hover .fc-box { fill: var(--run-bg); }
+.flow .fc-step:focus { outline: none; }
+.flow .fc-step:focus-visible .fc-box { stroke-width: 2.5; }
+.flow .fc-opt .fc-box, .flow .fc-opt .fc-bar { stroke-dasharray: 5 4; }
+.flow .fc-last .fc-box { stroke-width: 2.4; }
+.flow .fc-sel .fc-box { fill: var(--run-bg); stroke-width: 2.6; }
+.flow .fc-src .fc-box, .flow polygon.fc-src { fill: var(--ok-bg); stroke: var(--ok); }
+.flow .fc-mark { fill: var(--accent); }
+.fc-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--ink-3); }
+.fc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.fc-legend .lg { width: 22px; height: 13px; display: inline-block; border: 1.2px solid var(--ink-3); background: var(--surface); }
+.fc-legend .lg-proc { border-color: var(--accent); box-shadow: inset 3px 0 0 -1.8px var(--accent), inset -3px 0 0 -1.8px var(--accent); }
+.fc-legend .lg-opt { border-color: var(--accent); border-style: dashed; }
+.fc-legend .lg-human { border-color: var(--warn-dot); background: var(--warn-bg); clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%); }
+.fc-legend .lg-answers { border-color: var(--warn-dot); background: var(--warn-bg); clip-path: polygon(0 30%, 100% 0, 100% 100%, 0 100%); }
+.fc-legend .lg-dec { width: 15px; height: 15px; transform: rotate(45deg) scale(.75); }
+.fc-legend .lg-data { transform: skewX(-18deg); }
+.fc-legend .lg-doc { border-radius: 0 0 50% 50% / 0 0 30% 30%; }
+@media (max-width: 860px) { .fc-wrap { grid-template-columns: minmax(0, 1fr); } .fc-side { position: static; } }
 
 /* ---- small screens */
 @media (max-width: 860px) {
@@ -547,7 +589,7 @@ var S = {
   tech: false, down: false, deferred: false, wasOffline: false,
   // personal recipes: the recueil, a draft, a personal recipe, the editor, the test form, the proposal to the repository
   book: null, d: null, pr: null, dlog: null, need: { need: '', title: '', engine: '' }, recipeEdit: {}, essaiForm: {},
-  contrib: {}, contribError: {}, contribSource: {}, comments: {}
+  contrib: {}, contribError: {}, contribSource: {}, comments: {}, flowSel: {}
 };
 
 function $(sel) { return document.querySelector(sel); }
@@ -692,6 +734,7 @@ function parseRoute() {
   if ((m = /^#\/recettes\/b\/([a-z0-9][a-z0-9-]*)\/essais\/([a-z0-9][a-z0-9-]*)(?:\/([a-z0-9][a-z0-9_-]*|demande))?$/.exec(location.hash))) return { view: 'parcours', essai: m[1], slug: m[2], step: m[3] || null };
   if ((m = /^#\/recettes\/b\/([a-z0-9][a-z0-9-]*)(?:\/(proposition|etapes|fichier|essais|avis|besoin))?$/.exec(location.hash))) return { view: 'draft', draft: m[1], tab: m[2] || null };
   if ((m = /^#\/recettes\/p\/([a-z0-9][a-z0-9-]*)$/.exec(location.hash))) return { view: 'personal', id: m[1] };
+  if ((m = /^#\/recettes\/f\/([a-z0-9][a-z0-9-]*)$/.exec(location.hash))) return { view: 'provided', id: m[1] };
   if (location.hash === '#/recettes/nouvelle') return { view: 'recipeNew' };
   if (location.hash === '#/recettes') return { view: 'recipes' };
   if (location.hash === '#/nouveau') return { view: 'new' };
@@ -724,6 +767,10 @@ async function poll() {
       S.d = d; S.notFound = false;
       if (S.tech && (d.locked || S.open.has('dlog'))) await loadDesignLog(route.draft);
       sig = JSON.stringify([d, S.tech ? S.dlog : null]);
+    } else if (route.view === 'provided') {
+      var fr = await api('GET', '/api/recettes/fournies/' + encodeURIComponent(route.id), undefined, 20000);
+      if (route !== S.route) return;
+      S.fr = fr; S.notFound = false; sig = JSON.stringify(fr);
     } else if (route.view === 'personal') {
       var pr = await api('GET', '/api/recettes/personnelles/' + encodeURIComponent(route.id), undefined, 20000);
       if (route !== S.route) return;
@@ -742,7 +789,7 @@ async function poll() {
     S.lastOk = Date.now(); S.fails = 0; S.authError = false;
   } catch (e) {
     if (e instanceof ApiFail && e.status === 403) { S.authError = true; S.fails = 0; }
-    else if (e instanceof ApiFail && e.status === 404 && ['parcours', 'draft', 'personal'].indexOf(route.view) >= 0) { S.notFound = true; S.lastOk = Date.now(); S.fails = 0; }
+    else if (e instanceof ApiFail && e.status === 404 && ['parcours', 'draft', 'personal', 'provided'].indexOf(route.view) >= 0) { S.notFound = true; S.lastOk = Date.now(); S.fails = 0; }
     else S.fails++;
     sig = 'err:' + S.fails + S.authError + S.notFound;
   } finally { S.polling = false; }
@@ -800,6 +847,7 @@ function render() {
     else if (S.route.view === 'recipeNew') view = viewRecipeNew();
     else if (S.route.view === 'draft') view = viewDraft();
     else if (S.route.view === 'personal') view = viewPersonal();
+    else if (S.route.view === 'provided') view = viewProvided();
     else view = viewHome();
   } catch (e) {
     if (window.console) console.error(e);
@@ -820,14 +868,15 @@ function renderChrome() {
   if (S.route.view === 'parcours' && S.p && S.p.slug === S.route.slug) parts = [h('span', null, '/'), h('span', { class: 't' }, titleOf(S.p))];
   else if (S.route.view === 'new') parts = [h('span', null, '/'), h('span', { class: 't' }, 'Nouveau dossier')];
   else if (S.route.view === 'archives') parts = [h('span', null, '/'), h('span', { class: 't' }, 'Dossiers archivés')];
-  else if (S.route.view === 'recipes') parts = [h('span', null, '/'), h('span', { class: 't' }, 'Vos recettes')];
-  else if (S.route.view === 'recipeNew') parts = [h('span', null, '/'), h('a', { href: '#/recettes' }, 'Vos recettes'), h('span', null, '/'), h('span', { class: 't' }, 'Nouvelle recette')];
-  else if (S.route.view === 'draft') parts = [h('span', null, '/'), h('a', { href: '#/recettes' }, 'Vos recettes'), h('span', null, '/'), h('span', { class: 't' }, S.d && S.d.slug === S.route.draft ? draftTitle(S.d) : 'Brouillon')];
-  else if (S.route.view === 'personal') parts = [h('span', null, '/'), h('a', { href: '#/recettes' }, 'Vos recettes'), h('span', null, '/'), h('span', { class: 't' }, S.pr && S.pr.id === S.route.id ? S.pr.label : S.route.id)];
+  else if (S.route.view === 'recipes') parts = [h('span', null, '/'), h('span', { class: 't' }, 'Recettes')];
+  else if (S.route.view === 'provided') parts = [h('span', null, '/'), h('a', { href: '#/recettes' }, 'Recettes'), h('span', null, '/'), h('span', { class: 't' }, S.fr && S.fr.id === S.route.id ? S.fr.recipe.label : S.route.id)];
+  else if (S.route.view === 'recipeNew') parts = [h('span', null, '/'), h('a', { href: '#/recettes' }, 'Recettes'), h('span', null, '/'), h('span', { class: 't' }, 'Nouvelle recette')];
+  else if (S.route.view === 'draft') parts = [h('span', null, '/'), h('a', { href: '#/recettes' }, 'Recettes'), h('span', null, '/'), h('span', { class: 't' }, S.d && S.d.slug === S.route.draft ? draftTitle(S.d) : 'Brouillon')];
+  else if (S.route.view === 'personal') parts = [h('span', null, '/'), h('a', { href: '#/recettes' }, 'Recettes'), h('span', null, '/'), h('span', { class: 't' }, S.pr && S.pr.id === S.route.id ? S.pr.label : S.route.id)];
   if (S.route.view === 'parcours' && S.route.essai) parts = [h('span', null, '/'), h('a', { href: '#/recettes/b/' + S.route.essai + '/essais' }, 'Essai')].concat(parts);
   crumb.replaceChildren.apply(crumb, parts);
   document.querySelectorAll('.nav a').forEach(function (a) {
-    var on = a.getAttribute('data-nav') === (/^(recipes|recipeNew|draft|personal)$/.test(S.route.view) || S.route.essai ? 'recettes' : 'dossiers');
+    var on = a.getAttribute('data-nav') === (/^(recipes|recipeNew|draft|personal|provided)$/.test(S.route.view) || S.route.essai ? 'recettes' : 'dossiers');
     if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
   $('#tech-toggle').checked = S.tech;
@@ -845,9 +894,10 @@ function pageTitle() {
     var k = kindOf(S.p), mark = { validate: 'À valider', answers: 'Réponses attendues', choose: 'Choix à faire', stuck: 'À reprendre', running: 'En cours' }[k];
     return (mark ? '(' + mark + ') ' : '') + titleOf(S.p) + ' — Parcours';
   }
-  if (S.route.view === 'recipes' || S.route.view === 'recipeNew') return (S.route.view === 'recipes' ? 'Vos recettes' : 'Nouvelle recette') + ' — Parcours';
+  if (S.route.view === 'recipes' || S.route.view === 'recipeNew') return (S.route.view === 'recipes' ? 'Recettes' : 'Nouvelle recette') + ' — Parcours';
   if (S.route.view === 'draft') return (S.d && S.d.locked ? '(Conception) ' : '') + (S.d ? draftTitle(S.d) : 'Brouillon') + ' — Parcours';
   if (S.route.view === 'personal') return (S.pr ? S.pr.label : 'Recette') + ' — Parcours';
+  if (S.route.view === 'provided') return (S.fr ? S.fr.recipe.label : 'Recette') + ' — Parcours';
   return S.route.view === 'new' ? 'Nouveau dossier — Parcours' : S.route.view === 'archives' ? 'Dossiers archivés — Parcours' : 'Vos dossiers — Parcours';
 }
 
@@ -1089,24 +1139,28 @@ function sourceFr(input, steps) {
 // ---- the recueil
 function viewRecipes() {
   var b = S.book;
-  var head = h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Vos recettes'),
-    h('p', null, 'Vos propres recettes, rangées dans votre recueil, hors du dépôt. Elles se lancent comme les autres depuis « Nouveau dossier ».')),
-    S.book && (S.book.personal.length || S.book.drafts.length) ? h('button', { class: 'btn primary', type: 'button', onclick: function () { go('#/recettes/nouvelle'); } }, icon('plus'), 'Nouvelle recette') : null);
+  var head = h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Recettes'),
+    h('p', null, 'Les recettes fournies avec le plugin, et les vôtres, rangées dans votre recueil hors du dépôt. Toutes se lancent depuis « Nouveau dossier ».')),
+    h('button', { class: 'btn primary', type: 'button', onclick: function () { go('#/recettes/nouvelle'); } }, icon('plus'), 'Nouvelle recette'));
   if (!b) return h('div', null, head, h('p', { class: 'muted' }, 'Chargement…'));
-  if (!b.personal.length && !b.drafts.length) {
-    return h('div', null, head, h('div', { class: 'empty' }, h('h2', null, 'Créez votre première recette'),
-      h('p', null, 'Décrivez un travail qui revient souvent : la page fait concevoir la recette à partir du catalogue réel des skills, vous la modifiez, la testez sur un exemple, puis la gardez dans votre recueil.'),
-      h('button', { class: 'btn primary', type: 'button', onclick: function () { go('#/recettes/nouvelle'); } }, icon('plus'), 'Nouvelle recette')), recueilFooter(b));
-  }
+  var provided = b.provided || [];
   return h('div', null, head,
-    b.personal.length ? h('section', null, h('h2', { class: 'group-title' }, 'Dans votre recueil · ' + b.personal.length),
-      h('div', { class: 'cards' }, b.personal.map(function (r) {
+    h('section', null, h('h2', { class: 'group-title' }, 'Recettes fournies · ' + provided.length),
+      provided.length ? h('div', { class: 'cards' }, provided.map(function (r) {
+        var stops = r.steps.filter(function (s) { return s.pause === 'validate' || s.pause === 'answers'; }).length;
+        return h('a', { class: 'card', href: '#/recettes/f/' + r.id }, h('div', { class: 'ttl' }, r.label, h('span', { class: 'badge' }, 'Fournie')),
+          h('div', { class: 'sub' }, r.summary || firstSentence(r.description)),
+          h('div', { class: 'foot' }, h('span', null, plural(r.steps.length, 'étape', 'étapes') + ' · ' + plural(stops, 'arrêt', 'arrêts') + ' pour vous'), h('span', null, 'version ' + r.version)));
+      })) : h('p', { class: 'muted' }, 'Aucune recette fournie n’est lisible : le plugin ix-recipes est-il installé ?')),
+    h('section', null, h('h2', { class: 'group-title' }, 'Mes recettes · ' + b.personal.length),
+      b.personal.length ? h('div', { class: 'cards' }, b.personal.map(function (r) {
         var bad = r.errors.length || r.shadowed, sent = r.contribution && r.contribution.status === 'pushed';
-        return h('a', { class: 'card', href: '#/recettes/p/' + r.id }, h('div', { class: 'ttl' }, r.label), h('div', { class: 'sub' }, r.id + (r.version ? ' · version ' + r.version : '')),
+        return h('a', { class: 'card', href: '#/recettes/p/' + r.id }, h('div', { class: 'ttl' }, r.label, h('span', { class: 'badge mine' }, 'Personnelle')), h('div', { class: 'sub' }, r.id + (r.version ? ' · version ' + r.version : '')),
           h('div', { class: 'state' }, h('span', { class: 'dot ' + (bad ? 'bad' : 'ok') }),
             r.shadowed ? 'Masquée par une recette du plugin' : r.errors.length ? 'Ne peut plus être lancée' : sent ? 'Proposée au dépôt' : plural(r.steps, 'étape', 'étapes')),
           h('div', { class: 'foot' }, h('span', null, r.summary ? firstSentence(r.summary) : ''), h('span', null, ago(r.updated))));
-      }))) : null,
+      })) : h('div', { class: 'empty small' }, h('p', null, 'Aucune pour l’instant. Copiez une recette fournie pour l’adapter, ou créez-en une à partir d’un besoin.'),
+        h('button', { class: 'btn', type: 'button', onclick: function () { go('#/recettes/nouvelle'); } }, icon('plus'), 'Nouvelle recette'))),
     b.drafts.length ? h('section', null, h('h2', { class: 'group-title' }, 'Brouillons · ' + b.drafts.length),
       h('div', { class: 'cards' }, b.drafts.map(function (d) {
         var st = draftState(d);
@@ -1116,6 +1170,28 @@ function viewRecipes() {
           h('div', { class: 'foot' }, h('span', null, d.essais_count ? plural(d.essais_count, 'essai', 'essais') : 'aucun essai'), h('span', null, ago(d.updated))));
       }))) : null,
     recueilFooter(b));
+}
+
+// ---- a recipe provided by the plugin: launch it, or copy it to make it one's own
+function viewProvided() {
+  var f = S.fr;
+  if (S.notFound) return h('div', { class: 'narrow' }, h('div', { class: 'empty' }, h('h2', null, 'Recette introuvable'), h('a', { class: 'btn', href: '#/recettes' }, 'Recettes')));
+  if (!f || f.id !== S.route.id) return h('p', null, 'Chargement…');
+  var r = f.recipe, stops = r.steps.filter(function (s) { return s.pause === 'validate' || s.pause === 'answers'; }).length;
+  return h('div', null,
+    h('div', { class: 'dossier-head' }, h('h1', null, r.label, h('span', { class: 'badge' }, 'Fournie')),
+      h('div', { class: 'meta' }, h('span', null, 'id ' + f.id), r.version ? h('span', null, 'version ' + r.version) : null,
+        h('span', null, plural(r.steps.length, 'étape', 'étapes') + ' · ' + plural(stops, 'arrêt', 'arrêts') + ' pour vous'))),
+    h('div', { class: 'action' }, h('h2', null, 'Recette fournie avec le plugin'),
+      h('p', { class: 'lead' }, 'Elle se lance telle quelle. Pour l’adapter, copiez-la : la copie devient un brouillon à vous, sous un autre nom, que vous modifiez, testez et gardez dans votre recueil. L’originale ne change pas.'),
+      h('div', { class: 'btns' }, h('button', { class: 'btn primary', type: 'button', onclick: function () { startDossierWith(f.id); } }, 'Lancer un dossier'),
+        recipeBtn('Copier pour modifier', '', function () { forkProvided(f); }, 'Copie…'))),
+    stepsPanel(r, true, 'f:' + f.id));
+}
+async function forkProvided(f) {
+  S.busy = 'Copie…'; S.error = ''; render();
+  try { var res = await api('POST', '/api/recettes/fournies/' + encodeURIComponent(f.id) + '/fork', {}, 30000); S.busy = ''; toast('Copie créée : ' + res.id); go(draftHash(res.slug, 'etapes')); }
+  catch (e) { S.error = friendlyError(e); S.busy = ''; render(); }
 }
 function recueilFooter(b) {
   return h('p', { class: 'muted', style: 'margin-top:32px;font-size:12.5px;color:var(--ink-3)' }, 'Recueil : ' + b.recueil);
@@ -1167,7 +1243,7 @@ function viewDraft() {
   if (d.concept || d.design) tabs.push(['avis', 'Avis du concepteur']);
   if (d.need) tabs.push(['besoin', 'Votre besoin']);
   var panel = tab === 'proposition' && d.proposal ? proposalPanel(d) : tab === 'fichier' ? filePanel(d) : tab === 'essais' ? essaisPanel(d)
-    : tab === 'avis' ? avisPanel(d) : tab === 'besoin' ? needPanel(d) : stepsPanel(d.check && d.check.recipe, d.has_recipe);
+    : tab === 'avis' ? avisPanel(d) : tab === 'besoin' ? needPanel(d) : stepsPanel(d.check && d.check.recipe, d.has_recipe, 'd:' + d.slug);
   return h('div', null,
     h('div', { class: 'dossier-head' }, h('h1', null, draftTitle(d)),
       h('div', { class: 'meta' }, h('span', null, 'Brouillon de recette'), d.recipe_id ? h('span', null, 'id ' + d.recipe_id) : null,
@@ -1251,7 +1327,128 @@ function draftAction(d) {
     h('div', { class: 'btns' }, recipeBtn('Valider dans mon recueil', 'primary', function () { promote(d, false); }, 'Validation…')));
 }
 
-function stepsPanel(view, hasFile) {
+// ---- the flowchart of a recipe: standard shapes (ISO 5807), top to bottom
+// Built node by node (createElementNS, text through textContent): no data ever becomes markup.
+var FC = { W: 640, MX: 200, BX: 485, MW: 270, BW: 210, PH: 54, HH: 38, GAP: 26 };
+function sv(tag, attrs, text) {
+  var el = document.createElementNS(SVG_NS, tag);
+  Object.keys(attrs || {}).forEach(function (k) { if (attrs[k] !== null && attrs[k] !== undefined) el.setAttribute(k, attrs[k]); });
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+function clip(text, max) { text = String(text || ''); return text.length > max ? text.slice(0, max - 1) + '…' : text; }
+// One model for a recipe view and for a proposal: [{id, label, skill, pause, optional, receives, gives, sheet}]
+function flowSteps(steps) {
+  return steps.map(function (s, i) {
+    return { id: s.id, label: s.label || pretty(s.id), skill: s.skill, pause: s.pause || 'none', optional: !!s.optional,
+      receives: s.receives || [], gives: s.transmits || s.produces || [], mission: s.mission || s.role || '',
+      sheet: s.produces_context_sheet !== undefined ? !!s.produces_context_sheet : i === 0, output: s.output_field };
+  });
+}
+function flowchart(rawSteps, key, opts) {
+  opts = opts || {};
+  var steps = flowSteps(rawSteps), sel = S.flowSel[key] && steps.some(function (s) { return s.id === S.flowSel[key]; }) ? S.flowSel[key] : null;
+  var selected = steps.filter(function (s) { return s.id === sel; })[0];
+  var sources = {};
+  if (selected) selected.receives.forEach(function (r) {
+    if (r === 'brief') sources['__brief'] = true;
+    else if (r === 'context_sheet') sources[steps[0].id] = true;
+    else if (r === 'answers') steps.forEach(function (s) { if (s.pause === 'answers') sources[s.id] = true; });
+    else sources[String(r).split('.')[0]] = true;
+  });
+  var svg = sv('svg', { viewBox: '0 0 ' + FC.W + ' 100', class: 'flow', role: 'img' });
+  svg.appendChild(sv('title', {}, 'Organigramme de la recette : ' + steps.map(function (s) { return s.label; }).join(', ')));
+  var defs = sv('defs');
+  var marker = sv('marker', { id: 'fc-arrow-' + key, viewBox: '0 0 10 10', refX: '8', refY: '5', markerWidth: '6', markerHeight: '6', orient: 'auto-start-reverse' });
+  marker.appendChild(sv('path', { d: 'M2 1L8 5L2 9', fill: 'none', class: 'fc-arrowhead' }));
+  defs.appendChild(marker); svg.appendChild(defs);
+  var arrowRef = 'url(#fc-arrow-' + key + ')';
+  function arrow(x1, y1, x2, y2) { svg.appendChild(sv('line', { x1: x1, y1: y1, x2: x2, y2: y2, class: 'fc-line', 'marker-end': arrowRef })); }
+  function label(x, y, text, cls, anchor) { svg.appendChild(sv('text', { x: x, y: y, class: cls || 'fc-t', 'text-anchor': anchor || 'middle', 'dominant-baseline': 'central' }, text)); }
+  function terminator(cx, y, text) { svg.appendChild(sv('rect', { x: cx - 70, y: y, width: 140, height: FC.HH - 4, rx: (FC.HH - 4) / 2, class: 'fc-neutral' })); label(cx, y + (FC.HH - 4) / 2, text, 'fc-tb'); return y + FC.HH - 4; }
+  function data(cx, y, text, on) {
+    var w = FC.MW - 40, x = cx - w / 2;
+    svg.appendChild(sv('polygon', { points: [x + 14, y, x + w, y, x + w - 14, y + FC.HH, x, y + FC.HH].join(' '), class: 'fc-neutral' + (on ? ' fc-src' : '') }));
+    label(cx, y + FC.HH / 2, text); return y + FC.HH;
+  }
+  function human(cx, y, w, text, kind) {
+    var x = cx - w / 2, pts = kind === 'answers' ? [x, y + 10, x + w, y, x + w, y + FC.HH, x, y + FC.HH] : [x, y, x + w, y, x + w - 16, y + FC.HH, x + 16, y + FC.HH];
+    svg.appendChild(sv('polygon', { points: pts.join(' '), class: 'fc-human' }));
+    label(cx, y + FC.HH / 2 + (kind === 'answers' ? 4 : 0), text); return y + FC.HH;
+  }
+  function process(cx, y, w, s, last) {
+    var x = cx - w / 2, g = sv('g', { class: 'fc-step' + (s.id === sel ? ' fc-sel' : '') + (sources[s.id] ? ' fc-src' : '') + (s.optional ? ' fc-opt' : '') + (last ? ' fc-last' : ''),
+      tabindex: '0', role: 'button', 'aria-pressed': s.id === sel ? 'true' : 'false', 'aria-label': s.label + ' (' + s.skill + ')' });
+    g.appendChild(sv('rect', { x: x, y: y, width: w, height: FC.PH, rx: 3, class: 'fc-box' }));
+    g.appendChild(sv('line', { x1: x + 11, y1: y, x2: x + 11, y2: y + FC.PH, class: 'fc-bar' }));
+    g.appendChild(sv('line', { x1: x + w - 11, y1: y, x2: x + w - 11, y2: y + FC.PH, class: 'fc-bar' }));
+    g.appendChild(sv('text', { x: cx, y: y + 20, class: 'fc-tb', 'text-anchor': 'middle', 'dominant-baseline': 'central' }, clip(s.label, Math.floor((w - 30) / 7.6))));
+    g.appendChild(sv('text', { x: cx, y: y + 38, class: 'fc-ts', 'text-anchor': 'middle', 'dominant-baseline': 'central' }, clip(s.skill, Math.floor((w - 30) / 6.6))));
+    if (opts.marks && opts.marks[s.id]) g.appendChild(sv('circle', { cx: x + w - 4, cy: y + 4, r: 5, class: 'fc-mark' }));
+    g.appendChild(sv('title', {}, s.label + ' — ' + s.skill));
+    function pick() { S.flowSel[key] = S.flowSel[key] === s.id ? null : s.id; S.sig = ''; render(); }
+    g.addEventListener('click', pick);
+    g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+    svg.appendChild(g); return y + FC.PH;
+  }
+  function pauseOf(cx, y, w, s) {
+    if (s.pause === 'validate') { arrow(cx, y, cx, y + FC.GAP - 2); return human(cx, y + FC.GAP, w, s.sheet ? 'Vous validez la fiche' : 'Vous validez', 'validate'); }
+    if (s.pause === 'answers') { arrow(cx, y, cx, y + FC.GAP - 2); return human(cx, y + FC.GAP, w, s.sheet ? 'Vous répondez, validez la fiche' : 'Vous apportez les réponses', 'answers'); }
+    return y;
+  }
+  var mx = FC.MX, y = 12, lastMain = null;
+  steps.forEach(function (s) { if (!s.optional) lastMain = s.id; });
+  y = terminator(mx, y, 'Début');
+  arrow(mx, y, mx, y + FC.GAP - 2); y = data(mx, y + FC.GAP, 'Votre demande', sources.__brief);
+  for (var i = 0; i < steps.length; i++) {
+    var s = steps[i];
+    if (!s.optional) {
+      arrow(mx, y, mx, y + FC.GAP - 2); y = process(mx, y + FC.GAP, FC.MW, s, s.id === lastMain);
+      y = pauseOf(mx, y, FC.MW - 40, s);
+      continue;
+    }
+    var group = []; while (i < steps.length && steps[i].optional) group.push(steps[i++]); i--;
+    arrow(mx, y, mx, y + FC.GAP - 2);
+    var dy = y + FC.GAP, dh = 64, dw = 230;
+    svg.appendChild(sv('polygon', { points: [mx, dy, mx + dw / 2, dy + dh / 2, mx, dy + dh, mx - dw / 2, dy + dh / 2].join(' '), class: 'fc-neutral' }));
+    label(mx, dy + dh / 2, group.length > 1 ? 'Étapes facultatives ?' : 'Jouer « ' + clip(group[0].label, 16) + ' » ?');
+    label(mx + dw / 2 + 22, dy + dh / 2 - 10, 'Oui', 'fc-ts');
+    var bx = FC.BX, by = dy + dh / 2 - FC.PH / 2;
+    arrow(mx + dw / 2, dy + dh / 2, bx - FC.BW / 2 - 2, dy + dh / 2);
+    var cy = by;
+    group.forEach(function (g, k) {
+      if (k) { arrow(bx, cy, bx, cy + FC.GAP - 2); cy += FC.GAP; }
+      cy = process(bx, cy, FC.BW, g, false);
+      cy = pauseOf(bx, cy, FC.BW - 30, g);
+    });
+    var merge = Math.max(cy + 22, dy + dh + 30);
+    svg.appendChild(sv('path', { d: 'M' + bx + ' ' + cy + ' L' + bx + ' ' + merge + ' L' + (mx + 4) + ' ' + merge, class: 'fc-line', fill: 'none', 'marker-end': arrowRef }));
+    label(mx + 10, dy + dh + 14, 'Non', 'fc-ts', 'start');
+    svg.appendChild(sv('line', { x1: mx, y1: dy + dh, x2: mx, y2: merge, class: 'fc-line' }));
+    y = merge;
+  }
+  arrow(mx, y, mx, y + FC.GAP - 2); y += FC.GAP;
+  var w = FC.MW - 40, x = mx - w / 2;
+  svg.appendChild(sv('path', { d: 'M' + x + ' ' + y + ' H' + (x + w) + ' V' + (y + 32) + ' Q' + (mx + w / 4) + ' ' + (y + 44) + ' ' + mx + ' ' + (y + 32) + ' Q' + (mx - w / 4) + ' ' + (y + 20) + ' ' + x + ' ' + (y + 32) + ' Z', class: 'fc-neutral' }));
+  label(mx, y + 16, 'Votre livrable'); y += 40;
+  arrow(mx, y, mx, y + FC.GAP - 2); y = terminator(mx, y + FC.GAP, 'Fin');
+  svg.setAttribute('viewBox', '0 0 ' + FC.W + ' ' + (y + 12));
+  var legend = h('div', { class: 'fc-legend', 'aria-hidden': 'true' },
+    [['proc', 'Étape : un skill'], ['opt', 'Étape facultative'], ['human', 'Vous validez'], ['answers', 'Vous apportez une réponse'], ['dec', 'Votre choix'], ['data', 'Ce qui entre'], ['doc', 'Le livrable']]
+      .map(function (l) { return h('span', null, h('i', { class: 'lg lg-' + l[0] }), l[1]); }));
+  var detail = selected ? h('div', { class: 'fc-detail' },
+    h('div', { class: 'st-head' }, h('strong', null, selected.label), selected.optional ? h('span', { class: 'badge' }, 'Facultative') : null, h('code', null, selected.skill)),
+    selected.mission ? h('p', { class: 'mission', lang: opts.missionLang || 'en' }, selected.mission) : null,
+    h('dl', { class: 'kv' },
+      h('dt', null, 'Reçoit'), h('dd', null, selected.receives.map(function (r) { return sourceFr(r, steps); }).join(', ') || '—'),
+      h('dt', null, opts.proposal ? 'Produit' : 'Transmet'), h('dd', null, selected.gives.join(', ') + (selected.output ? ' (« ' + selected.output + ' » est le document entier)' : '') || '—'),
+      h('dt', null, 'Pause'), h('dd', null, PAUSE_FR[selected.pause] || selected.pause)),
+    opts.detailExtra ? opts.detailExtra(selected) : null)
+    : h('p', { class: 'hint fc-hint' }, opts.hint || 'Cliquez une étape : sa mission, ce qu’elle reçoit (les étapes d’où ça vient s’éclairent) et ce qu’elle transmet.');
+  return h('div', { class: 'fc-wrap' }, h('div', { class: 'fc-svg' }, svg), h('div', { class: 'fc-side' }, detail, legend));
+}
+
+function stepsPanel(view, hasFile, key) {
   if (!view) return h('div', { class: 'doc-card' }, h('div', { class: 'placeholder' }, h('div', { class: 'big' }, hasFile ? 'Étapes illisibles pour l’instant' : 'Pas encore de recette'),
     hasFile ? 'Corrigez les erreurs du fichier pour voir les étapes.' : 'Les étapes s’afficheront ici dès qu’une recette sera proposée.'));
   var pauses = view.steps.filter(function (s) { return s.pause === 'validate' || s.pause === 'answers'; }).length;
@@ -1265,7 +1462,8 @@ function stepsPanel(view, hasFile) {
         return [h('dt', null, c.label || pretty(c.key)), h('dd', null, c.definition ? h('span', { lang: 'en' }, c.definition.replace(/`/g, '')) : h('span', { class: 'muted' }, c.key))];
       })),
       h('h3', null, 'Les étapes'),
-      h('ol', { class: 'steps-view' }, view.steps.map(function (s) {
+      flowchart(view.steps, key || view.id || 'recette'),
+      subDetails('Le détail de chaque étape', 'steps:' + (key || view.id), h('ol', { class: 'steps-view' }, view.steps.map(function (s) {
         return h('li', null, h('div', { class: 'st-head' }, h('strong', null, stepName(s)), s.optional ? h('span', { class: 'badge' }, 'Facultative') : null,
           h('code', null, s.skill)),
           h('p', { class: 'mission', lang: 'en' }, s.mission),
@@ -1274,7 +1472,7 @@ function stepsPanel(view, hasFile) {
             h('dt', null, 'Transmet'), h('dd', null, s.transmits.join(', ') + (s.output_field ? ' (« ' + s.output_field + ' » est le document entier)' : '')),
             h('dt', null, 'Pause'), h('dd', { class: s.pause === 'none' ? '' : 'c-warn-t' }, PAUSE_FR[s.pause] || s.pause),
             h('dt', null, 'Modèle'), h('dd', null, s.model || 'par défaut')));
-      }))));
+      })))));
 }
 
 function filePanel(d) {
@@ -1441,21 +1639,17 @@ function proposalPanel(d) {
     area.addEventListener('input', function () { onInput(area.value); keepComments(d); });
     return area;
   }
-  var cards = [];
-  p.steps.forEach(function (s, i) {
-    if (i) cards.push(h('div', { class: 'chain-arrow', 'aria-hidden': 'true' }, '↓'));
-    var unknown = p.problems.some(function (x) { return x.indexOf('« ' + (s.skill || '?') + ' » n’existe pas') >= 0 || x.indexOf('« ' + (s.skill || '?') + ' » n\'existe pas') >= 0; });
-    var open = editable && (c.open[s.id] || (c.steps[s.id] || '').trim());
-    cards.push(h('li', { class: 'chain-step' },
-      h('div', { class: 'st-head' }, h('strong', null, s.label || pretty(s.id)), s.optional ? h('span', { class: 'badge' }, 'Facultative') : null,
-        h('code', { class: unknown ? 'c-bad' : '' }, s.skill || '?')),
-      s.role ? h('p', { class: 'mission' }, s.role) : null,
-      h('dl', { class: 'kv' },
-        h('dt', null, 'Reçoit'), h('dd', null, s.receives.map(function (r) { return sourceFr(r, p.steps); }).join(', ') || '—'),
-        h('dt', null, 'Produit'), h('dd', null, s.produces.join(', ') || '—')),
-      PAUSE_SHORT[s.pause] ? h('span', { class: 'pause-chip' }, PAUSE_SHORT[s.pause]) : null,
-      editable ? (open ? h('div', { class: 'comment' }, commentArea(c.steps[s.id] || '', 'Commentaire sur « ' + (s.label || s.id) + ' »', function (v) { c.steps[s.id] = v; }))
-        : h('button', { class: 'btn ghost comment-btn', type: 'button', onclick: function () { c.open[s.id] = true; render(); var a = document.querySelector('.chain-step:nth-of-type(' + (i + 1) + ') textarea'); if (a) a.focus(); } }, icon('plus'), 'Commenter cette étape')) : null));
+  var marks = {};
+  if (editable) Object.keys(c.steps).forEach(function (k) { if ((c.steps[k] || '').trim()) marks[k] = true; });
+  var chart = flowchart(p.steps, 'prop:' + d.slug + ':' + p.version, {
+    proposal: true, missionLang: 'fr', marks: marks,
+    hint: editable ? 'Cliquez une étape pour lire son rôle et la commenter. Un point bleu marque les étapes commentées.' : null,
+    detailExtra: function (sel) {
+      var unknown = p.problems.filter(function (x) { return x.indexOf('« ' + (sel.label || sel.id) + ' »') === 0; });
+      return [unknown.length ? h('ul', { class: 'checks bad' }, unknown.map(function (x) { return h('li', null, x); })) : null,
+        editable ? h('div', { class: 'comment' }, h('label', { class: 'sub-h', style: 'display:block;margin:6px 0 4px' }, 'Votre commentaire'),
+          commentArea(c.steps[sel.id] || '', 'Commentaire sur « ' + sel.label + ' »', function (v) { c.steps[sel.id] = v; })) : null];
+    }
   });
   var after = p.after_comments && (p.after_comments.general || Object.keys(p.after_comments.steps || {}).length);
   return h('div', { class: 'doc-card' },
@@ -1468,7 +1662,7 @@ function proposalPanel(d) {
         Object.keys(p.after_comments.steps || {}).map(function (k) { return h('p', null, 'Sur « ' + k + ' » : ' + p.after_comments.steps[k]); }))) : null,
       p.context_sheet.length ? [h('h3', null, 'Fiche de contexte'), h('p', { class: 'hint' }, 'Ce que la première étape tirera de la demande, et que vous validerez : ' + p.context_sheet.join(', ') + '.')] : null,
       h('h3', null, 'L’enchaînement'),
-      h('ol', { class: 'chain' }, cards),
+      chart,
       editable ? h('div', { class: 'field', style: 'margin-top:18px' }, h('label', null, 'Commentaire sur l’ensemble'),
         commentArea(c.general, 'Commentaire sur l’ensemble', function (v) { c.general = v; })) : null,
       editable ? h('div', { class: 'btns' },
@@ -1542,7 +1736,7 @@ function viewPersonal() {
         !r.errors.length && !r.shadowed ? h('button', { class: 'btn primary', type: 'button', onclick: function () { startDossierWith(r.id); } }, 'Nouveau dossier avec cette recette') : null,
         recipeBtn('Modifier', r.errors.length || r.shadowed ? 'primary' : '', function () { editPersonal(r); }, 'Ouverture…'),
         recipeBtn('Retirer du recueil', 'ghost danger', function () { retirePersonal(r); }, 'Retrait…'))),
-    stepsPanel(r.check && r.check.recipe, true),
+    stepsPanel(r.check && r.check.recipe, true, 'p:' + r.id),
     contributionPanel(r),
     S.tech ? h('div', { class: 'tech', style: 'margin-top:18px;border:1px solid var(--line);border-radius:var(--r-lg)' }, h('h4', null, 'Détails techniques'),
       h('dl', { class: 'kv' }, h('dt', null, 'Fichier'), h('dd', null, r.path), h('dt', null, 'Versions gardées'), h('dd', null, r.versions.length ? r.versions.join(', ') : 'aucune')),
@@ -2218,6 +2412,7 @@ window.addEventListener('hashchange', function () {
   if (S.route.view !== 'parcours' || before.slug !== S.route.slug || before.essai !== S.route.essai) { S.p = null; S.log = null; S.files = new Map(); S.docs = new Map(); }
   if (S.route.view !== 'draft' || before.draft !== S.route.draft) { S.d = null; S.dlog = null; }
   if (S.route.view !== 'personal' || before.id !== S.route.id) { S.pr = null; }
+  if (S.route.view !== 'provided' || before.id !== S.route.id) { S.fr = null; }
   S.notFound = false;
   if (S.route.view === 'new' && S.recipesError) { S.recipesError = ''; S.recipes = null; }   // try again
   if (S.route.view === 'archives') { S.archives = null; loadArchives(); }

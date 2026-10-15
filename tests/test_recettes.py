@@ -690,6 +690,43 @@ class DesignTests(RecettesTestCase):
         self.assertEqual((step["id"], step["receives"], step["pause"], step["optional"]), ("etape-un", ["brief"], "none", False))
 
 
+class ProvidedRecipeTests(RecettesTestCase):
+    def test_a_provided_recipe_is_read_and_copied_under_a_free_id(self):
+        shown = self.rok("provided", "brief-client")
+        steps = shown["recipe"]["steps"]
+        self.assertEqual([s["id"] for s in steps], ["cadrage", "questioning", "explorer", "decision", "brief"])
+        self.assertTrue(steps[0]["produces_context_sheet"])
+        self.assertEqual([s["optional"] for s in steps], [False, False, True, True, False])
+        self.assertEqual(self.rfail("provided", "absente")["error"], "not_found")
+        self.assertEqual(self.rfail("provided", "Bad_Id")["error"], "error")
+        first = self.rok("fork", "brief-client")
+        self.assertEqual((first["id"], first["forked_from"]), ("brief-client-perso", "brief-client"))
+        draft = self.rok("show", first["slug"])
+        self.assertEqual(draft["check"]["errors"], [])
+        self.assertEqual(draft["recipe_label"], "Brief client (ma version)")
+        self.assertIn("version: 0.1.0", draft["text"])
+        self.assertEqual(self.rok("fork", "brief-client")["id"], "brief-client-perso-2")   # the first copy holds the id
+        self.assertIn("Brief client", (parcours.ROOT / "skills" / "brief-client.md").read_text(encoding="utf-8"))   # untouched
+
+    def test_in_the_plugin_the_file_is_rebuilt_from_recipe_json(self):
+        folder = self.tmp / "plugin" / "skills"
+        (folder / "suivi-parcours").mkdir(parents=True)
+        (folder / "suivi-parcours" / "SKILL.md").write_text("---\nname: suivi-parcours\n---\n", encoding="utf-8")
+        fm, body = parcours.parse_recipe_text((REPO / "skills" / "brief-client.md").read_text(encoding="utf-8"))
+        (folder / "brief-client").mkdir()
+        (folder / "brief-client" / "recipe.json").write_text(json.dumps(
+            {k: fm[k] for k in ("id", "label", "version", "summary_fr", "description_fr", "icon", "workflow")}), encoding="utf-8")
+        (folder / "brief-client" / "SKILL.md").write_text("---\nname: brief-client\ndescription: x\n---\n" + body, encoding="utf-8")
+        with mock.patch.object(parcours, "ROOT", folder / "suivi-parcours"):
+            text = recettes.provided_text("brief-client")
+        rebuilt, rebuilt_body = parcours.parse_recipe_text(text)
+        self.assertEqual(rebuilt["workflow"], fm["workflow"])
+        self.assertEqual(rebuilt["requires"], ["ix-skills:cadrage", "ix-skills:questioning", "ix-skills:explorer",
+                                               "ix-skills:decision", "ix-skills:brief"])
+        self.assertEqual(rebuilt["description_fr"], fm["description_fr"])
+        self.assertEqual(parcours.workflow_errors(rebuilt, rebuilt_body, lambda ref: True), [])
+
+
 class RecueilCommandTests(RecettesTestCase):
     def test_promote_edit_retire(self):
         slug = self.draft_with(recettes.TEMPLATE.replace("pause: validate", "pause: later"))

@@ -732,7 +732,7 @@ python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours       
 
 ### Your own recipes
 
-The page also makes recipes, outside the repository, under **Recipes**:
+Under **Recipes**, the page shows the supplied recipes and yours, each as a standard flowchart (click a step for its mission, inputs and outputs); a supplied recipe can be launched, or copied to make your own version. It also makes recipes, outside the repository:
 
 1. **New recipe**: describe the recurring job (what comes in, what must come out, who reads it). One fresh engine call plays `concepteur-recette` over the **real catalogue** of ix-skills and ix-recipes (the current versions installed), with your need and nothing else. It first returns a **proposal**: the chain of steps, shown step by step, that you comment on (per step or overall) and send back for revision as many times as needed; no file is written until you click *Validate the principle and write the recipe*. When it concludes that one skill or a manual sequence is enough, the page says so and shows its answer; *Design a recipe anyway* asks again, or start from the blank model.
 2. **Edit**: the steps and pauses in a readable view, and the recipe file in an editor. Every save is checked like `build.py` checks a recipe of the repository (same rules, in plain French), plus: every skill exists in the catalogue, the id is free.

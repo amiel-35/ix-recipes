@@ -23,6 +23,7 @@ Usage:
     python3 scripts/recettes.py check --file recette.md [--json]
     python3 scripts/recettes.py promote <draft> [--replace]
     python3 scripts/recettes.py template <draft>          (the blank model as the draft's file)
+    python3 scripts/recettes.py provided <id> | fork <id>  (a recipe of the plugin; copied into a draft to modify it)
     python3 scripts/recettes.py edit <id>                 (a personal recipe back to a draft)
     python3 scripts/recettes.py personal <id> [--json]
     python3 scripts/recettes.py retire <id>               (out of the recueil, kept in .versions/)
@@ -441,6 +442,100 @@ def cmd_edit(args):
     state = read_json(directory / DRAFT_STATE, {})
     touch(directory, state, promoted={"id": args.recipe, "at": None, "sha256": sha256_file(directory / P.DRAFT_FILE)})
     return emit(args, {"slug": slug, "reused": False}, f"Brouillon créé : {slug}")
+
+
+# ---------------------------------------------------------------------------
+# The recipes the plugin provides: read them, copy one to make it one's own
+# ---------------------------------------------------------------------------
+def provided_recipe(recipe_id):
+    """(front matter, body) of a recipe of the plugin (or of the repository), else NotFound."""
+    if not recipe_id or not P.RECIPE_ID_RE.fullmatch(recipe_id):
+        raise P.ParcoursError(f"identifiant de recette invalide : '{recipe_id}'")
+    found = P.plugin_recipe(recipe_id)
+    if not found or not (found[0].get("workflow") or {}).get("steps"):
+        raise P.NotFound(f"recette fournie introuvable : {recipe_id}")
+    return found[0], found[1]
+
+
+def cmd_provided(args):
+    fm, body = provided_recipe(args.recipe)
+    data = {"id": args.recipe, "recipe": P.recipe_view(fm, body), "icon": str(fm.get("icon") or "")}
+    if args.json:
+        P.emit_json(data)
+    else:
+        P.say(f"{args.recipe} — {data['recipe']['label']} ({len(data['recipe']['steps'])} étapes)")
+    return 0
+
+
+def yaml_scalar(value):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
+    return json.dumps(str(value), ensure_ascii=False)   # a JSON string is a valid YAML double-quoted scalar
+
+
+def yaml_lines(value, indent=0):
+    """A small YAML emitter for a recipe front matter (mappings, lists, scalars), read back by load_yaml_subset."""
+    pad, lines = " " * indent, []
+    for key, item in value.items():
+        if isinstance(item, dict):
+            lines.append(f"{pad}{key}:")
+            lines += yaml_lines(item, indent + 2)
+        elif isinstance(item, list) and item and all(isinstance(x, dict) for x in item):
+            lines.append(f"{pad}{key}:")
+            for element in item:
+                inner = yaml_lines(element, indent + 4)
+                lines.append(f"{pad}  - {inner[0].lstrip()}")
+                lines += inner[1:]
+        elif isinstance(item, list):
+            lines.append(f"{pad}{key}: [{', '.join(yaml_scalar(x) for x in item)}]")
+        else:
+            lines.append(f"{pad}{key}: {yaml_scalar(item)}")
+    return lines
+
+
+def provided_text(recipe_id):
+    """The file of a provided recipe: skills/<id>.md in a clone, rebuilt from recipe.json and the body of
+    SKILL.md in the plugin (where the full front matter is not shipped)."""
+    path = P.ROOT / "skills" / f"{recipe_id}.md"
+    if path.is_file():
+        return path.read_text(encoding="utf-8")
+    fm, body = provided_recipe(recipe_id)
+    head = {k: fm[k] for k in ("id", "label", "version", "description_fr", "summary_fr", "icon") if k in fm}
+    head["category"] = "workflow"
+    head["requires"] = list(dict.fromkeys(s.get("skill") for s in fm["workflow"]["steps"] if s.get("skill")))
+    head["workflow"] = fm["workflow"]
+    return "---\n" + "\n".join(yaml_lines(head)) + "\n---\n" + body.lstrip("\n")
+
+
+def free_recipe_id(args, wanted):
+    taken = P.plugin_recipe_ids() | P.personal_recipe_ids({"recueil": recueil(args), "draft": None})
+    refs = set(P.catalogue())
+    for directory in drafts_dir(args).iterdir() if drafts_dir(args).is_dir() else []:
+        found = P.draft_id(directory / P.DRAFT_FILE) if (directory / P.DRAFT_FILE).is_file() else None
+        if found:
+            taken.add(found)
+    candidate, n = wanted[:60].strip("-"), 2
+    while candidate in taken or f"ix-recipes:{candidate}" in refs or f"ix-skills:{candidate}" in refs:
+        candidate, n = f"{wanted[:56].strip('-')}-{n}", n + 1
+    return candidate
+
+
+def cmd_fork(args):
+    """A provided recipe copied into a draft, under a free id of its own, to be modified and kept."""
+    text = provided_text(args.recipe)
+    fm, _ = P.parse_recipe_text(text)
+    new_id = free_recipe_id(args, f"{args.recipe}-perso")
+    label = f"{fm.get('label') or args.recipe} (ma version)"
+    text = re.sub(r"^id:.*$", f"id: {new_id}", text, count=1, flags=re.M)
+    text = re.sub(r"^label:.*$", f"label: {yaml_scalar(label)}", text, count=1, flags=re.M)
+    text = re.sub(r"^version:.*$", "version: 0.1.0", text, count=1, flags=re.M)
+    _, slug = new_draft(args, label, text=text, slug_hint=new_id)
+    directory = draft_dir(args, slug)
+    touch(directory, read_json(directory / DRAFT_STATE, {}), forked_from=args.recipe)
+    return emit(args, {"slug": slug, "id": new_id, "forked_from": args.recipe},
+                f"Copie de « {args.recipe} » dans le brouillon {slug} (id {new_id})")
 
 
 def cmd_template(args):
@@ -1280,6 +1375,8 @@ def build_parser():
     add("edit", cmd_edit, "rouvrir une recette du recueil en brouillon", "recipe")
     add("personal", cmd_personal, "une recette du recueil", "recipe")
     add("retire", cmd_retire, "retirer une recette du recueil (copie gardée)", "recipe")
+    add("provided", cmd_provided, "une recette fournie par le plugin", "recipe")
+    add("fork", cmd_fork, "copier une recette fournie dans un brouillon, pour la modifier", "recipe")
     add("template", cmd_template, "remplacer le fichier d'un brouillon par le modèle", "draft")
     add("delete-draft", cmd_delete_draft, "supprimer un brouillon et ses essais", "draft")
     add("essai-delete", cmd_essai_delete, "supprimer un dossier de test", "draft", "slug")

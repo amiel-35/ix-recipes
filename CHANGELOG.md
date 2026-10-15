@@ -20,6 +20,10 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
   shown step by step), which the user comments on per step or overall and sends back for
   revision; the recipe file is written only after "Validate the principle and write the recipe",
   and its departures from the validated proposal are flagged.
+- **Recipes as standard flowcharts** (ISO 5807 shapes, top to bottom) wherever a recipe is shown;
+  clicking a step shows its mission, inputs (their sources light up) and outputs, and in a proposal
+  takes its comment. The Recipes page lists "Supplied recipes", "My recipes" and "Drafts"; a supplied
+  recipe can be launched or copied ("Copy to modify", `recettes.py fork`) into a draft of one's own.
 - **Propose to the repository**: a branch prepared in a separate working copy of a local clone
   (or of the repository, cloned once), `skills/<id>.md`, its `.mystaffy.json`, `dist/` rebuilt by
   build.py, a local commit and its diff shown; push and `gh pr create` only after the user

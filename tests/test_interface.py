@@ -969,6 +969,19 @@ class RecipeBookTests(InterfaceTestCase):
         status, _, err = self.post(f"/api/recettes/brouillons/{slug}/stop", {})
         self.assertEqual((status, err["error"]), (409, "not_running"))
 
+    def test_provided_recipes_are_listed_shown_and_copied(self):
+        book = self.api("GET", "/api/recettes")
+        self.assertEqual(sorted(r["id"] for r in book["provided"]), ["brief-client", "reponse-appel-offres"])
+        shown = self.api("GET", "/api/recettes/fournies/brief-client")
+        self.assertEqual(shown["recipe"]["label"], "Brief client")
+        self.assertEqual(self.get("/api/recettes/fournies/absente")[0], 404)
+        self.assertEqual(self.get("/api/recettes/fournies/Bad_Id")[0], 400)
+        self.assertEqual(self.post("/api/recettes/fournies/brief-client/fork", {}, token=False)[0], 403)
+        copy = self.api("POST", "/api/recettes/fournies/brief-client/fork", {})
+        self.assertEqual(copy["id"], "brief-client-perso")
+        self.assertEqual(self.api("GET", f"/api/recettes/brouillons/{copy['slug']}")["check"]["errors"], [])
+        self.assertEqual(self.request("GET", "/api/recettes/fournies/brief-client/fork")[0], 405)
+
     def test_contribution_arguments_are_checked(self):
         parcours.recueil_dir(self.pdir).mkdir(parents=True, exist_ok=True)
         (parcours.recueil_dir(self.pdir) / "ma-recette.md").write_text(recettes.TEMPLATE, encoding="utf-8")

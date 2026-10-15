@@ -207,6 +207,13 @@ Chaque enregistrement (`save --if-sha`) garde la version précédente et refuse 
 
 Ce qui échoue est dit en clair, sans rien laisser à moitié (la branche locale est retirée si la préparation échoue) : git absent (comment l'installer, ou envoyer le fichier au mainteneur), dépendances de build.py absentes (`pip install -r requirements.txt`, ou `IX_RECIPES_PYTHON`), identité git inconnue (les deux `git config`), envoi refusé (droits d'écriture : forker avec `gh repo fork … --remote`, la branche reste prête), réseau. git tourne sans invite (`GIT_TERMINAL_PROMPT=0`, ssh en `BatchMode`) : il échoue au lieu d'attendre un mot de passe que personne ne tape. Testé contre un dépôt nu jetable ; le chemin GitHub contre un faux `gh`.
 
+### 9.7 bis Organigramme, recettes fournies, copie (retours d'Amiel du 2026-10-15)
+
+- **Organigramme standard** (formes ISO 5807, de haut en bas) partout où une recette s'affiche — recette fournie, recette du recueil, brouillon, proposition : terminateurs Début / Fin, « Votre demande » en entrée (parallélogramme), chaque étape en processus prédéfini (un skill ; pointillés si facultative, trait épais pour la dernière), « Vous validez » en opération manuelle (trapèze), « Vous apportez les réponses » en entrée manuelle, les étapes facultatives derrière un losange de décision (Oui à droite, Non tout droit), le livrable en document. Dessiné par la page (SVG construit élément par élément, textes en `textContent`, aucune bibliothèque). Cliquer une étape affiche sa mission, ce qu'elle reçoit — les étapes d'où ça vient passent en vert — et ce qu'elle transmet ; dans une proposition, c'est là qu'on la commente (un point marque les étapes commentées). Le détail de toutes les étapes reste dépliable sous le schéma.
+- **Page Recettes en trois blocs** : « Recettes fournies » (celles du plugin, lues par `parcours.py recipes`), « Mes recettes » (le recueil, avec un état vide qui invite à copier ou créer) et « Brouillons ».
+- **Une recette fournie** (`#/recettes/f/<id>`, `recettes.py provided <id>`) : son organigramme, « Lancer un dossier » et « Copier pour modifier » (`recettes.py fork <id>`) : un brouillon avec le fichier de la recette sous un id libre (`<id>-perso`, puis `-perso-2`…), libellé « (ma version) », version 0.1.0 ; l'originale ne change pas. Dans le plugin, où seul `recipe.json` est livré, le fichier est reconstruit (`recipe.json` + corps du SKILL.md, `requires` déduit des étapes) : il est valide, et ce qui manque pour le dépôt (description_en, domain…) s'affiche comme d'habitude.
+- **Une recette du recueil** : « Nouveau dossier avec cette recette », « Modifier », comme avant.
+
 ### 9.8 Routes ajoutées
 
 | Méthode | Chemin | Effet |
@@ -215,6 +222,7 @@ Ce qui échoue est dit en clair, sans rien laisser à moitié (la branche locale
 | POST | `/api/recettes/brouillons` | `{need, title?, engine?}` → brouillon + conception détachée ; `{template: true}` → brouillon depuis le modèle |
 | GET | `/api/recettes/brouillons/<b>` | `recettes.py show` (+ `essai_engines`) ; `…/log` : journal de la conception |
 | POST | `/api/recettes/brouillons/<b>/<action>` | `design {insist?, engine?}`, `stop`, `save {text, sha?}`, `template`, `promote {replace?}`, `delete`, `essai {text, title?, engine?}`, `essai-delete {slug}` |
+| GET | `/api/recettes/fournies/<id>` | `recettes.py provided` ; POST `…/fork` : `recettes.py fork` |
 | GET | `/api/recettes/personnelles/<id>` | `recettes.py personal` |
 | POST | `/api/recettes/personnelles/<id>/<action>` | `edit`, `retire`, `contribute {step: prepare\|push\|cancel\|status, source?}` |
 | GET/POST | `/api/essais/<b>/parcours/…` | les routes des dossiers, sur les essais du brouillon (création par `…/essai` seulement ; action `delete` en plus) |

@@ -1068,7 +1068,8 @@ def recipe_view(fm, body):
                           for k in wf.get("context_sheet") or []],
         "steps": [{"id": s["id"], "label": s["label"], "skill": s["skill"], "mission": s["mission"],
                    "receives": s["receives"], "transmits": s["transmits"], "pause": effective_pause(s),
-                   "model": s["model"], "optional": s["optional"], "output_field": s["output_field"]} for s in steps],
+                   "model": s["model"], "optional": s["optional"], "output_field": s["output_field"],
+                   "produces_context_sheet": s["produces_context_sheet"]} for s in steps],
     }
 
 

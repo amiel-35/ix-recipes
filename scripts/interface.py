@@ -259,7 +259,7 @@ class App:
             raise ApiError(400, "bad_request", f"titre invalide ({MAX_TITLE} caractères au plus)")
         flags = ["--input", "-"]
         if title.strip():
-            flags += ["--title", title.strip(), "--slug", title.strip()]
+            flags += [f"--title={title.strip()}", f"--slug={title.strip()}"]   # `=`: a title starting with "-" stays a value
         if engine:
             flags += ["--engine", self.check_engine(engine)]
         return self.run_json("new", flags, [recipe], input_text=text)

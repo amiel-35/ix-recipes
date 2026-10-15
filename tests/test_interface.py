@@ -373,6 +373,8 @@ class CreateAndReadTests(InterfaceTestCase):
         listed = next(p for p in self.api("GET", "/api/parcours")["parcours"] if p["slug"] == "offre-formation")
         self.assertEqual((listed["title"], listed["recipe_label"]), ("Offre formation", "Brief client"))
         self.assertEqual(listed["current"], {"id": "cadrage", "label": "Cadrage de la demande", "status": "pending"})
+        dashed = self.api("POST", "/api/parcours", {"recipe": "brief-client", "title": "--engine claude", "text": "x"})
+        self.assertEqual((dashed["slug"], dashed["title"]), ("engine-claude", "--engine claude"))
         untitled = self.api("POST", "/api/parcours", {"recipe": "brief-client", "text": "autre demande"})
         self.assertTrue(untitled["slug"].startswith("brief-client"))
         self.assertIsNone(untitled["title"])

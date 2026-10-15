@@ -455,6 +455,14 @@ class ThemeTests(InterfaceTestCase):
         self.assertNotIn("font-src", headers["content-security-policy"])
         self.assertEqual(self.get("/theme/Font.ttf", token=False)[0], 404)
 
+    def test_the_inflexion_theme_is_the_default_and_none_is_neutral(self):
+        self.assertTrue((interface.theme_folder("inflexion") / "theme.css").is_file())
+        self.assertIsNone(interface.theme_folder("none"))
+        self.assertEqual(interface.theme_folder("~/x"), Path.home() / "x")
+        bundled = REPO / "dist" / "skills" / "suivi-parcours" / "scripts" / "themes" / "inflexion"
+        for name in ("theme.css", "Archivo.ttf", "SourceSans3.ttf", "OFL-Archivo.txt"):
+            self.assertTrue((bundled / name).is_file(), name)
+
     def test_a_theme_folder_needs_its_stylesheet(self):
         with self.assertRaises(OSError):
             interface.make_server(self.pdir, 0, theme=self.tmp)

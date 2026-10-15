@@ -61,7 +61,9 @@ Paste this into Claude Code (or into Cowork, which will guide you through the cl
 ```text
 Install and set up ix-recipes for me (https://github.com/amiel-35/ix-recipes).
 1. If you can run commands: add the amiel-35/plugins marketplace and install
-   ix-skills@amiel-35 then ix-recipes@amiel-35 (update them if already there). If either is
+   ix-skills@amiel-35 then ix-recipes@amiel-35 (update them if already there; if adding the
+   marketplace fails for lack of a GitHub SSH key, retry with
+   https://github.com/amiel-35/plugins.git). If either is
    already installed from another marketplace, do not create a duplicate: tell me and offer
    to keep a single source. If you cannot run commands (Cowork, claude.ai), tell me exactly
    where to click to add amiel-35/ix-recipes and amiel-35/ix-skills from a repository.
@@ -80,9 +82,9 @@ Once Claude Code has restarted: "open the tracking page" starts the recipes' pag
 | **ix-recipes** plugin | domain skills and the workflow recipes chaining the atoms | same |
 | **tracking page** (`suivi-parcours`) | creates and follows a recipe's dossiers, step by step | Claude Code on your computer: a local server, Python 3.9+, the signed-in Claude CLI — not Cowork |
 | **dossiers** | one folder per request handled: outputs, traces, state | `~/Parcours` (or `$PARCOURS_DIR`); finished ones are archived in `.archives/` |
-| **theme** (optional) | the page's look, a company brand for instance | a separate folder named by `$PARCOURS_THEME` — never in this repository |
+| **theme** | the page's look: the Inflexion brand by default (shipped with the page, fonts under the OFL), `none` for the neutral look, or another brand's folder | `$PARCOURS_THEME` or `--theme` |
 
-For a team: everyone pastes the prompt above; the company's brand is shared as a theme folder (a `theme.css` and its fonts), turned on by `configuration-ix`.
+For a team: everyone pastes the prompt above; another brand is shared as a theme folder (a `theme.css` and its fonts), turned on by `configuration-ix`.
 
 ### Command by command
 

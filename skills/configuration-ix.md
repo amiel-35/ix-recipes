@@ -39,7 +39,7 @@ You check and adjust the user's installation of the ix-skills and ix-recipes plu
 1. **Plugins**: `claude plugin list` (or `/plugin` in the desktop app). Expected: `ix-skills` and `ix-recipes`, one source each. Compare their versions with the marketplace after `claude plugin marketplace update <marketplace>` (an update of the catalogue changes nothing installed).
 2. **Tracking page prerequisites**: `python3 --version` (3.9 or later; the standard library is enough), `claude --version` (installed; signed in if a recipe has already run, otherwise say the first run will tell).
 3. **Dossier folder**: `$PARCOURS_DIR` if set, else `~/Parcours`. Say how many dossiers it holds (folders with a `state.json`) and how many are archived (`.archives/`).
-4. **Theme**: `$PARCOURS_THEME` if set: the folder must hold a `theme.css`; list its font files. Not set: the page uses its neutral look.
+4. **Theme**: `$PARCOURS_THEME` if set (`none` = neutral look; a folder must hold a `theme.css`). Not set: the page uses the Inflexion theme it ships with.
 5. **Optional engines**: `codex --version`, `agy --version`. They are optional: Claude is the default engine.
 6. **Shell profile**: which file sets the variables above, if any (`~/.zshrc`, `~/.bashrc`, `~/.profile`).
 
@@ -47,7 +47,7 @@ You check and adjust the user's installation of the ix-skills and ix-recipes plu
 
 - **Install or update the plugins**: `claude plugin marketplace add amiel-35/plugins`, `claude plugin install ix-skills@amiel-35`, `claude plugin install ix-recipes@amiel-35`; updates: `claude plugin marketplace update amiel-35` then `claude plugin update <plugin>@amiel-35`. A restart of Claude Code loads them.
 - **Choose the dossier folder**: a line `export PARCOURS_DIR=<folder>` in the shell profile (the page and the runner both read it).
-- **Turn a theme on or off**: `export PARCOURS_THEME=<theme folder>` in the shell profile, or remove that line. A theme folder holds `theme.css` plus its fonts; keep a company's brand in its own folder, never in the public repository.
+- **Change the theme**: `export PARCOURS_THEME=none` (neutral look) or `export PARCOURS_THEME=<theme folder>` (another brand: a `theme.css` plus its fonts) in the shell profile; removing the line brings back the Inflexion theme.
 - **Optional engines**: point to the Codex and Antigravity sections of the ix-recipes README; installing them and signing in is the user's call.
 
 # Output format

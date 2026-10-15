@@ -61,6 +61,8 @@ MAX_BODY = 4_000_000        # bytes of a POST body (a pasted answer can be long)
 MAX_FILE = 2_000_000        # bytes of a file sent to the page
 MAX_TITLE = 120             # characters of a parcours title
 DEFAULT_DIR = "~/Parcours"  # one place for the dossiers, wherever the page is launched from
+# The Inflexion theme ships with the page: themes/inflexion in the repository, scripts/themes/inflexion in the plugin.
+DEFAULT_THEMES = (HERE / "themes" / "inflexion", HERE.parent / "themes" / "inflexion")
 THEME_ASSET_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\[\],-]{0,99}\.(ttf|otf|woff2?|svg|png)$")
 THEME_TYPES = {"ttf": "font/ttf", "otf": "font/otf", "woff": "font/woff", "woff2": "font/woff2",
                "svg": "image/svg+xml", "png": "image/png"}
@@ -694,6 +696,15 @@ def make_server(parcours_dir, port=0, dev=False, theme=None):
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+def theme_folder(choice):
+    """None for the neutral look, the bundled Inflexion theme by name, or a folder."""
+    if not choice or choice == "none":
+        return None
+    if choice == "inflexion":
+        return next((t for t in DEFAULT_THEMES if (t / "theme.css").is_file()), None)
+    return Path(choice).expanduser()
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Page de suivi des parcours (voir docs/interface.md)")
     parser.add_argument("--parcours-dir", default=os.environ.get("PARCOURS_DIR") or DEFAULT_DIR,
@@ -701,11 +712,12 @@ def main(argv=None):
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"port local (défaut {DEFAULT_PORT}, 0 = au hasard)")
     parser.add_argument("--dev", action="store_true", help="propose aussi le moteur fake (PARCOURS_FAKE_DIR)")
     parser.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
-    parser.add_argument("--theme", default=os.environ.get("PARCOURS_THEME") or None,
-                        help="dossier d'un thème : theme.css (+ polices, images servies sous /theme/) ; défaut : $PARCOURS_THEME")
+    parser.add_argument("--theme", default=os.environ.get("PARCOURS_THEME") or "inflexion",
+                        help="dossier d'un thème (theme.css + polices et images servies sous /theme/), "
+                             "« inflexion » (défaut) ou « none » pour l'apparence neutre ; défaut : $PARCOURS_THEME")
     args = parser.parse_args(argv)
     try:
-        server = make_server(Path(args.parcours_dir).expanduser(), args.port, args.dev, args.theme)
+        server = make_server(Path(args.parcours_dir).expanduser(), args.port, args.dev, theme_folder(args.theme))
     except OSError as exc:
         print(f"Erreur : impossible de démarrer le serveur sur le port {args.port} ({exc})", file=sys.stderr)
         return 1

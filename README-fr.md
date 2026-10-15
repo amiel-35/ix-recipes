@@ -61,7 +61,9 @@ Copiez ce texte dans Claude Code (ou dans Cowork, qui vous guidera pour les clic
 ```text
 Installe et configure ix-recipes pour moi (https://github.com/amiel-35/ix-recipes).
 1. Si tu peux lancer des commandes : ajoute la marketplace amiel-35/plugins et installe
-   ix-skills@amiel-35 puis ix-recipes@amiel-35 (mets-les à jour s'ils sont déjà là). Si l'un
+   ix-skills@amiel-35 puis ix-recipes@amiel-35 (mets-les à jour s'ils sont déjà là ; si l'ajout
+   de la marketplace échoue faute de clé SSH GitHub, réessaie avec
+   https://github.com/amiel-35/plugins.git). Si l'un
    d'eux est déjà installé depuis une autre marketplace, ne crée pas de doublon : dis-le-moi
    et propose de n'en garder qu'une source. Si tu ne peux pas lancer de commandes (Cowork,
    claude.ai), dis-moi exactement où cliquer pour ajouter amiel-35/ix-recipes et
@@ -81,9 +83,9 @@ Une fois Claude Code redémarré : « ouvre la page de suivi » lance la page de
 | plugin **ix-recipes** | les skills métier et les recettes-workflows qui enchaînent les atomes | idem |
 | **page de suivi** (`suivi-parcours`) | crée et suit les dossiers d'une recette, étape par étape | Claude Code sur votre ordinateur : un serveur local, Python 3.9+, la CLI Claude connectée — pas Cowork |
 | **dossiers** | un dossier par demande traitée : sorties, traces, état | `~/Parcours` (ou `$PARCOURS_DIR`) ; les terminés s'archivent dans `.archives/` |
-| **thème** (facultatif) | l'habillage de la page, par exemple une charte d'entreprise | un dossier à part, désigné par `$PARCOURS_THEME` — jamais dans ce dépôt |
+| **thème** | l'habillage de la page : la charte Inflexion par défaut (livrée avec la page, polices sous licence OFL), `none` pour l'apparence neutre, ou le dossier d'une autre charte | `$PARCOURS_THEME` ou `--theme` |
 
-Pour une équipe : chacun colle le prompt ci-dessus ; la charte de l'entreprise se partage comme un dossier de thème (un `theme.css` et ses polices), activé par `configuration-ix`.
+Pour une équipe : chacun colle le prompt ci-dessus ; une autre charte se partage comme un dossier de thème (un `theme.css` et ses polices), activé par `configuration-ix`.
 
 ### Commande par commande
 

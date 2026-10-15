@@ -22,6 +22,7 @@ scripts:
 - scripts/parcours.py
 - scripts/interface.py
 - scripts/interface.html
+- themes/inflexion
 ---
 
 # Role

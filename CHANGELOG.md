@@ -4,6 +4,9 @@ Notable changes to ix-recipes. Skills are versioned individually (semver in each
 
 ## Unreleased (branches `theme`, `dossiers`) — themes, many dossiers, setup
 
+- The Inflexion theme ships with the page and is on by default (`themes/inflexion/`, bundled
+  in the plugin; Archivo, Source Sans 3 and IBM Plex Mono under the SIL OFL 1.1, licences
+  included); `--theme none` / `PARCOURS_THEME=none` for the neutral look.
 - README: an install prompt to paste into Claude Code or Cowork, and a table of what gets
   deployed (plugins, tracking page, dossiers, theme). `configuration-ix` 1.0.0: checks the
   plugins (present, up to date, not duplicated), the page's prerequisites, the dossier

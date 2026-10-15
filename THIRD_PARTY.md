@@ -38,3 +38,11 @@ Règle pour la suite : avant de reprendre quoi que ce soit d'un autre dépôt, v
 ---
 
 Les méthodes publiques citées dans les skills (MoSCoW, RICE, Given/When/Then, OKR, TAM/SAM/SOM, Van Westendorp…) ne sont pas des sources tierces et ne sont pas listées ici.
+
+## Polices du thème Inflexion (`themes/inflexion/`)
+
+Le thème par défaut de la page de suivi embarque trois familles de polices, non modifiées, chacune sous SIL Open Font License 1.1 (texte de la licence à côté des fichiers : `OFL-*.txt`) :
+
+- **Archivo** — Omnibus-Type, via google/fonts.
+- **Source Sans 3** — Adobe, via google/fonts.
+- **IBM Plex Mono** (Regular) — IBM, via google/fonts.

@@ -1,6 +1,6 @@
 # Format d'une recette-workflow
 
-Spécification v1 du 2026-10-14 : c'est le **format 1** des recettes (§2bis, champ `format` ajouté le 2026-10-16). Le **format 2** (2026-10-16) y ajoute une seule chose : une étape qui vérifie peut relire la source (§1.10, §2ter). Une **recette-workflow** est un skill d'ix-recipes qui enchaîne plusieurs skills (atomes d'ix-skills ou autres recettes) pour un travail récurrent. Elle reprend ce qu'ix-memory avait éprouvé (chaîne courte, mission locale par étape, handoff borné, pauses humaines) et corrige ce qui n'avait jamais marché (le brief de départ qui pollue les étapes aval, `handoff.fields` jamais appliqué).
+Spécification v1 du 2026-10-14 : c'est le **format 1** des recettes (§2bis, champ `format` ajouté le 2026-10-16). Le **format 2** (2026-10-16) y ajoute une seule chose : une étape qui vérifie peut relire la source (§1.10, §2ter). Le **format 3** (2026-10-16) ajoute le corpus : une étape que la recette nomme consulte les pièces du dossier (§1.11, §2quater). Une **recette-workflow** est un skill d'ix-recipes qui enchaîne plusieurs skills (atomes d'ix-skills ou autres recettes) pour un travail récurrent. Elle reprend ce qu'ix-memory avait éprouvé (chaîne courte, mission locale par étape, handoff borné, pauses humaines) et corrige ce qui n'avait jamais marché (le brief de départ qui pollue les étapes aval, `handoff.fields` jamais appliqué).
 
 Une recette qui n'enchaîne rien reste un skill ordinaire : c'est le cas par défaut.
 
@@ -22,6 +22,13 @@ Une recette qui n'enchaîne rien reste un skill ordinaire : c'est le cas par dé
     - Les champs `verbatim` restent le défaut ; `reads_source` sert quand le contrôle porte sur la demande elle-même (chiffres d'un tableau, éléments imposés, mots du demandeur), pas seulement sur ce que l'amont a transmis.
     - Ce qu'elle transmet reste contrôlé : un verdict qui recopie un passage long de la source (40 mots d'affilée) est refusé comme toute fuite, puisque ses champs peuvent aller à une étape qui produit (une offre refaite avec les verdicts).
     - La vérification **de calcul** (recalculer un écart, un ratio, un total à partir des valeurs de la source) est un geste à part de `fact-check`, qui vérifie seulement qu'un chiffre est dans la source. Son atome, `ix-skills:calc-check`, est spécifié dans [`atome-verification-calcul.md`](atome-verification-calcul.md) et figure dans la liste fermée depuis le 2026-10-16 (décision 8) ; il reste à le créer dans ix-skills. Tant qu'il n'existe pas, `requires` le refuse et le concepteur de la page ne l'annonce pas.
+11. **Une étape nommée consulte les pièces du dossier** (format 3, décidé le 2026-10-16, [décision](decision-corpus.md)). La demande (ce que l'utilisateur veut obtenir) et le corpus (les pièces sur lesquelles on travaille : notes, tableaux, contrats) sont séparés à la création du dossier (`new --input demande.md --corpus pièces…`). La règle 2 protège la demande, qui fait dériver ; les pièces sont du matériau.
+    - La recette le déclare sur l'étape : `receives: [corpus, …]`. Toute étape peut le déclarer, qu'elle produise ou vérifie, l'étape 1 comprise ; aucune ne le reçoit sans le déclarer.
+    - **C'est l'exécuteur qui donne le droit** : il copie les pièces dans le dossier jetable des seules étapes qui les déclarent (`./corpus/`), les annonce dans le message, et ne les met jamais dans le message : l'étape lit ce dont elle a besoin. Le droit ne tient que si le moteur ne lit pas hors de son dossier : vrai pour Claude, pour Codex depuis le plugin 2.13.0 ; non vérifié pour Antigravity et Vibe (l'exécuteur le dit).
+    - L'étape dit ce qu'elle a lu dans une sous-section `### sources_read` du HANDOFF (une trace, pas un champ transmis) ; avec Claude, l'exécuteur relève aussi ses lectures réelles et signale l'écart. Il cherche chaque passage entre guillemets de la sortie dans les pièces et les entrées, et signale ceux qu'il ne trouve pas.
+    - Ce que l'étape produit reste contrôlé contre la demande, comme toute sortie ; les pièces ne sont pas protégées.
+    - La mission d'une étape qui produit et consulte le corpus dit en toutes lettres ce qu'elle ne refait pas (« the groups are decided ») : le test de dérive l'a joué ainsi ([résultats](preuve-corpus/derive/resultats.md)).
+    - Sans pièces séparées (tout collé dans la demande), rien ne change : l'étape qui déclare le corpus tourne sans pièces.
 
 ## 2. Frontmatter
 
@@ -41,7 +48,7 @@ workflow:
       label: "Cadrage de la demande"   # nom affiché à l'utilisateur, en français (facultatif ; l'id sinon)
       skill: ix-skills:cadrage    # skill exécuté, avec son espace de noms ; doit figurer dans requires
       mission: Clarify the need…  # mission locale, en une ou deux phrases
-      receives: [brief]           # brief (étape 1 seulement), context_sheet, answers, ou <étape>.<champ>
+      receives: [brief]           # brief (étape 1 seulement), corpus (format 3, §1.11), context_sheet, answers, ou <étape>.<champ>
       transmits: [need, constraints, hypotheses, open_points]
       produces_context_sheet: true   # étape 1 seulement
       verbatim: [imposed_items]      # étape 1 seulement : champs recopiés mot pour mot exprès (listes imposées par la source)
@@ -57,7 +64,7 @@ workflow:
 
 `build.py` vérifie mécaniquement :
 
-- `format` est présent et vaut un format connu (1 ou 2) — sinon il s'arrête là : les règles qui suivent sont celles des formats 1 et 2 ;
+- `format` est présent et vaut un format connu (1, 2 ou 3) — sinon il s'arrête là : les règles qui suivent sont celles des formats 1 à 3 ;
 - chaque `skill` figure dans `requires`, et chaque id de `requires` existe (dans ix-recipes, ou dans `../ix-skills/skills/` quand le dépôt voisin est présent) ;
 - les ids d'étape sont uniques ;
 - seule la première étape reçoit `brief`, et c'est elle qui porte `produces_context_sheet` ; sa pause vaut `validate` ou `answers` ;
@@ -69,13 +76,14 @@ workflow:
 - `answers` n'est reçu qu'après une étape dont la pause vaut `answers` ;
 - chaque `skill` est cité dans le corps du SKILL.md (le corps et le frontmatter ne divergent pas) ;
 - `model`, s'il est donné, vaut `sonnet`, `opus` ou `haiku` ;
-- `reads_source`, s'il est donné, vaut `true` ou `false` ; `true` seulement hors de l'étape 1, sur un skill de `VERIFICATION_SKILLS`, et dans une recette au format 2 au moins.
+- `reads_source`, s'il est donné, vaut `true` ou `false` ; `true` seulement hors de l'étape 1, sur un skill de `VERIFICATION_SKILLS`, et dans une recette au format 2 au moins ;
+- `corpus` n'est reçu que dans une recette au format 3 au moins.
 
 Le frontmatter est la version lisible par machine : c'est elle que l'exécuteur du lot 2 lira.
 
 ## 2bis. Le format (`workflow.format`)
 
-**Ce que c'est.** Un nombre entier, en tête du bloc `workflow`, qui dit selon quelles règles lire ce bloc. Le **format 1** est ce document hors §1.10 et §2ter ; le **format 2** est le format 1 plus `reads_source`. Il ne se confond ni avec `version` (la version de la recette elle-même, en x.y.z, qui change à chaque retouche), ni avec la version du plugin, ni avec celle de la page de suivi ([interface.md](interface.md) §4).
+**Ce que c'est.** Un nombre entier, en tête du bloc `workflow`, qui dit selon quelles règles lire ce bloc. Le **format 1** est ce document hors §1.10 et §2ter ; le **format 2** est le format 1 plus `reads_source` ; le **format 3** est le format 2 plus `receives: [corpus]`. Il ne se confond ni avec `version` (la version de la recette elle-même, en x.y.z, qui change à chaque retouche), ni avec la version du plugin, ni avec celle de la page de suivi ([interface.md](interface.md) §4).
 
 **Qui le lit, et ce qu'il fait d'un format qu'il ne connaît pas.**
 
@@ -89,7 +97,7 @@ Un format plus récent donne « cette recette est au format N, plus récent que 
 
 **Une recette sans champ `format` est lue comme format 1** (tranché le 2026-10-16). Raisons : toute recette écrite avant ce champ l'a été selon les règles du format 1, le seul qui existait — il n'y a donc aucune ambiguïté sur ce qu'elle veut dire ; la refuser casserait les recettes personnelles et les dossiers déjà créés sans rien protéger ; et la règle est figée : l'absence de champ voudra dire « format 1 » pour toujours, même quand le format 2 existera — une recette au format 2 devra le déclarer. L'avertissement suffit à le faire ajouter. Le dépôt, lui, exige le champ (`build.py`) : une recette publiée dit son format explicitement.
 
-**À la création.** Toute recette créée depuis la page déclare son format, le plus bas qui l'exprime : `format: 1`, ou `format: 2` dès qu'une étape relit la source (`needed_format`). C'est vrai du modèle, de la recette écrite à partir des blocs, de la copie d'une recette fournie, du fichier écrit par le concepteur (ajouté en tête du bloc `workflow` s'il l'a omis, relevé de 1 à 2 s'il a écrit 1 avec `reads_source`). Une recette qui n'utilise rien du format 2 reste au format 1 : une page plus ancienne sait encore la jouer. Une recette déjà rangée dans le recueil n'est jamais réécrite d'office.
+**À la création.** Toute recette créée depuis la page déclare son format, le plus bas qui l'exprime : `format: 1`, `format: 2` dès qu'une étape relit la source, `format: 3` dès qu'une étape consulte le corpus (`needed_format`). C'est vrai du modèle, de la recette écrite à partir des blocs, de la copie d'une recette fournie, du fichier écrit par le concepteur (ajouté en tête du bloc `workflow` s'il l'a omis, relevé de 1 à 2 s'il a écrit 1 avec `reads_source`). Une recette qui n'utilise rien du format 2 reste au format 1 : une page plus ancienne sait encore la jouer. Une recette déjà rangée dans le recueil n'est jamais réécrite d'office.
 
 **Quand changer de format.** On passe au format suivant quand une recette écrite selon les nouvelles règles serait **mal jouée sans le dire** par l'exécuteur actuel, ou une recette actuelle par le nouvel exécuteur :
 
@@ -119,6 +127,14 @@ Cesser de lire le format 1 serait un changement majeur de la page, annoncé à l
 **Ce qui a suivi les étapes du §2bis.** Ce document décrit le format 2 sans retirer le format 1 ; l'exécuteur joue les deux (`RECIPE_FORMATS = (1, 2)`) ; `build.py` accepte 2 (la copie d'ix-skills est à mettre à jour de la même façon) ; la page passe en 1.1.0 ; `RECIPE_FORMAT` reste 1, et la page écrit 2 seulement quand une étape relit la source ; aucune recette du dépôt ne passe au format 2, aucune ne s'en sert encore ; le CHANGELOG le dit.
 
 **Ce que reçoit l'étape.** Le texte exact de `input.md`, en entrée nommée `source`, après ses autres entrées, avec une consigne : c'est la référence du contrôle, une preuve et non une demande ; ne pas y répondre ni refaire le travail demandé ; la citer brièvement. Le contrôle d'isolation de son message écarte ce seul bloc : un passage de la demande dans un autre champ reçu reste une fuite. Sa relance éventuelle, qui lui renvoie sa propre sortie, n'est pas contrôlée (elle peut citer la source). Ses champs transmis restent contrôlés (§1.10).
+
+## 2quater. Le format 3 (2026-10-16) : une étape consulte les pièces du dossier
+
+**Ce qu'il ajoute.** Une source de `receives` : `corpus` (§1.11) ; rien d'autre ne change. Une recette au format 3 qui ne s'en sert pas se joue comme au format 2, et une étape qui le déclare dans un dossier sans pièces tourne comme avant.
+
+**Pourquoi c'est un format.** Le critère du §2bis : un exécuteur du format 2 refuse une source inconnue de `receives`, mais une page plus ancienne pourrait jouer l'étape sans les pièces et rendre un livrable qui a l'air complet (des personas sans verbatims, une vérification de chiffres sans le tableau). Le format 3 la fait refuser (« mettez la page à jour »).
+
+**Ce qui a suivi les étapes du §2bis.** Ce document décrit le format 3 ; l'exécuteur joue les trois (`RECIPE_FORMATS = (1, 2, 3)`) ; `build.py` accepte 3 (la copie d'ix-skills est à mettre à jour de la même façon) ; la page passe en 1.3.0, sans zone pour les pièces encore (décision 7.2 : la ligne de commande d'abord) ; `RECIPE_FORMAT` reste 1 ; aucune recette du dépôt ne passe au format 3 ; `concepteur-recette` sait l'écrire ; le CHANGELOG le dit.
 
 ## 3. Les pauses
 

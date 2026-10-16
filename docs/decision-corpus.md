@@ -1,6 +1,6 @@
 # Décision : la notion de corpus dans les recettes
 
-Document de décision du 2026-10-16. Amiel a tranché les questions (§3, §7) ; **pas de code avant les vérifications du §8**. Il remplace l'approche du commit `a27a922` (format 3 : `items` et `mode`), retiré le même jour (gardé sur la branche locale `sauvegarde-format3-a27a922`) ; seule la vérification de calcul en a été conservée.
+Document de décision du 2026-10-16. Amiel a tranché les questions (§3, §7) ; pas de code avant les vérifications du §8 : faites (§9), puis codé en ligne de commande dans le plugin 2.14.0 (§10). Il remplace l'approche du commit `a27a922` (format 3 : `items` et `mode`), retiré le même jour — le numéro 3 sert désormais au corpus (§10) (gardé sur la branche locale `sauvegarde-format3-a27a922`) ; seule la vérification de calcul en a été conservée.
 
 ## 1. Le problème
 
@@ -131,3 +131,19 @@ Incident utile, hors corpus : sur le CSV, Sonnet a signalé comme faux un total 
 5. **Moteurs** : le droit par copie tient avec Claude, et avec Codex depuis le plugin 2.13.0 (profil de permission, §4), sauf `/tmp` et `/var/tmp`. Antigravity et Vibe restent à tester. La page et la ligne de commande le disent au choix du moteur.
 
 **Reste à décider par Amiel** : jouer d'abord le cas d'une mission vague (sans « ne regroupe pas »), ou le couvrir par le point 4 et le vérifier sur le premier vrai dossier en ligne de commande ; garder ou non l'original à côté des pièces converties. Antigravity se rejoue quand son quota revient (vers le 2026-10-19), Vibe quand il a du crédit ([`rejouer.sh`](preuve-corpus/antigravity-vibe/rejouer.sh)).
+
+## 10. Codé en ligne de commande (plugin 2.14.0)
+
+Accepté par Amiel le 2026-10-16 (« coder le corpus en ligne de commande avec les ajustements du §9.4 »), après la fusion de Codex limité à son dossier (PR #8). Les cinq ajustements :
+
+1. **Conversion** à `new --corpus` : fait ([exécuteur](executeur.md) §3, le corpus). Les originaux restent dans `corpus-originaux/`, jamais copiés vers une étape.
+2. **Citer selon le type** : dans la consigne de l'étape (`fichier:ligne`, `fichier, p. N`, ou l'identifiant de la ligne).
+3. **Guillemets contrôlés** : chaque passage entre guillemets est cherché dans les pièces texte et le message ; ceux qu'on ne trouve pas sont signalés, rien n'est refusé. Les PDF ne sont pas vérifiés.
+4. **Missions** : écrit dans [format-recette.md](format-recette.md) §1.11 et dans `concepteur-recette` 1.3.0.
+5. **Moteurs** : la création avertit quand une étape tourne sur Antigravity ou Vibe.
+
+`receives: [corpus]` est le format 3 ([format](format-recette.md) §2quater). La trace déclarative (`### sources_read`) est toujours demandée ; la trace mécanique est relevée avec Claude (`stream-json`), comparée à la déclaration.
+
+**Essai réel** (2026-10-16, le cas du §9.1 rejoué par l'exécuteur, `new --corpus`, les deux étapes sur Sonnet, 0,26 $) : chaque étape a lu `corpus/notes.md` en une lecture, relevée et déclarée dans `sources_read` ; le contrôle des guillemets a signalé les 4 slogans de groupes que l'étape de regroupement avait mis entre guillemets comme des citations. Un premier réglage signalait aussi les noms de personas et une notation (« n sur 42 ») : un passage n'est plus vérifié qu'à partir de 4 mots, et de 7 dans un titre.
+
+**Reste ouvert** : la zone « vos pièces » de la page (décision 7.2) ; le cas d'une mission vague (§9.1, non joué) ; Antigravity et Vibe ; un corpus trop gros pour être lu en entier ; la vérification des citations d'un PDF ; `.docx` et images (refusés pour l'instant) ; la copie de `build.py` dans ix-skills.

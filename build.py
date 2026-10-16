@@ -232,8 +232,9 @@ SIBLING_SKILL_DIRS = {
 }
 PAUSES = {"none", "validate", "answers", "choose"}
 MODELS = {"sonnet", "opus", "haiku"}
-RECIPE_FORMATS = (1, 2)  # workflow.format values this build.py knows (docs/format-recette.md §2bis)
+RECIPE_FORMATS = (1, 2, 3)  # workflow.format values this build.py knows (docs/format-recette.md §2bis)
 SOURCE_FORMAT = 2        # from format 2 on, a checking step may read the source (`reads_source`)
+CORPUS_FORMAT = 3        # from format 3 on, a step may consult the dossier's pieces (`receives: [corpus]`)
 # The only skills that may read the source: they check an upstream output against evidence
 # (docs/format-recette.md §1.10). Keep in step with VERIFICATION_SKILLS in scripts/parcours.py.
 # `calc-check`: the calculation check of ix-recipes docs/atome-verification-calcul.md, to be created in ix-skills.
@@ -329,6 +330,11 @@ def validate_workflow(fm: dict, body: str) -> list:
             elif src == "context_sheet":
                 if i == 0:
                     errs.append("the first step cannot receive the context sheet it produces")
+            elif src == "corpus":
+                # In French, like the messages on the format: they reach the tracking page.
+                if not (type(wf.get("format")) is int and wf["format"] >= CORPUS_FORMAT):
+                    errs.append(f"étape '{sid}' : receives: [corpus] demande « format: {CORPUS_FORMAT} » en tête du bloc workflow "
+                                "(un exécuteur ou une page plus ancien jouerait l'étape sans les pièces, sans le dire)")
             elif src == "answers":
                 if not answers_ready:
                     errs.append(f"step '{sid}': receives answers before any step with pause 'answers'")

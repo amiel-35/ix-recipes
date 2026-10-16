@@ -4,7 +4,7 @@ Les essais du §8 de [`decision-corpus.md`](../decision-corpus.md), joués le 20
 
 | Dossier | Essai | État |
 |---|---|---|
-| [`derive/`](derive/grille.md) | l'étape persona avec et sans le corpus | protocole et grille écrits ; **en attente d'un matériau réel** |
+| [`derive/`](derive/grille.md) | l'étape persona avec et sans le corpus | fait : l'étape reste dans sa mission, verbatims exacts avec le corpus ; 6 appels, 1,28 $ ([résultats](derive/resultats.md)) ; matériau hors du dépôt |
 | [`antigravity-vibe/`](antigravity-vibe/) | lecture hors du dossier de l'étape | **non testé** : quota Antigravity épuisé, budget Vibe épuisé ([`sorties.txt`](antigravity-vibe/sorties.txt)) ; [`rejouer.sh`](antigravity-vibe/rejouer.sh) le rejoue |
 | [`pieces-non-textuelles/`](pieces-non-textuelles/) | ce que Claude lit d'un PDF et d'un tableur dans le dossier d'une étape | fait : 6 appels Sonnet, 0,256 $ |
 

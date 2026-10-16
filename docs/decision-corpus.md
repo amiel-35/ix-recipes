@@ -78,11 +78,16 @@ Hors du sujet : les deux phases d'un même skill (décision 2) n'ont pas besoin 
 
 Joués sans toucher à l'exécuteur ; protocoles, scripts et traces dans [`preuve-corpus/`](preuve-corpus/README.md). Codex : autre session (note `codex-lecture.md`).
 
-### 9.1 La dérive : en attente d'un matériau réel
+### 9.1 La dérive : l'étape persona reste dans sa mission
 
-Pas joué. Le dépôt n'a pas de notes de terrain réelles : le seul cas proche, `tests/cas-skills/persona.md`, est fictif et tient en six lignes déjà regroupées par rôle, trop peu pour qu'un regroupement soit un choix et qu'une dérive se voie. Le protocole et la grille sont écrits avant toute sortie : [`preuve-corpus/derive/grille.md`](preuve-corpus/derive/grille.md).
+Le dépôt n'a pas de notes de terrain réelles (`tests/cas-skills/persona.md` est fictif et tient en six lignes). Amiel a choisi dans ses archives la restitution d'une vraie étude UX de terrain ; ses verbatims et constats ont été mis en 113 notes, une par ligne, thèmes retirés, ordre mélangé. **Biais** : la source était déjà regroupée par thème ; le regroupement par comportement, celui des personas, restait à faire. Le matériau reste hors du dépôt public. Recette à deux étapes (`affinity-mapping` puis `persona`), étape persona jouée deux fois sans et deux fois avec le corpus, jugée par une grille écrite avant les sorties ([`grille.md`](preuve-corpus/derive/grille.md)) ; 1,28 $. Détail : [`resultats.md`](preuve-corpus/derive/resultats.md).
 
-Ce que la préparation a montré : le skill `persona` dit lui-même de former les groupes (« You form the groups yourself from the material »). Dans une chaîne regroupement → personas, c'est la mission seule qui l'en retient ; avec les notes sous la main, c'est le cas le plus défavorable, donc le bon cas à jouer.
+- **Verdict** : avec le corpus, l'étape persona **reste dans sa mission** dans les deux passages : mêmes 4 groupes, mêmes comptes, aucun motif nouveau, les notes d'autres groupes citées seulement en contraste. Elle le fait alors que le skill `persona` dit lui-même de former les groupes (« You form the groups yourself from the material »).
+- **Gain** : sans corpus, pas de verbatim (un passage en invente, signalés comme paraphrases ; l'autre renvoie au corpus) ; avec, 11 et 19 verbatims exacts, chacun avec l'identifiant de sa note. Le besoin du §6 est réglé sur ce cas.
+- **Coût** : +45 % par appel, parce que l'étape lit le fichier entier (10 500 caractères) pour en citer quelques lignes. La section `sources_read` déclarée correspond au flux (un `Read`).
+- **Fragile, avec ou sans corpus** : des formules inventées mises entre guillemets (titres de personas).
+- **Trouvé en route** : le premier regroupement a donné 10 groupes pour 4 personas au plus ; avec « une persona par groupe », l'étape suivante aurait dû fusionner, donc regrouper. Une recette doit borner le nombre de groupes de l'étape qui regroupe au plafond de l'étape qui suit.
+- **Non joué** : une mission qui n'interdit pas en toutes lettres de regrouper ; un corpus trop gros pour être lu en entier ; des notes brutes non structurées.
 
 ### 9.2 Antigravity, Vibe : non testé, pas de crédit
 
@@ -114,12 +119,14 @@ Ce qui en découle pour la création du dossier :
 
 Incident utile, hors corpus : sur le CSV, Sonnet a signalé comme faux un total juste (« 1 900 » pour 960 + 720 + 120 + 30 + 90, qui font 1 920). Une addition de tête fausse, présentée comme une anomalie à vérifier : un argument de plus pour `calc-check`, qui recalcule au lieu de lire.
 
-### 9.4 Recommandation (provisoire, en attente du test de dérive)
+### 9.4 Recommandation
 
-**Coder le corpus en ligne de commande comme au §5, ajusté** sur trois points :
+**Coder le corpus en ligne de commande comme au §5, ajusté.** Le test de dérive ne montre pas le risque qui aurait fait renoncer (une étape qui refait le regroupement avec le corpus et pas sans), et montre le gain attendu. Ajustements :
 
-1. **Conversion à la création du dossier** (`new --corpus`) : `.xlsx` → un CSV par onglet, en bibliothèque standard ; PDF gardé, avec la vérification poppler au-delà de 10 pages ; texte gardé ; tout autre binaire refusé avec un message. Les pièces converties sont celles que les étapes voient ; l'original reste dans `corpus/` pour l'humain.
-2. **Citer selon le type** : `fichier:ligne` pour le texte et le CSV, `fichier, p. N` pour le PDF.
-3. **Moteurs** : le droit par copie ne tient qu'avec Claude. Codex lit tout le disque (accepté, §7.1) ; Antigravity et Vibe restent à tester. La page et la ligne de commande le disent au choix du moteur.
+1. **Conversion à la création du dossier** (`new --corpus`) : `.xlsx` → un CSV par onglet, en bibliothèque standard ; PDF gardé, avec la vérification de poppler au-delà de 10 pages ; texte gardé ; tout autre binaire refusé avec un message. Les étapes voient les pièces converties ; l'original reste dans `corpus/` pour l'humain (proposition).
+2. **Citer selon le type** : `fichier:ligne` pour le texte et le CSV, `fichier, p. N` pour le PDF, ou l'identifiant que la pièce porte déjà (`N012`).
+3. **Guillemets contrôlés** : la consigne dit qu'un passage entre guillemets est une citation exacte d'une pièce ; l'exécuteur cherche chaque passage entre guillemets dans le corpus et signale ceux qu'il ne trouve pas (le contrôle de fuite à l'envers, bibliothèque standard).
+4. **Missions** : une étape qui produit et reçoit le corpus dit en toutes lettres ce qu'elle ne refait pas (« the groups are decided ») ; `concepteur-recette` l'écrit ainsi, et borne le nombre de groupes de l'étape amont au plafond de l'étape aval.
+5. **Moteurs** : le droit par copie ne tient qu'avec Claude. Codex lit tout le disque (accepté, §7.1) ; Antigravity et Vibe restent à tester. La page et la ligne de commande le disent au choix du moteur.
 
-Cette recommandation tombe si le test de dérive montre que l'étape persona refait le regroupement **avec** le corpus et pas **sans** : il faudrait alors réserver le corpus aux étapes qui vérifient. Si la dérive apparaît dans les deux variantes, c'est la mission ou le skill qu'il faut reprendre, pas le corpus.
+**Reste à décider par Amiel** : jouer d'abord le cas d'une mission vague (sans « ne regroupe pas »), ou le couvrir par le point 4 et le vérifier sur le premier vrai dossier en ligne de commande ; garder ou non l'original à côté des pièces converties. Antigravity se rejoue quand son quota revient (vers le 2026-10-19), Vibe quand il a du crédit ([`rejouer.sh`](preuve-corpus/antigravity-vibe/rejouer.sh)).

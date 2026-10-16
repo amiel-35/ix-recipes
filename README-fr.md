@@ -201,13 +201,13 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 
 ---
 
-#### `entretien-professionnel` — Entretien professionnel obligatoire
+#### `entretien-professionnel` — Entretien de parcours professionnel obligatoire
 
-**Ce qu'il fait :** Prépare un entretien professionnel obligatoire (Code du Travail, art. L6315-1) — obligatoire tous les 2 ans pour tout salarié. Produit une trame, des questions et un gabarit de compte-rendu conformes aux exigences légales.
+**Ce qu'il fait :** Prépare l'entretien de parcours professionnel obligatoire (ex-entretien professionnel, Code du travail art. L6315-1 modifié par la loi n° 2025-989) — dans l'année de l'embauche, puis tous les 4 ans, avec un état des lieux tous les 8 ans. Produit une trame, des questions et un gabarit de compte-rendu conformes aux exigences légales.
 
 **Ce qu'il ne fait pas :** Pas la même chose qu'un entretien annuel d'évaluation. C'est un entretien de développement professionnel obligatoire légalement, pas une évaluation de performance.
 
-**Quand l'utiliser :** Tous les 2 ans par salarié, ou après certains événements spécifiques (retour de congé maternité, longue maladie…) selon la loi française.
+**Quand l'utiliser :** Tous les 4 ans par salarié, pour l'état des lieux à 8 ans, ou après certains événements (retour de congé maternité ou de longue maladie sans entretien dans les 12 mois précédents, visite médicale de mi-carrière, approche des 60 ans) selon la loi française.
 
 ---
 

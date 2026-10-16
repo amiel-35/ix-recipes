@@ -716,7 +716,7 @@ Des livrables de recommandation pour un décideur. Un temps prévus pour devenir
 
 ## Workflows
 
-Un workflow enchaîne des skills pour un travail récurrent. Format : [`docs/format-recette.md`](docs/format-recette.md). Chaque étape tourne isolée (un sous-agent sous Claude Code) et ne reçoit que ce dont elle a besoin ; seule la première lit la demande brute ; une fiche de contexte validée par l'humain la remplace ensuite ; les pauses font valider, répondre (client, acheteur) ou choisir. Une trace de chaque étape est écrite dans `./parcours/` quand c'est possible.
+Un workflow enchaîne des skills pour un travail récurrent. Format : [`docs/format-recette.md`](docs/format-recette.md). Chaque étape tourne isolée (un sous-agent sous Claude Code) et ne reçoit que ce dont elle a besoin ; seule la première lit la demande brute, plus, depuis le format 2 des recettes, une étape qui vérifie (`fact-check`, `quality-check`, `controle-qualite`) et le déclare, pour contrôler ce qu'on en a fait ; une fiche de contexte validée par l'humain la remplace pour les autres ; les pauses font valider, répondre (client, acheteur) ou choisir. Une trace de chaque étape est écrite dans `./parcours/` quand c'est possible.
 
 Disponibles : `brief-client`, `reponse-appel-offres` (voir le catalogue). Tous deux testés de bout en bout sur du matériau réel (une transcription de réunion client, un cahier des charges de consultation). `concepteur-recette` en conçoit de nouvelles.
 

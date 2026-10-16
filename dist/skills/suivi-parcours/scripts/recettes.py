@@ -585,6 +585,7 @@ def personal_summary(args, path, full=False):
         "id": path.stem, "label": recipe.get("label") or path.stem, "version": recipe.get("version"),
         "summary": recipe.get("summary") or recipe.get("description") or "",
         "steps": len(recipe.get("steps") or []), "errors": check["errors"],
+        "reads_source": [s["id"] for s in recipe.get("steps") or [] if s.get("reads_source")],   # the checks that re-read the request
         "format_error": check.get("format_error"),
         "shadowed": path.stem in P.plugin_recipe_ids(),
         "updated": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds"),
@@ -662,12 +663,20 @@ SOURCES_RULE = (
     "reports, tables, emails: step 1 receives `[brief]`, never names of documents), `context_sheet` "
     "(from step 2 on), `answers` (after a step with `pause: answers`), or `<step>.<field>` transmitted "
     "by an earlier step. Any other name is refused.")
+SOURCE_RULE = (
+    "A checking step — " + ", ".join(f"`{ref}`" for ref in P.VERIFICATION_SKILLS) + ", and no other skill — "
+    "placed after the step that produced what it checks may re-read the raw request: `reads_source: true`. "
+    "Set it yourself whenever such a step must check a deliverable against what was asked or given (figures, "
+    "imposed items, the requester's wording), not only against the fields handed down: the context sheet and "
+    "the upstream fields are summaries, and a checker that reads only them cannot see what they dropped. "
+    "A producing step never reads the raw request; pass it precise items with `verbatim` at step 1 instead.")
 PROPOSAL_SHAPE = (
     '{"title": "<short French name of the recipe>", "summary": "<one French sentence: from what to what>",\n'
     ' "context_sheet": ["<French rubric of the context sheet>", "..."],\n'
     ' "steps": [{"id": "<lower-case id>", "label": "<French name>", "skill": "<namespace:id from the catalogue>",\n'
     '            "role": "<what the step does, one French sentence>", "receives": ["brief"],\n'
-    '            "produces": ["<field>", "..."], "pause": "none | validate | answers | choose", "optional": false}]}')
+    '            "produces": ["<field>", "..."], "pause": "none | validate | answers | choose", "optional": false,\n'
+    '            "reads_source": false}]}')
 
 
 def design_message(skill, need, mode="propose", insist=False, previous=None, proposal=None, comments=None):
@@ -686,8 +695,9 @@ def design_message(skill, need, mode="propose", insist=False, previous=None, pro
         "=== FORMAT REFERENCE ===\nA complete recipe file in the ix-recipes format (docs/format-recette.md), "
         "given as a model of the FORMAT only — not of the steps, which depend on the job. Keep every "
         "frontmatter key it has; a `workflow` step may also use `optional: true` (run only if the human "
-        "chooses it at the pause before), `verbatim` (step 1 only) and `pause: answers` / `choose`.\n"
-        f"{SOURCES_RULE}\n"
+        "chooses it at the pause before), `verbatim` (step 1 only), `reads_source: true` (a checking step that "
+        f"re-reads the raw request; the recipe then declares `format: {P.SOURCE_FORMAT}`) and `pause: answers` / `choose`.\n"
+        f"{SOURCES_RULE}\n{SOURCE_RULE}\n"
         f"````markdown\n{TEMPLATE}````\n=== END FORMAT REFERENCE ===",
         f"=== JOB ===\n{need}\n=== END JOB ===",
     ]
@@ -718,7 +728,8 @@ def design_message(skill, need, mode="propose", insist=False, previous=None, pro
             "=== OUTPUT FORMAT ===\n" + language +
             "Write the complete recipe file implementing EXACTLY the validated proposal: the same steps in "
             "the same order, the same skills, pauses and optional steps, the context sheet rubrics as keys "
-            "(with French `context_labels`), each step's `produces` as its `transmits`. Fill in what the "
+            "(with French `context_labels`), each step's `produces` as its `transmits`, `reads_source: true` on "
+            f"the steps the proposal marks so (and then `format: {P.SOURCE_FORMAT}`). Fill in what the "
             "proposal leaves out (missions in English, models, the body). The file follows the skill's "
             "language rules: `label`, `summary_fr` and `description_fr` in French, `description_en` and the "
             "body in English, step `label` in French.\n"
@@ -731,7 +742,7 @@ def design_message(skill, need, mode="propose", insist=False, previous=None, pro
             "Give the skill's part A (verdict). When a recipe is justified, DO NOT write the recipe file: "
             "the user first comments on the chain. Give instead the PROPOSAL, in ONE ```json code block of "
             f"exactly this shape:\n{PROPOSAL_SHAPE}\n"
-            f"Sources in `receives` follow the rule above: {SOURCES_RULE} At most {MAX_STEPS} steps.\n"
+            f"Sources in `receives` follow the rule above: {SOURCES_RULE} {SOURCE_RULE} At most {MAX_STEPS} steps.\n"
             + ("Take every comment into account; when you do not follow one, say why in the rationale.\n"
                if mode == "revise" else "")
             + "Then the rationale and the questions to settle (the skill's part B, without the file). Leave "
@@ -802,6 +813,7 @@ def normalize_proposal(data):
             "skill": str(raw.get("skill") or "").strip(), "role": str(raw.get("role") or "").strip(),
             "receives": as_strings(raw.get("receives")), "produces": as_strings(raw.get("produces")),
             "pause": pause if pause in P.PAUSES else "none", "optional": raw.get("optional") is True,
+            "reads_source": raw.get("reads_source") is True,   # a checking step re-reads the raw request (format 2)
             "auto": raw.get("auto") is not False,   # inputs wired by the page (all that comes before), or chosen by hand
         })
     return {"title": str(data.get("title") or "").strip(), "summary": str(data.get("summary") or "").strip(),
@@ -844,6 +856,12 @@ def proposal_problems(proposal, refs=None):
             else:
                 problems.append(f"« {name} » : « {source} » n'est pas une entrée possible"
                                 + (" (la première étape reçoit brief)" if not i else ""))
+        if step.get("reads_source"):
+            if not i:
+                problems.append(f"« {name} » : la première étape lit déjà la demande, elle n'a pas à la relire")
+            elif step["skill"] not in P.VERIFICATION_SKILLS:
+                problems.append(f"« {name} » : seule une étape qui vérifie (fact-check, audit de preuves, contrôle "
+                                "qualité) peut relire la demande ; une étape qui produit ne la relit jamais")
         produced[step["id"]] = set(step["produces"])
         answers_ready = answers_ready or step["pause"] == "answers"
     if "brief" not in steps[0]["receives"]:
@@ -929,15 +947,21 @@ def step_drift(proposal, recipe_text):
         pause = got.get("pause", "none")
         if want["skill"] == got.get("skill") and want["pause"] != pause and not (got.get("produces_context_sheet") and want["pause"] == "none"):
             drift.append(f"« {want['label'] or want['id']} » : pause {pause} au lieu de {want['pause']}")
+        if want["skill"] == got.get("skill") and bool(want.get("reads_source")) != (got.get("reads_source") is True):
+            drift.append(f"« {want['label'] or want['id']} » : "
+                         + ("relit la demande, ce que la proposition ne prévoyait pas" if got.get("reads_source") is True
+                            else "ne relit pas la demande, alors que la proposition le prévoyait"))
     return drift
 
 
 WORKFLOW_LINE_RE = re.compile(r"^workflow:[ \t]*(?:#.*)?$", re.M)
+FORMAT_LINE_RE = re.compile(r"^([ \t]+format:[ \t]*)(1)[ \t]*(?:#.*)?$", re.M)
 
 
 def with_format(text):
     """A recipe file written by the designer, with `format:` added at the head of its workflow block when the
-    engine left it out: every recipe created from the page declares its format (docs/format-recette.md §2bis).
+    engine left it out: every recipe created from the page declares its format (docs/format-recette.md §2bis),
+    the lowest one that expresses it — 2 when a step reads the source, also when the engine wrote 1.
     Anything else is left as written (a block written inline, a front matter that does not parse)."""
     match = P.FRONTMATTER_RE.match(text)
     if not match:
@@ -948,11 +972,18 @@ def with_format(text):
         return text
     workflow = fm.get("workflow") if isinstance(fm, dict) else None
     line = WORKFLOW_LINE_RE.search(text, 0, match.end(1))
-    if not isinstance(workflow, dict) or "format" in workflow or not line:
+    if not isinstance(workflow, dict) or not line:
+        return text
+    needed = P.needed_format(workflow.get("steps") if isinstance(workflow.get("steps"), list) else [])
+    if "format" in workflow:
+        if workflow["format"] == P.RECIPE_FORMAT and needed > P.RECIPE_FORMAT:   # a step reads the source: format 2
+            found = FORMAT_LINE_RE.search(text, line.end(), match.end(1))
+            if found:
+                return text[:found.start(2)] + str(needed) + text[found.end(2):]
         return text
     rest = text[line.end():match.end(1)].split("\n")
     indent = next((len(l) - len(l.lstrip(" ")) for l in rest if l.strip() and not l.lstrip().startswith("#")), 2) or 2
-    return text[:line.end()] + f"\n{' ' * indent}format: {P.RECIPE_FORMAT}" + text[line.end():]
+    return text[:line.end()] + f"\n{' ' * indent}format: {needed}" + text[line.end():]
 
 
 def cmd_design(args):
@@ -1053,8 +1084,8 @@ BLANK_PROPOSAL = {"title": "", "summary": "", "context_sheet": DEFAULT_SHEET, "s
 
 def cmd_catalogue(args):
     """The skills a block may hold: the real catalogue (current versions), tools left out."""
-    items = [dict(item, label=item["id"].replace("-", " ")) for ref, item in sorted(P.catalogue().items())
-             if item["id"] not in NOT_IN_CATALOGUE]
+    items = [dict(item, label=item["id"].replace("-", " "), verifies=ref in P.VERIFICATION_SKILLS)
+             for ref, item in sorted(P.catalogue().items()) if item["id"] not in NOT_IN_CATALOGUE]
     for item in items:
         item.pop("path", None)
     return emit(args, {"skills": items}, "\n".join(i["ref"] for i in items))
@@ -1094,7 +1125,7 @@ def recipe_to_proposal(text):
         steps.append({"id": raw.get("id"), "label": raw.get("label") or "", "skill": raw.get("skill"),
                       "role": raw.get("mission") or "", "receives": raw.get("receives") or [],
                       "produces": raw.get("transmits") or [], "pause": raw.get("pause") or "none",
-                      "optional": bool(raw.get("optional")), "auto": False})
+                      "optional": bool(raw.get("optional")), "reads_source": raw.get("reads_source") is True, "auto": False})
     proposal = normalize_proposal({"title": fm.get("label") or fm.get("id"), "summary": fm.get("summary_fr") or "",
                                    "context_sheet": [labels.get(k) or k for k in wf.get("context_sheet") or []],
                                    "steps": steps})
@@ -1151,6 +1182,8 @@ def proposal_to_recipe(proposal, recipe_id):
             step["produces_context_sheet"] = True
         if s["optional"]:
             step["optional"] = True
+        if i and s.get("reads_source"):
+            step["reads_source"] = True
         if i == last and s["produces"]:
             step["output_field"] = s["produces"][0]
         step["pause"] = ("answers" if s["pause"] == "answers" else "validate") if i == 0 else s["pause"]
@@ -1160,11 +1193,12 @@ def proposal_to_recipe(proposal, recipe_id):
         "id": recipe_id, "label": title, "version": "0.1.0",
         "description_fr": summary, "summary_fr": summary, "icon": "⇢", "category": "workflow",
         "requires": list(dict.fromkeys(s["skill"] for s in steps)),
-        "workflow": {"format": P.RECIPE_FORMAT, "context_sheet": [k for k, _ in sheet],
+        "workflow": {"format": P.needed_format(wf_steps), "context_sheet": [k for k, _ in sheet],
                      "context_labels": {k: v for k, v in sheet}, "steps": wf_steps},
     }
     rows = "\n".join(f"| {i + 1} | {s['id']} | `{s['skill']}` | {(s['role'] or s['label'] or '').replace('|', '/')} | "
-                     f"{', '.join(w['receives'])} | {', '.join(s['produces'])} | {w['pause']} |"
+                     f"{', '.join(w['receives'] + (['the raw request (reads_source, to check against it)'] if w.get('reads_source') else []))} | "
+                     f"{', '.join(s['produces'])} | {w['pause']} |"
                      for i, (s, w) in enumerate(zip(steps, wf_steps)))
     stops = [f"- After « {w['label']} »: " + ("show the questions and wait for the third party's answers."
                                              if w["pause"] == "answers" else "show the output and wait for the human to validate.")
@@ -1176,7 +1210,9 @@ You orchestrate the recipe « {title} »: you chain its steps, stop at its pause
 # Absolute rules
 
 - Each step runs isolated and receives only what its `receives` line lists.
-- The raw request reaches step 1 only; the validated context sheet replaces it for the later steps.
+- The raw request reaches step 1 only; the validated context sheet replaces it for the later steps.""" + (
+        "\n- A checking step marked `reads_source` re-reads the raw request to check against it; no producing step ever does."
+        if any(w.get("reads_source") for w in wf_steps) else "") + """
 - Steps hand over named fields only; the human decides at the pauses and chooses the optional steps.
 
 # Context sheet

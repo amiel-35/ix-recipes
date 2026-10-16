@@ -252,6 +252,7 @@ dialog .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1
 
 /* ---- personal recipes */
 .badge.mine { background: var(--ok-bg); color: var(--ok); }
+.badge.reads { background: var(--ok-bg); color: var(--ok); white-space: nowrap; }
 .empty.small { padding: 22px 20px; text-align: left; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .empty.small p { margin: 0; flex: 1; min-width: 220px; }
 .badge { display: inline-block; font: 600 11px/1.6 var(--sans); letter-spacing: .02em; padding: 0 7px; border-radius: 999px; background: var(--run-bg); color: var(--run); margin-left: 8px; vertical-align: 2px; }
@@ -331,6 +332,9 @@ pre.raw.diff { max-height: 560px; }
 .flow .fc-sel .fc-box { fill: var(--run-bg); stroke-width: 2.6; }
 .flow .fc-src .fc-box, .flow polygon.fc-src { fill: var(--ok-bg); stroke: var(--ok); }
 .flow .fc-mark { fill: var(--accent); }
+.flow .fc-reads { fill: var(--ok-bg); stroke: var(--ok); stroke-width: 1.2; }
+.flow .fc-reads-t { font: 600 10px var(--sans); fill: var(--ok); }
+.fc-legend .lg-reads { background: var(--ok-bg); border-color: var(--ok); border-radius: 999px; }
 .fc-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--ink-3); }
 .fc-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .fc-legend .lg { width: 22px; height: 13px; display: inline-block; border: 1.2px solid var(--ink-3); background: var(--surface); }
@@ -1198,6 +1202,20 @@ function draftState(d) {
   if (d.tested) return { dot: 'ok', text: 'Testée, prête à valider' };
   return { dot: 'warn', text: 'À tester sur un exemple' };
 }
+// A checking step may re-read the user's text to check against it (reads_source, format 2): never a producing one
+function readsSource(s) { return !!(s && (s.reads_source || s.source)); }
+function readersNote(steps) {
+  var r = (steps || []).filter(readsSource);
+  if (!r.length) return '';
+  return (r.length > 1 ? 'les étapes ' : 'l’étape ') + r.map(function (s) { return '« ' + stepName(s) + ' »'; }).join(', ') + (r.length > 1 ? ' le relisent' : ' le relit') + ' pour vérifier';
+}
+function receivesFr(s, steps) {
+  var list = (s.receives || []).map(function (r) { return sourceFr(r, steps); });
+  if (readsSource(s)) list.push('votre demande, relue pour vérifier (le texte brut)');
+  return list.join(', ') || '—';
+}
+var READS_BADGE_TITLE = 'Cette étape vérifie : elle relit votre demande telle que vous l’avez collée, pour contrôler ce qu’on lui transmet. Les étapes qui produisent ne la lisent jamais.';
+function readsBadge(s) { return readsSource(s) ? h('span', { class: 'badge reads', title: READS_BADGE_TITLE }, 'Relit votre demande') : null; }
 function sourceFr(input, steps) {
   if (input === 'brief') return 'votre demande (le texte brut)';
   if (input === 'context_sheet') return 'la fiche de contexte';
@@ -1220,14 +1238,16 @@ function viewRecipes() {
         var stops = r.steps.filter(function (s) { return s.pause === 'validate' || s.pause === 'answers'; }).length;
         return h('a', { class: 'card', href: '#/recettes/f/' + r.id }, h('div', { class: 'ttl' }, r.label, h('span', { class: 'badge' }, 'Fournie')),
           h('div', { class: 'sub' }, r.summary || firstSentence(r.description)),
-          h('div', { class: 'foot' }, h('span', null, plural(r.steps.length, 'étape', 'étapes') + ' · ' + plural(stops, 'arrêt', 'arrêts') + ' pour vous'), h('span', null, 'version ' + r.version)));
+          h('div', { class: 'foot' }, h('span', null, plural(r.steps.length, 'étape', 'étapes') + ' · ' + plural(stops, 'arrêt', 'arrêts') + ' pour vous'
+            + (r.steps.some(readsSource) ? ' · vérifie sur votre demande' : '')), h('span', null, 'version ' + r.version)));
       })) : h('p', { class: 'muted' }, 'Aucune recette fournie n’est lisible : le plugin ix-recipes est-il installé ?')),
     h('section', null, h('h2', { class: 'group-title' }, 'Mes recettes · ' + b.personal.length),
       b.personal.length ? h('div', { class: 'cards' }, b.personal.map(function (r) {
         var bad = r.errors.length || r.shadowed, sent = r.contribution && r.contribution.status === 'pushed';
         return h('a', { class: 'card', href: '#/recettes/p/' + r.id }, h('div', { class: 'ttl' }, r.label, h('span', { class: 'badge mine' }, 'Personnelle')), h('div', { class: 'sub' }, r.id + (r.version ? ' · version ' + r.version : '')),
           h('div', { class: 'state' }, h('span', { class: 'dot ' + (bad ? 'bad' : 'ok') }),
-            r.shadowed ? 'Masquée par une recette du plugin' : r.format_error ? 'Mettez la page à jour pour la lancer' : r.errors.length ? 'Ne peut plus être lancée' : sent ? 'Proposée au dépôt' : plural(r.steps, 'étape', 'étapes')),
+            r.shadowed ? 'Masquée par une recette du plugin' : r.format_error ? 'Mettez la page à jour pour la lancer' : r.errors.length ? 'Ne peut plus être lancée' : sent ? 'Proposée au dépôt'
+              : plural(r.steps, 'étape', 'étapes') + ((r.reads_source || []).length ? ' · vérifie sur votre demande' : '')),
           h('div', { class: 'foot' }, h('span', null, r.summary ? firstSentence(r.summary) : ''), h('span', null, ago(r.updated))));
       })) : h('div', { class: 'empty small' }, h('p', null, 'Aucune pour l’instant. Copiez une recette fournie pour l’adapter, ou créez-en une à partir d’un besoin.'),
         h('button', { class: 'btn', type: 'button', onclick: function () { go('#/recettes/nouvelle'); } }, icon('plus'), 'Nouvelle recette'))),
@@ -1419,7 +1439,8 @@ function flowSteps(steps) {
   return steps.map(function (s, i) {
     return { id: s.id, label: s.label || pretty(s.id), skill: s.skill, pause: s.pause || 'none', optional: !!s.optional,
       receives: s.receives || [], gives: s.transmits || s.produces || [], mission: s.mission || s.role || '',
-      sheet: s.produces_context_sheet !== undefined ? !!s.produces_context_sheet : i === 0, output: s.output_field };
+      sheet: s.produces_context_sheet !== undefined ? !!s.produces_context_sheet : i === 0, output: s.output_field,
+      source: i > 0 && !!s.reads_source };
   });
 }
 function flowchart(rawSteps, key, opts) {
@@ -1427,6 +1448,7 @@ function flowchart(rawSteps, key, opts) {
   var steps = flowSteps(rawSteps), sel = S.flowSel[key] && steps.some(function (s) { return s.id === S.flowSel[key]; }) ? S.flowSel[key] : null;
   var selected = steps.filter(function (s) { return s.id === sel; })[0];
   var sources = {};
+  if (selected && selected.source) sources.__brief = true;
   if (selected) selected.receives.forEach(function (r) {
     if (r === 'brief') sources['__brief'] = true;
     else if (r === 'context_sheet') sources[steps[0].id] = true;
@@ -1462,7 +1484,11 @@ function flowchart(rawSteps, key, opts) {
     g.appendChild(sv('text', { x: cx, y: y + 20, class: 'fc-tb', 'text-anchor': 'middle', 'dominant-baseline': 'central' }, clip(s.label, Math.floor((w - 30) / 7.6))));
     g.appendChild(sv('text', { x: cx, y: y + 38, class: 'fc-ts', 'text-anchor': 'middle', 'dominant-baseline': 'central' }, clip(s.skill, Math.floor((w - 30) / 6.6))));
     if (opts.marks && opts.marks[s.id]) g.appendChild(sv('circle', { cx: x + w - 4, cy: y + 4, r: 5, class: 'fc-mark' }));
-    g.appendChild(sv('title', {}, s.label + ' — ' + s.skill));
+    if (s.source) {   // re-reads the user's text to check: a tag on the box's top left
+      g.appendChild(sv('rect', { x: x + 16, y: y - 7, width: 112, height: 14, rx: 7, class: 'fc-reads' }));
+      g.appendChild(sv('text', { x: x + 72, y: y, class: 'fc-reads-t', 'text-anchor': 'middle', 'dominant-baseline': 'central' }, 'relit votre demande'));
+    }
+    g.appendChild(sv('title', {}, s.label + ' — ' + s.skill + (s.source ? ' — relit votre demande pour vérifier' : '')));
     function pick() { S.flowSel[key] = S.flowSel[key] === s.id ? null : s.id; S.sig = ''; render(); }
     g.addEventListener('click', pick);
     g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
@@ -1512,12 +1538,13 @@ function flowchart(rawSteps, key, opts) {
   svg.setAttribute('viewBox', '0 0 ' + FC.W + ' ' + (y + 12));
   var legend = h('div', { class: 'fc-legend', 'aria-hidden': 'true' },
     [['proc', 'Étape : un skill'], ['opt', 'Étape facultative'], ['human', 'Vous validez'], ['answers', 'Vous apportez une réponse'], ['dec', 'Votre choix'], ['data', 'Ce qui entre'], ['doc', 'Le livrable']]
+      .concat(steps.some(function (s) { return s.source; }) ? [['reads', 'Relit votre demande pour vérifier']] : [])
       .map(function (l) { return h('span', null, h('i', { class: 'lg lg-' + l[0] }), l[1]); }));
   var detail = selected ? h('div', { class: 'fc-detail' },
-    h('div', { class: 'st-head' }, h('strong', null, selected.label), selected.optional ? h('span', { class: 'badge' }, 'Facultative') : null, h('code', null, selected.skill)),
+    h('div', { class: 'st-head' }, h('strong', null, selected.label), selected.optional ? h('span', { class: 'badge' }, 'Facultative') : null, readsBadge(selected), h('code', null, selected.skill)),
     selected.mission ? h('p', { class: 'mission', lang: opts.missionLang || 'en' }, selected.mission) : null,
     h('dl', { class: 'kv' },
-      h('dt', null, 'Reçoit'), h('dd', null, selected.receives.map(function (r) { return sourceFr(r, steps); }).join(', ') || '—'),
+      h('dt', null, 'Reçoit'), h('dd', null, receivesFr(selected, steps)),
       h('dt', null, opts.proposal ? 'Produit' : 'Transmet'), h('dd', null, selected.gives.join(', ') + (selected.output ? ' (« ' + selected.output + ' » est le document entier)' : '') || '—'),
       h('dt', null, 'Pause'), h('dd', null, PAUSE_FR[selected.pause] || selected.pause)),
     opts.detailExtra ? opts.detailExtra(selected) : null)
@@ -1543,6 +1570,7 @@ function recipeChain(rawSteps, key, opts) {
   if (!opts.edit && (S.viewMode || 'cards') === 'flow') return flowchart(rawSteps, key, opts);
   var steps = flowSteps(rawSteps), sel = S.flowSel[key] || null, selected = steps.filter(function (s) { return s.id === sel; })[0];
   var sources = {};
+  if (selected && selected.source) sources.__brief = true;
   if (selected) selected.receives.forEach(function (r) {
     if (r === 'brief') sources.__brief = true;
     else if (r === 'context_sheet') sources[steps[0].id] = true;
@@ -1550,8 +1578,10 @@ function recipeChain(rawSteps, key, opts) {
     else sources[String(r).split('.')[0]] = true;
   });
   var lastMain = null; steps.forEach(function (s) { if (!s.optional) lastMain = s.id; });
+  var readers = readersNote(steps);
   var out = [h('div', { class: 'blk hat' + (sources.__brief ? ' src' : '') }, h('div', { class: 'blk-head' }, h('strong', null, 'Votre demande'), h('code', null, 'mail, notes, documents…')),
-    h('div', { class: 'blk-sub' }, 'Ce que vous collez en créant le dossier : seule la première étape le lit.'))];
+    h('div', { class: 'blk-sub' }, readers ? 'Ce que vous collez en créant le dossier : la première étape le lit, et ' + readers + ' (sans rien produire).'
+      : 'Ce que vous collez en créant le dossier : seule la première étape le lit.'))];
   if (opts.edit) out.push(opts.slot(0));
   for (var i = 0; i < steps.length; i++) {
     if (steps[i].optional) {
@@ -1570,11 +1600,11 @@ function recipeChain(rawSteps, key, opts) {
     if (opts.edit) return opts.block(s, i, rawSteps[i]);
     var card = h('div', { class: 'blk step ' + nsClass(s.skill) + (isSel ? ' sel' : '') + (sources[s.id] ? ' src' : '') + (s.id === lastMain ? ' last' : ''),
       tabindex: '0', role: 'button', 'aria-expanded': isSel ? 'true' : 'false' },
-      h('div', { class: 'blk-head' }, h('strong', null, s.label), opts.marks && opts.marks[s.id] ? h('span', { class: 'blk-mark', title: 'Commentée' }) : null, h('code', null, s.skill)),
+      h('div', { class: 'blk-head' }, h('strong', null, s.label), opts.marks && opts.marks[s.id] ? h('span', { class: 'blk-mark', title: 'Commentée' }) : null, readsBadge(s), h('code', null, s.skill)),
       s.gives.length ? h('div', { class: 'blk-sub' }, (opts.proposal ? 'Produit : ' : 'Transmet : ') + s.gives.join(', ') + (s.id === lastMain ? ' — le livrable' : '')) : null,
       isSel ? h('div', { class: 'blk-detail' },
         s.mission ? h('p', { class: 'mission', lang: opts.missionLang || 'en' }, s.mission) : null,
-        h('dl', { class: 'kv' }, h('dt', null, 'Reçoit'), h('dd', null, s.receives.map(function (r) { return sourceFr(r, steps); }).join(', ') || '—')),
+        h('dl', { class: 'kv' }, h('dt', null, 'Reçoit'), h('dd', null, receivesFr(s, steps))),
         opts.detailExtra ? opts.detailExtra(s) : null) : null);
     function pick(e) { if (e && e.target.closest('textarea, input, button, a')) return; S.flowSel[key] = isSel ? null : s.id; S.sig = ''; render(); }
     card.addEventListener('click', pick);
@@ -1600,7 +1630,7 @@ function wireSteps(steps) {
     }
     if (s.pause === 'answers') seenAnswers = true;
   });
-  if (steps[0]) steps[0].optional = false;
+  if (steps[0]) { steps[0].optional = false; steps[0].reads_source = false; }
   return steps;
 }
 function freeStepId(steps, base) {
@@ -1641,12 +1671,14 @@ async function loadCatalogue() {
   try { S.catalogue = (await api('GET', '/api/recettes/catalogue', undefined, 30000)).skills; } catch (e) { S.error = friendlyError(e); }
   S.catalogueLoading = false; S.sig = ''; render();
 }
+function verifies(skill) { return (S.catalogue || []).some(function (c) { return c.ref === skill && c.verifies; }); }
 function addSkill(d, item, at) {
   var b = builderOf(d), steps = b.p.steps;
   if (steps.length >= 6) { S.error = 'Six étapes au plus : une recette reste une chaîne courte.'; renderChrome(); return; }
   at = at === null || at === undefined ? steps.length : at;
   var step = { id: freeStepId(steps, item.id), label: pretty(item.id), skill: item.ref, role: '', receives: [], produces: ['resultat'],
-    pause: at === 0 && !steps.length ? 'validate' : 'none', optional: false, auto: true };
+    pause: at === 0 && !steps.length ? 'validate' : 'none', optional: false, auto: true,
+    reads_source: !!item.verifies && at > 0 };   // a check placed after a step re-reads the request by default: shown, and can be unticked
   steps.splice(at, 0, step);
   b.insertAt = null; S.flowSel['build:' + d.slug] = step.id;
   builderChanged(d, true);
@@ -1688,7 +1720,7 @@ function builderPanel(d) {
       var open = S.flowSel[key] === raw.id;
       var label = h('input', { class: 'input blk-title', type: 'text', value: raw.label, 'aria-label': 'Nom de l’étape', maxlength: '80' });
       label.addEventListener('input', function () { raw.label = label.value; b.dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(function () { saveBuilder(d); }, 900); });
-      var body = [h('div', { class: 'blk-head' }, h('span', { class: 'grip', title: 'Glisser pour déplacer', 'aria-hidden': 'true' }, '⋮⋮'), label, h('code', null, raw.skill),
+      var body = [h('div', { class: 'blk-head' }, h('span', { class: 'grip', title: 'Glisser pour déplacer', 'aria-hidden': 'true' }, '⋮⋮'), label, i > 0 ? readsBadge(raw) : null, h('code', null, raw.skill),
         h('span', { class: 'blk-tools' },
           h('button', { type: 'button', class: 'btn ghost icon', title: 'Monter', 'aria-label': 'Monter', disabled: i === 0, onclick: function () { moveStep(d, i, i - 1); } }, '↑'),
           h('button', { type: 'button', class: 'btn ghost icon', title: 'Descendre', 'aria-label': 'Descendre', disabled: i === steps.length - 1, onclick: function () { moveStep(d, i, i + 2); } }, '↓'),
@@ -1703,6 +1735,11 @@ function builderPanel(d) {
         body.push(h('div', { class: 'blk-detail' }, role,
           h('div', { class: 'row', style: 'margin-top:8px' }, h('span', { class: 'muted', style: 'font-size:13px' }, 'Après l’étape'), pause,
             i > 0 ? h('label', { class: 'check-inline' }, h('input', { type: 'checkbox', checked: raw.optional, onchange: function (e) { raw.optional = e.target.checked; builderChanged(d, true); } }), 'Facultative') : null),
+          i > 0 && (verifies(raw.skill) || raw.reads_source) ? h('div', { style: 'margin-top:8px' },
+            h('label', { class: 'check-inline' }, h('input', { type: 'checkbox', checked: !!raw.reads_source, onchange: function (e) { raw.reads_source = e.target.checked; builderChanged(d, true); } }), 'Relit votre demande pour vérifier'),
+            h('p', { class: 'hint', style: 'margin:4px 0 0' }, verifies(raw.skill)
+              ? 'Cette étape vérifie : en relisant votre texte de départ, elle voit ce que la fiche et les étapes précédentes ont laissé de côté. Sans cela, elle ne contrôle que ce qu’on lui transmet. La recette passe au format 2.'
+              : 'Seule une étape qui vérifie (fact-check, audit de preuves, contrôle qualité) peut relire votre demande : décochez.')) : null,
           b.advanced ? advancedWiring(d, b, raw, i) : null));
       }
       var card = h('div', { class: 'blk step ' + nsClass(raw.skill) + (open ? ' sel' : '') }, body);
@@ -1806,7 +1843,9 @@ function stepsPanel(view, hasFile, key) {
     h('div', { class: 'recipe-view' },
       view.summary || view.description ? h('p', { class: 'lead-p' }, view.summary || firstSentence(view.description)) : null,
       h('h3', null, 'Fiche de contexte'),
-      h('p', { class: 'hint' }, 'Ce que la première étape tire de la demande. Vous la validez ; les étapes suivantes ne lisent qu’elle, jamais votre texte de départ.'),
+      h('p', { class: 'hint' }, readersNote(view.steps)
+        ? 'Ce que la première étape tire de la demande. Vous la validez ; les étapes qui produisent ne lisent qu’elle, jamais votre texte de départ ; ' + readersNote(view.steps) + '.'
+        : 'Ce que la première étape tire de la demande. Vous la validez ; les étapes suivantes ne lisent qu’elle, jamais votre texte de départ.'),
       h('dl', { class: 'ctx-view' }, view.context_sheet.map(function (c) {
         var def = c.definition && c.definition !== c.label ? c.definition : null;
         return [h('dt', null, c.label || pretty(c.key)), h('dd', null, def ? h('span', { lang: 'en' }, def.replace(/`/g, '')) : h('span', { class: 'muted' }, 'tirée de la demande'))];
@@ -1815,10 +1854,10 @@ function stepsPanel(view, hasFile, key) {
       recipeChain(view.steps, key || view.id || 'recette'),
       subDetails('Le détail de chaque étape', 'steps:' + (key || view.id), h('ol', { class: 'steps-view' }, view.steps.map(function (s) {
         return h('li', null, h('div', { class: 'st-head' }, h('strong', null, stepName(s)), s.optional ? h('span', { class: 'badge' }, 'Facultative') : null,
-          h('code', null, s.skill)),
+          readsBadge(s), h('code', null, s.skill)),
           h('p', { class: 'mission', lang: 'en' }, s.mission),
           h('dl', { class: 'kv' },
-            h('dt', null, 'Reçoit'), h('dd', null, s.receives.map(function (r) { return sourceFr(r, view.steps); }).join(', ') || '—'),
+            h('dt', null, 'Reçoit'), h('dd', null, receivesFr(s, view.steps)),
             h('dt', null, 'Transmet'), h('dd', null, s.transmits.join(', ') + (s.output_field ? ' (« ' + s.output_field + ' » est le document entier)' : '')),
             h('dt', null, 'Pause'), h('dd', { class: s.pause === 'none' ? '' : 'c-warn-t' }, PAUSE_FR[s.pause] || s.pause),
             h('dt', null, 'Modèle'), h('dd', null, s.model || 'par défaut')));
@@ -2187,13 +2226,16 @@ function viewNew() {
   var title = h('input', { class: 'input', type: 'text', value: dr.title, maxlength: '120', placeholder: 'Offre formation gestion de projet', 'aria-label': 'Titre du dossier' });
   title.addEventListener('input', function () { dr.title = title.value; saveDraft(); });
   return h('div', { class: 'narrow' },
-    h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Nouveau dossier'), h('p', null, 'Seule la première étape lit votre texte. Les suivantes travaillent sur une fiche de contexte que vous validerez après cette première étape.'))),
+    h('div', { class: 'page-head' }, h('div', { class: 'grow' }, h('h1', null, 'Nouveau dossier'), h('p', null, chosen && readersNote(chosen.steps)
+      ? 'La première étape lit votre texte ; ' + readersNote(chosen.steps) + ', sans rien produire. Les autres travaillent sur une fiche de contexte que vous validerez après cette première étape.'
+      : 'Seule la première étape lit votre texte. Les suivantes travaillent sur une fiche de contexte que vous validerez après cette première étape.'))),
     h('div', { class: 'field' }, h('div', { class: 'label' }, 'Recette'), fieldError('recipe'),
       h('div', { class: 'choices', role: 'radiogroup', 'aria-label': 'Recette' }, S.recipes.map(function (r) {
         return h('label', { class: 'choice' + (r.id === dr.recipe ? ' on' : '') },
           h('input', { type: 'radio', name: 'recipe', value: r.id, checked: r.id === dr.recipe, onchange: function () { dr.recipe = r.id; S.formError = null; saveDraft(); render(); } }),
           h('div', { class: 'ttl' }, r.label, r.personal ? h('span', { class: 'badge' }, 'Personnelle') : null), h('div', { class: 'desc' }, r.summary || firstSentence(r.description)),
-          h('div', { class: 'steps' }, plural(r.steps.length, 'étape', 'étapes') + ' · ' + plural(r.steps.filter(function (s) { return s.pause === 'validate' || s.pause === 'answers'; }).length, 'relecture', 'relectures')));
+          h('div', { class: 'steps' }, plural(r.steps.length, 'étape', 'étapes') + ' · ' + plural(r.steps.filter(function (s) { return s.pause === 'validate' || s.pause === 'answers'; }).length, 'relecture', 'relectures')
+            + (r.steps.some(readsSource) ? ' · vérifie sur votre demande' : '')));
       }))),
     h('div', { class: 'field' }, h('label', null, 'Titre'), h('p', { class: 'hint' }, 'Pour retrouver le dossier dans la liste. Facultatif.'), title),
     h('div', { class: 'field' }, h('label', { for: 'new-text' }, 'La demande'), h('p', { class: 'hint' }, 'Le texte brut tel que vous l’avez reçu.'), text, fieldError('text'), h('div', { class: 'row', style: 'margin-top:6px' }, h('span', { class: 'grow' }), count), drop),
@@ -2538,6 +2580,7 @@ function techBlock(p, s) {
       h('dt', null, 'Coût'), h('dd', null, s.cost_usd ? usd(s.cost_usd) : '—'),
       s.started ? [h('dt', null, 'Durée'), h('dd', null, fmtDate(s.started) + (s.ended && s.ended !== s.started ? ' → ' + fmtDate(s.ended) : ''))] : null,
       h('dt', null, 'Pause'), h('dd', null, { validate: 'relecture', answers: 'réponses d’un tiers', none: 'aucune' }[s.pause] || s.pause || '—'),
+      s.reads_source ? [h('dt', null, 'Source'), h('dd', null, 'relit votre demande pour vérifier (le texte brut, dans le message exact reçu)')] : null,
       s.mission ? [h('dt', null, 'Mission'), h('dd', { lang: 'en' }, s.mission)] : null),
     s.error ? subDetails('Erreur', 'err:' + s.id, h('pre', { class: 'raw' }, s.error)) : null,
     s.summary ? subDetails('Résumé transmis', 'sum:' + s.id, mdBox(s.summary, 'compact')) : null,

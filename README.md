@@ -716,7 +716,7 @@ Recommendation deliverables for a decision-maker. Once planned as workflows, the
 
 ## Workflows
 
-A workflow chains skills for a recurring job. Format: [`docs/format-recette.md`](docs/format-recette.md). Each step runs isolated (a sub-agent in Claude Code) and receives only what it needs; only the first reads the raw input; a human-validated context sheet replaces it afterwards; pauses let the human validate, answer (client, buyer) or choose. A trace of each step is written to `./parcours/` when possible.
+A workflow chains skills for a recurring job. Format: [`docs/format-recette.md`](docs/format-recette.md). Each step runs isolated (a sub-agent in Claude Code) and receives only what it needs; only the first reads the raw input, plus, from recipe format 2, a checking step (`fact-check`, `quality-check`, `controle-qualite`) that declares it re-reads it to check against it; a human-validated context sheet replaces it for the others; pauses let the human validate, answer (client, buyer) or choose. A trace of each step is written to `./parcours/` when possible.
 
 Available: `brief-client`, `reponse-appel-offres` (see the catalog). Both tested end to end on real material (a client meeting transcript, a tender specification). `concepteur-recette` designs new ones.
 

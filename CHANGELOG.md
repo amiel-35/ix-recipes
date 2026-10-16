@@ -2,6 +2,41 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.10.0: a checking step may re-read the source (recipe format 2)
+
+### Recipes
+
+- **Recipe format 2** ([`docs/format-recette.md`](docs/format-recette.md) §1.10, §2ter): a step that checks
+  may declare `reads_source: true` and then receives, besides its fields, the raw request exactly as
+  the user gave it, to check the chain's output against it. Reserved to the checking skills
+  (`ix-skills:fact-check`, `ix-skills:quality-check`, `ix-skills:controle-qualite`, a closed list);
+  never step 1, never a producing step: `build.py`, the runner and the page refuse it with a plain
+  message pointing to `verbatim`. `verbatim` fields stay the default.
+- It is a format and not an optional field because a format-1 runner would ignore the key and run the
+  check without the source, without saying so; at format 2 an older page refuses the recipe
+  (« mettez la page à jour »). Format 1 recipes run unchanged; no recipe of the repository moves to
+  format 2 (none uses it yet).
+- Proof replayed on a real fact-check ([`docs/preuve-lecture-source/`](docs/preuve-lecture-source/README.md),
+  2 Sonnet calls, $0.12): with an upstream analysis that miscopied a figure and dropped a line, the
+  fact-check found 0 contradictions before and 4 after, and traced the error back to step 1.
+- `concepteur-recette` 1.2.0 sets `reads_source` itself when it places a checking step after a
+  producing one, and writes `format: 2` then.
+- `build.py`: formats 1 and 2, and the `reads_source` checks. The same change is to be carried over to
+  ix-skills' copy.
+
+### Page
+
+- **Page 1.1.0**: it reads format 2. The steps that re-read the request are shown on the cards
+  (badge « Relit votre demande », « Votre demande » says who reads it), in the flowchart, in step
+  details, on recipe lists and in a dossier's technical details. In the block builder, a checking skill
+  dropped after another step comes ticked « Relit votre demande pour vérifier » (it can be unticked);
+  writing the recipe then gives `format: 2`. The designer is told the rule and its proposals carry the
+  field; a file written at `format: 1` with such a step is raised to 2; a missing setting is flagged as
+  a departure from the proposal.
+- Runner: `formats --json` adds `source_format`; `reads_source` per step in `recipes --json`,
+  `status --json` and `plan --json`.
+- `suivi-parcours` 1.5.0 (the page and its scripts).
+
 ## 2026-10-16 — plugin 2.9.0: the recipe format and the page get their own versions
 
 ### Recipes

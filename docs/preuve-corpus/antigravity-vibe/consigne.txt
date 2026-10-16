@@ -1,0 +1,5 @@
+Test de lecture de fichiers. Pour chacun des fichiers ci-dessous, essaie de le lire avec tes outils, puis réponds par une ligne par fichier : le chemin, « lu » ou « non lu » (avec la raison exacte, par exemple un refus), et le marqueur qu'il contient si tu l'as lu. N'invente aucun marqueur.
+1. references/guide.md
+2. entretiens.md
+3. ../parcours/demo/input.md
+4. <essai>/parcours/demo/input.md

@@ -38,6 +38,7 @@ import hashlib
 import json
 import os
 import re
+import secrets
 import shutil
 import signal
 import subprocess
@@ -66,6 +67,8 @@ FREE_ENGINES = ("fake", "simulation")   # no model is called
 DEFAULT_TIMEOUT = 900
 DEFAULT_BUDGET = 5.0
 ARGV_PROMPT_LIMIT = 200_000  # bytes; agy takes the prompt in argv only (visible in `ps`); macOS ARG_MAX is 1 MB
+CODEX_PROFILE = "ixetape"     # the Codex permission profile of a step: read its folder only, write nothing
+CODEX_MIN_VERSION = (0, 155, 1)  # permission profiles (beta) tested with this codex-cli; older ones are refused
 LEAK_WORDS = 40          # a copied paragraph of the raw request; short quotes stay allowed
 MIN_LEAK_WORDS = 4       # below this, an input is too short to be checked
 VERBATIM_SHINGLE = 8     # word runs used to measure how much of the request a verbatim field copies
@@ -2141,7 +2144,7 @@ def parse_step_output(text, transmits, context_fields=None, output_field=None):
 # ---------------------------------------------------------------------------
 # Engines
 # ---------------------------------------------------------------------------
-def engine_argv(engine, model, work, out_file, budget):
+def engine_argv(engine, model, work, out_file, budget, codex_roots=()):
     """Command line of an engine; the prompt goes through stdin, except for agy (see argv_prompt)."""
     if engine == "claude":
         argv = ["claude", "-p"]
@@ -2153,13 +2156,133 @@ def engine_argv(engine, model, work, out_file, budget):
             "--max-budget-usd", f"{budget:g}",
         ]
     if engine == "codex":
-        return ["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ephemeral",
+        # No --sandbox / -s: any sandbox option turns the permission profiles off (the old read-only
+        # sandbox reads the whole disk). The user config (MCP servers, plugins) and the ChatGPT apps stay out.
+        return ["codex", "exec", "--ignore-user-config", "--disable", "apps", "--skip-git-repo-check",
+                "--ephemeral", "--json", *codex_profile_args(codex_roots),
                 "-C", str(work), "-o", str(out_file)]
     if engine == "agy":
         return ["agy", "--disable-slash-commands"]
     if engine == "vibe":
         return ["vibe", "-p", "--output", "text"]
     raise ParcoursError(f"moteur inconnu : '{engine}'")
+
+
+def codex_profile_args(roots):
+    """The step's permission profile, as `-c` options: the system paths commands need to start
+    (`:minimal`), Codex's own install (`roots`: it re-launches its binary inside the sandbox) and the
+    step's folder (`-C`), all read-only. Nothing else of the disk is readable, nothing is writable."""
+    table = ", ".join(['":minimal"="read"'] + [f'{json.dumps(str(r))}="read"' for r in roots]
+                      + ['":workspace_roots"={"."="read"}'])
+    return ["-c", f'default_permissions="{CODEX_PROFILE}"',
+            "-c", f"permissions.{CODEX_PROFILE}.filesystem={{{table}}}"]
+
+
+def exposes_private(folder):
+    """Reading `folder` would open the home folder, the temporary folder (the steps' folders) or the
+    current folder (the parcours) — or the whole disk."""
+    folder = Path(os.path.realpath(folder))
+    guarded = (Path.home(), Path(tempfile.gettempdir()), Path.cwd())
+    return any(Path(os.path.realpath(g)).is_relative_to(folder) for g in guarded)
+
+
+def codex_install_roots(binary):
+    """What Codex must read to re-launch itself in the sandbox: the install prefix of the `codex`
+    found on PATH and of the file it links to (`<prefix>/bin/codex` → `<prefix>`; with Homebrew,
+    `/opt/homebrew`). Never a folder that holds the home, temporary or current folder."""
+    roots = []
+    for path in (Path(binary).absolute(), Path(os.path.realpath(binary))):
+        root = path.parent.parent if path.parent.name == "bin" else path.parent
+        if exposes_private(root):
+            root = path.parent
+        if exposes_private(root):
+            raise EngineError(
+                f"codex est installé dans {path.parent}, qui contient votre dossier personnel ou le dossier "
+                "temporaire : l'ouvrir en lecture à Codex lui rendrait tout le disque. Installez codex "
+                "ailleurs (Homebrew, npm) ou choisissez un autre moteur.")
+        roots.append(Path(os.path.realpath(root)))
+    roots = sorted(set(roots), key=lambda r: len(r.parts))
+    return [r for i, r in enumerate(roots) if not any(r.is_relative_to(o) for o in roots[:i])]
+
+
+def codex_version(binary):
+    try:
+        out = subprocess.run([binary, "--version"], capture_output=True, text=True, timeout=60,
+                             stdin=subprocess.DEVNULL).stdout
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise EngineError(f"codex --version a échoué : {exc}")
+    match = re.search(r"(\d+)\.(\d+)\.(\d+)", out or "")
+    if not match:
+        raise EngineError(f"version de codex illisible ({(out or '').strip()[:80]!r}) : Codex n'est pas lancé")
+    return tuple(int(n) for n in match.groups())
+
+
+def codex_check_profile(binary, roots, work):
+    """Before each Codex call, without a model (`codex sandbox`, a fraction of a second): under the
+    step's profile, a file of the step's folder reads and a file next to it does not."""
+    token = secrets.token_hex(8)
+    inside, outside = work / f".ixetape-{token}", work.parent / f"ixetape-{token}"
+    inside.write_text(f"IN-{token}\n", encoding="utf-8")
+    outside.write_text(f"OUT-{token}\n", encoding="utf-8")
+    try:
+        proc = subprocess.run(
+            [binary, "sandbox", "-P", CODEX_PROFILE, *codex_profile_args(roots), "-C", str(work),
+             "--", "/bin/cat", str(inside), str(outside)],
+            capture_output=True, text=True, errors="replace", timeout=60, stdin=subprocess.DEVNULL)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise EngineError(f"vérification du profil de Codex impossible : {exc} ; Codex n'est pas lancé")
+    finally:
+        inside.unlink(missing_ok=True)
+        outside.unlink(missing_ok=True)
+    if f"OUT-{token}" in proc.stdout:
+        raise EngineError("le profil de permission de Codex ne tient pas : il lit hors du dossier de l'étape. "
+                          "Codex n'est pas lancé ; choisissez un autre moteur.")
+    if f"IN-{token}" not in proc.stdout:
+        raise EngineError(f"le profil de permission de Codex est refusé ({(proc.stderr or '').strip()[-200:]}). "
+                          "Codex n'est pas lancé sans protection ; choisissez un autre moteur ou mettez codex à jour.")
+
+
+def codex_preflight(work):
+    """The codex on PATH is recent enough and its permission profile holds; returns the install roots."""
+    binary = shutil.which("codex")
+    if not binary:
+        raise EngineError("commande introuvable : codex")
+    version = codex_version(binary)
+    if version < CODEX_MIN_VERSION:
+        wanted, found = (".".join(map(str, v)) for v in (CODEX_MIN_VERSION, version))
+        raise EngineError(f"codex-cli {found} : la version {wanted} au moins est nécessaire pour limiter ses "
+                          "lectures au dossier de l'étape (profils de permission). Codex n'est pas lancé ; "
+                          "mettez-le à jour ou choisissez un autre moteur.")
+    roots = codex_install_roots(binary)
+    codex_check_profile(binary, roots, work)
+    return roots
+
+
+def codex_events(stdout):
+    """The JSON events of `codex exec --json` (one per line; anything else is skipped)."""
+    for line in (stdout or "").splitlines():
+        with contextlib.suppress(ValueError):
+            event = json.loads(line)
+            if isinstance(event, dict):
+                yield event
+
+
+def codex_commands(stdout):
+    """The commands Codex ran, from its events. Only commands that ran show up: one the sandbox
+    refused does not appear (codex-cli 0.155.1), and a command is not a list of the files it read."""
+    commands = []
+    for event in codex_events(stdout):
+        item = event.get("item") or {}
+        if event.get("type") == "item.completed" and item.get("type") == "command_execution":
+            commands.append({"command": item.get("command"), "exit_code": item.get("exit_code"),
+                             "status": item.get("status")})
+    return commands
+
+
+def codex_last_message(stdout):
+    texts = [(e.get("item") or {}).get("text") for e in codex_events(stdout)
+             if e.get("type") == "item.completed" and (e.get("item") or {}).get("type") == "agent_message"]
+    return next((t for t in reversed(texts) if t), "")
 
 
 def kill_group(proc):
@@ -2270,8 +2393,11 @@ def simulation_engine(step_id, kind, message, expected):
     return "\n".join(parts), 0.0
 
 
-def call_engine(engine, message, *, model, timeout, budget, skill, step_id, kind, expected=None):
-    """One engine call in a throwaway folder holding only the skill's references/."""
+def call_engine(engine, message, *, model, timeout, budget, skill, step_id, kind, expected=None, events=None):
+    """One engine call in a throwaway folder holding only the skill's references/.
+
+    Codex runs under a permission profile checked first (codex_preflight); its JSON events, the
+    commands it ran, are kept in `events` when given."""
     if engine == "fake":
         return fake_engine(step_id, kind, message)
     if engine == "simulation":
@@ -2281,7 +2407,8 @@ def call_engine(engine, message, *, model, timeout, budget, skill, step_id, kind
         work, out_file = tmp / "work", tmp / "last-message.txt"
         work.mkdir()
         copy_references(skill, work)
-        argv = engine_argv(engine, model, work, out_file, budget)
+        codex_roots = codex_preflight(work) if engine == "codex" else ()
+        argv = engine_argv(engine, model, work, out_file, budget, codex_roots)
         stdin_text = message
         if engine == "agy":
             # agy reads no text prompt on stdin: `-p -` is taken literally, a bare -p prints help.
@@ -2290,6 +2417,8 @@ def call_engine(engine, message, *, model, timeout, budget, skill, step_id, kind
                 raise EngineError(f"message trop long pour agy ({size} octets, limite {ARGV_PROMPT_LIMIT})")
             argv, stdin_text = argv + [f"-p={message}"], ""
         code, stdout, stderr = run_process(argv, stdin_text, work, timeout)
+        if engine == "codex":
+            keep_codex_events(stdout, events)
         if code != 0:
             cost = claude_cost(stdout) if engine == "claude" else 0.0
             raise EngineError(f"{engine} a échoué (code {code}) : {(stderr or '').strip()[-300:]}", cost=cost)
@@ -2298,11 +2427,25 @@ def call_engine(engine, message, *, model, timeout, budget, skill, step_id, kind
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def keep_codex_events(stdout, events):
+    """Save Codex's events (an older file is kept as .vN) and say how many commands they show."""
+    if not events or not (stdout or "").strip():
+        return
+    if events.exists():
+        events.rename(versioned_name(events))
+    write_atomic(events, stdout)
+    count = len(codex_commands(stdout))
+    say(f"  codex : {count} commande(s) dans {events.name} (une lecture refusée par le bac à sable n'y figure pas)")
+
+
 def read_engine_output(engine, stdout, out_file):
     """Only stdout or the engine's output file are parsed, never stderr."""
     if engine == "claude":
         return parse_claude_json(stdout)
-    text = out_file.read_text(encoding="utf-8") if engine == "codex" and out_file.is_file() else stdout
+    if engine == "codex":   # stdout holds the --json events
+        text = out_file.read_text(encoding="utf-8") if out_file.is_file() else codex_last_message(stdout)
+    else:
+        text = stdout
     if not (text or "").strip():
         raise EngineError(f"{engine} : sortie vide")
     return text, 0.0
@@ -2315,14 +2458,15 @@ def engine_for(state, step_id):
     return state["engine_steps"].get(step_id, state["engine"])
 
 
-def invoke(directory, state, step, engine, message, opts, kind, skill, model, expected=None):
+def invoke(directory, state, step, engine, message, opts, kind, skill, model, expected=None, idx=None):
     """Engine call with its accounting (call count, cost), saved as soon as the call returns."""
     state["calls"][engine] = state["calls"].get(engine, 0) + 1
+    events = directory / events_name(idx, step["id"], kind) if engine == "codex" and idx is not None else None
     text, cost = None, 0.0
     try:
         text, cost = call_engine(
             engine, message, model=model, timeout=opts.timeout, budget=opts.max_budget_usd,
-            skill=skill, step_id=step["id"], kind=kind, expected=expected,
+            skill=skill, step_id=step["id"], kind=kind, expected=expected, events=events,
         )
     except EngineError as exc:
         cost = exc.cost  # a failed claude call still reports what it cost
@@ -2336,6 +2480,11 @@ def invoke(directory, state, step, engine, message, opts, kind, skill, model, ex
 
 def trace_name(idx, step_id, kind):
     return f"{idx + 1:02d}-{step_id}{'.retry' if kind == 'retry' else ''}.in.md"
+
+
+def events_name(idx, step_id, kind):
+    """Codex's JSON events for a call (`codex exec --json`): the commands it ran."""
+    return f"{idx + 1:02d}-{step_id}{'.retry' if kind == 'retry' else ''}.events.jsonl"
 
 
 def write_trace(directory, idx, step_id, kind, message):
@@ -2377,7 +2526,7 @@ def produce_output(directory, state, recipe, idx, skill, message, opts, retried=
     if existing:
         return existing
     write_trace(directory, idx, defn["id"], "main", message)
-    text = invoke(directory, state, step, engine, message, opts, "main", skill, model, expected)
+    text = invoke(directory, state, step, engine, message, opts, "main", skill, model, expected, idx)
     write_atomic(out_path, text)
     try:
         return parse_step_output(text, defn["transmits"], context_fields, defn.get("output_field"))
@@ -2388,7 +2537,7 @@ def produce_output(directory, state, recipe, idx, skill, message, opts, retried=
             ensure_isolated(retry, directory, idx, admitted=admitted_text(state, recipe, idx))
         warn(f"étape '{defn['id']}' : {first} ; une relance sur la sortie produite")
         write_trace(directory, idx, defn["id"], "retry", retry)
-        retry_text = invoke(directory, state, step, engine, retry, opts, "retry", skill, model, expected)
+        retry_text = invoke(directory, state, step, engine, retry, opts, "retry", skill, model, expected, idx)
         write_atomic(out_path, f"{text}\n\n{RETRY_MARKER}\n{retry_text}\n")
         if defn.get("output_field"):
             retry_text = f"{output_body(text)}\n\n{retry_text}"  # the document comes from the first answer
@@ -2822,6 +2971,9 @@ def status_report(directory, state, fingerprint):
         }
         for key, kind in (("trace", "main"), ("retry_trace", "retry")):
             name = trace_name(idx, step["id"], kind)
+            item[key] = name if name in files else None
+        for key, kind in (("events", "main"), ("retry_events", "retry")):
+            name = events_name(idx, step["id"], kind)
             item[key] = name if name in files else None
         steps.append(item)
     final = None

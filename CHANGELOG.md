@@ -2,6 +2,38 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.13.0: a Codex step reads only its own folder
+
+### Runner
+
+- **Codex is confined to the step's folder** (`scripts/parcours.py`, [`docs/executeur.md`](docs/executeur.md) §4).
+  The old `codex exec -s read-only` forbade writing, not reading: a Codex step could read the whole disk,
+  including a dossier's request. The call now passes a Codex permission profile, `ixetape`: the step's
+  folder read-only, the system paths commands need (`:minimal`) and Codex's own install prefix (detected
+  from `codex` on PATH and its link target, never a folder that holds the home, temporary or current
+  folder). No `--sandbox` option (it would turn profiles off); `--ignore-user-config` and `--disable apps`
+  keep MCP servers, plugins and ChatGPT connectors out; `--ephemeral` as before.
+- **Checked before every Codex call**, without a model: codex-cli **0.155.1 or later**, then
+  `codex sandbox` under the same profile must read a witness file in the step's folder and be refused
+  one next to it. Otherwise the step fails with a clear message and Codex is not started.
+- **Trace**: `--json` events are kept in `NN-<step>.events.jsonl` (`status --json`: `events`,
+  `retry_events`). They list the commands Codex ran and their output, not the files read; a command the
+  sandbox refused does not appear.
+- **Still open**: `/tmp`, `/var/tmp` and some system files stay readable (built into `:minimal`);
+  permission profiles are beta at OpenAI; tested on macOS only; Codex sub-agents not tested.
+- Verified with one real `codex exec` call (codex-cli 0.155.1) through `call_engine`: the copied
+  reference reads; a request next to the folder, a dossier's request and `~/.zshrc` are refused; a file
+  under `/tmp` reads; nothing can be written.
+- [`docs/decision-corpus.md`](docs/decision-corpus.md) §4, §7, §8 updated accordingly.
+
+### Page
+
+- **Page 1.2.0**: when Codex is the engine (new dossier, next steps, test runs and their confirmation), the
+  page says what it can still read (`/tmp`, `/var/tmp`, system files). A Codex step's technical details
+  show its commands.
+- `suivi-parcours` 1.6.0 (its scripts).
+- README: the install prompt names version 2.13.0.
+
 ## 2026-10-16 — plugin 2.12.0: the calculation check is specified and may re-read the source
 
 ### Recipes

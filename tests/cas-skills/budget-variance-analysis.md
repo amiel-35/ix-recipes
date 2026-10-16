@@ -59,3 +59,78 @@ ecrit: 2026-10-16
 
 | Date | Version | Modèle | Critères tenus (sur 10) | Note |
 |---|---|---|---|---|
+| 2026-10-16 | 1.1.0 | Sonnet 5.5 | 4.3 (4–5) | banc 3 passages, moyenne (min–max) ; erreurs relevées 0.0 (0–0) |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5 | **8.7 (8–9)** | banc 3 passages ; erreurs 1.3 (0–4) |
+| 2026-10-16 | 1.1.0 | Haiku 5.5 | 3.0 (2–4) | banc 3 passages, moyenne (min–max) ; erreurs relevées 7.0 (4–9) |
+| 2026-10-16 | 1.2.0 | Haiku 5.5 | **7.0 (6–8)** | banc 3 passages ; erreurs 4.7 (2–7) |
+
+# Cas 3 — Écarts du troisième trimestre d'un fabricant (contrôle indépendant)
+
+Écrit le 2026-10-16 sans voir le corps du skill, à partir de sa seule description.
+
+## Demande
+
+> On est un fabricant de mobilier de jardin en aluminium (PME, 45 salariés). Le comité de direction veut comprendre pourquoi le résultat du T3 2026 (juillet à septembre) est sous le budget alors que « les charges sont tenues ». Voici le budget et le réalisé du trimestre, en euros HT :
+>
+> | Ligne | Budget T3 | Réel T3 |
+> |---|---|---|
+> | Unités vendues | 10 000 | 9 000 |
+> | Chiffre d'affaires | 1 200 000 | 1 147 500 |
+> | Achats matières (aluminium, quincaillerie) | 480 000 | 459 000 |
+> | Transport sur ventes | 60 000 | 63 000 |
+> | Personnel | 300 000 | 318 000 |
+> | Loyer | 45 000 | 45 000 |
+> | Marketing | 40 000 | 22 000 |
+> | Honoraires | 15 000 | 27 000 |
+> | Résultat | 260 000 | 213 500 |
+>
+> Ce que je sais : on a augmenté nos prix de vente de 7,50 € par unité au 1er juillet pour répercuter la hausse de l'aluminium. Le salon professionnel prévu en septembre a été reporté à la mi-octobre. Dans les honoraires, il y a une facture d'avocat de 12 000 € pour le litige avec un distributeur. Pour le personnel et le transport, je n'ai pas d'explication. Le budget a été construit avec 120 € de prix de vente, 48 € de matières et 6 € de transport par unité.
+
+## Valeurs de référence
+
+| Ligne | Budget | Réel | Écart | Budget flexible (9 000 u.) | Écart réel / flexible |
+|---|---|---|---|---|---|
+| Chiffre d'affaires | 1 200 000 | 1 147 500 | −52 500 (−4,4 %) | 1 080 000 | +67 500 (effet prix) |
+| Matières | 480 000 | 459 000 | −21 000 | 432 000 | +27 000 défavorable |
+| Transport | 60 000 | 63 000 | +3 000 | 54 000 | +9 000 défavorable |
+| Personnel | 300 000 | 318 000 | +18 000 | 300 000 | +18 000 défavorable |
+| Loyer | 45 000 | 45 000 | 0 | 45 000 | 0 |
+| Marketing | 40 000 | 22 000 | −18 000 | 40 000 | −18 000 (décalage) |
+| Honoraires | 15 000 | 27 000 | +12 000 | 15 000 | +12 000 défavorable |
+| Total charges | 940 000 | 934 000 | −6 000 | 886 000 | +48 000 défavorable |
+| Résultat | 260 000 | 213 500 | −46 500 | 194 000 | +19 500 |
+
+- Prix unitaires réels : vente 1 147 500 / 9 000 = 127,50 € (+6,25 %) ; matières 459 000 / 9 000 = 51 € (+6,25 %) ; transport 63 000 / 9 000 = 7 € (+16,7 %). Volume : −10 %.
+- Chiffre d'affaires : effet volume (9 000 − 10 000) × 120 = −120 000 ; effet prix (127,50 − 120) × 9 000 = +67 500 ; total −52 500.
+- Matières : effet volume −1 000 × 48 = −48 000 (favorable) ; effet prix (51 − 48) × 9 000 = +27 000 (défavorable) ; total −21 000.
+- Taux de marge sur matières inchangé : 60 % au budget (720 000 / 1 200 000) comme au réel (688 500 / 1 147 500) ; marge unitaire 72 € → 76,50 €.
+- Pont du résultat : 260 000 → effet volume −66 000 (1 000 u. × marge sur coûts variables budgétée de 120 − 48 − 6 = 66 €) → 194 000 → écarts de prix et de coûts +19 500 (+67 500 prix de vente, −27 000 matières, −9 000 transport, −18 000 personnel, +18 000 marketing, −12 000 honoraires) → 213 500.
+- Résultat hors décalage du salon : 213 500 − 18 000 = 195 500 ; hors décalage et hors honoraires d'avocat ponctuels : 207 500.
+
+## Une bonne sortie contient
+
+1. Donne l'écart de chaque ligne en euros et en pourcentage, avec une convention de signe annoncée (une charge sous le budget est favorable, un produit sous le budget est défavorable).
+2. Décompose l'écart de chiffre d'affaires en effet volume (−120 000 €) et effet prix (+67 500 €).
+3. Décompose l'écart matières en effet volume (−48 000 €, favorable) et effet prix (+27 000 €, défavorable), et constate que la hausse du coût matière (+6,25 %) est exactement répercutée dans le prix de vente (+6,25 %), le taux de marge restant à 60 %.
+4. Montre que « les charges sont tenues » est trompeur : à 9 000 unités, le budget flexible des charges est de 886 000 €, le réel de 934 000 €, soit 48 000 € de dépassement au lieu des 6 000 € d'économie apparents.
+5. Construit le pont du résultat de 260 000 € à 213 500 € : effet volume −66 000 € (1 000 unités × 66 € de marge sur coûts variables), écarts de prix et de coûts +19 500 €, et identifie la baisse de volume comme première cause de l'écart.
+6. Traite les −18 000 € de marketing comme un décalage dans le temps (salon reporté en octobre) et non comme une économie, en indiquant que le T4 les supportera et que le résultat sous-jacent du T3 est d'environ 195 500 €.
+7. Isole les 12 000 € d'avocat comme une charge observée et ponctuelle, distincte de la tendance.
+8. Calcule le coût de transport unitaire (7 € contre 6 €, soit +9 000 € par rapport au budget flexible) et le présente comme non expliqué, avec des hypothèses marquées comme telles (tarif ou surcharge du transporteur, livraisons plus petites ou plus nombreuses) et la vérification à faire (factures transporteur, nombre d'expéditions).
+9. Relève que le personnel augmente de 18 000 € alors que le volume baisse de 10 %, et propose des hypothèses à vérifier (intérim, heures supplémentaires, remplacement d'absences), sans en présenter aucune comme un fait.
+10. Formule le lien entre la hausse de prix au 1er juillet et la baisse de 10 % du volume comme une hypothèse à tester (volumes par client et par mois, clients perdus), pas comme une cause établie, et sépare dans toute la sortie ce qui est observé, ce qui est une hypothèse chiffrée et ce qui reste à vérifier.
+
+## Une mauvaise sortie
+
+- Conclut que les charges sont maîtrisées (−6 000 €) et que l'écart vient « du chiffre d'affaires », sans budget flexible ni décomposition volume/prix.
+- Compte les 18 000 € de marketing comme une économie, ou affirme sans réserve que la hausse de prix a fait fuir les clients.
+- Commente seulement les écarts en pourcentage, ligne par ligne, sans pont jusqu'au résultat.
+
+## Résultats
+
+| Date | Version | Modèle | Critères tenus (sur 10) | Note |
+|---|---|---|---|---|
+| 2026-10-16 | 1.1.0 | Sonnet 5.5 | 5.7 (5–6) | banc 3 passages, moyenne (min–max) ; erreurs relevées 0.3 (0–1) |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5 | **6.7 (6–7)** | banc 3 passages ; erreurs 1.3 (0–4) |
+| 2026-10-16 | 1.1.0 | Haiku 5.5 | 4.0 (3–5) | banc 3 passages, moyenne (min–max) ; erreurs relevées 7.7 (7–8) |
+| 2026-10-16 | 1.2.0 | Haiku 5.5 | **5.0 (4–6)** | banc 3 passages ; erreurs 9.0 (7–12) |

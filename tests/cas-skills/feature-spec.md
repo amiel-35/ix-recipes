@@ -37,3 +37,67 @@ ecrit: 2026-10-16
 
 | Date | Version | Modèle | Critères tenus (sur 10) | Note |
 |---|---|---|---|---|
+| 2026-10-16 | 1.1.1 | Sonnet 5.5 | 7.0 (6–8) | banc 3 passages, moyenne (min–max) ; erreurs relevées 0.7 (0–1) |
+| 2026-10-16 | 1.2.0 brouillon | Sonnet 5.5 | 9.0 (9–9) | banc 3 passages ; erreurs 0.3 (0–1) |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5 | **9.3 (9–10)** | banc 3 passages, après correction ; erreurs 1.0 (0–3) |
+| 2026-10-16 | 1.1.1 | Haiku 5.5 | 4.0 (3–5) | banc 3 passages, moyenne (min–max) ; erreurs relevées 9.0 (6–11) |
+| 2026-10-16 | 1.2.0 brouillon | Haiku 5.5 | 6.7 (6–7) | banc 3 passages ; erreurs 9.3 (9–10) |
+| 2026-10-16 | 1.2.0 | Haiku 5.5 | **6.0 (5–7)** | banc 3 passages, après correction ; erreurs 7.7 (6–9) |
+
+# Cas 3 — Relances automatiques des factures impayées (contrôle indépendant)
+
+Écrit le 2026-10-16 sans voir le corps du skill, à partir de sa seule description.
+
+## Demande
+
+> Je suis PM chez un éditeur de logiciel de facturation en ligne pour TPE et PME (12 000 entreprises clientes, surtout des artisans et des sociétés de services). Il me faut la spec fonctionnelle de la feature « relances automatiques des impayés », avec user stories, MoSCoW, critères d'acceptation et métriques.
+>
+> Données : 38 % des factures émises par nos clients sont adressées à des particuliers, 62 % à des professionnels. 23 % des factures sont payées après l'échéance ; délai moyen de paiement constaté : 41 jours. 31 % de nos clients exportent leurs factures dans Excel pour relancer à la main ; « comment relancer » est le 2e motif de contact au support. Le rapprochement bancaire existe déjà : on sait quand une facture est payée, y compris partiellement. Le numéro SIREN du client final est un champ facultatif. Sur les factures, la mention des pénalités de retard est un texte libre que nos clients peuvent modifier ou supprimer.
+>
+> Ce que l'équipe et les clients demandent, en vrac :
+> - relance par e-mail avant l'échéance (J−3) puis après (J+7, J+21) ;
+> - ajouter automatiquement les pénalités de retard et l'indemnité de 40 € sur les relances ;
+> - générer une mise en demeure en PDF à J+30 ;
+> - relance par SMS ;
+> - arrêter les relances dès que la facture est payée ;
+> - modèles de relance personnalisables ;
+> - un tableau de bord des encours ;
+> - le CEO veut « pouvoir envoyer directement au contentieux, injonction de payer en ligne ».
+
+## Valeurs de référence
+
+- Taux de l'intérêt légal du second semestre 2026 (arrêté du 26 juin 2026) : 2,75 % lorsque le créancier n'est pas une personne physique agissant hors de ses besoins professionnels, 6,84 % sinon. Le créancier étant ici l'entreprise cliente, c'est 2,75 % qui s'applique, même quand le débiteur est un particulier.
+- Plancher des pénalités de retard stipulées entre professionnels : 3 × 2,75 % = 8,25 % (C. com. L441-10, II). Taux par défaut sans stipulation : taux de refinancement de la BCE majoré de 10 points, celui du 1er janvier pour le premier semestre et du 1er juillet pour le second.
+- Indemnité forfaitaire pour frais de recouvrement : 40 € (C. com. D441-5), due par un débiteur professionnel.
+
+Textes vérifiés le 2026-10-16 : C. com. L441-9 et L441-10 (versions en vigueur depuis le 1er sept. 2026), D441-5 ; C. civ. 1231-6 ; C. mon. fin. L313-2 (deux taux légaux, fixés par arrêté, calculés chaque semestre).
+
+## Une bonne sortie contient
+
+1. Écrit des user stories au format « en tant que… je veux… afin de… », qui couvrent au moins l'entreprise qui relance et son client final destinataire de la relance.
+2. Classe toutes les demandes en MoSCoW avec une justification, et place au moins l'envoi au contentieux ou l'injonction de payer en ligne en « Won't (pour cette version) » ou équivalent, avec la raison.
+3. Rédige des critères d'acceptation Given/When/Then testables, avec des valeurs concrètes (date d'échéance, jour de relance, montant).
+4. Distingue les débiteurs professionnels des particuliers et en tire la règle produit : l'indemnité de 40 € et les pénalités du code de commerce seulement pour un débiteur professionnel ; pour un particulier, à défaut de stipulation, des intérêts au taux légal à compter de la mise en demeure (C. civ. 1231-6) ; exige donc un champ qui qualifie le débiteur, le SIREN étant facultatif.
+5. Fait calculer les pénalités sur le taux indiqué sur la facture (mention obligatoire entre professionnels, L441-9), à compter du lendemain de l'échéance, sans exiger de rappel préalable (L441-10) ; traite le cas où la mention a été supprimée ou est sous le plancher de 3 fois le taux légal (8,25 % au second semestre 2026).
+6. Interdit de coder les taux en dur : taux légal et taux BCE sont des paramètres mis à jour chaque semestre.
+7. Spécifie l'arrêt des relances et ses cas limites : paiement total (arrêt), paiement partiel (relance du solde seulement), avoir, facture contestée ou litige (suspension manuelle), plusieurs factures en retard pour un même client (regroupement ou non).
+8. Donne des métriques de succès avec valeur de départ, cible et délai : par exemple part des factures payées en retard (23 % au départ), délai moyen de paiement (41 jours au départ), part des clients qui exportent vers Excel pour relancer (31 % au départ), contacts au support sur la relance ; plus au moins un garde-fou (taux de désactivation de la feature, plaintes ou désabonnements des destinataires).
+9. Précise que la mise en demeure en PDF est générée par l'outil mais envoyée ou validée par l'utilisateur, et indique pour le particulier qu'elle fait courir les intérêts au taux légal.
+10. Liste les exigences non fonctionnelles et les questions ouvertes (délivrabilité des e-mails, horaires d'envoi des SMS, journal des relances envoyées pour servir de preuve, validation juridique des modèles).
+
+## Une mauvaise sortie
+
+- Ajoute 40 € et des pénalités à toutes les relances, y compris celles adressées à des particuliers.
+- Fixe le taux des pénalités en dur (« 3 fois le taux légal ») sans lire la mention de la facture ni prévoir de mise à jour semestrielle.
+- Livre des critères d'acceptation vagues (« la relance part au bon moment ») et des métriques sans valeur de départ ni cible.
+
+## Résultats
+
+| Date | Version | Modèle | Critères tenus (sur 10) | Note |
+|---|---|---|---|---|
+| 2026-10-16 | 1.1.1 | Sonnet 5.5 | 5.0 (4–6) | banc 3 passages, moyenne (min–max) ; erreurs relevées 0.0 (0–0) |
+| 2026-10-16 | 1.2.0 brouillon | Sonnet 5.5 | 4.0 (3–5) | banc 3 passages ; erreurs 0.3 (0–1) |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5 | **4.3 (3–5)** | banc 3 passages, après correction (cas 3 lu avant la correction : plus indépendant) ; erreurs 0.7 (0–2) |
+| 2026-10-16 | 1.1.1 | Haiku 5.5 | 2.0 (1–3) | banc 3 passages, moyenne (min–max) ; erreurs relevées 10.3 (8–12) |
+| 2026-10-16 | 1.2.0 brouillon | Haiku 5.5 | 3.0 (1–4) | banc 3 passages ; erreurs 7.0 (6–9) |
+| 2026-10-16 | 1.2.0 | Haiku 5.5 | **2.3 (2–3)** | banc 3 passages, après correction (cas 3 lu avant la correction : plus indépendant) ; erreurs 8.3 (6–12) |

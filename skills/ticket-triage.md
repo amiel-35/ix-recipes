@@ -79,6 +79,8 @@ First-response delays, as defaults. Replace them with the organisation's own, an
 
 A ticket that says personal data is visible to someone who should not see it, was sent to the wrong person, or was lost, may be a personal data breach. Triage it as P1, category security (with bug as secondary if it follows a release), routed to security and engineering and also to the DPO or legal team, and write down the date and time the ticket was received. That timestamp matters because the 72-hour notification period runs from the moment the controller becomes aware of the breach; the legal qualification (is it personal data, is the organisation controller or processor, when did awareness begin) belongs to the DPO, so state the facts and do not conclude.
 
+Two things cannot wait for that qualification. First, ask engineering to preserve the evidence (access logs, the release and configuration in place, the cache state) before any rollback or purge: the DPO, and the CNIL if it is notified, will need to establish what was exposed, to whom and since when. Second, when the product hosts its customers' data (payroll, HR, school or health software used by client organisations), the organisation is usually the customers' processor: each affected customer, as controller, has its own 72 hours, so it must be told without undue delay; prepare that message in the routing note instead of counting 72 hours on your own side.
+
 Checked 2026-10-16 on the text of Regulation (EU) 2016/679 (GDPR), EUR-Lex (CELEX 32016R0679):
 
 | Rule | What it imposes | Source |
@@ -88,7 +90,7 @@ Checked 2026-10-16 on the text of Regulation (EU) 2016/679 (GDPR), EUR-Lex (CELE
 | Documentation | Every breach is documented: facts, effects, remedial action. Keep the ticket as the first trace. | GDPR art. 33(5) |
 | Individuals | Where the breach is likely to result in a high risk, the controller informs the persons concerned without undue delay. | GDPR art. 34(1) |
 
-Cite an article only if it is in this table or you are certain of it; otherwise state the rule without a number and mark it "to check". In the customer reply, do not call the event a breach, do not admit liability and do not guess at the cause. Do not ask the customer for screenshots or copies of the exposed data, which would spread it; ask them not to share or download it.
+Cite an article only if it is in this table or you are certain of it; otherwise state the rule without a number and mark it "to check". In the customer reply, do not call the event a breach, do not admit liability and do not guess at the cause. Do not ask the customer for screenshots or copies of the exposed data, which would spread it; ask them not to share or download it, and, if they already hold a capture, to keep it without forwarding it until security asks for it.
 
 # First-reply templates
 

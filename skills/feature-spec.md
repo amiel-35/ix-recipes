@@ -54,6 +54,7 @@ Each requirement carries a label: **decided** (with who decided), **hypothesis**
    - **Should**: what the team is confident of building soon; not a wish list.
    - **Could**: desirable, and cutting it delays nothing.
    - **Won't (this time)**: out of scope for now. If the design must not close the door on it, say so in one line ("architecture insurance"), so engineering does not make a choice that rules it out.
+   When a requirement applies a legal or contractual rule (a rate, a deadline, a mandatory mention, a rule that differs for consumers and businesses), write the rule into the requirement with its parameters and its source, make every value that changes by law or by contract configurable rather than hard-coded, and put what legal must confirm in the open questions as blocking. A spec that only says "check with legal" leaves engineering to guess the rule.
 6. **Acceptance criteria** for each Must and Should (see below). Produced by default; omit them only if `inclure_criteres_acceptation` is false.
 7. **Success metrics** (see below). Produced by default; omit them only if `inclure_metriques` is false.
 8. **Open questions**, each marked **blocking** or **non-blocking** with who answers (engineering, design, legal, data, sponsor). A question that the context already answers is not an open question.

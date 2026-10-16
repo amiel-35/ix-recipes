@@ -47,6 +47,10 @@ Pour garder les trois faits, la convocation doit partir avant le 8 novembre 2026
 
 | Date | Version | Modèle | Critères tenus (sur 11) | Note |
 |---|---|---|---|---|
+| 2026-10-16 | 1.1.0 | Sonnet 5.5 | 7.3 (7–8) | banc 3 passages, moyenne (min–max) ; erreurs relevées 2.3 (2–3) |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5 | **11.0 (11–11)** | banc 3 passages ; erreurs 0.0 (0–0) |
+| 2026-10-16 | 1.1.0 | Haiku 5.5 | 2.0 (0–4) | banc 3 passages, moyenne (min–max) ; erreurs relevées 10.0 (8–13) |
+| 2026-10-16 | 1.2.0 | Haiku 5.5 | **1.3 (0–3)** | banc 3 passages ; erreurs 1.0 (0–2) |
 
 # Cas 2 — type_sanction `mise_en_demeure` (présomption de démission)
 
@@ -69,3 +73,59 @@ Pour garder les trois faits, la convocation doit partir avant le 8 novembre 2026
 
 | Date | Version | Modèle | Critères tenus (sur 8) | Note |
 |---|---|---|---|---|
+
+# Cas 3 — Avertissement pour retards et absence de poste (contrôle indépendant)
+
+Écrit le 2026-10-16 sans voir le corps du skill, à partir de sa seule description.
+
+## Demande
+
+> Je suis RRH d'une PME de 85 salariés (logistique, entrepôt à Saint-Priest). On a un règlement intérieur. Je dois rédiger un avertissement pour M. Karim B., préparateur de commandes en CDI depuis 2021, équipe du matin (6 h – 13 h 30). Voici les faits :
+>
+> - 12 mai 2026 : altercation verbale avec un cariste, qu'il a traité d'« incapable » devant l'équipe. Le chef d'équipe nous l'a signalé le jour même ; on n'avait rien fait à l'époque.
+> - Septembre : retards de 25 min le 8/09, 40 min le 15/09 et 30 min le 19/09 (relevés de badgeuse). Le 22/09, le responsable d'entrepôt lui a envoyé ce mail : « Karim, trois retards ce mois-ci, c'est inacceptable. Je te rappelle à l'ordre : la prochaine fois ce sera une sanction. »
+> - Octobre : retard de 50 min le 6/10 (badgeuse). Le 9/10, il a quitté son poste à 11 h 55 sans prévenir ; son chef d'équipe l'a cherché vingt minutes, il est revenu à 12 h 40 sans explication (attestation écrite du chef d'équipe, transmise aux RH le 9/10).
+> - Plus généralement, il a une mauvaise attitude et ne fait aucun effort.
+>
+> Je veux un avertissement qui reprenne tout, avec la mention qu'on retiendra 100 € sur sa paie d'octobre pour les retards, et je voudrais l'envoyer demain. Faut-il le convoquer avant ?
+
+## Valeurs de référence
+
+Prescription de deux mois à compter de la connaissance des faits par l'employeur (C. trav. L1332-4) :
+
+| Fait | Connu le | Poursuites possibles jusqu'au |
+|---|---|---|
+| Altercation | 12/05/2026 | 12/07/2026 — prescrit au 16/10/2026 |
+| Retard du 8/09 | 8/09/2026 | 8/11/2026 |
+| Retard du 6/10 | 6/10/2026 | 6/12/2026 |
+| Absence de poste du 9/10 | 9/10/2026 | 9/12/2026 |
+
+Textes et décisions vérifiés le 2026-10-16 : C. trav. L1311-2 (règlement intérieur obligatoire à partir de 50 salariés), L1321-1 (le règlement fixe la nature et l'échelle des sanctions), L1331-1, L1331-2, L1332-1, L1332-2, L1332-4, L1332-5 ; Cass. soc. 26 oct. 2010, n° 09-42.740 et 23 mars 2017, n° 15-23.090 (sanction autre que le licenciement seulement si prévue au règlement intérieur) ; Cass. soc. 3 mai 2011, n° 10-14.104 (convocation requise si le règlement intérieur fait compter l'avertissement pour un licenciement) ; Cass. soc. 18 mars 2015, n° 13-28.481 (lettre qui caractérise un manquement et annonce que le comportement ne sera plus toléré = avertissement ; les mêmes faits ne peuvent être sanctionnés de nouveau) ; Cass. soc. 23 juin 2021, n° 20-13.762 (l'employeur, pour le délai de deux mois, inclut le supérieur hiérarchique).
+
+## Une bonne sortie contient
+
+1. Écarte l'altercation du 12 mai comme fondement de la sanction : connue le jour même, elle est prescrite depuis le 12 juillet 2026 (L1332-4).
+2. Signale que le mail du 22 septembre, qui qualifie les retards d'inacceptables et rappelle à l'ordre, peut déjà valoir avertissement pour les retards de septembre, de sorte que ces retards ne peuvent pas être sanctionnés une seconde fois ; ils peuvent seulement être rappelés comme antécédent.
+3. Fonde l'avertissement sur les deux faits d'octobre, chacun daté, avec heure, durée et source (badgeuse du 6/10, attestation du chef d'équipe du 9/10).
+4. Retire « mauvaise attitude » et « aucun effort » faute de faits observables et datés, ou les remplace par des faits précis seulement si la RRH en fournit.
+5. Refuse la retenue forfaitaire de 100 € : les amendes et autres sanctions pécuniaires sont interdites (L1331-2).
+6. Répond à la question de la convocation : pas d'entretien préalable obligatoire pour un simple avertissement (L1332-2), sauf si le règlement intérieur fait compter l'avertissement pour un licenciement ultérieur ; demande de le vérifier.
+7. Fait vérifier que l'avertissement figure dans l'échelle des sanctions du règlement intérieur (obligatoire à 85 salariés, L1311-2 et L1321-1), faute de quoi la sanction est contestable.
+8. Produit une lettre qui nomme la sanction (« avertissement »), énonce par écrit les griefs retenus (L1332-1), formule l'attente pour la suite sans menace disproportionnée, et prévoit un envoi qui laisse une preuve de date (recommandé avec accusé de réception ou remise contre décharge).
+9. Donne la date limite pour agir sur les faits retenus : avant le 6 décembre 2026 pour le retard du 6 octobre, avant le 9 décembre 2026 pour l'absence du 9 octobre.
+10. Indique que le projet doit être validé par un juriste avant envoi.
+
+## Une mauvaise sortie
+
+- Rédige une lettre qui « reprend tout » : altercation de mai, retards de septembre, mauvaise attitude générale et retenue de 100 €.
+- Exige un entretien préalable systématique, ou dit au contraire qu'aucune vérification du règlement intérieur n'est nécessaire.
+- Refuse toute la demande au motif que certains faits sont vagues, alors que les faits d'octobre sont datés et documentés.
+
+## Résultats
+
+| Date | Version | Modèle | Critères tenus (sur 10) | Note |
+|---|---|---|---|---|
+| 2026-10-16 | 1.1.0 | Sonnet 5.5 | 8.3 (8–9) | banc 3 passages, moyenne (min–max) ; erreurs relevées 0.7 (0–1) |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5 | **9.0 (9–9)** | banc 3 passages ; erreurs 0.7 (0–1) |
+| 2026-10-16 | 1.1.0 | Haiku 5.5 | 2.3 (1–4) | banc 3 passages, moyenne (min–max) ; erreurs relevées 6.7 (6–8) |
+| 2026-10-16 | 1.2.0 | Haiku 5.5 | **5.7 (5–6)** | banc 3 passages ; erreurs 1.3 (0–3) |

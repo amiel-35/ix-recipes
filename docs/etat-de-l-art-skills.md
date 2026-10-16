@@ -168,6 +168,38 @@ Après l'accord d'Amiel sur le pilote, les 43 autres skills ont été réécrits
 
 **Droit de 2026 vérifié sur la source** (que le modèle ne peut pas connaître seul) : nouvel art. L221-21 C. conso. (fonction de rétractation en ligne, 19/06/2026) ; L442-1 C. com. modifié par la loi n° 2026-796 du 18/08/2026 ; R2152-7 CCP (critère environnemental, 21/08/2026) ; L223-1 C. conso. (démarchage téléphonique sur consentement, 11/08/2026) ; AI Act modifié par le règlement (UE) 2026/1744 ; Cass. com. 13/05/2026, n° 24-17.137 (art. 1171 entre professionnels) ; Cass. soc. 1/07/2026, n° 25-10.960 (renonciation à la non-concurrence) ; référentiel CNIL RH de conservation (mis à jour le 20/05/2026). Ce qu'un rédacteur n'a pas pu voir sur la source officielle est resté hors du skill ou marqué « to check » (transposition de NIS2, report éventuel de la facturation électronique, seuil de chiffre d'affaires de l'accessibilité, adoption de la loi de transposition de la directive 2023/970).
 
+### Banc de la généralisation
+
+Un skill par famille, joué avec `tests/cas-skills/banc.py` : avant (`cbe271c`) et après, sur Sonnet 5.5 et Haiku 5.5, **3 passages** par cas, chaque sortie notée seule et à l'aveugle par un juge Opus. Deux cas par skill. Le cas 1 a été écrit par le rédacteur du skill, il favorise donc la nouvelle version. Le cas 3, de **contrôle indépendant**, a été écrit par un agent qui n'avait vu que la description du skill.
+
+Critères tenus, moyenne sur 3 passages (avant → après) :
+
+| Skill | Cas 1, Sonnet | Cas 1, Haiku | Cas 3, Sonnet | Cas 3, Haiku |
+|---|---|---|---|---|
+| `contrat-emploi` (RH recrutement) | 6,7 → 11,0 /11 | 2,3 → 5,3 | 7,3 → 8,7 /9 * | 1,0 → 3,7 |
+| `lettre-cadrage-disciplinaire` (RH suivi) | 7,3 → 11,0 /11 | 2,0 → 1,3 | 8,3 → 9,0 /10 | 2,3 → 5,7 |
+| `cgv-checker` (juridique) | 4,3 → 12,0 /12 | 2,0 → 8,7 | 4,7 → 6,7 /10 | 2,0 → 4,0 |
+| `budget-variance-analysis` (finance) | 4,3 → 8,7 /10 | 3,0 → 7,0 | 5,7 → 6,7 /10 | 4,0 → 5,0 |
+| `vendor-scorecard` (achats) | 6,3 → 7,7 /10 | 3,0 → 4,7 | 6,0 → 8,7 /10 | 1,3 → 4,3 |
+| `feature-spec` (produit) | 7,0 → 9,3 /10 | 4,0 → 6,0 | 5,0 → 4,3 /10 * | 2,0 → 2,3 |
+| `ticket-triage` (tech) | 5,7 → 9,3 /10 | 4,7 → 7,7 | 8,3 → 10,0 /10 * | 3,0 → 5,0 |
+| **Total** | 41,6 → 69,0 /73 | 21,0 → 40,7 | 45,3 → 54,1 /69 | 15,6 → 30,0 |
+
+\* Ces trois skills ont été corrigés après un premier banc où ils **régressaient** avec Sonnet sur le cas indépendant (`contrat-emploi` 7,3 → 6,0, `feature-spec` 5,0 → 4,0, `ticket-triage` 8,3 → 7,0). J'ai ajouté le savoir général qui manquait, vérifié sur la source :
+- pour `contrat-emploi`, la contrepartie de non-concurrence se paie après la rupture (Cass. soc. 7/03/2007) ; le renouvellement de l'essai doit être prévu expressément ; un poste itinérant n'a pas besoin de clause de mobilité ;
+- pour `ticket-triage`, conserver les journaux avant tout retour arrière, et l'éditeur sous-traitant prévient ses clients sans délai ;
+- pour `feature-spec`, une règle légale s'écrit dans l'exigence, ses valeurs restent paramétrables.
+
+Le cas 3 de ces trois skills n'est plus indépendant, puisque j'en ai lu les échecs. Sur les quatre autres, qui gardent un contrôle indépendant, Sonnet passe de 24,7 à 31,1 sur 40.
+
+Ce que le banc apprend :
+
+1. **Le gain est net avec Haiku, sur les deux sortes de cas** (critères doublés). Avec Sonnet, il est net sur le cas 1 et modéré sur le cas indépendant : +7 points sur 40 pour les quatre skills restés indépendants.
+2. **Une réécriture peut faire régresser un bon modèle sur un cas qu'elle n'a pas prévu.** Le premier banc l'a montré sur trois skills sur sept. Deux causes : une règle utile laissée « à vérifier » faute de source, alors que le rédacteur aurait pu la vérifier ; une consigne de prudence trop large (« la qualification revient au DPO »), qui pousse le modèle à ne plus conclure.
+3. **Les erreurs relevées montent parfois avec Haiku** (`vendor-scorecard`, cas 3 : 8,7 → 11,7), parce que la nouvelle sortie calcule et affirme davantage. Avec Sonnet, elles baissent ou restent proches de zéro.
+4. **`feature-spec`, cas 3** : le cas demande le droit des pénalités de retard, qu'un skill de spécification ne porte pas. Les deux versions échouent ; l'écart (5,0 → 4,3) reste dans le bruit d'un passage à l'autre.
+5. **Pour la suite** : 10 skills ont été joués (les 3 du pilote et ces 7). Les 36 autres ont leur cas de test écrit mais n'ont pas été joués. La mesure utile serait la même démarche : un cas de contrôle écrit sans voir le skill, puis le banc à 3 passages (`banc.py --skills …`).
+
 ### Points laissés en l'état
 
 Parce qu'ils dépendent d'une question non tranchée de la revue (§3) :

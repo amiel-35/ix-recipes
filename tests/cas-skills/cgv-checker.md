@@ -44,6 +44,10 @@ ecrit: 2026-10-16
 
 | Date | Version | Modèle | Critères tenus (sur 12) | Note |
 |---|---|---|---|---|
+| 2026-10-16 | 1.2.1 | Sonnet 5.5 | 4.3 (3–5) | banc 3 passages, moyenne (min–max) ; erreurs relevées 3.7 (3–4) |
+| 2026-10-16 | 1.3.0 | Sonnet 5.5 | **12.0 (12–12)** | banc 3 passages ; erreurs 0.0 (0–0) |
+| 2026-10-16 | 1.2.1 | Haiku 5.5 | 2.0 (2–2) | banc 3 passages, moyenne (min–max) ; erreurs relevées 10.7 (10–11) |
+| 2026-10-16 | 1.3.0 | Haiku 5.5 | **8.7 (8–9)** | banc 3 passages ; erreurs 6.0 (5–8) |
 
 # Cas 2 — CGU d'une plateforme B2B reçues d'un fournisseur (cas de contrôle)
 
@@ -74,3 +78,64 @@ ecrit: 2026-10-16
 
 | Date | Version | Modèle | Critères tenus (sur 10) | Note |
 |---|---|---|---|---|
+
+# Cas 3 — CGV d'un ERP en SaaS, côté client (contrôle indépendant)
+
+Écrit le 2026-10-16 sans voir le corps du skill, à partir de sa seule description.
+
+## Demande
+
+> On est une PME (SAS, 60 salariés, négoce de matériel électrique). On va souscrire un ERP en SaaS (gestion commerciale, facturation, stocks) ; ce sont les CGV de l'éditeur, « standard et non négociables » d'après son commercial. Abonnement : 2 900 € HT par mois. Relis-les de notre côté, en tant que client : quelles clauses posent problème, et lesquelles essayer de négocier ?
+>
+> Art. 3 – Durée. Engagement initial de 36 mois, renouvelé tacitement par périodes de 36 mois sauf dénonciation par lettre recommandée au moins 6 mois avant l'échéance.
+>
+> Art. 5 – Prix. Le Prestataire peut réviser ses tarifs à tout moment ; les nouveaux tarifs s'appliquent 30 jours après leur notification par e-mail.
+>
+> Art. 6 – Paiement. Les factures sont payables à réception. En cas de retard, le Prestataire peut suspendre l'accès au service sans préavis ; des pénalités au taux de 15 % l'an et une indemnité forfaitaire de 40 € pour frais de recouvrement sont dues.
+>
+> Art. 8 – Disponibilité. Le Prestataire s'efforce d'assurer la disponibilité du service 24 h/24, sans engagement de niveau de service.
+>
+> Art. 9 – Responsabilité. La responsabilité du Prestataire, toutes causes confondues, est limitée aux sommes versées par le Client au cours des trois derniers mois. Le Prestataire n'est en aucun cas responsable des pertes de données, quelle qu'en soit la cause.
+>
+> Art. 10 – Données. À la fin du contrat, les données du Client sont supprimées sous 8 jours. Un export peut être fourni, dans le format du Prestataire, sur devis.
+>
+> Art. 11 – Sous-traitance. Le Prestataire peut recourir à tout sous-traitant de son choix, y compris hors de l'Union européenne, sans en informer le Client.
+>
+> Art. 13 – Modification. Le Prestataire peut modifier les présentes CGV à tout moment ; la version publiée en ligne s'applique dès sa publication.
+>
+> Art. 15 – Juridiction. Compétence exclusive du tribunal de commerce de Lyon (siège du Prestataire).
+
+## Valeurs de référence
+
+- Plafond de responsabilité (art. 9) : 3 × 2 900 € = 8 700 € HT, à comparer à 34 800 € HT par an et 104 400 € HT sur l'engagement initial de 36 mois.
+- Taux de l'intérêt légal du second semestre 2026, cas où le créancier est un professionnel : 2,75 % (arrêté du 26 juin 2026). Plancher des pénalités de retard B2B : 3 × 2,75 % = 8,25 % (C. com. L441-10, II). Le taux de 15 % est au-dessus du plancher ; l'indemnité de 40 € est le montant fixé par l'art. D441-5.
+
+Textes vérifiés le 2026-10-16 : C. civ. 1170, 1171, 1231-3 ; C. com. L441-10 (version en vigueur depuis le 1er sept. 2026), L442-1 (version en vigueur depuis le 20 août 2026), D441-5 ; C. consom. article liminaire et L215-3 ; CPC art. 48 (clause de compétence valable entre commerçants si très apparente) ; RGPD art. 28 ; règlement (UE) 2023/2854 (règlement sur les données) art. 2, 23, 25, 29, 31 et 50 (applicable depuis le 12 sept. 2025).
+
+## Une bonne sortie contient
+
+1. Pose le cadre d'un contrat entre professionnels : les règles de consommation (reconduction tacite encadrée, clauses abusives du code de la consommation) ne s'appliquent pas à une SAS qui achète pour son activité, et mobilise à la place le déséquilibre significatif du contrat d'adhésion (C. civ. 1171) et/ou des relations commerciales (C. com. L442-1, I, 2°).
+2. Identifie l'exclusion de toute responsabilité pour perte de données, « quelle qu'en soit la cause », comme une clause qui vide de sa substance l'obligation essentielle d'un service d'hébergement et de traitement de données (C. civ. 1170), et rappelle qu'une limitation ne joue pas en cas de faute lourde ou dolosive (C. civ. 1231-3).
+3. Chiffre le plafond de l'art. 9 (8 700 € HT) et le met en regard du préjudice possible d'un ERP indisponible ou de données perdues ; propose un plafond plus haut (par exemple 12 mois de redevances) et l'exclusion du plafond pour la perte de données due au Prestataire.
+4. Rattache l'art. 10 au règlement sur les données (chapitre VI, applicable depuis le 12 septembre 2025, un SaaS étant un service de traitement de données) : récupération des données pendant au moins 30 jours (et non 8), export de toutes les données exportables, frais de changement limités aux coûts directs jusqu'au 12 janvier 2027 puis interdits (art. 25 et 29).
+5. Mentionne que le contrat doit permettre de lancer un changement de fournisseur avec un préavis de deux mois au plus (art. 25, 2, d), à articuler avec l'engagement de 36 mois, des pénalités de résiliation anticipée restant possibles si elles sont annoncées avant la signature (art. 29, 4).
+6. Relève sur les art. 10 et 11 les manques au regard du RGPD (les données clients et salariés de la PME sont des données personnelles) : restitution ou suppression au choix du client (art. 28, 3, g), sous-traitants ultérieurs seulement après autorisation écrite et information sur tout changement avec droit d'objection (art. 28, 2), transferts hors UE sur instruction documentée (art. 28, 3, a) ; réclame un accord de traitement des données.
+7. Signale la combinaison art. 3 + 5 + 13 (engagement long, reconduction de 36 mois avec préavis de 6 mois, prix et CGV modifiables seuls par le Prestataire) comme le principal déséquilibre et propose des contreparties : prix ferme ou indexation plafonnée, droit de résilier en cas de hausse ou de modification défavorable, reconduction annuelle.
+8. Signale à l'art. 6 que la suspension sans préavis d'un ERP bloque la facturation de la PME, et demande une mise en demeure préalable avec délai ; ne présente pas comme abusifs le taux de 15 % ni l'indemnité de 40 €, conformes au code de commerce.
+9. Signale à l'art. 8 l'absence d'engagement de disponibilité et demande un taux de disponibilité mesuré, des délais d'intervention et des pénalités ou crédits de service.
+10. Classe les points par ordre de priorité de négociation et rappelle qu'une relecture par un juriste reste nécessaire avant signature.
+
+## Une mauvaise sortie
+
+- Invoque la loi Chatel ou les clauses abusives du code de la consommation comme si la PME était un consommateur.
+- Qualifie d'abusifs les pénalités de 15 % et l'indemnité de 40 €, ou la clause attributive de juridiction entre sociétés commerciales, en les mettant sur le même plan que l'exclusion de responsabilité pour perte de données.
+- Ne dit rien de la réversibilité des données (art. 10) ni du RGPD, alors que c'est un ERP qui héberge les données de la PME.
+
+## Résultats
+
+| Date | Version | Modèle | Critères tenus (sur 10) | Note |
+|---|---|---|---|---|
+| 2026-10-16 | 1.2.1 | Sonnet 5.5 | 4.7 (4–5) | banc 3 passages, moyenne (min–max) ; erreurs relevées 0.0 (0–0) |
+| 2026-10-16 | 1.3.0 | Sonnet 5.5 | **6.7 (6–7)** | banc 3 passages ; erreurs 1.0 (0–3) |
+| 2026-10-16 | 1.2.1 | Haiku 5.5 | 2.0 (2–2) | banc 3 passages, moyenne (min–max) ; erreurs relevées 5.7 (3–7) |
+| 2026-10-16 | 1.3.0 | Haiku 5.5 | **4.0 (3–5)** | banc 3 passages ; erreurs 6.7 (4–10) |

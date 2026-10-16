@@ -19,12 +19,12 @@
       "type": "enum",
       "required": false,
       "values": [
-        "moins_2_ans",
-        "2_4_ans",
-        "4_6_ans",
-        "plus_6_ans"
+        "moins_1_an",
+        "1_4_ans",
+        "4_8_ans",
+        "plus_8_ans"
       ],
-      "help": "Determine les obligations legales applicables (bilan a 6 ans)."
+      "help": "Determine les obligations legales applicables (premier entretien dans l'annee de l'embauche, puis tous les 4 ans, etat des lieux a 8 ans)."
     },
     "effectif_entreprise": {
       "label": "Effectif de l'entreprise",

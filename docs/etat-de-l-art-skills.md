@@ -160,7 +160,7 @@ Ce que le pilote apprend :
 
 ## Généralisation (2026-10-16)
 
-Après l'accord d'Amiel sur le pilote, les 43 autres skills ont été réécrits par famille (un rédacteur Sonnet par famille, à partir de sa fiche de `fiches-reecriture/`), puis relus. `entretien-professionnel` n'est pas réécrit sur cette branche : sa version 2.0.0 (loi 2025-989) attend sur `claude/entretien-parcours-professionnel` ; sa ligne d'analyse dit ce qui lui manque encore.
+Après l'accord d'Amiel sur le pilote, les 43 autres skills ont été réécrits par famille (un rédacteur Sonnet par famille, à partir de sa fiche de `fiches-reecriture/`), puis relus. `entretien-professionnel` n'est pas réécrit sur cette branche : sa version 2.0.1 (loi 2025-989) a été fusionnée à part (plugin 2.10.1) ; sa ligne d'analyse, faite sur la 2.0.0, dit ce qui lui manquait encore au regard de la grille.
 
 **Ce qui a été fait sur les 46 skills réécrits.** Version relevée ; chaque contrainte porte sa raison ou devient une consigne positive ; le savoir des fiches est ajouté ; les paramètres `.mystaffy.json` sont définis dans le corps (R11) ; un exemple court quand la forme compte, jamais tiré du cas de test ; un tableau de droit vérifié et daté, avec la consigne R12, dans chaque skill qui cite du droit ; un cas de test dans `tests/cas-skills/`. Les reprises d'Anthropic sont créditées dans `THIRD_PARTY.md` et en fin de corps.
 

@@ -201,13 +201,13 @@ Tools for the full employee lifecycle — recruiting, onboarding, development, a
 
 ---
 
-#### `entretien-professionnel` — Mandatory professional development interview
+#### `entretien-professionnel` — Mandatory career path interview
 
-**What it does:** Prepares a mandatory professional development interview (French Labor Code, art. L6315-1) — required every 2 years for all employees. Produces a framework, questions, and a meeting record template compliant with legal requirements.
+**What it does:** Prepares the mandatory career path interview ("entretien de parcours professionnel", French Labor Code art. L6315-1 as amended by Law 2025-989) — within the first year after hiring, then every 4 years, with a summary review every 8 years. Produces a framework, questions, and a meeting record template compliant with legal requirements.
 
 **What it doesn't do:** Not the same as an annual performance review. This is a legally required career development conversation, not a performance assessment.
 
-**Use when:** Every 2 years per employee, or after specific events (return from parental leave, sick leave…) as required by French law.
+**Use when:** Every 4 years per employee, for the 8-year review, or after specific events (return from parental leave or long sick leave with no interview in the previous 12 months, mid-career medical visit, approaching age 60) as required by French law.
 
 ---
 

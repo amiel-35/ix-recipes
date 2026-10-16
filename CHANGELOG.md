@@ -34,8 +34,7 @@ Same release, first part (developed as 2.9.0 on its branch, renumbered at merge)
   "do not"; domain knowledge the model would get wrong is added (formulas, default positions, French and EU
   law checked on Légifrance / EUR-Lex / CNIL and dated 2026-10-16, including 2026 changes); `.mystaffy.json`
   parameters are defined in the body; short examples where the form matters. Legal skills cite an article only
-  when it is in their table or certain. `entretien-professionnel` is not rewritten here (2.0.0 waits on its own
-  branch). Points that depend on an open question of the 2026-10-16 review are left as they were and listed.
+  when it is in their table or certain. `entretien-professionnel` is not rewritten here (its 2.0.1 came separately, in 2.10.1). Points that depend on an open question of the 2026-10-16 review are left as they were and listed.
 - **New shared annexes** `partials/transverse_anti_biais.md` and `partials/transverse_debrief.md`: the text
   `interview-loop-planner` and `interview-guide-recruteur` used to copy inline (329 → 101 and 172 → 98 body lines).
 - `contrat-fournisseur` no longer promises drafting (it analyses, buyer side); README aligned, as for
@@ -43,6 +42,18 @@ Same release, first part (developed as 2.9.0 on its branch, renumbered at merge)
 - `THIRD_PARTY.md`: the passages adapted from anthropics/knowledge-work-plugins (commit `33eeda1`), skill by skill.
 - **Test cases** in `tests/cas-skills/` (one or more per skill) and a before/after bench, `tests/cas-skills/banc.py`,
   that plays each case several times per model and has each output graded blind.
+## 2026-10-16 — plugin 2.10.1: entretien-professionnel follows law 2025-989
+
+- `entretien-professionnel` 2.0.1: the professional interview becomes the *entretien de
+  parcours professionnel* (law 2025-989 of 24 October 2025, Labor Code L6315-1 in force since
+  31 December 2025): first year, every 4 years, 8-year review (7 years in some cases), who
+  runs it and when (employer, line manager or management, during working hours), the 3,000 €
+  top-up above 50 employees, sources with Légifrance links. Checked by an independent legal
+  review against the texts in force: the 4- and 8-year periods counted from the last interview
+  are the labour ministry's position (Q&A of 12 February 2026, question 2, Civil Code
+  art. 2222), not the law's wording; below 50 employees damages require proof of harm
+  (Cass. soc. 17 June 2026, 25-10.517).
+
 ## 2026-10-16 — plugin 2.10.0: a checking step may re-read the source (recipe format 2)
 
 ### Recipes

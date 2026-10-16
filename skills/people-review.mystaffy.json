@@ -13,7 +13,7 @@
     "metier_marketing",
     "metier_direction"
   ],
-  "category": "decision",
+  "category": "production",
   "params": {
     "perimetre": {
       "label": "Perimetre de la revue",

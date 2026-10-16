@@ -4,12 +4,36 @@
   ],
   "category": "critique",
   "params": {
+    "position_lecture": {
+      "label": "Position de lecture",
+      "type": "enum",
+      "required": false,
+      "default": "client",
+      "help": "Cadre la lecture selon la partie que tu representes : client (acheteur), fournisseur (qui publie ou vend), utilisateur.",
+      "values": [
+        "client",
+        "fournisseur",
+        "utilisateur"
+      ]
+    },
+    "type_document": {
+      "label": "Type de document",
+      "type": "enum",
+      "required": false,
+      "default": "contrat_negocie",
+      "help": "Choisit le jeu de clauses a lire : CGV / CGU d'adhesion, contrat fournisseur ou de prestation negocie, conditions de service SaaS / cloud.",
+      "values": [
+        "cgv_cgu",
+        "contrat_negocie",
+        "saas_cloud"
+      ]
+    },
     "type_fournisseur": {
       "label": "Type de fournisseur",
       "type": "enum",
       "required": false,
       "default": "prestation",
-      "help": "Permet de cadrer les clauses a surveiller en priorite.",
+      "help": "Pour un contrat negocie : permet de cadrer les clauses a surveiller en priorite.",
       "values": [
         "prestation",
         "logiciel",
@@ -32,10 +56,13 @@
   },
   "ui": {
     "simple_fields": [
-      "type_fournisseur",
+      "position_lecture",
+      "type_document",
       "niveau_detail"
     ],
-    "advanced_fields": []
+    "advanced_fields": [
+      "type_fournisseur"
+    ]
   },
   "execution": {
     "supports_async": false,

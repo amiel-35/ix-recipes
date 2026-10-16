@@ -247,6 +247,25 @@ Hors recette, et à mener avant les recettes qui en dépendent : enrichir les 10
 11. **Fusions** : `contrat-fournisseur` + `cgv-checker` (avis favorable, après avoir réglé le mode rédaction) ; `feature-spec` + `product-spec` (avis favorable, id survivant à choisir). On fusionne ?
 12. **Périmètres** : `contrat-emploi` doit-il porter le droit du travail français, ou être réduit à la rédaction (l'analyse revenant à `legal-risk-flag`) ? `analyse-entretien` doit-il couvrir les notes d'entretien de recrutement, et devenir le debrief qui manque ? `vendor-scorecard` doit-il couvrir le marché public ? `mockup` : l'enrichir ou le retirer, après la comparaison avec `frontend-design` ?
 
+### Décisions d'Amiel du 2026-10-16
+
+Prises après la réécriture des skills et les bancs (voir [`etat-de-l-art-skills.md`](etat-de-l-art-skills.md)). Elles remplacent les questions ci-dessus.
+
+| Question | Décision |
+|---|---|
+| 1. Accès à la source | Les deux formes : (a) lecture seule de la source déclarée sur une étape de contrôle nommée ; (b) handoff par identifiants. |
+| 2. Même skill deux fois | Assouplir : un skill peut figurer deux fois dans une recette s'il a deux modes nommés autour d'une pause. |
+| 3. `offre-commerciale` | Réduit à la rédaction derrière une position choisie par un humain, avec la recette « proposition commerciale » ; reste utilisable seul pour une petite proposition. |
+| 4. `prd` | Oui : recette « PRD depuis une demande de sponsor » (cadrage → questioning → réponses des parties prenantes → prd → validation). |
+| 5. `people-review` | Non : pas de séance de calibrage chez les utilisateurs visés ; skill simple, `category` passe de `decision` à `production`. |
+| 6. `persona` | Non tranchée. |
+| 7. Cycle d'entretien annuel | Oui, recette prioritaire ; frontière axes présumés / constatés ; fusionner `entretien-professionnel` 2.0.0. |
+| 8. Vérification séparée | Oui, contrats et chiffres : créer l'atome « vérification de calcul » dans ix-skills et une étape de contrôle isolée, avec accès à la source. |
+| 9. `business-case-draft` | Oui, découper : chiffrage et scénarios → validation humaine des hypothèses → recommandation. |
+| 10. `strategie-prix` | Enrichir : modèles tarifaires, métrique de valeur, consentement à payer, volume d'équilibre, droit des prix ; il propose, `decision` tranche. |
+| 11. Fusions | `cgv-checker` fusionné dans `contrat-fournisseur` (id conservé, `cgv-checker` en alias le temps d'une version) ; `product-spec` fusionné dans `feature-spec` (id conservé). |
+| 12. Périmètres | `contrat-emploi` garde l'analyse (droit du travail en partial `droit_contrat_travail`, mode `revision` défini) ; `analyse-entretien` reste sur l'entretien annuel (le débrief de recrutement sera un skill à créer) ; achat privé seulement pour `vendor-scorecard`, `rfp-draft`, `offer-comparison` ; `mockup` enrichi (fidélité, charte, accessibilité, formats français). |
+
 ---
 
 ## Annexe A — Les 13 skills « minces » du 2026-10-14

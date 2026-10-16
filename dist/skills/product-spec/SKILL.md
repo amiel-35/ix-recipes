@@ -1,77 +1,11 @@
 ---
 name: product-spec
-description: "Turns a brief or an already-scoped need into an actionable specification, flows, screens, data model, edge cases, acceptance criteria, for a product, design, or engineering team. Triggers on \"write the spec for this screen or flow\", \"detail the data model and edge cases\", \"actionable spec from this scoped brief\". Does not define overall product vision (use `prd`) and does not rewrite existing user stories (use `reformulation-us`)."
+description: "Merged into feature-spec, use feature-spec. Still triggers on \"write the spec for this screen or flow\", \"detail the data model and edge cases\", \"actionable spec from this scoped brief\", to point to `feature-spec`, which now covers screens, flows, states and the data model."
 ---
-# Role
+# Merged into `feature-spec`
 
-You transform a brief, an already-scoped need, or a decomposition plan into a specification that a product, design, or engineering team can act on.
+Use `feature-spec` for what this skill did: specifying a screen (`mode_spec: ecran`), a journey (`flux`) or a batch of specs (`lot`), with the states of every view, the content edge cases, the data model with the computation rules of derived statuses, and the companion artefacts (`user_flows`, `inventaire_ecrans`, `composants_ds`, `modele_donnees`, `cas_limites`).
 
-# Absolute rule
+The two skills are merged because a screen spec and a feature spec share most of their method (labels, requirements, acceptance criteria, open questions): kept apart, each improvement had to be written twice, and a user had to guess which of two near-identical skills to call. The id `feature-spec` is kept; `product-spec` stays for one version as a pointer.
 
-You must always produce a main artifact of type `spec`.
-
-You may produce companion artifacts only among the types authorized by the manifest:
-- `user_flows`
-- `inventaire_ecrans`
-- `composants_ds`
-- `modele_donnees`
-- `cas_limites`
-- `criteres_acceptation`
-
-You never invent a document type outside the manifest.
-You explicitly distinguish scoping facts, working hypotheses, and still-open areas.
-
-# Expected inputs
-
-- A clean `brief` or a sufficiently scoped need.
-- Optionally a `spec_plan` if an earlier analysis pass has already determined the right decomposition.
-- Optionally: references, screenshots, technical constraints, or business rules.
-
-# Method
-
-1. Identify the relevant level of specification.
-2. Build a main specification that remains readable on its own.
-3. Produce companion artifacts only when they reduce confusion or avoid an overly monolithic spec.
-4. Surface areas of uncertainty, implicit decisions, and dependencies.
-5. Flag what is sufficiently specified to start work, and what still needs arbitration.
-
-# Constraints
-
-- Do not drown the main spec in unnecessary appendices.
-- Do not produce multiple separate specs without clearly stating the decomposition chosen.
-- Never present as decided what is only a hypothesis.
-- Mermaid diagrams should clarify, not decorate.
-
-# Multi-output rule
-
-- Always produce `spec`.
-- Produce `user_flows` if journeys structure the subject better than continuous prose.
-- Produce `inventaire_ecrans` if the subject has several distinct views or surfaces.
-- Produce `composants_ds` if the design system layer deserves a dedicated extraction.
-- Produce `modele_donnees` if objects, attributes, or relationships become a subject of their own.
-- Produce `cas_limites` if exceptions and guardrails are numerous or critical.
-- Produce `criteres_acceptation` if the specification must directly support validation.
-
-# Expected output format
-
-The `spec` main document must remain the reference document.
-
-Recommended structure:
-- objective
-- scope
-- users or actors
-- journeys and expected behaviors
-- functional rules
-- dependencies
-- open areas
-- working hypotheses if relevant
-
-Companion artifacts must remain specialized and complementary.
-
-# Definition of done
-
-- The team knows what to build or design.
-- The main document is self-contained.
-- Appendices, if present, serve a clear need.
-- The chosen decomposition is explicit and non-arbitrary.
-- Hypotheses and open decisions are visible without breaking the spec's readability.
+Run `feature-spec` on the request. If a brief arrives here with an `analysis_plan`, `feature-spec` accepts it as input.

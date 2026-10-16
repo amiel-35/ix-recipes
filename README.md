@@ -44,16 +44,16 @@
 
 ix-recipes does the groundwork of consulting, HR, legal, finance and product jobs with Claude: answering a call for tenders, turning a vague client request into a brief, writing a job description, reviewing a contract… The bigger jobs are **recipes**: a series of steps you follow in a page on your computer, which stops whenever your judgement is needed.
 
-**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.8.0**:
+**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.9.0**:
 
 ```text
-Install ix-recipes (version 2.8.0 or later) on this computer and open its tracking page so I can try it
+Install ix-recipes (version 2.9.0 or later) on this computer and open its tracking page so I can try it
 (https://github.com/amiel-35/ix-recipes). Do everything yourself, without asking me to restart:
 1. Add the amiel-35/plugins marketplace (if that fails for lack of a GitHub SSH key, use
    https://github.com/amiel-35/plugins.git), then install ix-skills@amiel-35 and
    ix-recipes@amiel-35. If they are already installed, update them; if they come from another
    marketplace, keep that one and create no duplicate. Check the installed ix-recipes version:
-   if it is older than 2.8.0, update the marketplace and the plugin.
+   if it is older than 2.9.0, update the marketplace and the plugin.
 2. Check python3 (3.9 or later); if it is missing, tell me what to install and stop.
 3. Start, in the background, the script skills/suivi-parcours/scripts/interface.py of the
    installed ix-recipes plugin (under ~/.claude/plugins/cache/, the latest version); it opens
@@ -267,11 +267,11 @@ Tools for the full employee lifecycle — recruiting, onboarding, development, a
 
 #### `lettre-cadrage-disciplinaire` — Disciplinary framing letter
 
-**What it does:** Drafts a factual and proportionate disciplinary framing letter — documenting observed facts, their impact, and expected behavior change. Calibrated to the severity of the situation.
+**What it does:** Drafts a disciplinary letter (warning, reprimand, suspension…) from dated facts, after setting the sanction aimed at, the procedure it triggers and its deadlines. Calibrated to the sanction aimed at. Also covers the formal notice for job abandonment, which is not a sanction.
 
-**What it doesn't do:** Does not produce a formal sanction letter. Must be validated by a labor lawyer before sending.
+**What it doesn't do:** Does not draft the summons to the prior interview (it says when one is needed and what it contains). Must be validated by a labor lawyer before sending: under French law any letter that reproaches a fault is in principle a sanction, and the same facts cannot be sanctioned again.
 
-**Use when:** A documented conversation is needed before a formal disciplinary procedure, or to create a written record of a behavioral issue.
+**Use when:** Specific, dated misconduct calls for a sanction, before anything is sent to the employee.
 
 ---
 
@@ -279,7 +279,7 @@ Tools for the full employee lifecycle — recruiting, onboarding, development, a
 
 **What it does:** Structures an offboarding plan covering knowledge handover, admin checklist, exit interview framework, and continuity risk mapping.
 
-**Use when:** When an employee gives notice. The earlier it starts, the better the knowledge transfer.
+**Use when:** As soon as a departure is decided, whatever its form (resignation, mutual termination, dismissal, end of fixed-term contract). The earlier it starts, the better the knowledge transfer.
 
 ---
 
@@ -287,7 +287,7 @@ Tools for the full employee lifecycle — recruiting, onboarding, development, a
 
 **What it does:** Formalizes an organizational target with a current state diagnosis, design rationale, human risks, and sequencing — before any announcement or implementation. Surfaces what the new structure solves, what new risks it creates, and how to phase the transition.
 
-**Use when:** Before announcing a reorganization. Also useful as pre-work before engaging a management team in the design.
+**Use when:** Before consulting the works council (CSE) and before announcing a reorganization. Also useful as pre-work before engaging a management team in the design.
 
 </details>
 
@@ -311,11 +311,11 @@ Pre-legal tools — all require professional validation before use. They orient 
 
 #### `cgv-checker` — Unbalanced clauses in T&Cs
 
-**What it does:** Identifies unbalanced, unusual, or sensitive clauses in General Terms and Conditions (sales or use), depending on the reading position (buyer, user, subscriber).
+**What it does:** Identifies unbalanced, unusual, or sensitive clauses in General Terms and Conditions (sales or use), depending on the reading position (client, supplier, user), under French law: qualification of the parties, consumer-code black and grey lists, rules between businesses.
 
 **What it doesn't do:** Does not assess the full legal validity of the T&Cs. Does not replace legal advice.
 
-**Use when:** Before accepting T&Cs for a significant vendor or platform relationship, or when drafting your own T&Cs.
+**Use when:** Before accepting T&Cs for a significant vendor or platform relationship, or to review your own T&Cs before publishing them.
 
 
 ---
@@ -332,7 +332,7 @@ Pre-legal tools — all require professional validation before use. They orient 
 
 #### `compliance-checklist` — Legal compliance checklist
 
-**What it does:** Generates a compliance checklist covering legal, contractual, and regulatory obligations — GDPR, labor law, sector-specific regulation — from a project context or document.
+**What it does:** Generates a compliance checklist covering legal, contractual, and regulatory obligations — consumer, digital, accessibility, AI, cybersecurity, invoicing, sector-specific regulation — from a project context or document, each obligation with its application date and size exemption. GDPR is handed to `conformite-rgpd`.
 
 **What it doesn't do:** Does not replace professional legal or regulatory advice. Always requires expert validation before operational use.
 
@@ -352,11 +352,11 @@ Pre-legal tools — all require professional validation before use. They orient 
 
 #### `contrat-fournisseur` — Supplier contract, buyer's side
 
-**What it does:** Analyzes **or** drafts a supplier or service provider contract from the buyer's perspective. Surfaces unbalanced conditions, clauses to renegotiate (SLA, liability, termination, penalties, exclusivity, renewal), and contractual risks. Can also produce a first draft when no contract exists yet.
+**What it does:** Analyzes a supplier or service provider contract from the buyer's perspective. Surfaces unbalanced conditions, clauses to renegotiate (SLA, liability, termination, penalties, exclusivity, renewal, exit), and contractual risks, ranked by priority with a fallback position.
 
 **What it doesn't do:** Does not replace legal advice. Requires professional validation before use.
 
-**Use when:** Before signing a supplier contract, before entering negotiations, or when drafting initial terms for a new supplier relationship.
+**Use when:** Before signing a supplier contract or before entering negotiations.
 
 </details>
 
@@ -881,7 +881,7 @@ These targets carry `skill.md` and `manifest.json` only, not the `references/` f
 
 ### GPT / Gemini / other LLMs (chat interfaces)
 
-For plain chat UIs with no CLI: paste the content of `skills/<id>.md` as a system prompt. The YAML frontmatter is ignored harmlessly. For a skill that lists `references` in its frontmatter (the HR skills), also paste the matching `partials/metier_<family>.md` (`metier_tech`, `metier_rh`…), or the skill will ask for the organisation's competency framework.
+For plain chat UIs with no CLI: paste the content of `skills/<id>.md` as a system prompt. The YAML frontmatter is ignored harmlessly. For a skill that lists `references` in its frontmatter (the HR skills), also paste the matching `partials/metier_<family>.md` (`metier_tech`, `metier_rh`…), or the skill will ask for the organisation's competency framework. The two recruitment-interview skills also list `transverse_anti_biais` (and `transverse_debrief` for `interview-loop-planner`): paste them too, or the skills keep only their essential rules.
 
 ---
 
@@ -890,7 +890,7 @@ For plain chat UIs with no CLI: paste the content of `skills/<id>.md` as a syste
 ```
 ix-recipes/
 ├── skills/                 ← canonical source (one .md + .mystaffy.json per skill)
-├── partials/               ← job-family references (metier_*.md), copied into references/ of the skills that list them
+├── partials/               ← job-family references (metier_*.md) and interview annexes (transverse_*.md), copied into references/ of the skills that list them
 ├── scripts/
 │   └── install-codex.sh    ← Codex CLI installer
 ├── dist/                   ← plugin root, committed

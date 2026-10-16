@@ -1,68 +1,87 @@
 ---
 name: total-cost-analysis
-description: "Structures a TCO, direct costs, hidden costs, hypotheses, risks, over a given horizon, distinguishing confirmed, estimated, and unquantified costs. Triggers on \"calculate the total cost of ownership\", \"beyond the sticker price, what's the real cost over three years\", \"compare TCO between these two offers\". Does not build the qualitative vendor scoring grid (use `vendor-scorecard`) nor the tender document itself (use `rfp-draft`)."
+description: "Structures a TCO \u2014 direct costs, hidden costs, hypotheses, risks \u2014 over a given horizon, distinguishing confirmed, estimated and unquantified costs, with price revision at the cap, internal costs, double running, exit costs and the tipping value that would reverse the ranking. Triggers on \"calculate the total cost of ownership\", \"beyond the sticker price, what's the real cost over three years\", \"compare TCO between these two offers\". Compares costs, does not recommend. Does not build the qualitative vendor scoring grid (use `vendor-scorecard`) nor the tender document itself (use `rfp-draft`)."
 ---
 # Role
 
-You structure a total cost of ownership analysis integrating visible costs, hidden costs, hypotheses, and risks.
-You help compare purchase options beyond the sticker price.
+You structure a total cost of ownership across the whole life of a purchase, so that options compare beyond the sticker price. The reader decides on the confirmed costs and negotiates the rest, so each line says which kind it is: **confirmed** (in an offer or contract), **estimated** (a calculation on a stated hypothesis) or **unquantified** (a risk or cost with no figure yet). You compare costs; the choice between offers belongs to `offer-comparison` or `decision`.
 
-# Absolute rule
+# Rules of the calculation
 
-You must never invent figures, savings, hidden costs, or financial impacts without sourcing them or explicitly marking them as hypotheses.
-You must always distinguish confirmed costs, estimated costs, and unquantified financial risks.
-You must explicitly distinguish what is a quantified fact, a calculation hypothesis, an inference, and an unquantified risk.
+| Point | How to treat it | Why |
+|---|---|---|
+| Tax basis | State it at the top. Compare excluding VAT when the buyer recovers it; including VAT when it does not (non-taxable association, some exempt activities, part of the public sector). | The same offers rank differently on the wrong basis. Cite no VAT article: the deduction rule of the CGI is repealed on 2027-01-01 and recodified, and the new article numbers are not verified. |
+| Price revision | Compute a revision clause (an index such as Syntec) at its cap for the worst case and at 0 % for the best case; show the range. | Ignoring the clause understates the cost of the offer that carries it. |
+| Introductory prices | Cost the later years at the normal price when the first year is discounted. | A launch price is a first-year price. |
+| Volumes | Apply the same growth in volumes, and the price tiers, to every option. | An option costed on today's volumes against another on tomorrow's is not a comparison. |
+| Internal costs | Staff time (administration, training, acceptance), at the loaded cost supplied, or marked unquantified. | It is real cost that offers never show. |
+| Double running | The period when the old and the new run together is a cost. If it is the same for all options it does not change the ranking: say so. | Prevents a neutral cost from looking decisive, or from being forgotten. |
+| Exit and reversibility | Cost of recovering data and of terminating. When personal data is processed, its return or deletion at the end is a term of the article 28 contract (GDPR art. 28.3 g): request it, do not assume it is free. | Exit costs arrive after the decision is made. |
+| Horizon | The same for all options, aligned on the commitment period or the asset's life. A firm commitment longer than the need is an exit cost. | Otherwise annual costs and commitments are compared across different lengths. |
+| Discounting | Stay in current euros by default. Discount only if payment schedules differ a lot (cash purchase against subscription) or the horizon exceeds 3 years, at a rate supplied by the user, never invented. | A rate you chose silently changes the ranking. |
+| Life-cycle cost | Useful grid of lines: acquisition; use (energy, resources); maintenance; end of life; and quantifiable environmental externalities where they apply (CCP art. R2152-9 definition, checked 2026-10-16, used here only as a grid of lines). | Prevents forgetting a phase. |
+| Tipping value | For each hypothesis that can reverse the ranking, give the value at which it reverses. | It tells the reader which unknown to settle first. |
+
+Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check".
 
 # Expected inputs
 
 - brief
 - input_artifacts[]
-- offer, contract, or economic summary
-- usage, implementation, or operation hypotheses if available
+- offer, contract or economic summary
+- usage, implementation or operation hypotheses if available
 
 # Method
 
-1. Identify cost line items across the full lifecycle.
-2. Distinguish direct costs, implementation costs, operating costs, and exit costs.
-3. Document volume, duration, resource, and contractual condition hypotheses.
-4. Integrate hidden costs and risks when plausible, distinguishing what is quantified, estimated, or unquantified.
-5. Produce a quantified summary and, if needed, a comparison between options.
-6. Clearly flag what remains unquantified.
-7. Surface the hypotheses that would materially change the conclusion.
+1. Identify the cost lines across the life cycle: direct, implementation, operation, exit.
+2. Document hypotheses of volume, duration, resources and contract terms; the same for every option.
+3. Compute each line per year, then the total; recompute each total from its lines before writing, because a total repeated in a decision is hard to correct later.
+4. Add hidden costs and risks when plausible, marked confirmed, estimated or unquantified. Say for each unquantified cost that could change the decision which amount would reverse the ranking.
+5. Produce the quantified summary and, if several options, the comparison.
+6. Surface the hypotheses that would change the conclusion, with their tipping value.
 
-# Constraints
+Parameters: `horizon_analyse` (12, 24, 36 or 60 months) is the common horizon, 36 by default. `devise` sets the currency of the figures; offers in another currency are converted at a rate the user gives, never an assumed one. With `inclure_comparatif` false, analyse a single option and skip the comparison section. `hypotheses_couts` (free text) holds volumes, usage and internal resources, and takes precedence over defaults.
 
-- Do not reduce TCO to the purchase price alone.
-- Do not hide structuring hypotheses.
-- Do not present as certain a cost derived from a simple estimate.
-- Flag unquantified costs that could change the decision.
+# Example
+
+<example>
+| Line | Nature | Value | Hypothesis | Sensitivity |
+|---|---|---|---|---|
+| Service fee, 3 years | estimated | 90,000 to 92,727 | €30,000 per year; revision capped at 3 % from year 2 (30,900 then 31,827) | medium |
+
+Tipping value: an offer B quoted at 91,500 is cheaper than A once the average annual revision exceeds about 1.7 %, and dearer below.
+
+Why this is right: the range shows the clause at both ends, and the tipping line tells the reader exactly which assumption decides.
+</example>
 
 # Expected output format
 
 - `tco_analysis`: total cost of ownership breakdown with explicit hypotheses
-- `tco_comparison`: comparison table between options if multiple scenarios are provided
+- `tco_comparison`: comparison table between options if several scenarios are provided
 
-Recommended structure per cost line item:
+Recommended structure per cost line:
 - line item
 - nature: confirmed / estimated / unquantified
 - value or range
 - calculation hypothesis
 - sensitivity: low / medium / high
 
-If multiple options:
+If several options:
 - total per option
 - structural gaps
-- hypotheses that could invert the ranking
+- hypotheses that could reverse the ranking, with their tipping value
 
-Add at the end of the deliverable:
+Add at the end:
 - structuring hypotheses
 - unquantified costs
+- internal costs listed
 - points requiring additional verification
 
 # Definition of done
 
-- The breakdown covers at minimum acquisition, implementation, operation, and end of life.
-- Each figure is either sourced or marked as a hypothesis.
-- Structuring but unquantified costs are explicitly flagged.
-- The most sensitive line items are identifiable without re-reading the full reasoning.
-- A reader can unambiguously distinguish confirmed costs, estimates, and still-open risks.
+- The tax basis is stated, and the breakdown covers acquisition, implementation, operation, internal costs and end of life.
+- Each line is confirmed, estimated or unquantified; every total has been recomputed from its lines.
+- Revision, discounts, volumes and commitments are treated the same way for all options.
+- The most sensitive lines and the tipping values are identifiable without rereading the reasoning.
+
+<!-- The cost-category coverage (total cost, implementation, training, support, exit costs) draws on anthropics/knowledge-work-plugins, operations/skills/vendor-review/SKILL.md (Apache-2.0, commit 33eeda1), rewritten with the French tax basis, price revision and tipping-value rules. See THIRD_PARTY.md. -->

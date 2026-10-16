@@ -158,6 +158,41 @@ Ce que le pilote apprend :
 5. **Les erreurs d'addition résistent.** Une étape « vérifie les totaux » corrige Sonnet, pas Haiku. Pour les skills chiffrés, c'est la limite d'un skill-prompt ; la vérification de calcul isolée relève de la question 8 de la revue.
 6. **Limite du banc** : les cas 1 ont été écrits par le même rédacteur que la réécriture, ce qui favorise la nouvelle version ; les cas de contrôle montrent des gains plus faibles, et c'est la mesure la plus honnête. Une seule exécution par cas et par modèle : un écart d'un point n'est pas significatif.
 
+## Généralisation (2026-10-16)
+
+Après l'accord d'Amiel sur le pilote, les 43 autres skills ont été réécrits par famille (un rédacteur Sonnet par famille, à partir de sa fiche de `fiches-reecriture/`), puis relus. `entretien-professionnel` n'est pas réécrit sur cette branche : sa version 2.0.0 (loi 2025-989) attend sur `claude/entretien-parcours-professionnel` ; sa ligne d'analyse dit ce qui lui manque encore.
+
+**Ce qui a été fait sur les 46 skills réécrits.** Version relevée ; chaque contrainte porte sa raison ou devient une consigne positive ; le savoir des fiches est ajouté ; les paramètres `.mystaffy.json` sont définis dans le corps (R11) ; un exemple court quand la forme compte, jamais tiré du cas de test ; un tableau de droit vérifié et daté, avec la consigne R12, dans chaque skill qui cite du droit ; un cas de test dans `tests/cas-skills/`. Les reprises d'Anthropic sont créditées dans `THIRD_PARTY.md` et en fin de corps.
+
+**Longueur.** Le corps moyen passe de 66 à 82 lignes (3 058 → 3 749 au total, +23 %). Les deux skills qui recopiaient des annexes raccourcissent (`interview-loop-planner` 329 → 101, `interview-guide-recruteur` 172 → 98), les annexes passant dans `partials/transverse_anti_biais.md` et `partials/transverse_debrief.md`. Les plus fortes hausses sont là où le savoir manquait : `contrat-emploi`, `analyse-cdc`, `budget-variance-analysis`, `tech-debt`, `ticket-triage`, `vendor-scorecard`.
+
+**Droit de 2026 vérifié sur la source** (que le modèle ne peut pas connaître seul) : nouvel art. L221-21 C. conso. (fonction de rétractation en ligne, 19/06/2026) ; L442-1 C. com. modifié par la loi n° 2026-796 du 18/08/2026 ; R2152-7 CCP (critère environnemental, 21/08/2026) ; L223-1 C. conso. (démarchage téléphonique sur consentement, 11/08/2026) ; AI Act modifié par le règlement (UE) 2026/1744 ; Cass. com. 13/05/2026, n° 24-17.137 (art. 1171 entre professionnels) ; Cass. soc. 1/07/2026, n° 25-10.960 (renonciation à la non-concurrence) ; référentiel CNIL RH de conservation (mis à jour le 20/05/2026). Ce qu'un rédacteur n'a pas pu voir sur la source officielle est resté hors du skill ou marqué « to check » (transposition de NIS2, report éventuel de la facturation électronique, seuil de chiffre d'affaires de l'accessibilité, adoption de la loi de transposition de la directive 2023/970).
+
+### Points laissés en l'état
+
+Parce qu'ils dépendent d'une question non tranchée de la revue (§3) :
+
+| Question | Skill | Ce qui attend |
+|---|---|---|
+| 2 | `org-design-brief`, `okr`, `people-review` | Phase après l'avis du CSE, après la séance OKR, après le calibrage : rien d'ajouté. |
+| 3 | `offre-commerciale` | Étapes 1, 2 et 4 (nature de la réponse, ce qui engage, position) gardées ; pas de réduction à la rédaction. |
+| 4 | `prd` | Rien à préparer : il reste la dernière étape de la recette envisagée. |
+| 5 | `people-review` | Pause de calibrage, `category: decision`, règle du classement nominatif inchangées. |
+| 6 et §6bis | `persona` | Garde ses étapes 1-2 (repérer, grouper) ; pas de double point d'entrée. |
+| 7 | `performance-review-helper`, `plan-developpement-competences` | Frontière entre axes présumés et constatés. |
+| 8 | juridiques et chiffrés | Aucune vérification isolée ; seul l'auto-contrôle interne est écrit. |
+| 9 | `business-case-draft` | Pas de validation des hypothèses avant la recommandation. |
+| 10 | `strategie-prix` | Seulement les interdits reformulés et `modele_prix` défini (1.1.1) ; ni catalogue de modèles, ni consentement à payer, ni droit des prix. |
+| 11 | `contrat-fournisseur`, `cgv-checker`, `feature-spec`, `product-spec` | Pas de fusion ; savoir commun écrit deux fois ; `contrat-fournisseur` ne promet plus la rédaction (descriptions et README alignés), sans méthode de rédaction ajoutée. |
+| 12 | `contrat-emploi`, `analyse-entretien`, `vendor-scorecard`, `mockup` | Mode `revision` non défini ; notes de recrutement ; marché public ; enrichissement de `mockup` (fidélité, charte, accessibilité chiffrée, formats français). |
+
+Relevés pendant la réécriture, hors périmètre de ce chantier :
+
+- `offre-commerciale` produit maintenant une note interne, placée sous un titre fixe (« Internal note — not for the client ») ; l'étape de mise en forme de `reponse-appel-offres` retire déjà les annotations internes, à vérifier sur un vrai dossier. Les « main risks » d'`analyse-cdc` ne sont toujours transmis à aucune étape de la recette.
+- `.mystaffy.json` : `tam-sam-som` et `analyse-concurrentielle` lisent un niveau de profondeur que leur fichier ne déclare pas ; `compliance-checklist` propose une valeur `rgpd` neutralisée dans le corps (renvoi à `conformite-rgpd`) ; `feature-spec` a une valeur `prd` qui se télescope avec le skill `prd` ; `ticket-triage` est `enabled: false`, `visibility: internal`.
+- Repères non sourcés, présentés comme tels dans les skills : seuil de matérialité « relatif et absolu à la fois » (`budget-variance-analysis`), facteur 2 entre top-down et bottom-up (`tam-sam-som`), plages de `niveau_detail` de `journey-map`.
+- Idée de partial (à décider, non créée) : « ce qu'on n'écrit pas sur une personne » (RGPD art. 9, CNIL, L1132-1), aujourd'hui écrit dans quatre skills RH ; et un `droit_contrat_travail` si la question 12 garde l'analyse dans `contrat-emploi`.
+
 ## Analyse des 47 skills
 
 Une ligne par skill, établie le 2026-10-16 par un sous-agent Opus par famille, sur la version de départ (commit `cbe271c`), puis relue. Les fiches de réécriture détaillées (savoir à ajouter avec ses sources, contraintes à reformuler, cas de test) sont dans [`fiches-reecriture/`](fiches-reecriture/), une par famille ; ce tableau en garde l'essentiel. Le droit qu'elles citent a été vérifié par les sous-agents le 2026-10-16 ; il est revérifié sur la source officielle au moment de la réécriture. « En attente » renvoie aux questions du §3 de la revue : ce qui en dépend n'est pas traité.

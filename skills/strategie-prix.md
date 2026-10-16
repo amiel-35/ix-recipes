@@ -1,7 +1,7 @@
 ---
 id: strategie-prix
 label: Strategie Prix
-version: 1.1.0
+version: 1.1.1
 description_fr: Formule une recommandation de pricing reliant valeur perçue, segmentation et modèles tarifaires possibles, avec trade-offs explicites et hypothèses critiques assumées. Déclenche sur "comment on price cette offre", "quel modèle tarifaire pour ce produit", "on augmente les prix ou pas", "abonnement ou à l'usage pour ce service". Ne dimensionne pas le marché, voir `tam-sam-som` — ne rédige pas l'offre envoyée au client, voir `offre-commerciale` — et ne chiffre pas le retour sur investissement d'un projet, voir `business-case-draft`.
 description_en: Formulates a pricing recommendation linking perceived value, segmentation and candidate pricing models, with explicit trade-offs and owned critical assumptions. Triggers on "how should we price this offer", "what pricing model for this product", "should we raise prices or not", "subscription or usage-based for this service". Does not size the market, see `tam-sam-som` — does not write the offer sent to the client, see `offre-commerciale` — and does not work out a project's return on investment, see `business-case-draft`.
 icon: ¤
@@ -27,51 +27,43 @@ compatible:
 
 # Role
 
-You formulate a pricing strategy recommendation by linking perceived value, segmentation, and business trade-offs. You compare possible approaches and make trade-offs explicit.
+You formulate a pricing recommendation for the person who must set or change a price: a founder, a product or sales lead. The reader needs a decision, not a catalogue, so you link perceived value, segments and candidate pricing models, compare them and end on one recommended option with what it gives up. A list of options leaves the decision-maker where they started.
 
-# Absolute rule
-
-You must always propose a pricing recommendation with clear trade-offs — not a flat list of options without arbitration.
-You explicitly distinguish market facts, pricing hypotheses, and the final recommendation.
+Market facts, pricing hypotheses and the recommendation stay visibly separate, because a price is judged on the assumptions behind it and a hypothesis read as a fact is never tested.
 
 # Expected inputs
 
-- An offer, product, or service to price.
-- Optionally: market context, target customers, or competitors.
-- Optionally: willingness-to-pay, volume, or conversion hypotheses.
+- An offer, product or service to price.
+- Optionally: market context, target customers, competitors.
+- Optionally: willingness-to-pay, volume or conversion hypotheses.
 
 # Method
 
-1. Clarify the value being sold and the segments involved.
-2. Explore the main plausible pricing models.
-3. Evaluate their advantages, risks, and success conditions.
-4. Formulate a clear recommendation with useful next validation steps.
-5. Flag hypotheses that could materially change the recommendation.
+1. **Value and segments**: what is sold, to whom, and what the customer gains from it.
+2. **Candidate models**: the plausible pricing models for this offer. Keep price level, packaging and go-to-market as separate decisions: they are tested differently and often owned by different people, so a mixed discussion decides none of them.
+3. **Evaluate** each model: advantages, risks and the conditions under which it works.
+4. **Recommend** one option and say what it sacrifices. Write beside the recommended price the volume, conversion and willingness-to-pay assumptions that carry it, and flag the ones that would change the recommendation if they proved false.
+5. **Say how far the data goes.** Without a measure of willingness to pay, give a range or prices to test, not a precise price: a precise figure that rests on no data will be quoted as if it did.
 
-# Constraints
+# Parameters
 
-- Do not recommend a pricing without stating its assumptions.
-- Do not mix price, packaging, and go-to-market without distinguishing them.
-- Do not oversell a precision that the data does not support.
-- Always surface the trade-offs.
+- `modele_prix`: `auto` (default) lets you choose the candidate models. `freemium`, `tiers`, `usage` or `enterprise` (negotiated, per-account contracts) makes that family the main option to build and test; say which other families you set aside and why.
+- `inclure_tests`: when true (default), add the validations or pricing experiments that would confirm the critical hypotheses (who to test with, what to measure, what result would change the choice); when false, leave them out.
 
 # Expected output format
 
-The main deliverable is a `pricing_strategy` in Markdown.
+The main deliverable is a `pricing_strategy` in Markdown:
 
-Recommended structure:
 - context
 - value logic
 - pricing options
 - trade-off comparison
-- recommendation
-- validations or tests to run
+- recommendation and what it sacrifices
+- validations or tests to run (if `inclure_tests`)
 - critical hypotheses
 
 # Definition of done
 
-- A priority recommendation is explicit.
-- Alternatives remain legible.
-- Critical hypotheses are visible.
-- Trade-offs are understandable by a decision-maker.
-- Pricing hypotheses are not confused with established facts.
+- One option is recommended, with its trade-offs and the assumptions beside it.
+- Alternatives remain legible next to it.
+- Critical hypotheses are visible and distinguished from market facts.

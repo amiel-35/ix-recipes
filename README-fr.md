@@ -44,16 +44,16 @@
 
 ix-recipes fait avec Claude le travail de fond des métiers du conseil, des RH, du juridique, de la finance et du produit : répondre à un appel d'offres, transformer une demande client floue en brief, écrire une fiche de poste, relire un contrat… Les plus gros travaux sont des **recettes** : une suite d'étapes que vous suivez dans une page sur votre ordinateur, qui s'arrête chaque fois qu'il faut votre avis.
 
-**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page. Prompt pour la version **2.8.0** :
+**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page. Prompt pour la version **2.9.0** :
 
 ```text
-Installe ix-recipes (version 2.8.0 ou plus récente) sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
+Installe ix-recipes (version 2.9.0 ou plus récente) sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
 (https://github.com/amiel-35/ix-recipes). Fais tout toi-même, sans me demander de redémarrer :
 1. Ajoute la marketplace amiel-35/plugins (si ça échoue faute de clé SSH GitHub, utilise
    https://github.com/amiel-35/plugins.git), puis installe ix-skills@amiel-35 et
    ix-recipes@amiel-35. S'ils sont déjà installés, mets-les à jour ; s'ils viennent d'une autre
    marketplace, garde celle-là et ne crée pas de doublon. Vérifie la version installée
-   d'ix-recipes : si elle est plus ancienne que 2.8.0, mets à jour la marketplace et le plugin.
+   d'ix-recipes : si elle est plus ancienne que 2.9.0, mets à jour la marketplace et le plugin.
 2. Vérifie python3 (3.9 ou plus) ; s'il manque, dis-moi quoi installer et arrête-toi.
 3. Lance en arrière-plan le script skills/suivi-parcours/scripts/interface.py du plugin
    ix-recipes installé (sous ~/.claude/plugins/cache/, la version la plus récente) ; il ouvre
@@ -267,11 +267,11 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 
 #### `lettre-cadrage-disciplinaire` — Lettre de cadrage disciplinaire
 
-**Ce qu'il fait :** Rédige un projet de courrier de cadrage disciplinaire factuel et proportionnel — documentant les faits observés, leur impact et le changement de comportement attendu. Calibré à la gravité de la situation.
+**Ce qu'il fait :** Rédige un projet de courrier disciplinaire (avertissement, blâme, mise à pied…) à partir de faits datés, après avoir fixé la sanction visée, la procédure qu'elle déclenche et ses délais. Calibré à la sanction visée. Couvre aussi la mise en demeure pour abandon de poste, qui n'est pas une sanction.
 
-**Ce qu'il ne fait pas :** Ne produit pas une lettre de sanction formelle. Doit être validé par un avocat en droit du travail avant envoi.
+**Ce qu'il ne fait pas :** Ne rédige pas la convocation à l'entretien préalable (il dit quand elle est nécessaire et ce qu'elle contient). Doit être validé par un avocat en droit du travail avant envoi : tout écrit qui reproche une faute est en principe une sanction, et les mêmes faits ne peuvent plus être sanctionnés ensuite.
 
-**Quand l'utiliser :** Quand un entretien documenté est nécessaire avant une procédure disciplinaire formelle, ou pour créer une trace écrite d'un problème comportemental.
+**Quand l'utiliser :** Quand des faits fautifs précis et datés appellent une sanction, avant d'envoyer quoi que ce soit au salarié.
 
 ---
 
@@ -279,7 +279,7 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 
 **Ce qu'il fait :** Structure un plan d'offboarding couvrant la passation de connaissances, la checklist administrative, le guide d'entretien de sortie et la cartographie des risques de continuité.
 
-**Quand l'utiliser :** Dès qu'un collaborateur donne sa démission. Plus tôt on commence, meilleur est le transfert de connaissances.
+**Quand l'utiliser :** Dès qu'un départ est décidé, quel qu'en soit le mode (démission, rupture conventionnelle, licenciement, fin de CDD). Plus tôt on commence, meilleur est le transfert de connaissances.
 
 ---
 
@@ -287,7 +287,7 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 
 **Ce qu'il fait :** Formalise une cible organisationnelle avec diagnostic de l'état actuel, rationale du design, risques humains et séquencement — avant toute annonce ou mise en œuvre. Surface ce que la nouvelle structure résout, les nouveaux risques qu'elle crée, et comment phaser la transition.
 
-**Quand l'utiliser :** Avant d'annoncer une réorganisation. Utile aussi comme pré-travail avant d'impliquer l'équipe de direction dans le design.
+**Quand l'utiliser :** Avant la consultation du CSE et avant toute annonce d'une réorganisation. Utile aussi comme pré-travail avant d'impliquer l'équipe de direction dans le design.
 
 </details>
 
@@ -311,11 +311,11 @@ Outils pré-juridiques — tous nécessitent une validation professionnelle avan
 
 #### `cgv-checker` — Clauses déséquilibrées dans les CGV/CGU
 
-**Ce qu'il fait :** Identifie les clauses déséquilibrées, inhabituelles ou sensibles dans des conditions générales de vente ou d'utilisation, selon la position de lecture (acheteur, utilisateur, abonné).
+**Ce qu'il fait :** Identifie les clauses déséquilibrées, inhabituelles ou sensibles dans des conditions générales de vente ou d'utilisation, selon la position de lecture (client, fournisseur, utilisateur), en droit français : qualification des parties, listes noire et grise du Code de la consommation, règles entre professionnels.
 
 **Ce qu'il ne fait pas :** N'évalue pas la validité juridique complète des CGV. Ne remplace pas un conseil juridique.
 
-**Quand l'utiliser :** Avant d'accepter les CGV d'un fournisseur ou d'une plateforme significatifs, ou lors de la rédaction de ses propres CGV.
+**Quand l'utiliser :** Avant d'accepter les CGV d'un fournisseur ou d'une plateforme significatifs, ou pour relire ses propres CGV avant de les publier.
 
 
 ---
@@ -332,7 +332,7 @@ Outils pré-juridiques — tous nécessitent une validation professionnelle avan
 
 #### `compliance-checklist` — Checklist de conformité légale
 
-**Ce qu'il fait :** Génère une checklist de conformité couvrant les obligations légales, contractuelles et réglementaires — RGPD, droit du travail, réglementation sectorielle — depuis un contexte projet ou un document.
+**Ce qu'il fait :** Génère une checklist de conformité couvrant les obligations légales, contractuelles et réglementaires — consommation, numérique, accessibilité, IA, cybersécurité, facturation, réglementation sectorielle — depuis un contexte projet ou un document, chaque obligation avec sa date d'application et son exemption de taille. Le RGPD est renvoyé à `conformite-rgpd`.
 
 **Ce qu'il ne fait pas :** Ne remplace pas un conseil juridique ou réglementaire professionnel. Nécessite toujours une validation experte avant utilisation opérationnelle.
 
@@ -352,11 +352,11 @@ Outils pré-juridiques — tous nécessitent une validation professionnelle avan
 
 #### `contrat-fournisseur` — Contrat fournisseur côté acheteur
 
-**Ce qu'il fait :** Analyse **ou** rédige un contrat fournisseur ou prestataire depuis la perspective de l'acheteur. Surface les conditions déséquilibrées, les clauses à renégocier (SLA, responsabilité, résiliation, pénalités, exclusivité, renouvellement) et les risques contractuels. Peut aussi produire un premier projet quand aucun contrat n'existe encore.
+**Ce qu'il fait :** Analyse un contrat fournisseur ou prestataire depuis la perspective de l'acheteur. Surface les conditions déséquilibrées, les clauses à renégocier (SLA, responsabilité, résiliation, pénalités, exclusivité, renouvellement, réversibilité) et les risques contractuels, classés par priorité avec une position de repli.
 
 **Ce qu'il ne fait pas :** Ne remplace pas un conseil juridique. Nécessite une validation professionnelle avant utilisation.
 
-**Quand l'utiliser :** Avant de signer un contrat fournisseur, avant d'entrer en négociation, ou lors de la rédaction des conditions initiales d'une nouvelle relation fournisseur.
+**Quand l'utiliser :** Avant de signer un contrat fournisseur ou avant d'entrer en négociation.
 
 </details>
 
@@ -881,7 +881,7 @@ Ces cibles ne contiennent que `skill.md` et `manifest.json`, pas les dossiers `r
 
 ### GPT / Gemini / autre LLM (interfaces de chat)
 
-Pour les interfaces de chat simples, sans CLI : copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter YAML est ignoré sans effet de bord. Pour un skill qui déclare `references` dans son frontmatter (les skills RH), coller aussi le `partials/metier_<famille>.md` correspondant (`metier_tech`, `metier_rh`…), sinon le skill demandera le référentiel de compétences de l'organisation.
+Pour les interfaces de chat simples, sans CLI : copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter YAML est ignoré sans effet de bord. Pour un skill qui déclare `references` dans son frontmatter (les skills RH), coller aussi le `partials/metier_<famille>.md` correspondant (`metier_tech`, `metier_rh`…), sinon le skill demandera le référentiel de compétences de l'organisation. Les deux skills d'entretien de recrutement déclarent aussi `transverse_anti_biais` (et `transverse_debrief` pour `interview-loop-planner`) : à coller aussi, sinon ils n'en gardent que les règles essentielles.
 
 ---
 
@@ -890,7 +890,7 @@ Pour les interfaces de chat simples, sans CLI : copier-coller le contenu de `ski
 ```
 ix-recipes/
 ├── skills/                 ← source canonique (un .md + .mystaffy.json par skill)
-├── partials/               ← références par famille de métier (metier_*.md), copiées dans references/ des skills qui les déclarent
+├── partials/               ← références par famille de métier (metier_*.md) et annexes d'entretien (transverse_*.md), copiées dans references/ des skills qui les déclarent
 ├── scripts/
 │   └── install-codex.sh    ← installateur Codex CLI
 ├── dist/                   ← racine du plugin, commité

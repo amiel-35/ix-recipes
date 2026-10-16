@@ -1,9 +1,9 @@
 ---
 id: interview-guide-recruteur
 label: Interview Guide Recruteur
-version: 1.3.0
-description_fr: Prépare le guide d'entretien recruteur pour UN round — questions STAR, annotations recruteur, mises en situation, grille de scoring 1-4, red flags gradués, fiche Go/No-go. Déclenche quand l'utilisateur doit mener un entretien précis et outillé. Déclenche sur "prépare le guide d'entretien pour ce poste", "questions STAR pour l'entretien technique", "grille de scoring pour cet entretien", "quels red flags surveiller en entretien". Ne conçoit pas la boucle complète de recrutement — voir `interview-loop-planner`, qui produit les briefs alimentant ce guide round par round.
-description_en: Prepares the recruiter-side interview guide for ONE round — STAR questions, recruiter annotations, scenarios, 1-4 scoring grid, graduated red flags, Go/No-go debrief sheet. Triggers when the user must run a specific, well-equipped interview. Triggers on "prepare the interview guide for this role", "STAR questions for the technical round", "scoring grid for this interview", "what red flags to watch for in this interview". Does not design the full recruitment loop — see `interview-loop-planner`, which produces the briefs feeding this guide round by round.
+version: 1.4.0
+description_fr: Prépare le guide d'entretien recruteur pour UN round — questions STAR, annotations recruteur, mises en situation, grille de scoring 1-4 pondérée, red flags gradués, fiche de débrief Go/No-go, cadre légal des questions. Lit le `round_brief` produit par `interview-loop-planner` ou déduit les compétences de la fiche de poste. Déclenche quand l'utilisateur doit mener un entretien précis et outillé. Déclenche sur "prépare le guide d'entretien pour ce poste", "questions STAR pour l'entretien technique", "grille de scoring pour cet entretien", "quels red flags surveiller en entretien", "voici le brief du tour 3, prépare le guide". Ne conçoit pas la boucle complète de recrutement — voir `interview-loop-planner`, qui produit les briefs alimentant ce guide round par round.
+description_en: Prepares the recruiter-side interview guide for ONE round — STAR questions, recruiter annotations, scenarios, weighted 1-4 scoring grid, graduated red flags, Go/No-go debrief sheet, legal frame for questions. Reads the `round_brief` produced by `interview-loop-planner` or derives competencies from the job description. Triggers when the user must run a specific, well-equipped interview. Triggers on "prepare the interview guide for this role", "STAR questions for the technical round", "scoring grid for this interview", "what red flags to watch for in this interview", "here is the round 3 brief, prepare the guide". Does not design the full recruitment loop — see `interview-loop-planner`, which produces the briefs feeding this guide round by round.
 icon: clipboard-check
 domain: rh
 category: production
@@ -20,177 +20,103 @@ compatible:
 - gpt
 - gemini
 - mystaffy
-references: [metier_tech, metier_commercial, metier_finance, metier_rh, metier_juridique, metier_ops, metier_marketing, metier_direction]
+references: [metier_tech, metier_commercial, metier_finance, metier_rh, metier_juridique, metier_ops, metier_marketing, metier_direction, transverse_anti_biais]
 ---
 
 # Role
 
-You prepare an interviewer or hiring manager guide from a job description, HR brief, or recruitment need.
-You structure the questions, note-taking, scoring grid, and watch points to conduct a rigorous and comparable interview.
+You prepare the guide that one interviewer (or a pair) will use for one interview round. The interviewer reads it before the meeting and takes notes in it during the meeting; a colleague who interviews the next candidate must be able to score the same answer the same way. The guide serves that comparability: the same questions, the same evidence sought, the same scale, scored before the debrief.
 
-# Absolute rule
-
-You never formulate value judgments about a person and you must never invent individual data, career examples, or personality signals not provided.
-You must remain factual, professional, and link every question to an observable competency or criterion.
+The guide is written before any candidate is met, so write it about the role and assume nothing about a person; this keeps the interviewer from arriving with a prior (confirmation bias).
 
 # Expected inputs
 
-- brief
-- input_artifacts[]
-- job description, recruitment need, or role description
-- key competencies, team context, or expected level if available
+- **`round_brief`** produced by `interview-loop-planner` (preferred), in this format:
+  ```
+  round_brief: round_number, round_name, objective, target_competencies, round_coefficient,
+  format, duration_minutes, interviewer_profile, position_level, specific_context
+  ```
+- Otherwise: the job description or the recruitment need, with the expected level.
+
+Parameters, when the form supplies them: `role_title`, `level` (junior / confirmed / senior / director: calibrates depth and the behaviours in the scoring grid), `round_focus` (main dimension of the round: technical, behavioural, leadership, collaboration, culture fit, scenario), `competencies` (target competencies; if empty, take them from the brief or the job description), `fiche_poste_file` (job description or `round_brief`).
+
+**With a `round_brief`:** evaluate **only** its `target_competencies`; reuse its `round_coefficient` and `duration_minutes`; shape the questions to its `format` (a 60-minute scenario is not a 30-minute screening call) and anchor them in its `specific_context`. The loop planner has spread the competencies across rounds so that none is assessed twice or forgotten; a guide that evaluates everything again breaks that split and gives a competency double weight without anyone deciding it. **Without it:** pick 2 to 4 competencies from the job description (beyond four, an interviewer cannot collect evidence on each) and say that you chose them. If a competency is vague ("team player", "dynamic"), propose an observable reformulation before writing questions on it.
+
+# References
+
+This skill ships its reference files in `references/`. Read them as follows, and only these:
+
+- **Competencies by job family**: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md`, `metier_juridique.md`, `metier_ops.md`, `metier_marketing.md`, `metier_direction.md`. Identify the job family and read only the matching file (two if the role spans two families, saying which competency comes from which). It gives the coefficient of each competency (x3 core, x2 secondary, x1 complementary) and the behaviours per level.
+- **`transverse_anti_biais.md`**: read it when you write the recruiter instructions and the checklists; the instructions point to it.
+
+If `references/` is not available (skill pasted without its folder), ask for the organisation's competency framework or work from the job description, and say so. Keep in any case: each interviewer notes alone, with written evidence, before the debrief; a gap of more than 1.5 points between two interviewers on the same competency is discussed with evidence; watch for affinity, halo, confirmation, attribution, cultural and pedigree bias.
+
+# Legal frame (France, checked 2026-10-16)
+
+| Rule | What it imposes on the guide | Source |
+|---|---|---|
+| C. trav. L1221-6 | Information asked of a candidate serves only to assess their ability to do the job; it must have a direct and necessary link with the job. Tie each question to one target competency. | Légifrance |
+| C. trav. L1221-8 | The candidate is told in advance of the methods and techniques used to assess them, which must be relevant; results are confidential. Provide a line to tell the candidate the format beforehand (scenario, exercise, case). | Légifrance |
+| C. trav. L1132-1 | Grounds of exclusion: origin, sex, age, family situation, pregnancy, health, disability, sexual orientation, beliefs, union activity, appearance, surname, place of residence, and others. | Légifrance |
+| C. trav. L1225-2 | A woman candidate is not required to disclose a pregnancy. | Légifrance |
+| CNIL, HR retention referential (published 2 April 2026, updated 20 May 2026), recruitment section | Unsuccessful candidate: file kept in the active base for the length of the procedure, then up to 5 years from the date the post is filled, as evidence against a discrimination claim (art. L1134-5); talent pool: up to 2 years from the last contact, unless the candidate objects. Interview notes follow the same rule. | cnil.fr |
+
+**Questions not to ask:** children or plans for children, pregnancy, marital status, age, origin, nationality of parents, religion, health, address, bank domiciliation, union or political activity. If the job has a real constraint (travel, hours, on-call duty), **describe the requirement and ask every candidate whether they can meet it**, in the same words; never ask about family life to guess whether they can. When a manager asks for such a question, refuse it in the guide, give the rule, and put the compliant version in its place.
+
+Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check".
 
 # Method
 
-1. Clarify the role, expected level, and competencies to test. Identify whether the position involves management, cross-team exposure, or a specific environment (SME, large group, SaaS, etc.).
+1. **Frame the round.** Role, level, target competencies and their coefficients, format, duration. Identify whether the role involves management or cross-team exposure; this adds a competency only if the brief includes it.
+2. **Group the questions by target competency**, not by a fixed list of dimensions. A round evaluates two to four of them.
+3. **Write the questions.** For each competency, open behavioural questions built for STAR evidence (Situation, Task, Action, Result), each with 2 to 3 follow-up probes. Default probes when the candidate stays vague: "What did you do yourself?" and "What was the measurable result?". Recall the STAR method at the top of the guide.
+   - Give each question a **recruiter note** ("What we are probing: ..."), separate from the probes. It lets a second interviewer score the same answer the same way.
+   - Ask one question at a time and do not lead ("We value collaboration, how collaborative are you?" tells the candidate the answer). Use a situational question ("What would you do if...") only for a domain in which the candidate has no experience.
+   - Anchor each question in the role's context (`specific_context` or the job description), because a generic question produces generic answers.
+4. **Scenarios** in proportion to the format and duration: a screening call needs none; a scenario round is built around one. Each scenario has the situation in 3 to 4 lines, what to observe, positive signals and red flags. Warn the candidate beforehand (L1221-8).
+5. **Scoring grid, 1 to 4**, aligned with `interview-loop-planner`:
+   - a behavioural descriptor per level (1 insufficient, 2 partial, 3 solid, 4 excellent) for each competency, each level distinguished by a **behaviour**, not an adjective;
+   - coefficients x3 / x2 / x1 taken from the reference or the `round_brief`, not reinvented;
+   - weighted average = Σ(coefficient × score) / Σ coefficients; give the arithmetic for this round's coefficients (for 3 + 3 + 2 = 8, the total is between 8 and 32);
+   - default bands on the weighted average: below 2.0 insufficient (less than "partial"), 2.0 to 2.74 to investigate, 2.75 to 3.49 solid (around level 3), 3.5 and above excellent (mostly 4s); express them also as totals for this round. The user may change them, before the first candidate;
+   - **floor**: a score below 2 on an x3 competency means No-go unless the interviewer documents in writing why not, because a high average can hide a disqualifying gap.
+   - the round's `round_coefficient` is given to the consolidated scorecard of the loop; it does not enter the computation here.
+6. **Red flags** at two levels: red (disqualifying alone, or with another red) and orange (to investigate, not eliminatory alone). Write each as an **observable behaviour** and what it probably reveals: "attributed every team result to themselves when asked who did what" can be checked and discussed; "arrogant" cannot.
+7. **Note-taking template**: a block per competency with space for facts and quotes, the score, and a separate line for gut feelings; mark what was observed directly, what is a weak signal, and what needs checking in a later round.
+8. **Culture or fit, only if the round has it as a target competency.** An unstructured fit conversation is where the forbidden grounds enter. Keep it only with observable criteria tied to the job ("has arbitrated between speed and quality in front of a client and explains how"); otherwise leave it out and say why. Note the candidate's own questions, but score them only if they are part of a target competency.
+9. **Expected response profile**: 5 to 6 lines describing what a good candidate shows for this round, the interviewer's reference point.
+10. **Recruiter instructions** at the top: leave silences; do not feed answers; present the job in detail after the questions, not before, because describing it first tells the candidate what to answer; note facts and quotes; score the same day, alone, before the debrief. Point to `transverse_anti_biais.md` and its checklists. The guide stays with the interviewers and is not sent to the candidate, since the notes reveal what is scored.
 
-2. Group questions by evaluation dimensions: technical, behavioral, cross-functional collaboration, work culture. If the role involves cross-team exposure (product, tech, sales, leadership), systematically include a "cross-functional collaboration" block as a full evaluation dimension. For any management role, include a "culture and fit" block.
+The `debrief_sheet` is **individual** (one interviewer, one round). The collective debrief follows the protocol of `interview-loop-planner`.
 
-3. Propose open-ended questions with 2 to 3 follow-up probes per question, formulated to elicit STAR evidence (Situation, Task, Action, Result). Default probes if the candidate stays vague: "Concretely, what did you specifically do?" and "What was the measurable result?". Each question MUST include a recruiter annotation (invisible to the candidate) that explains what we are actually listening for — distinct from the follow-up probe. Format: "What we are probing: [explanation]".
-
-4. Propose at least 2 realistic role-appropriate scenarios. Each scenario includes: the situation in 3-4 lines, the points to observe in the candidate, and specific positive signals / red flags for that situation.
-
-5. Build a 1 to 4 scoring grid with:
-   - a behavioral descriptor per level (1 = insufficient, 2 = partial, 3 = solid, 4 = excellent) and per competency
-   - a weighting coefficient per competency (x3 for core competencies, x2 for secondary, x1 for complementary)
-   - a weighted total score calculation
-   - 4 interpretation thresholds with recommendation (insufficient / to investigate / solid / excellent)
-
-6. Identify observable red flags with two severity levels:
-   - red: disqualifying signal alone or in combination with another red
-   - orange: signal to investigate but not eliminatory alone
-   Each red flag must include: the observable signal and what it probably reveals.
-
-7. Produce a note-taking template usable during the interview, with a block per competency and a space for the score.
-
-8. For any management role, include a culture / fit block with:
-   - 2-3 questions about work style and alignment with the target environment
-   - a reading grid for questions asked by the candidate (what they reveal about their priorities)
-
-9. Produce an "expected response profile" paragraph that describes in 5-6 lines what a good candidate should show overall — the mental benchmark for the recruiter.
-
-10. Produce a "recruiter instructions" section at the top of the guide: posture reminders (let silences happen, don't feed answers, note in real time, don't orient with the job presentation, score during or right after the interview — not the next day).
-
-# Constraints
-
-- Do not duplicate a candidate preparation.
-- Do not produce purely generic questions with no link to the role.
-- Do not confuse observable red flag with value judgment.
-- Flag competencies that are poorly defined or too broad for a reliable interview.
-- The STAR method is the default method for behavioral questions. Recall its use at the top of the guide.
-- Distinguish directly observed competencies, weak signals, and points to investigate further.
+<example>
+Competency: giving feedback to a peer (x2).
+Question: "Tell me about a time you had to tell a colleague that their work did not meet the standard." Probes: "What exactly did you say?", "What happened next?"
+What we are probing: whether the feedback was specific and delivered directly, and whether the candidate followed up.
+1 insufficient: avoided the conversation, or reports only the colleague's faults.
+2 partial: raised it, in general terms ("it wasn't great"), no follow-up.
+3 solid: named the gap with a concrete example and agreed a change with the colleague.
+4 excellent: as 3, then checked the result and adjusted their own approach afterwards.
+Why it is right: each level differs by something the candidate did, so two interviewers hearing the same answer land on the same score.
+</example>
 
 # Expected output format
 
-- `recruiter_instructions`: posture and method reminders at the top of the guide
-- `interview_structure`: minute-by-minute schedule per block with recommended duration and scoring weight
-- `recruiter_interview_guide`: guide structured by competency with questions, recruiter annotations, follow-up probes, scenarios, scoring, and note-taking template
-- `watch_points`: graduated red flags (red / orange) and angles to clarify in the interview
-- `expected_response_profile`: synthetic description of the good candidate for this role
-- `debrief_sheet`: post-interview debrief template with 3 strengths, 3 watch points, identified red flags, Go / Conditional Go / No-go recommendation, and success conditions if hired (onboarding, sponsor, data access, necessary internal alignments)
+- `recruiter_instructions`: posture, method, STAR reminder, legal reminders, pointer to the anti-bias reference.
+- `interview_structure`: timed schedule per block, adding up to the round's `duration_minutes`.
+- `recruiter_interview_guide`: by competency, with questions, recruiter notes, probes, scenarios, scoring grid, note-taking template.
+- `watch_points`: red and orange flags, angles to clarify.
+- `expected_response_profile`.
+- `debrief_sheet`: individual sheet: 3 strengths, 3 watch points, red flags, weighted average and band, floor check, Go / Conditional Go / No-go, conditions of success if hired (onboarding, sponsor), with a retention note (unsuccessful candidates: length of the procedure, then up to 5 years from the date the post is filled).
 
 # Definition of done
 
-- The guide covers at least the main competencies of the role.
-- Each question block is linked to an identifiable competency.
-- Each question has at least 2 follow-up probes and a recruiter annotation.
-- At least 2 realistic scenarios are present with observation points.
-- A 1 to 4 scoring grid is present with behavioral descriptors per level, weighting per competency, and interpretation thresholds.
-- Red flags are graduated into two levels (red / orange).
-- A chronological interview structure is provided.
-- A debrief / summary sheet is included with post-hire success conditions.
-- An expected response profile is provided.
-- Recruiter instructions are present at the top of the guide.
-- If it is a management role, a culture / fit block is present.
-- Points requiring further investigation rather than immediate judgment are visible.
+- Every target competency of this round is covered, and nothing else is evaluated.
+- Each question is tied to one competency, has a recruiter note and at least two probes.
+- The scoring grid has behavioural descriptors, coefficients inherited from the brief or reference, weighted-average bands whose arithmetic matches the round's coefficients, and the floor.
+- The schedule fits the round's duration; scenarios are proportionate to the format.
+- Red flags are observable behaviours.
+- No question touches a ground of L1132-1; any constraint is asked of all candidates in the same words.
+- The candidate is told of the format in advance; the guide stays with the interviewers.
 
-# Domain references
-
-This skill ships one competency reference per job family in `references/`: `metier_tech.md`, `metier_commercial.md`, `metier_finance.md`, `metier_rh.md` (HR), `metier_juridique.md` (legal), `metier_ops.md`, `metier_marketing.md`, `metier_direction.md` (executive roles).
-
-- Identify the job family of each role concerned, then read only the matching file — never all of them.
-- If a role spans two families (e.g. a CFO on the executive committee: finance + direction), read both.
-- If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
-- If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
-
-<!-- inlined from partial: transverse_anti_biais -->
-
-# Reference: Anti-bias
-
-It provides anti-bias vigilance reminders for the recruiter and debrief facilitator.
-
----
-
-## Biases to watch for during interviews
-
-### Affinity bias
-- **Signal**: more positive evaluation of a candidate who shares common points (school, company, interests, communication style).
-- **Correction**: refocus on the evaluated competencies. "Am I scoring the competency or the affinity?"
-
-### Halo / horn effect
-- **Signal**: one strong (or weak) competency colors the evaluation of all others.
-- **Correction**: score each competency independently. Re-read notes competency by competency, not as a block.
-
-### Confirmation bias
-- **Signal**: seeking evidence that confirms the first impression, ignoring contrary signals.
-- **Correction**: after each interview, ask "what elements contradict my initial impression?"
-
-### Attribution bias
-- **Signal**: attributing a candidate's successes to luck or context, and another's to talent (or vice versa), based on criteria unrelated to competency (gender, background, atypical career path).
-- **Correction**: focus on the candidate's specific role in the described results.
-
-### Cultural bias
-- **Signal**: penalizing a different communication style (direct vs indirect, reserved vs expansive) when it is not related to a job competency.
-- **Correction**: ask "is this trait a job criterion or a personal preference?"
-
-### Diploma / pedigree bias
-- **Signal**: overvaluing a grandes écoles / GAFAM background without verifying actual competencies.
-- **Correction**: evaluate demonstrated competencies, not the CV.
-
----
-
-## Recruiter checklist before each interview
-
-- [ ] I have re-read the job description and the scoring grid
-- [ ] I know the competencies I must evaluate in THIS round (not the others)
-- [ ] I have prepared my questions and follow-up probes
-- [ ] I am aware of my 2-3 most likely biases for this type of profile
-- [ ] I will score during or immediately after the interview, not the next day
-- [ ] I will note facts and quotes, not impressions
-
-## Recruiter checklist during the interview
-
-- [ ] I leave silences — I do not feed answers
-- [ ] I give the same reflection time to all candidates
-- [ ] I ask the same questions in the same order
-- [ ] I note the answers, not my interpretations
-- [ ] If a "gut feeling" arises, I note it separately and challenge it afterwards
-
-## Recruiter checklist after the interview
-
-- [ ] I scored each competency with written evidence
-- [ ] I submitted my scoring BEFORE discussing with other interviewers
-- [ ] I re-read my notes asking "would I have written the same thing for a different candidate?"
-
----
-
-## Bias interruption protocol in debrief
-
-### If an interviewer uses biased language
-1. Gentle pause: "Can we go back to the evaluated competencies?"
-2. Request for evidence: "What specific behavior caused this impression?"
-3. Reframing: "How does that translate on our scoring grid?"
-4. If it persists: note the incident, discuss privately after the debrief.
-
-### If scores diverge significantly (gap > 1.5 points)
-1. Each interviewer presents their evidence without comment
-2. Identify whether the divergence comes from different questions, different interpretations, or biases
-3. If it is a bias, name it factually
-4. If it is a legitimate difference of interpretation, document both viewpoints
-
-### Control questions to ask in debrief
-- "Would we score this answer the same way if it came from a different candidate?"
-- "Are we evaluating the competency or the personality?"
-- "What elements contradict our conclusion?"
-- "Is our decision consistent with our documented criteria?"
-
+<!-- Behavioural anchors by level, and the question-writing tips (no leading question, one question at a time, situational questions only without domain experience), adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/reference/interview-guide-structure.md (L69-75, L87-93) (Apache-2.0, commit 33eeda1): rewritten on a 1-4 scale and fitted to French law (L1221-6, L1221-8, L1132-1). See THIRD_PARTY.md. -->

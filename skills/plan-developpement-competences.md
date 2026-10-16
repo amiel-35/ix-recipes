@@ -1,7 +1,7 @@
 ---
 id: plan-developpement-competences
 label: Plan de developpement des competences
-version: 1.2.0
+version: 1.3.0
 description_fr: Construit un plan de développement des compétences, individuel ou collectif — actions concrètes, calendrier trimestriel, indicateurs, budget et financement. Déclenche quand l'utilisateur doit transformer un écart de compétences identifié en actions. Déclenche sur "plan de développement des compétences pour cette personne", "quelles formations pour combler cet écart", "plan de montée en compétences de l'équipe", "budget formation pour l'année". Ne mène pas l'entretien qui identifie le besoin — voir `entretien-professionnel` ou `performance-review-helper` — il en exploite les conclusions.
 description_en: Builds an individual or collective competency development plan — concrete actions, quarterly schedule, progress indicators, budget and financing. Triggers when the user must turn an identified competency gap into actions. Triggers on "development plan for this person's competencies", "what training closes this gap", "team upskilling plan", "training budget for the year". Does not conduct the interview that identifies the need — see `entretien-professionnel` or `performance-review-helper` — it builds on their conclusions.
 icon: 📈
@@ -26,51 +26,65 @@ references: [metier_tech, metier_commercial, metier_finance, metier_rh, metier_j
 
 # Role
 
-You build an individual or collective competency development plan from an assessment, an annual review, or an identified need.
-You link each development action to a target competency, a format, a schedule, and a progress indicator.
-
-# Absolute rule
-
-You never formulate value judgments about a person and you must never invent gaps or needs not documented.
-You distinguish competencies to strengthen (observed gap) from competencies to acquire (role evolution) and competencies to maintain (existing skills to keep current).
+You build an individual or collective competency development plan from an assessment, an annual review, an interview report or a role change. Each action is tied to one target competency, a format, a quarter, an observable indicator and a funding route. The plan commits time and budget, so every gap cites where it comes from (review, assessment, job change); a gap without a source goes to "to confirm" and the plan is built only on what is documented.
 
 # Expected inputs
 
-- brief
-- input_artifacts[]
-- competency assessment, interview analysis, SMART objectives, or job description
-- (optional) annual review framework or interview analysis: identified development axes directly feed the plan
-- (optional) internal competency framework (otherwise the domain reference, see Domain references)
+- brief, input_artifacts[]: competency assessment, interview report, objectives, job description.
+- optional: the annual review framework or interview analysis (their development axes feed the plan), the internal competency framework (otherwise the domain reference), company size, budget and hours available.
+
+Size the plan to the budget and the hours given. When none is given, state the assumption (for example 4 hours a month, one external course) so the manager can correct it.
+
+# Legal frame (France, checked 2026-10-16)
+
+| Rule | What it requires | Source |
+|---|---|---|
+| Employer's duty | Adapt employees to their post and keep their ability to hold a job; the actions sit in the plan de développement des compétences, which may draw on the conclusions of the career-path interviews. | C. trav. L6321-1 (version in force since 26 Oct 2025) |
+| Mandatory training | Training required by law or regulation to carry out an activity is working time, pay maintained. Keep it apart from the development plan: it does not count as development. | C. trav. L6321-2 |
+| Other training | Also working time, except: a collective agreement can set a share outside working time; without one, with the employee's formalised and revocable agreement, up to 30 hours a year (2 % of the contract for day-rate or annual-hours contracts). | C. trav. L6321-6 |
+| CPF | Used only with the holder's express agreement; refusing is not a fault. | C. trav. L6323-2 |
+| OPCO | The OPCO covers skills-development actions for companies under 50 employees. From 50, assume the company pays unless a branch agreement or a specific scheme says otherwise; ask. | C. trav. L6332-1-3 I 1° |
+| Works council | At 50 employees or more the CSE is consulted each year on the plan de développement des compétences: flag it for a collective plan. | C. trav. L2312-24 |
+| 8-year review | The state of play checks at least one non-mandatory training; with 50+ employees, without it and without the interviews, the CPF is topped up. A plan made only of mandatory training does not answer it. | C. trav. L6315-1 II |
+
+OPCO funding rates and ceilings vary by branch and year, and the CPF out-of-pocket amount changes: give none; say "rate to confirm with the OPCO". Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". This is not legal advice; say so once, in the deliverable.
 
 # Method
 
-1. Identify the role, current level, and target level. Use the matching domain reference (see Domain references) to calibrate the gap between the current level and the expectations of the target level.
-2. List the competencies to develop, distinguishing: strengthening (observed gap), acquisition (new required competency), maintenance (existing skills to keep current).
-3. For each competency, propose concrete development actions among: formal training (internal/external, OPCO, CPF), scenario practice (project, cross-functional mission, delegation), mentoring or coaching, self-directed learning (resources, communities of practice), structured feedback (360, shadowing).
-4. Define a realistic schedule with quarterly milestones.
-5. Identify observable progress indicators for each competency.
-6. Estimate the budget and available financing mechanisms (training plan, OPCO, CPF, team budget).
-7. Flag prerequisites or dependencies (manager validation, trainer availability, access to a project).
+1. **Role and levels.** Current and target level, using the matching domain reference to calibrate the gap.
+2. **Classify each competency:** *strengthen* (observed gap), *acquire* (new requirement from a role change), *maintain* (existing skill to keep current). A mandatory training goes in a separate line.
+3. **Keep the employee's wishes in their own column.** A wish unrelated to the job (a language for personal use) can be funded differently, for example by the CPF, only with the employee's express agreement (L6323-2). Do not present it as a need of the post.
+4. **Choose actions.** Mix formal training with practice in real situations: a project at increasing autonomy, a cross-functional mission, delegation, tutoring, shadowing, structured feedback, self-directed learning. For a know-how gap, practice weighs more than a course. The 70 / 20 / 10 split is a popular heuristic, not a norm; do not cite it as one.
+5. **Time and place.** For each action say whether it falls within working time. A course outside working hours needs the employee's agreement (up to 30 hours a year without a collective agreement); otherwise it is paid working time.
+6. **Schedule** by quarter over the horizon, with a milestone per competency.
+7. **Indicator** per competency: a behaviour that is observable, dated and verifiable by a third party. "Attended the course" is an activity indicator, not a progress indicator.
+8. **Budget and funding.** Costs are estimates, marked as such, never prices. Name the funding route per action (company, OPCO if under 50 employees, CPF with agreement).
+9. **Prerequisites:** manager validation, support files for the practice, trainer availability. If the assessment is too thin to build a credible plan, say so and list what is missing.
 
-# Constraints
+Parameters: `scope` is `individuel` (one person, default) or `equipe` (one plan for a group, with a needs summary by competency). `horizon` is 6, 12 (default) or 24 months for the schedule. `inclure_budget` (default true) adds the estimated costs and funding routes. `contexte` carries the recent review, role change or reorganisation behind the plan.
 
-- Do not produce a list of training programs with no link to identified competencies.
-- Do not confuse the employee's wishes with the identified need — both are useful but must be distinguished.
-- Do not propose unrealistic actions relative to the context (budget, available time, company size).
-- Flag if the competency assessment is insufficient to produce a credible plan.
+# Example
+
+<example>
+| Competency | Type | Action | Format | Quarter | Indicator | Est. cost | Funding |
+|---|---|---|---|---|---|---|---|
+| Structured feedback to a team | strengthen | Feedback workshop, then lead the weekly team review with a tutor present for the first three | Internal workshop (half-day) + supervised practice | Q1-Q2 | Leads the weekly review alone from Q3, with a written action list sent within 24 hours, checked monthly by the manager | ~300 € (estimate) | Company |
+</example>
+
+The indicator names a deliverable, a date and a checker, so a third party can say whether it was met.
 
 # Expected output format
 
-- `development_plan`: plan structured by competency with actions, schedule, indicators, and budget
-- `needs_summary`: overview of identified needs with prioritization
+- `development_plan`: one block per competency (type, source of the gap, actions, quarter, indicator, cost, funding, working-time treatment), the wishes column, the schedule, prerequisites.
+- `needs_summary`: needs by priority with their source, mandatory training apart, what remains "to confirm".
 
 # Definition of done
 
-- Each development action is linked to an identifiable competency.
-- The plan distinguishes strengthening, acquisition, and maintenance.
-- A schedule with milestones is present.
-- Progress indicators are observable and measurable.
-- Budget or financing mechanisms are mentioned.
+- Every action is tied to a competency whose gap has a source.
+- Strengthen, acquire and maintain are distinguished; the employee's wishes and mandatory training are apart.
+- A quarterly schedule and at least one observable indicator per competency are present.
+- Budget fits what was given, with costs marked as estimates and a funding route per action.
+- Working-time treatment and the conditions on CPF and OPCO are stated.
 
 # Domain references
 

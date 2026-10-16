@@ -2,6 +2,27 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.9.0: domain skills rewritten after Anthropic's skill-writing guidance
+
+- README: the install prompt names version 2.9.0.
+- **Grid and analysis** (`docs/etat-de-l-art-skills.md`): Anthropic's skill-authoring guide, skill-creator and
+  recent prompting guidance, compared with anthropics/knowledge-work-plugins (why its skills are longer, and
+  when that length is knowledge or filler); one analysis line for each of the 47 domain skills; per-family
+  rewrite sheets in `docs/fiches-reecriture/`.
+- **46 domain skills rewritten** (minor version bump each): every rule carries its reason instead of a bare
+  "do not"; domain knowledge the model would get wrong is added (formulas, default positions, French and EU
+  law checked on Légifrance / EUR-Lex / CNIL and dated 2026-10-16, including 2026 changes); `.mystaffy.json`
+  parameters are defined in the body; short examples where the form matters. Legal skills cite an article only
+  when it is in their table or certain. `entretien-professionnel` is not rewritten here (2.0.0 waits on its own
+  branch). Points that depend on an open question of the 2026-10-16 review are left as they were and listed.
+- **New shared annexes** `partials/transverse_anti_biais.md` and `partials/transverse_debrief.md`: the text
+  `interview-loop-planner` and `interview-guide-recruteur` used to copy inline (329 → 101 and 172 → 98 body lines).
+- `contrat-fournisseur` no longer promises drafting (it analyses, buyer side); README aligned, as for
+  `cgv-checker`, `compliance-checklist`, `lettre-cadrage-disciplinaire`, `offboarding-structure` and `org-design-brief`.
+- `THIRD_PARTY.md`: the passages adapted from anthropics/knowledge-work-plugins (commit `33eeda1`), skill by skill.
+- **Test cases** in `tests/cas-skills/` (one or more per skill) and a before/after bench, `tests/cas-skills/banc.py`,
+  that plays each case several times per model and has each output graded blind.
+
 ## 2026-10-15 — plugin 2.8.0: recipes shown as cards, built in blocks
 
 - README: the install prompt names version 2.8.0.

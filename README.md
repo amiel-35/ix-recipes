@@ -44,16 +44,16 @@
 
 ix-recipes does the groundwork of consulting, HR, legal, finance and product jobs with Claude: answering a call for tenders, turning a vague client request into a brief, writing a job description, reviewing a contract… The bigger jobs are **recipes**: a series of steps you follow in a page on your computer, which stops whenever your judgement is needed.
 
-**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.13.0**:
+**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.14.0**:
 
 ```text
-Install ix-recipes (version 2.13.0 or later) on this computer and open its tracking page so I can try it
+Install ix-recipes (version 2.14.0 or later) on this computer and open its tracking page so I can try it
 (https://github.com/amiel-35/ix-recipes). Do everything yourself, without asking me to restart:
 1. Add the amiel-35/plugins marketplace (if that fails for lack of a GitHub SSH key, use
    https://github.com/amiel-35/plugins.git), then install ix-skills@amiel-35 and
    ix-recipes@amiel-35. If they are already installed, update them; if they come from another
    marketplace, keep that one and create no duplicate. Check the installed ix-recipes version:
-   if it is older than 2.13.0, update the marketplace and the plugin.
+   if it is older than 2.14.0, update the marketplace and the plugin.
 2. Check python3 (3.9 or later); if it is missing, tell me what to install and stop.
 3. Start, in the background, the script skills/suivi-parcours/scripts/interface.py of the
    installed ix-recipes plugin (under ~/.claude/plugins/cache/, the latest version); it opens
@@ -730,6 +730,8 @@ The same runner works from the command line, for scripts:
 python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/.ix-recipes/parcours
 python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours        # runs until the next pause
 ```
+
+**Pieces apart from the request** (format 3, command line only for now): `new <recipe> --input request.md --corpus notes.md budget.xlsx contract.pdf`. The pieces are copied only to the steps that declare `receives: [corpus]`, which read what they need instead of receiving it in their message. A `.xlsx` becomes one CSV per sheet; a PDF of more than 10 pages needs poppler (`brew install poppler`); other formats are refused with what to do. After such a step, the runner says which pieces it read (declared, and actually read with Claude) and which quoted passages it found nowhere ([`docs/executeur.md`](docs/executeur.md) §3).
 
 **Versions.** Each recipe declares its format in its `workflow` block (`format: 1`; [`docs/format-recette.md`](docs/format-recette.md) §2bis). The runner, the page and `build.py` refuse a format they do not know, or a newer one, with a plain message (« mettez la page à jour »: update the page); a personal recipe written before the field existed is read as format 1, with a warning. The page has its own version, apart from the plugin's: shown at the bottom of the page and returned by `GET /api/version` (also in the list of dossiers and of recipes); `python3 scripts/parcours.py formats` lists the formats the runner plays. Page changes are listed under « Page » in the [CHANGELOG](CHANGELOG.md).
 

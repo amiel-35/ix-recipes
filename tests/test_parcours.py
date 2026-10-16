@@ -1070,7 +1070,7 @@ class SkillResolutionTests(ParcoursTestCase):
         self.assertEqual([r["id"] for r in listed], ["brief-client", "reponse-appel-offres"])
         brief = listed[0]
         self.assertEqual(brief["label"], "Brief client")
-        self.assertEqual(brief["steps"][0], {"id": "cadrage", "label": "Cadrage de la demande", "pause": "validate", "optional": False, "reads_source": False})
+        self.assertEqual(brief["steps"][0], {"id": "cadrage", "label": "Cadrage de la demande", "pause": "validate", "optional": False, "reads_source": False, "corpus": False})
         self.assertTrue(brief["description"])
         created = json.loads(self.ok("new", "brief-client", "--input", str(self.input_file), "--title", "  Offre   formation  ",
                                      "--slug", "Offre formation", "--engine", "fake", "--json"))
@@ -2649,7 +2649,7 @@ class RecipeFormatTests(ParcoursTestCase):
         self.assertEqual(self.state()["recipe_format"], 1)
         self.assertEqual(json.loads(self.ok("status", "demo", "--json"))["recipe_format"], 1)
         listed = json.loads(self.ok("recipes", "--json"))
-        self.assertEqual(listed["formats"], [1, 2])
+        self.assertEqual(listed["formats"], [1, 2, 3])
         self.assertEqual({r["id"]: (r["format"], r["warnings"]) for r in listed["recipes"]},
                          {"brief-client": (1, []), "reponse-appel-offres": (1, [])})
 
@@ -2670,10 +2670,10 @@ class RecipeFormatTests(ParcoursTestCase):
 
     def test_a_recipe_of_a_newer_format_is_refused_with_a_clear_message(self):
         self.new()   # a dossier created while the recipe was still at format 1
-        self.set_format(3)
+        self.set_format(4)
         code, out, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "autre", "--engine", "fake")
         self.assertEqual(code, 1)
-        self.assertIn("au format 3", err)
+        self.assertIn("au format 4", err)
         self.assertIn("mettez la page à jour", err)
         self.assertFalse((self.pdir / "autre").exists())
         code, out, _ = self.cli("new", "brief-client", "--input", str(self.input_file), "--json")
@@ -2700,8 +2700,9 @@ class RecipeFormatTests(ParcoursTestCase):
         shutil.copy(REPO / "skills" / "brief-client.md", self.root / "skills")
 
     def test_the_runner_announces_the_formats_it_plays(self):
-        self.assertEqual(json.loads(self.ok("formats", "--json")), {"formats": [1, 2], "current": 1, "source_format": 2})
-        self.assertIn("Formats de recette acceptés : 1, 2", self.ok("formats"))
+        self.assertEqual(json.loads(self.ok("formats", "--json")),
+                         {"formats": [1, 2, 3], "current": 1, "source_format": 2, "corpus_format": 3})
+        self.assertIn("Formats de recette acceptés : 1, 2, 3", self.ok("formats"))
 
     def test_a_format_2_recipe_without_reads_source_runs_like_format_1(self):
         self.set_format(2)
@@ -2871,6 +2872,279 @@ class CalcCheckTests(ParcoursTestCase):
         self.assertTrue(parcours.normalize_step(dict(wf["steps"][1], mission="m", transmits=["x"]), 1)["reads_source"])
         wf["format"] = 1
         self.assertTrue(any("format: 2" in e for e in parcours.source_errors(wf)))
+
+
+
+# ---------------------------------------------------------------------------
+# The corpus: the dossier's pieces, consulted by the steps a recipe names (format 3)
+# ---------------------------------------------------------------------------
+NOTES_TEXT = ("N001 « Les frais de port doublent la facture à chaque commande »\n"
+              "N002 « Je prends les tickets en photo dans la voiture »\n")
+
+
+def make_xlsx(path, formula_value=True):
+    """A small workbook written as a spreadsheet saves it: two sheets, inline strings, a formula,
+    a date cell (number format 14), a merged range."""
+    ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+    rel = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+
+    def s(ref, text):
+        return f'<c r="{ref}" t="inlineStr"><is><t>{text}</t></is></c>'
+
+    value = "<v>18</v>" if formula_value else ""
+    sheet1 = (f'<worksheet {ns}><sheetData>'
+              f'<row r="1">{s("A1", "Suivi T3")}</row>'
+              f'<row r="2">{s("A2", "Poste")}{s("B2", "Budget")}{s("C2", "Réel")}{s("D2", "Écart")}</row>'
+              f'<row r="3">{s("A3", "Marketing")}<c r="B3"><v>120</v></c><c r="C3"><v>138</v></c>'
+              f'<c r="D3"><f>C3-B3</f>{value}</c></row>'
+              f'<row r="5">{s("A5", "Arrêté au")}<c r="B5" s="1"><v>46295</v></c></row>'
+              '</sheetData><mergeCells count="1"><mergeCell ref="A1:D1"/></mergeCells></worksheet>')
+    sheet2 = f'<worksheet {ns}><sheetData><row r="1">{s("A1", "Cause")}{s("B1", "Salon de septembre")}</row></sheetData></worksheet>'
+    styles = (f'<styleSheet {ns}><cellXfs count="2"><xf numFmtId="0"/><xf numFmtId="14" applyNumberFormat="1"/>'
+              '</cellXfs></styleSheet>')
+    workbook = (f'<workbook {ns} xmlns:r="{rel}"><sheets><sheet name="T3" sheetId="1" r:id="rId1"/>'
+                '<sheet name="Notes / causes" sheetId="2" r:id="rId2"/></sheets></workbook>')
+    rels = ('<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            f'<Relationship Id="rId1" Type="{rel}/worksheet" Target="worksheets/sheet1.xml"/>'
+            f'<Relationship Id="rId2" Type="{rel}/worksheet" Target="worksheets/sheet2.xml"/></Relationships>')
+    import zipfile
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("xl/workbook.xml", workbook)
+        z.writestr("xl/_rels/workbook.xml.rels", rels)
+        z.writestr("xl/worksheets/sheet1.xml", sheet1)
+        z.writestr("xl/worksheets/sheet2.xml", sheet2)
+        z.writestr("xl/styles.xml", styles)
+    return path
+
+
+def make_pdf(path, pages=2):
+    path.write_bytes(b"%PDF-1.4\n" + b"".join(b"%d 0 obj << /Type /Page >> endobj\n" % (i + 3) for i in range(pages))
+                     + b"2 0 obj << /Type /Pages /Count %d >> endobj\n%%%%EOF\n" % pages)
+    return path
+
+
+class CorpusTests(ParcoursTestCase):
+    """docs/decision-corpus.md: the pieces apart from the request, copied only to the steps that
+    declare `receives: [corpus]`; converted at the creation of the dossier."""
+
+    def declare(self, step_receives="[context_sheet, cadrage.need, cadrage.constraints, cadrage.hypotheses, answers", fmt="3"):
+        """The last step of brief-client consults the corpus."""
+        path = self.root / "skills" / "brief-client.md"
+        text = path.read_text(encoding="utf-8")
+        self.assertIn(f"receives: {step_receives}", text)
+        text = text.replace(f"receives: {step_receives}", f"receives: [corpus, {step_receives[1:]}", 1)
+        path.write_text(text.replace("\n  format: 1\n", f"\n  format: {fmt}\n", 1), encoding="utf-8")
+
+    def pieces(self):
+        notes = self.tmp / "notes.md"
+        notes.write_text(NOTES_TEXT, encoding="utf-8")
+        return [str(notes), str(make_xlsx(self.tmp / "budget.xlsx")), str(make_pdf(self.tmp / "contrat.pdf"))]
+
+    def test_the_pieces_are_converted_and_only_the_named_step_finds_them(self):
+        self.declare()
+        out = self.ok("new", "brief-client", "--input", str(self.input_file), "--slug", "demo", "--engine", "fake",
+                      "--corpus", *self.pieces())
+        self.assertIn("consultées par : brief", out)
+        folder = self.pdir / "demo" / "corpus"
+        self.assertEqual(sorted(p.name for p in folder.iterdir()),
+                         ["budget.Notes-causes.csv", "budget.T3.csv", "contrat.pdf", "notes.md"])
+        self.assertEqual(sorted(p.name for p in (self.pdir / "demo" / "corpus-originaux").iterdir()),
+                         ["budget.xlsx", "contrat.pdf", "notes.md"])
+        self.assertEqual((folder / "budget.T3.csv").read_text(encoding="utf-8"),
+                         "Suivi T3\nPoste,Budget,Réel,Écart\nMarketing,120,138,18\n\nArrêté au,2026-09-30\n")
+        records = {r["name"]: r for r in self.state()["corpus"]}
+        self.assertEqual(records["budget.xlsx"]["files"], ["budget.T3.csv", "budget.Notes-causes.csv"])
+        self.assertIn("A1:D1", records["budget.xlsx"]["warnings"][0])
+        self.assertEqual(records["contrat.pdf"]["pages"], 2)
+        self.write_fakes("brief-client")
+        self.assertEqual(self.drive()["status"], "completed")
+        message = self.received("brief")
+        self.assertIn("The dossier's pieces are in ./corpus/, in your current working directory: "
+                      "budget.Notes-causes.csv, budget.T3.csv, contrat.pdf, notes.md.", message)
+        self.assertIn("### sources_read", message)
+        self.assertNotIn("Je prends les tickets", message)   # consulted in the folder, never pushed into the message
+        self.assertEqual((self.fake / "received" / "brief.corpus.txt").read_text(encoding="utf-8").split(),
+                         ["budget.Notes-causes.csv", "budget.T3.csv", "contrat.pdf", "notes.md"])
+        for other in ("cadrage", "questioning"):
+            with self.subTest(step=other):
+                self.assertNotIn("./corpus/", self.received(other))
+                self.assertNotIn("sources_read", self.received(other))
+                self.assertFalse((self.fake / "received" / f"{other}.corpus.txt").exists())
+        report = json.loads(self.ok("status", "demo", "--json"))
+        self.assertEqual([s["id"] for s in report["steps"] if s["corpus"]], ["brief"])
+        self.assertEqual([r["name"] for r in report["corpus"]], ["notes.md", "budget.xlsx", "contrat.pdf"])
+
+    def test_the_review_says_what_was_not_declared_and_the_quotes_found_nowhere(self):
+        self.declare()
+        self.ok("new", "brief-client", "--input", str(self.input_file), "--slug", "demo", "--engine", "fake",
+                "--corpus", self.pieces()[0])
+        made_up = ("Brief.\n\nUn client dit « Les frais de port doublent la facture à chaque commande » (N001), un autre "
+                   "« je veux suivre mon colis heure par heure ».\n\n## HANDOFF\n\n## SUMMARY\nBrief.\n")
+        self.write_fakes("brief-client", brief=made_up)
+        code, out, err = self.run_to_the_end()
+        self.assertEqual(self.step("brief")["status"], "done", err)
+        check = self.step("brief")["corpus_check"]
+        self.assertEqual(check["unfound_quotes"], ["je veux suivre mon colis heure par heure"])
+        self.assertIsNone(check["reads"])   # the fake engine, like codex, says nothing of what it read
+        self.assertIn("section sources_read absente", err)
+        self.assertIn("1 passage(s) entre guillemets introuvable(s)", err)
+        honest = ("Brief.\n\nUn client dit « Les frais de port doublent la facture à chaque commande » (N001).\n\n"
+                  "## HANDOFF\n### sources_read\nnotes.md lu en entier.\n\n## SUMMARY\nBrief.\n")
+        (self.fake / "brief.md").write_text(honest, encoding="utf-8")
+        self.ok("rerun", "demo", "brief")
+        self.ok("next", "demo", "--yes")
+        check = self.step("brief")["corpus_check"]
+        self.assertEqual((check["unfound_quotes"], check["sources_read"]), ([], "notes.md lu en entier."))
+        self.assertNotIn("sources_read", self.step("brief")["handoff"])   # a trace, not a field passed on
+
+    def run_to_the_end(self):
+        out_all, err_all = "", ""
+        for _ in range(20):
+            code, out, err = self.cli("next", "demo", "--yes")
+            out_all, err_all = out_all + out, err_all + err
+            state = self.state()
+            if state["status"] != "active":
+                return code, out_all, err_all
+            pending = state["pending"]
+            if pending["type"] == "validate":
+                self.ok("validate", "demo")
+            elif pending["type"] == "answers":
+                self.ok("answer", "demo", "--file", str(self.answers_file))
+            else:
+                self.ok("choose", "demo", "--skip")
+        self.fail("parcours did not finish")
+
+    def test_refusals_come_before_anything_is_written(self):
+        docx = self.tmp / "cr.docx"
+        docx.write_bytes(b"PK\x03\x04")
+        twice = self.tmp / "autre"
+        twice.mkdir()
+        (twice / "notes.md").write_text("x", encoding="utf-8")
+        cases = [
+            ([str(docx)], "pièce refusée : cr.docx", "enregistrez-le en PDF ou en texte"),
+            ([self.pieces()[0], str(twice / "notes.md")], "deux pièces portent le même nom", "renommez"),
+            ([str(self.tmp / "absente.md")], "pièce introuvable", "absente.md"),
+        ]
+        self.declare()
+        for paths, first, second in cases:
+            with self.subTest(case=first):
+                code, _, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "demo",
+                                        "--engine", "fake", "--corpus", *paths)
+                self.assertEqual(code, 1)
+                self.assertIn(first, err)
+                self.assertIn(second, err)
+                self.assertFalse((self.pdir / "demo").exists())
+
+    def test_a_recipe_without_a_step_that_consults_the_pieces_refuses_them(self):
+        code, _, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--engine", "fake",
+                                "--corpus", self.pieces()[0])
+        self.assertEqual(code, 1)
+        self.assertIn("ne fait consulter les pièces à aucune étape", err)
+
+    def test_receives_corpus_needs_format_3_and_any_step_may_declare_it(self):
+        self.declare(fmt="2")
+        code, _, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--engine", "fake")
+        self.assertEqual(code, 1)
+        self.assertIn("étape 'brief' : receives: [corpus] demande « format: 3 »", err)
+        steps = [{"id": "a", "receives": ["brief", "corpus"]}, {"id": "b", "receives": ["corpus"]}]
+        self.assertEqual(parcours.needed_format(steps), 3)
+        self.assertEqual(parcours.corpus_errors({"format": 3, "steps": steps}), [])
+        self.assertEqual(len(parcours.corpus_errors({"format": 1, "steps": steps})), 2)
+
+    def test_without_pieces_a_format_3_recipe_runs_as_before(self):
+        self.declare()
+        out = self.ok("new", "brief-client", "--input", str(self.input_file), "--slug", "demo", "--engine", "fake")
+        self.assertIn("Aucune pièce (--corpus) : les étapes brief travailleront sans pièces.", out)
+        self.write_fakes("brief-client")
+        self.assertEqual(self.drive()["status"], "completed")
+        self.assertNotIn("./corpus/", self.received("brief"))
+        self.assertNotIn("corpus_check", self.step("brief"))
+
+    def test_a_long_pdf_without_poppler_is_said_at_creation(self):
+        self.declare()
+        with mock.patch.object(parcours.shutil, "which", return_value=None):
+            code, _, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "demo",
+                                    "--engine", "fake", "--corpus", str(make_pdf(self.tmp / "annexe.pdf", pages=25)))
+        self.assertEqual(code, 0, err)
+        self.assertIn("pièce 'annexe.pdf' : 25 pages : au-delà de 10", err)
+        self.assertIn("brew install poppler", err)
+
+    def test_an_engine_whose_isolation_is_not_checked_is_named(self):
+        self.declare()
+        code, _, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "demo",
+                                "--engine", "fake", "--engine-step", "questioning=vibe", "--corpus", self.pieces()[0])
+        self.assertEqual(code, 0, err)
+        self.assertIn("moteur(s) vibe : leur lecture hors du dossier de l'étape n'est pas vérifiée", err)
+
+
+class CorpusConversionTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="test-corpus-"))
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+
+    def test_a_formula_never_calculated_is_left_empty_and_said(self):
+        sheets, warnings = parcours.xlsx_to_csv(make_xlsx(self.tmp / "b.xlsx", formula_value=False))
+        self.assertEqual(sheets[0][1].splitlines()[2], "Marketing,120,138,")
+        self.assertTrue(any("T3!D3 : formule =C3-B3 sans valeur calculée" in w for w in warnings))
+
+    def test_a_file_that_is_not_a_workbook_is_refused(self):
+        bad = self.tmp / "faux.xlsx"
+        bad.write_text("pas un zip", encoding="utf-8")
+        directory = self.tmp / "dossier"
+        directory.mkdir()
+        with self.assertRaises(parcours.ParcoursError) as ctx:
+            parcours.build_corpus(directory, parcours.corpus_plan([str(bad)]))
+        self.assertIn("n'est pas un classeur .xlsx lisible", str(ctx.exception))
+
+    def test_quotes_are_looked_for_with_their_ellipses_and_apostrophes(self):
+        hay = "N101 « Je suis allergique, c'est pas évident de trouver un plat sûr, j'ai pris une salade »"
+        text = ("Elle dit « c’est pas évident de trouver […] j’ai pris une salade ». "
+                "Et « une formule inventée pour le titre ».\n\n```\n\"code ignored here please\"\n```\n")
+        self.assertEqual(parcours.unfound_quotes(text, hay), ["une formule inventée pour le titre"])
+        text = ("« n sur 42 » et \"quatre mots ici aussi\"\n### G1 : « Le client pressé »\n"
+                "### G2 : « On a tout commandé en ligne, vite et bien »\n")
+        self.assertEqual(parcours.quotes_of(text), ["quatre mots ici aussi", "On a tout commandé en ligne, vite et bien"])
+
+
+class CorpusEngineTests(EngineTests):
+    def test_claude_on_a_step_with_pieces_streams_and_its_reads_are_kept(self):
+        corpus = self.tmp / "dossier" / "corpus"
+        corpus.mkdir(parents=True)
+        (corpus / "notes.md").write_text(NOTES_TEXT, encoding="utf-8")
+        seen = {}
+
+        def run(argv, stdin, cwd, timeout):
+            seen["listing"] = sorted(str(p.relative_to(cwd)) for p in Path(cwd).rglob("*"))
+            lines = [
+                {"type": "assistant", "message": {"content": [
+                    {"type": "tool_use", "id": "t1", "name": "Read", "input": {"file_path": str(Path(cwd) / "corpus" / "notes.md")}},
+                    {"type": "tool_use", "id": "t2", "name": "Read", "input": {"file_path": "/etc/hosts"}}]}},
+                {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": "t1", "content": "1\tN001"},
+                                                         {"type": "tool_result", "tool_use_id": "t2", "is_error": True}]}},
+                {"type": "result", "is_error": False, "result": "OUT", "total_cost_usd": 0.12},
+            ]
+            return 0, "\n".join(json.dumps(line) for line in lines), ""
+
+        calls, reads = [], []
+
+        def spy(argv, stdin, cwd, timeout):
+            calls.append(list(argv))
+            return run(argv, stdin, cwd, timeout)
+
+        with mock.patch.object(parcours, "run_process", spy):
+            text, cost = parcours.call_engine("claude", "MSG", model="sonnet", timeout=5, budget=1.0,
+                                              skill={"references": self.tmp / "none"}, step_id="s", kind="main",
+                                              corpus=corpus, reads=reads)
+        self.assertEqual((text, cost), ("OUT", 0.12))
+        self.assertIn("stream-json", calls[0])
+        self.assertIn("--verbose", calls[0])
+        self.assertEqual(seen["listing"], ["corpus", "corpus/notes.md"])
+        self.assertEqual(reads, [{"path": "corpus/notes.md", "in_work": True, "in_corpus": True, "error": False},
+                                 {"path": "/etc/hosts", "in_work": False, "in_corpus": False, "error": True}])
+        parsed = {"warnings": [], "sources_read": "rien"}
+        parcours.corpus_review(parsed, "OUT", "MSG", corpus.parent, reads)
+        self.assertTrue(any("lue(s) mais non déclarée(s) dans sources_read : notes.md" in w for w in parsed["warnings"]))
+        self.assertTrue(any("hors du dossier de l'étape : /etc/hosts" in w for w in parsed["warnings"]))
 
 
 if __name__ == "__main__":

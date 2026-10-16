@@ -184,7 +184,10 @@ def mutations(fm):
     variant(lambda f: f["workflow"].update(steps=[]))
     variant(lambda f: f.update(requires=f["requires"] + ["ix-skills:does-not-exist"]))
     variant(lambda f: f["workflow"].pop("format"))
-    variant(lambda f: f["workflow"].update(format=3))
+    variant(lambda f: f["workflow"].update(format=4))
+    # receives: [corpus] (format 3): under format 1 or 2, on any step
+    variant(lambda f: f["workflow"]["steps"][1]["receives"].append("corpus"))
+    variant(lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][0]["receives"].append("corpus")))
     # reads_source (format 2): on a producing step, on step 1, under format 1, not a boolean
     variant(lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][1].update(reads_source=True)))
     variant(lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][0].update(reads_source=True)))
@@ -205,7 +208,9 @@ def valid_variants(fm):
     for change in [lambda f: f["workflow"].update(format=2),
                    lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][1].update(reads_source=False))] + \
                   [lambda f, i=i: (f["workflow"].update(format=2), f["workflow"]["steps"][i].update(reads_source=True))
-                   for i in checking_steps(fm)]:
+                   for i in checking_steps(fm)] + \
+                  [lambda f: (f["workflow"].update(format=3), f["workflow"]["steps"][0]["receives"].append("corpus"),
+                              f["workflow"]["steps"][-1]["receives"].append("corpus"))]:
         clone = copy.deepcopy(fm)
         change(clone)
         out.append(clone)
@@ -263,7 +268,7 @@ class WorkflowCheckParityTests(unittest.TestCase):
                                                        "format 1 (ajoutez « format: 1 » en tête du bloc workflow)"])
         with mock.patch.object(self.build, "_skill_exists", lambda ref: True):
             self.assertIn("ajoutez « format: 1 »", self.build.validate_workflow(missing, body)[0])
-            for value in (3, "deux"):
+            for value in (4, "deux"):
                 newer = copy.deepcopy(fm)
                 newer["workflow"]["format"] = value
                 newer["workflow"]["steps"][1]["pause"] = "later"   # format 1's rules say nothing of another format
@@ -1186,7 +1191,7 @@ class PersonalRecipeFormatTests(RecettesTestCase):
         self.assertEqual(without["errors"], [])   # read as format 1: it can be tested and kept
         self.assertEqual((without["recipe"]["format"], without["recipe"]["format_declared"]), (1, False))
         self.assertIn(parcours.FORMAT_MISSING, without["contribution"])   # the repository wants it written
-        newer = parcours.check_recipe_text(recettes.TEMPLATE.replace("\n  format: 1\n", "\n  format: 3\n", 1)
+        newer = parcours.check_recipe_text(recettes.TEMPLATE.replace("\n  format: 1\n", "\n  format: 4\n", 1)
                                            .replace("pause: validate", "pause: later"))
         self.assertEqual(newer["errors"], [newer["format_error"]])   # only the format: the rest is format 1's rules
         self.assertIn("mettez la page à jour", newer["format_error"])

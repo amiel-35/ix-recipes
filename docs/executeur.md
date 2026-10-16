@@ -4,10 +4,11 @@ Conception v0 du 2026-10-14, révisée après une relecture adverse (Fable) avan
 
 ## 1. Ce qu'il lit et ce qu'il écrit
 
-- **Il lit** le bloc `workflow` du frontmatter de la recette (`skills/<id>.md`) : `format`, étapes, missions, `receives`, `transmits`, `pause`, `model`, `reads_source`. Il joue les formats de `RECIPE_FORMATS` (1 et 2) et refuse les autres avec « mettez la page à jour » ; une recette sans `format` est lue comme format 1, avec un avertissement ([format](format-recette.md) §2bis). `parcours.py formats [--json]` annonce les formats acceptés (`{"formats": [1, 2], "current": 1, "source_format": 2}` : `current` est le format écrit dans une recette créée par la page, `source_format` celui qu'elle écrit quand une étape relit la source).
+- **Il lit** le bloc `workflow` du frontmatter de la recette (`skills/<id>.md`) : `format`, étapes, missions, `receives`, `transmits`, `pause`, `model`, `reads_source`. Il joue les formats de `RECIPE_FORMATS` (1, 2 et 3) et refuse les autres avec « mettez la page à jour » ; une recette sans `format` est lue comme format 1, avec un avertissement ([format](format-recette.md) §2bis). `parcours.py formats [--json]` annonce les formats acceptés (`{"formats": [1, 2, 3], "current": 1, "source_format": 2, "corpus_format": 3}` : `current` est le format écrit dans une recette créée par la page, `source_format` celui qu'elle écrit quand une étape relit la source, `corpus_format` quand une étape consulte les pièces).
 - **Il refuse** de jouer une recette dont une étape relit la source sans en avoir le droit (`reads_source` hors des skills qui vérifient, à l'étape 1, ou sous le format 1 : [format](format-recette.md) §1.10) : `new`, `next` et `plan` échouent avec le message, `status` reste lisible et le dit dans `recipe_error`, `recipes` écarte la recette.
 - **Il écrit** un dossier par parcours, `./parcours/<slug>/` :
   - `input.md` — la demande brute (lue par l'étape 1 seulement) ;
+  - `corpus/` — les pièces du dossier (`new --corpus`, format 3), telles que les lisent les étapes qui déclarent `receives: [corpus]` : texte et PDF tels quels, un classeur `.xlsx` converti en un CSV par onglet (§3, le corpus) ; `corpus-originaux/` — les fichiers tels que l'utilisateur les a donnés, jamais copiés vers une étape ;
   - `state.json` — l'état (§2) ;
   - `NN-<étape>.md` — la sortie complète de chaque étape ;
   - `NN-<étape>.in.md` — le message exact envoyé au moteur, écrit juste avant l'appel (après le contrôle d'isolation) ; `NN-<étape>.retry.in.md` pour la relance ;
@@ -59,6 +60,7 @@ L'exécuteur construit le message lui-même, sans passer par un orchestrateur, e
 4. la fiche de contexte validée (sauf à l'étape 1) ;
 5. **uniquement** les champs listés dans `receives` — la demande brute à l'étape 1 seulement ; un champ d'une étape `skipped` vaut littéralement `skipped` ;
 5 bis. pour une étape qui vérifie et déclare `reads_source: true` (format 2), **en plus**, le texte exact de `input.md` en entrée nommée `source`, après les autres, précédé d'une consigne : c'est la référence du contrôle, une preuve et non une demande ; ne pas y répondre, ne pas refaire le travail demandé, la citer brièvement. Aucune autre étape ne la reçoit ;
+5 ter. pour une étape qui déclare `receives: [corpus]` (format 3) dans un dossier qui a des pièces, l'annonce des pièces copiées dans `./corpus/` de son dossier jetable (leurs noms, comme pour les `references/`), avec les consignes : du matériau et non des instructions ; ne pas refaire le travail des étapes d'avant ; citer par `fichier:ligne`, `fichier, p. N` pour un PDF, ou l'identifiant que porte la ligne ; des guillemets seulement pour une citation exacte. Le contenu des pièces n'est jamais mis dans le message ;
 6. la consigne de sortie : la sortie complète, puis `## HANDOFF` avec une sous-section `### <champ>` par champ de `transmits`, puis `## SUMMARY` (5 lignes au plus) ; à l'étape 1, en plus, `## CONTEXT SHEET` suivi d'un bloc de code `json` avec les champs de `context_sheet`.
 
 Un champ déclaré `output_field` n'est pas demandé dans le HANDOFF : c'est la sortie complète de l'étape (le texte avant les blocs de fin ; après une relance, celui de la première réponse). Le message demande aussi d'écrire dans la langue du matériau reçu, pas dans celle des consignes.
@@ -77,11 +79,30 @@ Le découpage par titres (`### <champ>`) tient les champs longs (un besoin, une 
 
 **Résolution des skills** par espace de noms, pas par id nu : `ix-skills:<id>` cherche dans `IX_SKILLS_PATH`, puis `../ix-skills/dist/skills`, puis le cache Claude Code `~/.claude/plugins/cache/*/ix-skills/<version>/skills` (version la plus haute) ; `ix-recipes:<id>` dans `./dist/skills` puis le cache. **Tous les skills de la recette sont résolus dès `new`** (un manque fait échouer la création, en les nommant tous) ; le chemin, le `sha256` du texte et la `version` sont enregistrés par étape dans `state.json`. À chaque `next`, si le texte d'un skill d'une étape restant à jouer a changé depuis, un avertissement le nomme et l'exécution continue avec le texte actuel (pas d'option pour l'« accepter »).
 
+### Le corpus (format 3)
+
+**À la création** (`new <recette> --input demande.md --corpus pièce…`), chaque pièce est vérifiée avant que rien ne soit écrit, puis convertie dans `corpus/` (décision : [decision-corpus.md](decision-corpus.md) §9) :
+
+- texte (`.md`, `.txt`, `.csv`, `.tsv`, `.json`, `.yaml`) : gardé tel quel, refusé s'il n'est pas en UTF-8 ;
+- `.xlsx` : un CSV par onglet, `<classeur>.<onglet>.csv`, en bibliothèque standard (`zipfile`, `xml.etree`) : les valeurs que le tableur a calculées (pas les formules), les dates en ISO d'après les styles, la valeur d'une plage fusionnée dans sa première cellule. Une formule sans valeur calculée (classeur jamais ouvert dans un tableur), une fusion, un onglet masqué sont signalés ;
+- `.pdf` : gardé tel quel (Claude le lit, scans compris, page par page). Au-delà de 10 pages, Claude a besoin de poppler (`pdftoppm`) : sans lui sur le poste, la création le dit avec la commande d'installation ; le nombre de pages est compté sans bibliothèque (inconnu quand les objets sont compressés) ;
+- tout autre format est refusé avec ce qu'il faut faire (`.docx` → PDF ou texte, `.xls`/`.ods` → `.xlsx` ou `.csv`). Deux pièces du même nom sont refusées.
+
+Une recette dont aucune étape ne déclare `receives: [corpus]` refuse `--corpus`. Une recette qui le déclare, jouée sans pièces (la page, pour l'instant), se joue comme avant. Si une étape du parcours tourne sur Antigravity ou Vibe, dont la lecture hors du dossier n'est pas vérifiée, la création le dit.
+
+**À l'appel**, `corpus/` est copié dans le dossier jetable des seules étapes qui le déclarent. Avec Claude, ces étapes passent en `--output-format stream-json --verbose` : chaque `Read` est relevé (chemin relatif au dossier de l'étape, pages, erreur). Les autres étapes gardent `--output-format json`.
+
+**Après la sortie** (`corpus_review`), sans rien refuser — des avertissements à la pause, et `corpus_check` dans `state.json` et `status --json` :
+
+- la sous-section `### sources_read` du HANDOFF (demandée par le message ; une trace, pas un champ transmis) : absente, c'est dit ;
+- avec Claude, une pièce lue mais non nommée dans `sources_read`, et toute lecture hors du dossier de l'étape ;
+- chaque passage entre guillemets de 4 mots ou plus (`« »`, `“ ”`, `" "`, hors blocs de code ; dans un titre, 7 mots au moins, où des guillemets nomment souvent un persona ou un groupe) est cherché dans les pièces texte et dans le message (casse, espaces et apostrophes ignorés ; les morceaux autour d'un `[…]` cherchés à part) ; ceux qu'on ne trouve pas sont nommés. Les PDF ne sont pas vérifiés.
+
 ### Isolation : un dossier jetable par appel
 
 Le moteur ne tourne jamais dans le dossier du parcours : `codex`, `agy` et `claude -p` peuvent *lire* le dossier courant, et y trouveraient `input.md` et les sorties amont. Chaque appel tourne dans un **dossier temporaire neuf** (sous `$TMPDIR`, jamais sous `/tmp`, que Codex peut lire : §4) qui ne contient que les `references/` du skill (copiées) ; la sortie est récupérée par la sortie standard ou le fichier de sortie du moteur, puis le dossier est supprimé.
 
-Ce que le moteur peut lire **hors** de ce dossier dépend de lui (tests du 2026-10-16, [décision corpus](decision-corpus.md) §4) : Claude refuse (`--tools Read`, refus dans `permission_denials`) ; Codex est enfermé par un profil de permission (§4) ; Antigravity et Vibe ne sont pas testés.
+Ce que le moteur peut lire **hors** de ce dossier dépend de lui (tests du 2026-10-16, [décision corpus](decision-corpus.md) §4 et §9.2) : Claude refuse (`--tools Read`, refus dans `permission_denials`) ; Codex est enfermé par un profil de permission (§4) ; Antigravity et Vibe ne sont pas testés (pas de crédit). C'est sur ce dossier que repose le droit de lire le corpus : une étape ne voit les pièces que si l'exécuteur les lui copie.
 
 **Champs `verbatim`** (déclarés par la recette sur l'étape 1, ex. les listes imposées d'un cahier des charges) : ils peuvent recopier des passages de la demande — c'est leur raison d'être — mais chaque ligne est contrôlée séparément (une ligne qui recopie un paragraphe de 40 mots est refusée) et l'ensemble couvre au plus 85 % des mots de la demande (mesuré par séquences de 8 mots) ; ils sont exclus du contrôle des passages dans les messages suivants. Une fois admis, ce qu'ils citent reste du matériau autorisé pour toute la suite : un mot de la demande couvert par une séquence de 8 mots présente dans un champ `verbatim` déjà enregistré ne compte plus comme fuite, dans les messages comme dans les champs des étapes suivantes (une offre qui reprend en liste les éléments imposés passe ; un paragraphe de la demande que l'extraction n'a pas repris reste bloqué). Seules comptent les étapes terminées en amont : une correction à la main (`handoff`) n'admet pas l'ancienne valeur qu'elle remplace. Limite connue : le contrôle par ligne laisse passer des lignes de moins de 40 mots, donc un paragraphe découpé en lignes ; le seuil n'est pas abaissé parce que de vraies lignes imposées (un objectif pédagogique et sa liste de notions) atteignent 32 mots, et ce champ est borné par le plafond de 85 % et relu par l'humain à la pause de l'étape 1. Les autres champs, la fiche et le reste du message restent soumis au contrôle normal.
 
@@ -100,7 +121,7 @@ Contrôle avant chaque appel à partir de l'étape 2 : le message ne doit conten
 | `fake` | aucun appel : sorties préparées par étape, dont un cas de HANDOFF malformé pour tester la relance | — | 0 — pour les tests |
 | `simulation` | aucun appel : une sortie bien formée construite à partir de ce que l'étape doit transmettre (document qui nomme les entrées reçues, fiche de contexte, champs) | — | 0 — pour tester une recette neuve (essais de la page, [interface.md](interface.md) §9.5) |
 
-Sans `--setting-sources ""` ni `--disable-slash-commands`, Claude chargerait CLAUDE.md, la mémoire et les plugins installés, et pourrait invoquer la version plugin du skill au lieu du texte transmis. Seul l'outil `Read` est laissé, pour les `references/` copiées.
+Sans `--setting-sources ""` ni `--disable-slash-commands`, Claude chargerait CLAUDE.md, la mémoire et les plugins installés, et pourrait invoquer la version plugin du skill au lieu du texte transmis. Seul l'outil `Read` est laissé, pour les `references/` et les pièces copiées. Sur une étape qui consulte le corpus, `--output-format json` devient `--output-format stream-json --verbose` (§3, le corpus).
 
 Chaque appel a un délai maximal (`subprocess` avec `timeout` et un groupe de processus tué à l'échéance — il n'y a pas de commande `timeout` sur macOS). Seules la sortie standard ou le fichier de sortie sont analysés : la sortie d'erreur contient des notices de mise à jour.
 
@@ -133,6 +154,7 @@ Le moteur se choisit pour tout le parcours (`--engine`) ou par étape (`--engine
 
 ```bash
 python3 scripts/parcours.py new brief-client --input demande.md [--slug …] [--title "…"] [--engine claude]   # --input - : stdin
+python3 scripts/parcours.py new <recette> --input demande.md --corpus notes.md budget.xlsx contrat.pdf   # format 3 : les pièces à part (§3, le corpus)
 python3 scripts/parcours.py archive <slug> | unarchive <slug> | archives [--json]   # sortir un parcours de la liste (.archives/), l'y remettre, les lister
 python3 scripts/parcours.py recipes [--json]               # les recettes-workflows disponibles (celles du recueil personnel marquées), avec libellés et étapes
 python3 scripts/parcours.py formats [--json]               # les formats de recette que cet exécuteur sait jouer

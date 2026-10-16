@@ -2,6 +2,43 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.14.0: the corpus, pieces apart from the request (command line)
+
+Amiel's decision of 2026-10-16 ([`docs/decision-corpus.md`](docs/decision-corpus.md)), after the checks of
+its §8 (§9: drift test on a real case, non-text pieces, Antigravity and Vibe untested for lack of credit).
+
+### Recipes
+
+- **Format 3**: a step may declare `corpus` in `receives` to consult the dossier's pieces (any step, step 1
+  included). [`docs/format-recette.md`](docs/format-recette.md) §1.11 and §2quater; `build.py` and the
+  runner accept format 3 (the ix-skills copy of `build.py` is to be updated the same way). No recipe of the
+  repository uses it yet.
+- `concepteur-recette` 1.3.0 designs with a corpus when later steps need the material itself, writes
+  `format: 3`, and gives a producing step that consults it a mission saying what it does not redo.
+
+### Runner
+
+- **`new <recipe> --input request.md --corpus piece…`** ([`docs/executeur.md`](docs/executeur.md) §3): the
+  pieces are checked before anything is written, kept in `corpus-originaux/`, and converted into
+  `corpus/`: text as is, a `.xlsx` as one CSV per sheet (calculated values, ISO dates, merged ranges and
+  uncalculated formulas reported; standard library only), PDF as is with a warning when it has more than
+  10 pages and poppler is missing; `.docx`, `.xls`, `.ods` and other formats are refused with what to do.
+- **The right is given by copying**: `corpus/` is copied only into the throwaway folder of the steps that
+  declare it, announced in their message, never pushed into it. With Claude, those steps run in
+  `stream-json` and their `Read` calls are kept.
+- **After such a step** (warnings, `corpus_check` in `state.json` and `status --json`): a missing
+  `### sources_read` sub-section, a piece read but not declared, a read outside the step's folder, and
+  every quoted passage found in neither the pieces nor the message.
+- `formats --json` gives `corpus_format`; `plan`, `status --json` and `recipes --json` say which steps
+  consult the pieces; `new` warns when a step of the dossier runs on Antigravity or Vibe, whose reading
+  outside the folder is not checked.
+
+### Page
+
+- **Page 1.3.0**: reads format 3. No area for the pieces yet (decision 7.2: the command line first); a
+  format 3 recipe played from the page runs without pieces, as before.
+- `suivi-parcours` 1.7.0 (its scripts). README: the install prompt names version 2.14.0.
+
 ## 2026-10-16 — plugin 2.13.0: a Codex step reads only its own folder
 
 ### Runner

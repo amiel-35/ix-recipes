@@ -2,6 +2,25 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.11.0: the calculation check is specified and may re-read the source
+
+### Recipes
+
+- **Calculation check** (Amiel's decision 8 of 2026-10-16): the atom that recomputes every derived
+  figure from the source values and reports the gaps is specified in
+  [`docs/atome-verification-calcul.md`](docs/atome-verification-calcul.md). It belongs to ix-skills
+  (`ix-skills:calc-check`), where it remains to be created. `fact-check` only checks that a figure is in
+  the source.
+- `ix-skills:calc-check` joins the closed list of the skills that may re-read the source
+  (`VERIFICATION_SKILLS` in `scripts/parcours.py` and `build.py`). Until the atom exists, `requires`
+  refuses it. The same change is to be carried over to ix-skills' copy of `build.py`.
+
+### Page
+
+- **Page 1.1.1**: the designer is told only the checking skills the catalogue holds (`calc-check` is not
+  announced before it exists).
+- `suivi-parcours` 1.5.1 (its scripts).
+
 ## 2026-10-16 — plugin 2.10.0: a checking step may re-read the source (recipe format 2)
 
 ### Recipes

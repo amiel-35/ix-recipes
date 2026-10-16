@@ -4,7 +4,7 @@ Conception v0 du 2026-10-14, révisée après une relecture adverse (Fable) avan
 
 ## 1. Ce qu'il lit et ce qu'il écrit
 
-- **Il lit** le bloc `workflow` du frontmatter de la recette (`skills/<id>.md`) : étapes, missions, `receives`, `transmits`, `pause`, `model`.
+- **Il lit** le bloc `workflow` du frontmatter de la recette (`skills/<id>.md`) : `format`, étapes, missions, `receives`, `transmits`, `pause`, `model`. Il joue les formats de `RECIPE_FORMATS` (aujourd'hui le seul format 1) et refuse les autres avec « mettez la page à jour » ; une recette sans `format` est lue comme format 1, avec un avertissement ([format](format-recette.md) §2bis). `parcours.py formats [--json]` annonce les formats acceptés (`{"formats": [1], "current": 1}`, `current` étant le format écrit dans une recette créée par la page).
 - **Il écrit** un dossier par parcours, `./parcours/<slug>/` :
   - `input.md` — la demande brute (lue par l'étape 1 seulement) ;
   - `state.json` — l'état (§2) ;
@@ -21,6 +21,7 @@ Le même dossier sert aux recettes jouées en conversation (`./parcours/` y est 
 {
   "recipe": "brief-client",
   "recipe_version": "1.1.0",
+  "recipe_format": 1,
   "slug": "brief-client-formation",
   "created": "2026-10-14T18:00:00",
   "engine": "claude",
@@ -108,6 +109,7 @@ Le moteur se choisit pour tout le parcours (`--engine`) ou par étape (`--engine
 python3 scripts/parcours.py new brief-client --input demande.md [--slug …] [--title "…"] [--engine claude]   # --input - : stdin
 python3 scripts/parcours.py archive <slug> | unarchive <slug> | archives [--json]   # sortir un parcours de la liste (.archives/), l'y remettre, les lister
 python3 scripts/parcours.py recipes [--json]               # les recettes-workflows disponibles (celles du recueil personnel marquées), avec libellés et étapes
+python3 scripts/parcours.py formats [--json]               # les formats de recette que cet exécuteur sait jouer
 python3 scripts/parcours.py next <slug> [--yes] [--if-state <empreinte>]   # joue jusqu'à la prochaine pause
 python3 scripts/parcours.py plan <slug> --json           # le plan de ce que ferait `next`, sans rien écrire
 python3 scripts/parcours.py status <slug> [--json]
@@ -133,7 +135,7 @@ python3 scripts/parcours.py handoff <slug> <étape> --file champs.md          # 
   - L'**empreinte** est `sha256(state.json + NUL + 00-context.md)` (fiche absente = vide), lue en une fois. `next --if-state <empreinte>` la recalcule **sous le verrou**, avant toute écriture (même pas la surcharge `--engine`) : si elle diffère, rien ne tourne, erreur `state_changed`.
   - `status <slug> --json` : tout ce qu'une page montre en un objet (titre, libellé de la recette, `context_labels`, marqueur `not_stated`, étapes avec libellé, mission, moteur, modèle, pause, résumé, champs, erreur, blocage, coût, fichiers `trace` / `retry_trace`, fiche, `pending`, `files`, `final_output`, `recipe_error` si la recette a changé — sans échouer — , `fingerprint`, `max_budget_usd`) et `locked`, sonde non bloquante et sans écriture du verrou (`flock` partagé sur un `.lock` existant, relâché aussitôt ; pas de `.lock`, pas de verrou).
   - `--json` (ou `--json-errors`, accepté aussi avant la commande) : une erreur attendue sort en `{"error": code, "message": …}` sur la sortie standard, code de sortie 1 ; l'erreur est la dernière ligne (le texte de progression de `next` peut la précéder). Codes : `error`, `locked`, `state_changed`, `not_found`, `engine`, `timeout`, `parse`, `leak`, `missing_input`, `unexpected` (exception non prévue). Un code de sortie **2** vient d'argparse : une ligne de commande mal construite, donc un bug de l'appelant. Tous les arguments positionnels peuvent suivre un `--`.
-  - `recipes --json` : les recettes du dépôt qui ont un bloc `workflow` (id, `label`, `description_fr`, icône, version, étapes avec `label`, pause effective et caractère facultatif). `new --title "…"` garde un titre lisible dans `state.json` ; `new --json` répond `{"slug", "title"}`. `output_document(texte)` (fonction, pour la page) rend le document d'une sortie d'étape : ce qui précède ses blocs de fin, sans l'en-tête YAML éventuel, rendu à part.
+  - `recipes --json` : les recettes du dépôt qui ont un bloc `workflow` (id, `label`, `description_fr`, icône, version, `format`, `warnings` — le format absent, lu comme 1 —, étapes avec `label`, pause effective et caractère facultatif), et `formats`, les formats acceptés. `status --json` donne `recipe_format` ; une recette passée à un format inconnu laisse le dossier lisible, avec la raison dans `recipe_error`. `new --title "…"` garde un titre lisible dans `state.json` ; `new --json` répond `{"slug", "title"}`. `output_document(texte)` (fonction, pour la page) rend le document d'une sortie d'étape : ce qui précède ses blocs de fin, sans l'en-tête YAML éventuel, rendu à part.
   - **SIGTERM pendant `next`** devient une sortie propre : l'appel au moteur en cours (groupe de processus à part) est tué, l'étape reste `running` (`retry` la reprend) et le verrou se libère.
 
 Avant de lancer des étapes, `next` affiche ce qu'il va faire — étapes, moteur, modèle, taille des entrées — et demande confirmation (sauf `--yes`) : les abonnements Codex et Antigravity sont petits.

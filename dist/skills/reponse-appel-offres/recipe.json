@@ -1,11 +1,12 @@
 {
   "id": "reponse-appel-offres",
   "label": "Réponse à appel d'offres",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "summary_fr": "Du cahier des charges à une offre vérifiée : analyse, questions à l’acheteur, décision, rédaction et contrôle de conformité.",
   "description_fr": "Conduit une réponse à appel d'offres de bout en bout — lecture du cahier des charges, questions à l'acheteur, go / no-go, stratégie de réponse, rédaction de l'offre, contrôle de conformité, mise en forme — chaque étape isolée, le dossier de consultation lu seulement par la première, une fiche de contexte validée par l'humain, et des pauses pour les réponses de l'acheteur et les décisions. Déclenche quand une consultation, un appel d'offres ou un cahier des charges reçu appelle une réponse complète. Déclenche sur \"on répond à cet appel d'offres\", \"prépare notre réponse à ce cahier des charges\", \"on y va ou pas sur cette consultation\", \"monte la réponse à cet AO\". Ne fait pas seulement l'analyse du cahier des charges — voir `analyse-cdc` — ni seulement l'offre — voir `offre-commerciale` ; pour une demande client informelle, voir `brief-client`.",
   "icon": "⇶",
   "workflow": {
+    "format": 1,
     "context_sheet": [
       "buyer",
       "objective",

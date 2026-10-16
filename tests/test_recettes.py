@@ -183,6 +183,9 @@ def mutations(fm):
     variant(lambda f: f["workflow"]["steps"][0].pop("produces_context_sheet"))
     variant(lambda f: f["workflow"].update(steps=[]))
     variant(lambda f: f.update(requires=f["requires"] + ["ix-skills:does-not-exist"]))
+    variant(lambda f: f["workflow"].pop("format"))
+    variant(lambda f: f["workflow"].update(format=2))
+    variant(lambda f: f["workflow"].update(format="un"))
     return out
 
 
@@ -197,7 +200,7 @@ class WorkflowCheckParityTests(unittest.TestCase):
 
         with mock.patch.object(self.build, "_skill_exists", exists):
             theirs = self.build.validate_workflow(fm, body)
-        mine = parcours.workflow_errors(fm, body, exists)
+        mine = parcours.workflow_errors(fm, body, exists, require_format=True)
         self.assertEqual(len(mine), len(theirs), f"build.py: {theirs}\nparcours.py: {mine}")
         return mine
 
@@ -218,6 +221,26 @@ class WorkflowCheckParityTests(unittest.TestCase):
     def test_a_skill_missing_from_the_body_is_an_error_for_both(self):
         fm, body = self.build.parse_skill(REPO / "skills" / "brief-client.md")
         self.assertTrue(self.compare(fm, body.replace("`ix-skills:brief`", "brief")))
+
+    def test_build_py_wants_format_1(self):
+        fm, body = self.build.parse_skill(REPO / "skills" / "brief-client.md")
+        self.assertEqual(fm["workflow"]["format"], 1)
+        self.assertEqual(self.compare(fm, body), [])
+        missing = copy.deepcopy(fm)
+        missing["workflow"].pop("format")
+        self.assertEqual(self.compare(missing, body), ["pas de champ format dans le bloc workflow : la recette est lue comme "
+                                                       "format 1 (ajoutez « format: 1 » en tête du bloc workflow)"])
+        with mock.patch.object(self.build, "_skill_exists", lambda ref: True):
+            self.assertIn("ajoutez « format: 1 »", self.build.validate_workflow(missing, body)[0])
+            for value in (2, "deux"):
+                newer = copy.deepcopy(fm)
+                newer["workflow"]["format"] = value
+                newer["workflow"]["steps"][1]["pause"] = "later"   # format 1's rules say nothing of another format
+                errors = self.build.validate_workflow(newer, body)
+                self.assertEqual(len(errors), 1, errors)
+                self.assertIn("mettez à jour build.py et la page de suivi", errors[0])
+        # a personal recipe without format is valid for the page (read as format 1)
+        self.assertEqual(parcours.workflow_errors(missing, body, lambda ref: True), [])
 
     def test_the_blank_model_passes_build_py(self):
         fm, body = parcours.parse_recipe_text(recettes.TEMPLATE)
@@ -1010,6 +1033,53 @@ class ContributionTests(RecettesTestCase):
             self.assertEqual(recettes.github_slug(url), "amiel-35/ix-recipes")
         for url in ("/tmp/x.git", "https://gitlab.com/a/b.git", "https://github.com.evil.io/a/b"):
             self.assertIsNone(recettes.github_slug(url))
+
+
+# ---------------------------------------------------------------------------
+# Recipe format (docs/format-recette.md §2bis): personal recipes
+# ---------------------------------------------------------------------------
+class PersonalRecipeFormatTests(RecettesTestCase):
+    def format_of(self, text):
+        fm, _ = parcours.parse_recipe_text(text)
+        return fm["workflow"].get("format", "absent")
+
+    def test_every_recipe_created_from_the_page_declares_format_1(self):
+        self.assertEqual(self.format_of(recettes.TEMPLATE), 1)
+        slug = self.rok("draft-new", "--template", "--title", "Modèle")["slug"]
+        self.assertEqual(self.format_of((self.draft_path(slug) / "recipe.md").read_text(encoding="utf-8")), 1)
+        forked = self.rok("fork", "brief-client")
+        self.assertEqual(self.format_of(self.rok("show", forked["slug"])["text"]), 1)
+        built = recettes.proposal_to_recipe(recettes.normalize_proposal(PROPOSAL), "par-blocs")
+        self.assertEqual(self.format_of(built), 1)
+        self.assertNotIn(parcours.FORMAT_MISSING, parcours.check_recipe_text(built)["contribution"])
+
+    def test_a_file_written_by_the_designer_without_format_gets_it(self):
+        without = recettes.TEMPLATE.replace("\n  format: 1\n", "\n", 1)
+        self.assertEqual(self.format_of(without), "absent")
+        self.assertEqual(recettes.with_format(without), recettes.TEMPLATE)
+        self.assertEqual(recettes.with_format(recettes.TEMPLATE), recettes.TEMPLATE)   # already there: unchanged
+        deeper = without.replace("\n  ", "\n    ")
+        self.assertEqual(self.format_of(recettes.with_format(deeper)), 1)
+        self.assertEqual(recettes.with_format("pas d'en-tête"), "pas d'en-tête")
+        slug = self.draft_with()
+        (self.fake / "concepteur-recette.md").write_text(proposal_output(), encoding="utf-8")
+        self.rok("design", slug, "--engine", "fake")
+        (self.fake / "concepteur-recette.md").write_text(WRITTEN.format(recipe=without), encoding="utf-8")
+        self.rok("design", slug, "--mode", "write", "--engine", "fake")
+        self.assertEqual((self.draft_path(slug) / "recipe.md").read_text(encoding="utf-8"), recettes.TEMPLATE)
+
+    def test_the_check_of_a_personal_recipe(self):
+        good = parcours.check_recipe_text(recettes.TEMPLATE)
+        self.assertEqual((good["errors"], good["format_error"], good["recipe"]["format"]), ([], None, 1))
+        without = parcours.check_recipe_text(recettes.TEMPLATE.replace("\n  format: 1\n", "\n", 1))
+        self.assertEqual(without["errors"], [])   # read as format 1: it can be tested and kept
+        self.assertEqual((without["recipe"]["format"], without["recipe"]["format_declared"]), (1, False))
+        self.assertIn(parcours.FORMAT_MISSING, without["contribution"])   # the repository wants it written
+        newer = parcours.check_recipe_text(recettes.TEMPLATE.replace("\n  format: 1\n", "\n  format: 2\n", 1)
+                                           .replace("pause: validate", "pause: later"))
+        self.assertEqual(newer["errors"], [newer["format_error"]])   # only the format: the rest is format 1's rules
+        self.assertIn("mettez la page à jour", newer["format_error"])
+        self.assertIsNone(newer["recipe"])
 
 
 if __name__ == "__main__":

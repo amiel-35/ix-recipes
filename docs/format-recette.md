@@ -1,6 +1,6 @@
 # Format d'une recette-workflow
 
-Spécification v1 du 2026-10-14. Une **recette-workflow** est un skill d'ix-recipes qui enchaîne plusieurs skills (atomes d'ix-skills ou autres recettes) pour un travail récurrent. Elle reprend ce qu'ix-memory avait éprouvé (chaîne courte, mission locale par étape, handoff borné, pauses humaines) et corrige ce qui n'avait jamais marché (le brief de départ qui pollue les étapes aval, `handoff.fields` jamais appliqué).
+Spécification v1 du 2026-10-14 : c'est le **format 1** des recettes (§2bis, champ `format` ajouté le 2026-10-16). Une **recette-workflow** est un skill d'ix-recipes qui enchaîne plusieurs skills (atomes d'ix-skills ou autres recettes) pour un travail récurrent. Elle reprend ce qu'ix-memory avait éprouvé (chaîne courte, mission locale par étape, handoff borné, pauses humaines) et corrige ce qui n'avait jamais marché (le brief de départ qui pollue les étapes aval, `handoff.fields` jamais appliqué).
 
 Une recette qui n'enchaîne rien reste un skill ordinaire : c'est le cas par défaut.
 
@@ -24,6 +24,7 @@ En plus du frontmatter canonique (CLAUDE.md §3), une recette-workflow déclare 
 category: workflow
 requires: [ix-skills:cadrage, ix-skills:questioning, ix-skills:brief]
 workflow:
+  format: 1                       # le format de la recette (§2bis) ; en tête du bloc
   context_sheet: [entities, objective, constraints, recipient, format, deadlines, named_solutions]
   context_labels:                 # facultatif : nom de chaque rubrique pour l'utilisateur, en français
     entities: "Acteurs"
@@ -48,6 +49,7 @@ workflow:
 
 `build.py` vérifie mécaniquement :
 
+- `format` est présent et vaut un format connu (1) — sinon il s'arrête là : les règles qui suivent sont celles du format 1 ;
 - chaque `skill` figure dans `requires`, et chaque id de `requires` existe (dans ix-recipes, ou dans `../ix-skills/skills/` quand le dépôt voisin est présent) ;
 - les ids d'étape sont uniques ;
 - seule la première étape reçoit `brief`, et c'est elle qui porte `produces_context_sheet` ; sa pause vaut `validate` ou `answers` ;
@@ -61,6 +63,43 @@ workflow:
 - `model`, s'il est donné, vaut `sonnet`, `opus` ou `haiku`.
 
 Le frontmatter est la version lisible par machine : c'est elle que l'exécuteur du lot 2 lira.
+
+## 2bis. Le format (`workflow.format`)
+
+**Ce que c'est.** Un nombre entier, en tête du bloc `workflow`, qui dit selon quelles règles lire ce bloc. Le **format 1** est ce document. Il ne se confond ni avec `version` (la version de la recette elle-même, en x.y.z, qui change à chaque retouche), ni avec la version du plugin, ni avec celle de la page de suivi ([interface.md](interface.md) §4).
+
+**Qui le lit, et ce qu'il fait d'un format qu'il ne connaît pas.**
+
+| Lecteur | Format connu | Format plus récent, ou inconnu | Pas de champ `format` |
+|---|---|---|---|
+| `build.py` (recettes du dépôt) | accepté | erreur, seule (le reste n'est pas vérifié) : « mettez à jour build.py et la page de suivi » | erreur : « ajoutez « format: 1 » » |
+| l'exécuteur (`parcours.py`) | accepté | refus : `new`, `next`, `plan` échouent ; `status` reste lisible et dit pourquoi dans `recipe_error` ; `recipes` écarte la recette (une recette personnelle va dans `personal_problems`) | lu comme format 1, avec un avertissement (`new`, `recipes` ; `warnings` dans `recipes --json`) |
+| la page de suivi | acceptée | la même chose, par l'exécuteur ; « Mes recettes » dit de mettre la page à jour plutôt que de modifier la recette ; créer un dossier répond 422 `recipe_refused` | lue comme format 1 ; la proposition au dépôt demande d'ajouter le champ |
+
+Un format plus récent donne « cette recette est au format N, plus récent que ce que la page de suivi sait lire (format 1) : mettez la page à jour (installez la dernière version du plugin ix-recipes) ». Toute autre valeur (un texte, un décimal comme `1.0`, `0`, un booléen, `"1"` entre guillemets) est un format inconnu, avec le même conseil. Les formats acceptés sont annoncés par `parcours.py formats [--json]` et `GET /api/version` (`recipe_formats`) ; `state.json` garde le format de la recette à la création d'un dossier (`recipe_format`).
+
+**Une recette sans champ `format` est lue comme format 1** (tranché le 2026-10-16). Raisons : toute recette écrite avant ce champ l'a été selon les règles du format 1, le seul qui existait — il n'y a donc aucune ambiguïté sur ce qu'elle veut dire ; la refuser casserait les recettes personnelles et les dossiers déjà créés sans rien protéger ; et la règle est figée : l'absence de champ voudra dire « format 1 » pour toujours, même quand le format 2 existera — une recette au format 2 devra le déclarer. L'avertissement suffit à le faire ajouter. Le dépôt, lui, exige le champ (`build.py`) : une recette publiée dit son format explicitement.
+
+**À la création.** Toute recette créée depuis la page reçoit `format: 1` : le modèle, la recette écrite à partir des blocs, la copie d'une recette fournie, le fichier écrit par le concepteur (ajouté en tête du bloc `workflow` s'il l'a omis). Une recette déjà rangée dans le recueil n'est jamais réécrite d'office.
+
+**Quand changer de format.** On passe au format suivant quand une recette écrite selon les nouvelles règles serait **mal jouée sans le dire** par l'exécuteur actuel, ou une recette actuelle par le nouvel exécuteur :
+
+- un champ existant change de sens (`receives` qui accepterait autre chose qu'un champ nommé, `pause` dont une valeur ferait autre chose) ;
+- un champ nouveau que l'exécuteur ne peut pas ignorer sans trahir la recette : imbrication de recettes, étapes en parallèle, boucle, embranchement conditionnel, une nouvelle valeur de `pause` ;
+- un champ est retiré ou rendu obligatoire.
+
+On reste au format 1 pour un champ facultatif qu'un exécuteur plus ancien peut ignorer sans danger (un libellé, une indication d'affichage : c'est ainsi que `label`, `context_labels` et `summary_fr` sont arrivés), pour un contrôle de plus dans `build.py`, ou pour un changement du corps du SKILL.md. Un tel ajout se documente dans ce document, daté.
+
+**Passer au format 2.** Dans l'ordre :
+
+1. écrire ce que change le format 2 dans ce document (une section par format, le format 1 restant décrit) ;
+2. l'exécuteur apprend à jouer les deux (`RECIPE_FORMATS = (1, 2)`) : une recette au format 1 continue de tourner telle quelle, sans migration forcée ;
+3. `build.py` accepte 2 — dans les deux copies, ix-recipes et ix-skills (CLAUDE.md §7) ;
+4. la page relève sa version (mineure : elle lit un format de plus) ; `RECIPE_FORMAT`, le format écrit à la création, passe à 2 quand le modèle, les blocs et `concepteur-recette` savent l'écrire ;
+5. une recette du dépôt passe au format 2 seulement si elle utilise ce qu'il apporte ;
+6. le CHANGELOG le dit (section « Page » et notes du plugin).
+
+Cesser de lire le format 1 serait un changement majeur de la page, annoncé à l'avance et accompagné d'une conversion des recettes.
 
 ## 3. Les pauses
 

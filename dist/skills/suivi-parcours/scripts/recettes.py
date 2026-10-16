@@ -167,6 +167,7 @@ compatible:
 - mystaffy
 requires: [ix-skills:cadrage, ix-skills:brief]
 workflow:
+  format: 1
   context_sheet: [objective, constraints, recipient, deadlines]
   context_labels:
     objective: "Objectif"
@@ -584,6 +585,7 @@ def personal_summary(args, path, full=False):
         "id": path.stem, "label": recipe.get("label") or path.stem, "version": recipe.get("version"),
         "summary": recipe.get("summary") or recipe.get("description") or "",
         "steps": len(recipe.get("steps") or []), "errors": check["errors"],
+        "format_error": check.get("format_error"),
         "shadowed": path.stem in P.plugin_recipe_ids(),
         "updated": datetime.fromtimestamp(path.stat().st_mtime).isoformat(timespec="seconds"),
         "contribution": public_contribution(contribution),
@@ -930,6 +932,29 @@ def step_drift(proposal, recipe_text):
     return drift
 
 
+WORKFLOW_LINE_RE = re.compile(r"^workflow:[ \t]*(?:#.*)?$", re.M)
+
+
+def with_format(text):
+    """A recipe file written by the designer, with `format:` added at the head of its workflow block when the
+    engine left it out: every recipe created from the page declares its format (docs/format-recette.md §2bis).
+    Anything else is left as written (a block written inline, a front matter that does not parse)."""
+    match = P.FRONTMATTER_RE.match(text)
+    if not match:
+        return text
+    try:
+        fm = P.load_yaml_subset(match.group(1))
+    except P.YamlSubsetError:
+        return text
+    workflow = fm.get("workflow") if isinstance(fm, dict) else None
+    line = WORKFLOW_LINE_RE.search(text, 0, match.end(1))
+    if not isinstance(workflow, dict) or "format" in workflow or not line:
+        return text
+    rest = text[line.end():match.end(1)].split("\n")
+    indent = next((len(l) - len(l.lstrip(" ")) for l in rest if l.strip() and not l.lstrip().startswith("#")), 2) or 2
+    return text[:line.end()] + f"\n{' ' * indent}format: {P.RECIPE_FORMAT}" + text[line.end():]
+
+
 def cmd_design(args):
     directory = draft_dir(args, args.draft)
     engine = args.engine or "claude"
@@ -986,6 +1011,7 @@ def cmd_design(args):
             block = recipe_block(body)
             recipe = block[2] if block else None
             if recipe:
+                recipe = with_format(recipe)
                 keep_version(directory / P.DRAFT_FILE)
                 P.write_atomic(directory / P.DRAFT_FILE, recipe)
                 design["drift"] = step_drift(proposal, recipe)
@@ -1134,8 +1160,8 @@ def proposal_to_recipe(proposal, recipe_id):
         "id": recipe_id, "label": title, "version": "0.1.0",
         "description_fr": summary, "summary_fr": summary, "icon": "⇢", "category": "workflow",
         "requires": list(dict.fromkeys(s["skill"] for s in steps)),
-        "workflow": {"context_sheet": [k for k, _ in sheet], "context_labels": {k: v for k, v in sheet},
-                     "steps": wf_steps},
+        "workflow": {"format": P.RECIPE_FORMAT, "context_sheet": [k for k, _ in sheet],
+                     "context_labels": {k: v for k, v in sheet}, "steps": wf_steps},
     }
     rows = "\n".join(f"| {i + 1} | {s['id']} | `{s['skill']}` | {(s['role'] or s['label'] or '').replace('|', '/')} | "
                      f"{', '.join(w['receives'])} | {', '.join(s['produces'])} | {w['pause']} |"

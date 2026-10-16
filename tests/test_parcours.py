@@ -1219,7 +1219,7 @@ class SkillResolutionTests(ParcoursTestCase):
 class EngineTests(ParcoursTestCase):
     MESSAGE = "THE-WHOLE-MESSAGE " * 5000  # far beyond any argv limit
 
-    def call(self, engine, run, model="opus", step_id="cadrage"):
+    def call(self, engine, run, model="opus", step_id="cadrage", events=None):
         calls = []
 
         def spy(argv, stdin, cwd, timeout):
@@ -1228,9 +1228,10 @@ class EngineTests(ParcoursTestCase):
             return run(argv, stdin, cwd, timeout)
 
         skill = {"references": self.tmp / "no-references"}
-        with mock.patch.object(parcours, "run_process", spy):
+        with mock.patch.object(parcours, "run_process", spy), \
+                mock.patch.object(parcours, "codex_preflight", return_value=[Path("/opt/prefix")]):
             result = parcours.call_engine(engine, self.MESSAGE, model=model, timeout=77, budget=5.0,
-                                          skill=skill, step_id=step_id, kind="main")
+                                          skill=skill, step_id=step_id, kind="main", events=events)
         self.assertEqual(len(calls), 1)
         return calls[0], result
 
@@ -1275,12 +1276,66 @@ class EngineTests(ParcoursTestCase):
 
         call, (text, cost) = self.call("codex", run)
         argv = call["argv"]
-        self.assertEqual(argv[:7], ["codex", "exec", "-s", "read-only", "--skip-git-repo-check", "--ephemeral", "-C"])
-        self.assertEqual(argv[7], str(call["cwd"]))
-        self.assertEqual(argv[8], "-o")
-        self.assertNotEqual(Path(argv[9]).parent, call["cwd"])
+        self.assertEqual(argv[:15], [
+            "codex", "exec", "--ignore-user-config", "--disable", "apps", "--skip-git-repo-check",
+            "--ephemeral", "--json",
+            "-c", 'default_permissions="ixetape"',
+            "-c", 'permissions.ixetape.filesystem={":minimal"="read", "/opt/prefix"="read", ":workspace_roots"={"."="read"}}',
+            "-C", str(call["cwd"]), "-o"])
+        self.assertNotEqual(Path(argv[15]).parent, call["cwd"])
+        self.assertEqual(len(argv), 16)
+        # any sandbox option would turn the permission profile off (the old sandbox reads the whole disk)
+        self.assertFalse({"-s", "--sandbox", "--full-auto", "--dangerously-bypass-approvals-and-sandbox"} & set(argv))
+        self.assertFalse(any("sandbox_mode" in a for a in argv))
         self.assertEqual((text, cost), ("CODEX-ANSWER", 0.0))
         self.assert_safe_call(call)
+
+    CODEX_EVENTS = "\n".join(json.dumps(e) for e in [
+        {"type": "thread.started", "thread_id": "t"},
+        {"type": "item.completed", "item": {"type": "command_execution", "command": "/bin/zsh -lc 'cat references/guide.md'",
+                                            "aggregated_output": "REF", "exit_code": 0, "status": "completed"}},
+        {"type": "item.completed", "item": {"type": "command_execution", "command": "/bin/zsh -lc 'cat absent.md'",
+                                            "aggregated_output": "", "exit_code": 1, "status": "failed"}},
+        {"type": "item.completed", "item": {"type": "agent_message", "text": "FROM-EVENTS"}},
+        {"type": "turn.completed", "usage": {}},
+    ]) + "\nnot json\n"
+
+    def test_codex_events_are_kept_as_the_trace_of_its_commands(self):
+        events = self.tmp / "02-questioning.events.jsonl"
+        events.write_text("an older call\n", encoding="utf-8")
+
+        def run(argv, stdin, cwd, timeout):
+            Path(argv[argv.index("-o") + 1]).write_text("CODEX-ANSWER", encoding="utf-8")
+            return 0, self.CODEX_EVENTS, ""
+
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            _, (text, _) = self.call("codex", run, events=events)
+        self.assertEqual(text, "CODEX-ANSWER")
+        self.assertEqual(events.read_text(encoding="utf-8"), self.CODEX_EVENTS)
+        self.assertEqual(parcours.versioned_name(events).name, "02-questioning.events.v2.jsonl")
+        self.assertEqual((self.tmp / "02-questioning.events.v1.jsonl").read_text(encoding="utf-8"), "an older call\n")
+        self.assertIn("2 commande(s)", out.getvalue())
+        self.assertEqual(parcours.codex_commands(self.CODEX_EVENTS), [
+            {"command": "/bin/zsh -lc 'cat references/guide.md'", "exit_code": 0, "status": "completed"},
+            {"command": "/bin/zsh -lc 'cat absent.md'", "exit_code": 1, "status": "failed"}])
+
+    def test_codex_without_its_output_file_falls_back_on_the_last_message_of_its_events(self):
+        _, (text, _) = self.call("codex", lambda *a: (0, self.CODEX_EVENTS, ""))
+        self.assertEqual(text, "FROM-EVENTS")
+        with self.assertRaisesRegex(parcours.EngineError, "vide"):
+            self.call("codex", lambda *a: (0, "", ""))
+
+    def test_codex_is_not_started_when_its_preflight_fails(self):
+        calls = []
+        skill = {"references": self.tmp / "none"}
+        with mock.patch.object(parcours, "run_process", lambda *a: calls.append(a)), \
+                mock.patch.object(parcours, "codex_preflight", side_effect=parcours.EngineError("profil refusé")):
+            with self.assertRaisesRegex(parcours.EngineError, "profil refusé"):
+                parcours.call_engine("codex", "m", model=None, timeout=5, budget=5.0,
+                                     skill=skill, step_id="x", kind="main")
+        self.assertEqual(calls, [])
+
 
     def test_agy_takes_the_prompt_attached_to_p_and_reads_stdout_only(self):
         # agy has no text-on-stdin mode: the prompt must be attached as -p=<message>.
@@ -1351,6 +1406,129 @@ class EngineTests(ParcoursTestCase):
         self.assertIn("délai", err)
         self.assertEqual(self.step("cadrage")["status"], "failed")
         self.assertEqual(self.state()["calls"], {"claude": 1})
+
+    def test_a_codex_step_keeps_its_events_next_to_its_trace(self):
+        self.new()
+        self.write_fakes("brief-client")
+        output = (self.fake / "cadrage.md").read_text(encoding="utf-8")
+        events = json.dumps({"type": "item.completed", "item": {"type": "command_execution", "command": "ls",
+                                                                 "exit_code": 0, "status": "completed"}})
+
+        def run(argv, stdin, cwd, timeout):
+            Path(argv[argv.index("-o") + 1]).write_text(output, encoding="utf-8")
+            return 0, events + "\n", ""
+
+        with mock.patch.object(parcours, "run_process", run), \
+                mock.patch.object(parcours, "codex_preflight", return_value=[]):
+            self.ok("next", "demo", "--yes", "--engine", "codex")
+        self.assertEqual((self.pdir / "demo" / "01-cadrage.events.jsonl").read_text(encoding="utf-8"), events + "\n")
+        status = json.loads(self.ok("status", "demo", "--json"))
+        step = next(s for s in status["steps"] if s["id"] == "cadrage")
+        self.assertEqual((step["events"], step["retry_events"]), ("01-cadrage.events.jsonl", None))
+
+
+class CodexProfileTests(ParcoursTestCase):
+    """The checks that run before each Codex call (no codex is executed: subprocess.run is mocked)."""
+
+    def fake_codex(self, version="codex-cli 0.155.1", sandbox=None):
+        """A subprocess.run stand-in: `--version`, and `sandbox … -- /bin/cat <inside> <outside>`."""
+        seen = []
+
+        def run(argv, **kwargs):
+            seen.append(argv)
+            if argv[1:] == ["--version"]:
+                return subprocess.CompletedProcess(argv, 0, version + "\n", "")
+            files = [Path(a) for a in argv[argv.index("--") + 2:]]
+            return (sandbox or self.honest)(argv, files)
+
+        return run, seen
+
+    @staticmethod
+    def honest(argv, files):
+        inside, outside = files
+        return subprocess.CompletedProcess(argv, 1, inside.read_text(), f"cat: {outside}: Operation not permitted\n")
+
+    def work(self):
+        work = self.tmp / "parcours-x" / "work"
+        work.mkdir(parents=True)
+        return work
+
+    def preflight(self, run, which="/opt/homebrew/bin/codex", realpath=None):
+        with mock.patch.object(parcours.subprocess, "run", run), \
+                mock.patch.object(parcours.shutil, "which", return_value=which), \
+                mock.patch.object(parcours, "codex_install_roots", return_value=[Path("/opt/homebrew")]):
+            return parcours.codex_preflight(self.work())
+
+    def test_a_profile_that_holds_lets_codex_run(self):
+        run, seen = self.fake_codex()
+        self.assertEqual(self.preflight(run), [Path("/opt/homebrew")])
+        sandbox = seen[1]
+        self.assertEqual(sandbox[1:4], ["sandbox", "-P", "ixetape"])
+        self.assertIn('default_permissions="ixetape"', sandbox)
+        inside, outside = (Path(a) for a in sandbox[-2:])
+        self.assertEqual(outside.parent, inside.parent.parent)   # next to the step's folder, like input.md would be
+        self.assertFalse(inside.exists() or outside.exists())    # removed before Codex starts
+
+    def test_an_old_codex_is_refused_before_anything_runs(self):
+        run, seen = self.fake_codex(version="codex-cli 0.120.0")
+        with self.assertRaisesRegex(parcours.EngineError, r"0\.120\.0.*0\.155\.1"):
+            self.preflight(run)
+        self.assertEqual(len(seen), 1)   # only --version
+
+    def test_a_profile_that_reads_next_to_the_folder_is_refused(self):
+        def reads_all(argv, files):
+            return subprocess.CompletedProcess(argv, 0, "".join(f.read_text() for f in files), "")
+        run, _ = self.fake_codex(sandbox=reads_all)
+        with self.assertRaisesRegex(parcours.EngineError, "ne tient pas"):
+            self.preflight(run)
+
+    def test_a_profile_codex_does_not_understand_is_refused(self):
+        def unknown(argv, files):
+            return subprocess.CompletedProcess(argv, 2, "", "error: unexpected argument '-P' found\n")
+        run, _ = self.fake_codex(sandbox=unknown)
+        with self.assertRaisesRegex(parcours.EngineError, "refusé.*-P.*sans protection"):
+            self.preflight(run)
+
+    def test_codex_missing_from_path(self):
+        with mock.patch.object(parcours.shutil, "which", return_value=None):
+            with self.assertRaisesRegex(parcours.EngineError, "introuvable : codex"):
+                parcours.codex_preflight(self.work())
+
+    def test_install_roots_open_the_prefix_of_the_command_and_of_its_target(self):
+        prefix = self.tmp / "brew"
+        real = prefix / "Caskroom" / "codex" / "9.9.9" / "bin" / "codex"
+        real.parent.mkdir(parents=True)
+        real.write_text("#!/bin/sh\n")
+        (prefix / "bin").mkdir()
+        (prefix / "bin" / "codex").symlink_to(real)
+        roots = parcours.codex_install_roots(str(prefix / "bin" / "codex"))
+        self.assertEqual(roots, [Path(os.path.realpath(prefix))])   # the target's prefix is inside it
+
+        npm = self.tmp / "node" / "lib" / "node_modules" / "codex" / "bin" / "codex.js"
+        npm.parent.mkdir(parents=True)
+        npm.write_text("")
+        other = self.tmp / "elsewhere" / "bin"
+        other.mkdir(parents=True)
+        (other / "codex").symlink_to(npm)
+        self.assertEqual(parcours.codex_install_roots(str(other / "codex")), [
+            Path(os.path.realpath(self.tmp / "elsewhere")),
+            Path(os.path.realpath(self.tmp / "node" / "lib" / "node_modules" / "codex"))])
+
+    def test_install_roots_never_open_the_home_folder(self):
+        home = self.tmp / "home"
+        (home / "bin").mkdir(parents=True)
+        (home / "bin" / "codex").write_text("")
+        (home / "codex").write_text("")
+        with mock.patch.object(parcours.Path, "home", return_value=home):
+            # ~/bin/codex: its prefix would be the home folder, only ~/bin is opened
+            self.assertEqual(parcours.codex_install_roots(str(home / "bin" / "codex")),
+                             [Path(os.path.realpath(home / "bin"))])
+            with self.assertRaisesRegex(parcours.EngineError, "dossier personnel"):
+                parcours.codex_install_roots(str(home / "codex"))
+
+    def test_profile_paths_are_quoted_for_toml(self):
+        args = parcours.codex_profile_args([Path('/opt/a "b"')])
+        self.assertIn('"/opt/a \\"b\\""="read"', args[3])
 
 
 class PlanAndAccountingTests(ParcoursTestCase):

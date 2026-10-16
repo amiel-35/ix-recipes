@@ -1,0 +1,10 @@
+# agy --disable-slash-commands -p=<consigne>   (cwd : <essai>/work)
+error: Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 69h44m7s.
+AGY_ERROR: {"short_error":"RESOURCE_EXHAUSTED (code 429): Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 69h44m7s.","status":"RESOURCE_EXHAUSTED","error_code":429,"code_kind":"http","retryable":true,"error_id":"3bfd6ea2-5783-435a-b9cc-cf3b7b532e9e-1"}
+
+# agy --disable-slash-commands --model gemini-3.8-flash-low -p=<consigne>
+error: Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 69h43m45s.
+AGY_ERROR: {"short_error":"RESOURCE_EXHAUSTED (code 429): Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 69h43m45s.","status":"RESOURCE_EXHAUSTED","error_code":429,"code_kind":"http","retryable":true,"error_id":"ce6970ab-5b49-4335-a75e-9afa5508a863-1"}
+
+# vibe -p --output text < consigne   (cwd : <essai>/work)
+Error: API error occurred: Status 402. Body: {"object":"error","message":"Vibe budget exhausted.","type":"billing_vibe_budget_exhausted","param":null,"code":"2304","raw_status_code":402}

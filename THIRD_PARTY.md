@@ -8,8 +8,8 @@ Règle pour la suite : avant de reprendre quoi que ce soit d'un autre dépôt, v
 
 ## anthropics/knowledge-work-plugins (Anthropic)
 
-- **Source :** https://github.com/anthropics/knowledge-work-plugins, état du 2026-03-13 (commit `7b2ea8ea53095665fc1dae68602bf64a57faffab`)
-- **Licence :** Apache License 2.0, copie dans [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt). Le dépôt n'a pas de fichier NOTICE.
+- **Source :** https://github.com/anthropics/knowledge-work-plugins, état du 2026-03-13 (commit `7b2ea8ea53095665fc1dae68602bf64a57faffab`) ; état du 2026-10-15 (commit `33eeda1`) pour `nda-draft`. Vérifié le 2026-10-16 : les quatre fichiers sources repris en mars n'ont pas changé depuis `7b2ea8ea`.
+- **Licence :** Apache License 2.0, copie dans [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt). Le dépôt n'a pas de fichier NOTICE (vérifié le 2026-10-16 ; depuis avril 2026, le fichier LICENSE racine porte une dizaine de lignes parasites après le texte Apache, sans effet sur les termes).
 - **Skills adaptés :**
 
   | Skill ix-recipes | Fichier source | Ce qui en est repris |
@@ -18,6 +18,7 @@ Règle pour la suite : avant de reprendre quoi que ce soit d'un autre dépôt, v
   | `system-design` | `engineering/skills/system-design/SKILL.md` | Les cinq étapes et leur ordre : exigences, conception d'ensemble, approfondissement, montée en charge et fiabilité, compromis |
   | `tech-debt` | `engineering/skills/tech-debt/SKILL.md` | Les trois axes notés de 1 à 5 et la formule Priorité = (Impact + Risque) × (6 − Effort) |
   | `ticket-triage` | `customer-support/skills/ticket-triage/SKILL.md` | Les définitions P1 à P4 ; « la cause racine détermine la catégorie » ; dans le doute, monter en priorité |
+  | `nda-draft` (depuis 1.2.0) | `legal/skills/triage-nda/SKILL.md`, état du 2026-10-15 (commit `33eeda1e8fd856455b05479d13a0f85b5f803744`) | Les positions par défaut d'un NDA : durée des discussions et survie des obligations, degré de soin, confirmation écrite des divulgations orales, clause de « residuals » à refuser, repli de la non-sollicitation à 12 mois. Repris pour la rédaction et non pour le tri, et adapté au droit français (clause pénale admise, art. 1210 C. civ., clause attributive de juridiction) |
 
 - **Modifications :** chaque skill a été condensé (de 1 700–2 000 mots à environ 300 pour `feature-spec` et `ticket-triage`), réécrit dans le gabarit ix (rôle, règle absolue, entrées, méthode, contraintes, format de sortie, définition de fini), rédigé en français puis traduit en anglais, débarrassé des connecteurs propres à Claude, et complété de règles maison (sortie nulle « RAS », séparation faits / hypothèses). Chaque fichier modifié porte une mention en fin de corps.
 - `code-review` et `contract-review`, issus du même dépôt, ont été retirés d'ix-recipes en 2.0.0 : la source fait mieux, et Claude Code a déjà un `/code-review` intégré.

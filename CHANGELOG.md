@@ -2,6 +2,46 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.11.0: domain skills rewritten after Anthropic's skill-writing guidance, merges, output format
+
+- README: the install prompt names version 2.11.0.
+- **Decisions** on the open questions of the 2026-10-16 review, recorded in `docs/revue-skills-metier.md`.
+- **Merges**: `cgv-checker` is merged into `contrat-fournisseur` (2.0.0), which now reads supplier contracts, GTC / ToS
+  and SaaS terms from a given position, with clause sets as annexes (`partials/clauses_cgv.md`,
+  `clauses_contrat_fournisseur.md`, `clauses_saas_donnees.md`); `product-spec` is merged into `feature-spec` (2.0.0),
+  which now covers screens, view states and the data model. `cgv-checker` and `product-spec` stay one version as
+  hand-overs, so existing installs keep working.
+- **Output format**: every rewritten skill gets a short default output skeleton (summary first, named table columns,
+  facts / hypotheses / to-verify labels, actions with owner and date), because the bench showed form was the weak point.
+- **Open reading lists**: every checklist now ends by checking what the document's subject calls for beyond the list
+  (the bench showed a list makes models miss what they would see without it, e.g. the Data Act on SaaS terms).
+- **Enriched**: `strategie-prix` 2.0.0 (pricing models, value metric, willingness to pay, break-even volume, pricing
+  law; it prepares options and `decision` decides; category `research`), `mockup` 2.0.0 (fidelity levels, imposed
+  brand guide, WCAG 2.2 AA baseline, French formats; adapted ideas from anthropics/skills `frontend-design`).
+- `contrat-emploi` 1.3.0: labour law moved to `partials/droit_contrat_travail.md`; modes analyse, generation and
+  revision defined. `people-review` 1.4.0: category `production`, no calibration session. `analyse-entretien` 1.2.0:
+  annual and career-path interviews only.
+- `tests/cas-skills/banc.py`: compares with no skill, across model and effort settings, with cost, form criteria
+  and judges from several vendors (claude, codex, agy).
+
+Same release, first part (developed as 2.9.0 on its branch, renumbered at merge):
+
+- **Grid and analysis** (`docs/etat-de-l-art-skills.md`): Anthropic's skill-authoring guide, skill-creator and
+  recent prompting guidance, compared with anthropics/knowledge-work-plugins (why its skills are longer, and
+  when that length is knowledge or filler); one analysis line for each of the 47 domain skills; per-family
+  rewrite sheets in `docs/fiches-reecriture/`.
+- **46 domain skills rewritten** (minor version bump each): every rule carries its reason instead of a bare
+  "do not"; domain knowledge the model would get wrong is added (formulas, default positions, French and EU
+  law checked on Légifrance / EUR-Lex / CNIL and dated 2026-10-16, including 2026 changes); `.mystaffy.json`
+  parameters are defined in the body; short examples where the form matters. Legal skills cite an article only
+  when it is in their table or certain. `entretien-professionnel` is not rewritten here (its 2.0.1 came separately, in 2.10.1). Points that depend on an open question of the 2026-10-16 review are left as they were and listed.
+- **New shared annexes** `partials/transverse_anti_biais.md` and `partials/transverse_debrief.md`: the text
+  `interview-loop-planner` and `interview-guide-recruteur` used to copy inline (329 → 101 and 172 → 98 body lines).
+- `contrat-fournisseur` no longer promises drafting (it analyses, buyer side); README aligned, as for
+  `cgv-checker`, `compliance-checklist`, `lettre-cadrage-disciplinaire`, `offboarding-structure` and `org-design-brief`.
+- `THIRD_PARTY.md`: the passages adapted from anthropics/knowledge-work-plugins (commit `33eeda1`), skill by skill.
+- **Test cases** in `tests/cas-skills/` (one or more per skill) and a before/after bench, `tests/cas-skills/banc.py`,
+  that plays each case several times per model and has each output graded blind.
 ## 2026-10-16 — plugin 2.10.1: entretien-professionnel follows law 2025-989
 
 - `entretien-professionnel` 2.0.1: the professional interview becomes the *entretien de

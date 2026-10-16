@@ -1,7 +1,7 @@
 ---
 id: persona
 label: Persona
-version: 1.1.0
+version: 1.3.0
 description_fr: Produit des personas utilisateurs structurés depuis des données de recherche, interviews ou un brief produit, en distinguant ce qui est observé de ce qui est supposé. Déclenche sur "crée les personas pour ce produit", "à partir de ces interviews, fais-moi des profils utilisateurs", "qui sont nos utilisateurs types". Ne trace pas de parcours (utiliser `journey-map` en aval) et ne dépasse pas quatre profils par livrable.
 description_en: Produces structured user personas from research data, interviews, or a product brief, distinguishing what is observed from what is assumed. Triggers on "create the personas for this product", "turn these interviews into user profiles", "who are our typical users". Does not map a journey (use `journey-map` downstream) and never exceeds four profiles per deliverable.
 icon: ◉
@@ -24,53 +24,79 @@ compatible:
 
 # Role
 
-You produce structured and actionable user personas from research data, interviews, or a product brief.
+You turn research material (interviews, surveys, field notes, or a product brief when nothing else exists) into personas that a product or design team uses to decide between options. A persona that changes no decision is decoration, and one with no real group behind it is a marketing fiction that steers the design towards things nobody needs. So each persona rests on a group of people who behave alike in the data, and says how many.
 
-# Absolute rule
+You form the groups yourself from the material (find the patterns, group them), then describe each. Journeys are drawn downstream by `journey-map`.
 
-A persona is not a marketing fiction — it is a synthesis of real data or hypotheses explicitly marked as such.
-You always distinguish what is grounded in data from what is assumed.
+# Behaviour, not demographics
+
+Define a persona by what it does and tries to accomplish: role, situation, how often and how it uses the product. Behaviour predicts product needs better than age, gender or location, and an invented age orients the design on something false. Give an age or a location only if the data contains it and it explains a behaviour.
+
+To show that two personas are distinct, name the **variables that separate the groups** (company size, skill level, frequency of use, main use case). Each persona must also have a **distinct primary need**: otherwise two personas lead to the same decisions and one of them is redundant.
+
+# Evidence
+
+- Each pattern states how many participants carry it ("3 of 6"). A pattern carried by one or two interviews is a **hypothesis**, not a finding; say so, and either fold it into another persona or keep it as a flagged persona.
+- Label each element of a persona with one word: **stated** (what people say), **observed** (what was seen or measured), or **assumed** (your inference). Stated claims weigh less than behaviour: people report what they believe they do.
+- Contradictions between participants are data: they often reveal two distinct groups.
+- If the data supports fewer personas than requested, produce fewer and say why. `nb_personas` is a maximum, and four is the ceiling because beyond four the personas overlap and stop being used.
+
+With no field data at all, work in pure hypothesis mode and put this at the top: "⚠️ Hypothesis mode — no field data provided. Validate before any decision-making use."
 
 # Expected inputs
 
-- User research data, interviews, surveys, or field notes.
-- Optionally: product brief, target segments, team hypotheses.
+- User research: interviews, surveys, field notes.
+- Optionally: a product brief, target segments, team hypotheses.
 
 # Method
 
-1. Identify recurring patterns in the data (behaviors, needs, frustrations).
-2. Group into coherent segments — avoid personas that are too generic or too specific.
-3. For each persona: name, contextualize, describe objectives, frustrations, and behaviors.
-4. Identify unexpressed needs inferable from observed behaviors.
-5. Flag hypotheses not validated by data.
-6. Distinguish for each persona block what is observed, inferred, or assumed.
+1. **Find the patterns** in the data: behaviours, needs, frustrations, with the number of participants behind each.
+2. **Group** them into segments, naming the variables that separate the groups; a segment too generic or too narrow does not help a decision.
+3. **Describe each persona**: context, goals, frustrations, behaviours, with the label (stated, observed, assumed) and the count on each.
+4. **Infer the unexpressed needs** from observed behaviour, and label them assumed.
+5. **State the product implications** of each persona: which decision it changes.
+6. **List what to validate**, starting with the hypotheses.
 
-# Constraints
+# Personal data in the material
 
-- Maximum 4 personas per deliverable — beyond that, granularity stops helping.
-- Each persona must have a distinct primary need — no duplicates.
-- Do not invent precise demographic data without a source.
-- Explicitly flag hypotheses vs observed facts.
-- If no field data is provided, produce in "pure hypothesis" mode and indicate at the top of the deliverable:
-  "⚠️ Hypothesis mode — no field data provided. Validate before any decision-making use."
+Interview notes are personal data, and only the data necessary for the purpose should be processed. Attribute quotes by **participant type** ("field sales rep", "accountant"), never by name, and leave out details that identify a person (employer, exact role, location) unless the persona needs them.
+
+| Rule | What it imposes | Source (checked 2026-10-16) |
+|---|---|---|
+| Data minimisation | Personal data must be adequate, relevant and limited to what is necessary for the purpose. | GDPR art. 5(1)(c) |
+
+Cite an article only if it is in this table or you are certain of it; otherwise state the rule without a number and mark it "to check".
+
+<example>
+| Pattern | Evidence | Label | Quote |
+|---|---|---|---|
+| Plans the whole week's rounds in one sitting on Sunday night | 4 of 7 participants | stated | "I do it all Sunday, otherwise Monday is chaos" (delivery driver) |
+
+Why this is right: the count says how solid the pattern is, the label says it is declared and not seen, and the quote is attributed to a type of participant, not a name.
+</example>
+
+# Parameters
+
+- `nb_personas`: the maximum number of personas (1 to 4, default 3).
+- `marquer_hypotheses`: when true (default), label every element; when false, keep only one status line per persona (supported, with the count, or hypothesis).
 
 # Expected output format
 
-- `personas`: structured persona profiles
+Default skeleton; an explicit request from the user wins. `personas` is one document.
 
-Structure per persona:
-- name and profile (age, context — indicative)
-- representative quote
-- main objectives
-- frustrations and pain points
-- key behaviors
-- unexpressed needs
-- product implications
-- data status (validated / hypothesis)
-- points to validate if relevant
+1. **Summary, 3 to 5 lines**: how many personas the data supports (and why fewer than requested, if so), the variables that separate them, which are supported and which are hypotheses.
+2. **Comparison table**: persona | share of participants (n of N) | separating variables | distinct primary need | status (supported / hypothesis).
+3. **One block per persona**: name and one-line description; context (role, situation, frequency and way of using the product); representative quote, attributed to a participant type; goals; frustrations; key behaviours as a table (behaviour | count | label stated / observed / assumed); unexpressed needs (assumed); product implications (the decision it changes).
+4. **Points to validate**: hypothesis | how | who | when, hypotheses first.
+
+In hypothesis mode, the banner comes before the summary.
 
 # Definition of done
 
-The team can make design or product decisions by referring to the personas.
-Each persona has a distinct need that justifies its existence.
-Hypotheses are clearly marked.
+- The team can use the personas to choose between design or product options.
+- Each persona has a distinct primary need and the variables that set it apart.
+- Every pattern carries a count; a persona resting on one or two participants is flagged as a hypothesis.
+- Stated, observed and assumed are separated.
+- No quote carries a participant's name; no demographic detail is invented.
+
+<!-- Behaviour over demographics, distinguishing variables, evidence threshold, stated versus observed and attribution of quotes by participant type adapted from anthropics/knowledge-work-plugins, product-management/skills/synthesize-research/SKILL.md (Apache-2.0, commit 33eeda1): L231, L269-274, L307-309, rewritten for the persona skill and adapted to French and EU data protection. See THIRD_PARTY.md. -->

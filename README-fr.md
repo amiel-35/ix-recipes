@@ -44,16 +44,16 @@
 
 ix-recipes fait avec Claude le travail de fond des métiers du conseil, des RH, du juridique, de la finance et du produit : répondre à un appel d'offres, transformer une demande client floue en brief, écrire une fiche de poste, relire un contrat… Les plus gros travaux sont des **recettes** : une suite d'étapes que vous suivez dans une page sur votre ordinateur, qui s'arrête chaque fois qu'il faut votre avis.
 
-**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page. Prompt pour la version **2.8.0** :
+**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page. Prompt pour la version **2.11.0** :
 
 ```text
-Installe ix-recipes (version 2.8.0 ou plus récente) sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
+Installe ix-recipes (version 2.11.0 ou plus récente) sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
 (https://github.com/amiel-35/ix-recipes). Fais tout toi-même, sans me demander de redémarrer :
 1. Ajoute la marketplace amiel-35/plugins (si ça échoue faute de clé SSH GitHub, utilise
    https://github.com/amiel-35/plugins.git), puis installe ix-skills@amiel-35 et
    ix-recipes@amiel-35. S'ils sont déjà installés, mets-les à jour ; s'ils viennent d'une autre
    marketplace, garde celle-là et ne crée pas de doublon. Vérifie la version installée
-   d'ix-recipes : si elle est plus ancienne que 2.8.0, mets à jour la marketplace et le plugin.
+   d'ix-recipes : si elle est plus ancienne que 2.11.0, mets à jour la marketplace et le plugin.
 2. Vérifie python3 (3.9 ou plus) ; s'il manque, dis-moi quoi installer et arrête-toi.
 3. Lance en arrière-plan le script skills/suivi-parcours/scripts/interface.py du plugin
    ix-recipes installé (sous ~/.claude/plugins/cache/, la version la plus récente) ; il ouvre
@@ -217,7 +217,7 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 
 **Ce qu'il ne fait pas :** Ne prépare pas un entretien à venir (`performance-review-helper`, `entretien-professionnel`) et ne porte aucun jugement sur la personne.
 
-**Quand l'utiliser :** Après un entretien annuel, pour en tirer une synthèse actionnable pour le manager ou les RH.
+**Quand l'utiliser :** Après un entretien annuel ou un entretien de parcours professionnel, pour en tirer une synthèse actionnable pour le manager ou les RH. Pas pour les notes d'entretien de recrutement.
 
 ---
 
@@ -257,21 +257,19 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 
 #### `contrat-emploi` — Contrat de travail
 
-**Ce qu'il fait :** Analyse ou rédige un contrat de travail, une offre d'embauche ou un avenant RH. Surface les clauses clés et les points d'attention. Produit un langage contractuel conforme.
+**Ce qu'il fait :** Trois modes : analyser un contrat reçu, rédiger un contrat, une offre ou un avenant, réviser un projet existant clause par clause. S'appuie sur le droit du travail en annexe (`droit_contrat_travail` : période d'essai, CDD, forfait jours, temps partiel, non-concurrence, mobilité, offre ou promesse) et corrige les demandes qui le heurtent en disant pourquoi.
 
 **Ce qu'il ne fait pas :** Ne fournit pas de conseil juridique. Nécessite une validation par un avocat en droit du travail avant utilisation.
 
-**Quand l'utiliser :** Rédaction d'un nouveau contrat, revue d'un contrat reçu, ou préparation d'un avenant (changement de poste, temps partiel…).
-
----
+**Quand l'utiliser :** Rédaction d'un nouveau contrat, revue d'un contrat reçu, correction d'un projet, ou préparation d'un avenant.
 
 #### `lettre-cadrage-disciplinaire` — Lettre de cadrage disciplinaire
 
-**Ce qu'il fait :** Rédige un projet de courrier de cadrage disciplinaire factuel et proportionnel — documentant les faits observés, leur impact et le changement de comportement attendu. Calibré à la gravité de la situation.
+**Ce qu'il fait :** Rédige un projet de courrier disciplinaire (avertissement, blâme, mise à pied…) à partir de faits datés, après avoir fixé la sanction visée, la procédure qu'elle déclenche et ses délais. Calibré à la sanction visée. Couvre aussi la mise en demeure pour abandon de poste, qui n'est pas une sanction.
 
-**Ce qu'il ne fait pas :** Ne produit pas une lettre de sanction formelle. Doit être validé par un avocat en droit du travail avant envoi.
+**Ce qu'il ne fait pas :** Ne rédige pas la convocation à l'entretien préalable (il dit quand elle est nécessaire et ce qu'elle contient). Doit être validé par un avocat en droit du travail avant envoi : tout écrit qui reproche une faute est en principe une sanction, et les mêmes faits ne peuvent plus être sanctionnés ensuite.
 
-**Quand l'utiliser :** Quand un entretien documenté est nécessaire avant une procédure disciplinaire formelle, ou pour créer une trace écrite d'un problème comportemental.
+**Quand l'utiliser :** Quand des faits fautifs précis et datés appellent une sanction, avant d'envoyer quoi que ce soit au salarié.
 
 ---
 
@@ -279,7 +277,7 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 
 **Ce qu'il fait :** Structure un plan d'offboarding couvrant la passation de connaissances, la checklist administrative, le guide d'entretien de sortie et la cartographie des risques de continuité.
 
-**Quand l'utiliser :** Dès qu'un collaborateur donne sa démission. Plus tôt on commence, meilleur est le transfert de connaissances.
+**Quand l'utiliser :** Dès qu'un départ est décidé, quel qu'en soit le mode (démission, rupture conventionnelle, licenciement, fin de CDD). Plus tôt on commence, meilleur est le transfert de connaissances.
 
 ---
 
@@ -287,7 +285,7 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 
 **Ce qu'il fait :** Formalise une cible organisationnelle avec diagnostic de l'état actuel, rationale du design, risques humains et séquencement — avant toute annonce ou mise en œuvre. Surface ce que la nouvelle structure résout, les nouveaux risques qu'elle crée, et comment phaser la transition.
 
-**Quand l'utiliser :** Avant d'annoncer une réorganisation. Utile aussi comme pré-travail avant d'impliquer l'équipe de direction dans le design.
+**Quand l'utiliser :** Avant la consultation du CSE et avant toute annonce d'une réorganisation. Utile aussi comme pré-travail avant d'impliquer l'équipe de direction dans le design.
 
 </details>
 
@@ -309,16 +307,9 @@ Outils pré-juridiques — tous nécessitent une validation professionnelle avan
 
 ---
 
-#### `cgv-checker` — Clauses déséquilibrées dans les CGV/CGU
+#### `cgv-checker` — Fusionné dans `contrat-fournisseur`
 
-**Ce qu'il fait :** Identifie les clauses déséquilibrées, inhabituelles ou sensibles dans des conditions générales de vente ou d'utilisation, selon la position de lecture (acheteur, utilisateur, abonné).
-
-**Ce qu'il ne fait pas :** N'évalue pas la validité juridique complète des CGV. Ne remplace pas un conseil juridique.
-
-**Quand l'utiliser :** Avant d'accepter les CGV d'un fournisseur ou d'une plateforme significatifs, ou lors de la rédaction de ses propres CGV.
-
-
----
+**Depuis 2.0.0 :** renvoie vers `contrat-fournisseur`, position « client » ou « fournisseur » et type de document « CGV / CGU ». L'identifiant reste une version pour que les installations existantes continuent de fonctionner.
 
 #### `conformite-rgpd` — Checklist conformité RGPD
 
@@ -332,7 +323,7 @@ Outils pré-juridiques — tous nécessitent une validation professionnelle avan
 
 #### `compliance-checklist` — Checklist de conformité légale
 
-**Ce qu'il fait :** Génère une checklist de conformité couvrant les obligations légales, contractuelles et réglementaires — RGPD, droit du travail, réglementation sectorielle — depuis un contexte projet ou un document.
+**Ce qu'il fait :** Génère une checklist de conformité couvrant les obligations légales, contractuelles et réglementaires — consommation, numérique, accessibilité, IA, cybersécurité, facturation, réglementation sectorielle — depuis un contexte projet ou un document, chaque obligation avec sa date d'application et son exemption de taille. Le RGPD est renvoyé à `conformite-rgpd`.
 
 **Ce qu'il ne fait pas :** Ne remplace pas un conseil juridique ou réglementaire professionnel. Nécessite toujours une validation experte avant utilisation opérationnelle.
 
@@ -350,13 +341,13 @@ Outils pré-juridiques — tous nécessitent une validation professionnelle avan
 
 ---
 
-#### `contrat-fournisseur` — Contrat fournisseur côté acheteur
+#### `contrat-fournisseur` — Lecture de contrat et de CGV
 
-**Ce qu'il fait :** Analyse **ou** rédige un contrat fournisseur ou prestataire depuis la perspective de l'acheteur. Surface les conditions déséquilibrées, les clauses à renégocier (SLA, responsabilité, résiliation, pénalités, exclusivité, renouvellement) et les risques contractuels. Peut aussi produire un premier projet quand aucun contrat n'existe encore.
+**Ce qu'il fait :** Lit un contrat fournisseur ou de prestation, des CGV / CGU ou des conditions de service SaaS, depuis une position donnée (client ou acheteur, fournisseur qui publie ses conditions, utilisateur), en droit français. Qualifie d'abord les parties, puis signale les clauses déséquilibrées, abusives ou manquantes, classées par priorité, chacune avec une réécriture proposée et une position de repli. Lit en annexe les clauses propres au type de document (`clauses_cgv`, `clauses_contrat_fournisseur`, `clauses_saas_donnees`) et vérifie ce que le sujet appelle en plus (données, portabilité, secteur). Reprend `cgv-checker` depuis 2.0.0.
 
-**Ce qu'il ne fait pas :** Ne remplace pas un conseil juridique. Nécessite une validation professionnelle avant utilisation.
+**Ce qu'il ne fait pas :** Ne rédige pas un contrat. Ne remplace pas un conseil juridique.
 
-**Quand l'utiliser :** Avant de signer un contrat fournisseur, avant d'entrer en négociation, ou lors de la rédaction des conditions initiales d'une nouvelle relation fournisseur.
+**Quand l'utiliser :** Avant de signer ou d'accepter des conditions, avant une négociation, ou pour relire ses propres CGV avant de les publier.
 
 </details>
 
@@ -397,13 +388,13 @@ Chiffrer, expliquer et défendre une décision d'argent — écarts budgétaires
 
 ---
 
-#### `strategie-prix` — Stratégie de prix avec trade-offs
+#### `strategie-prix` — Options de prix, critères pour décider
 
-**Ce qu'il fait :** Formule une stratégie de pricing en liant valeur perçue, segmentation client et trade-offs business. Compare les modèles de prix (freemium, value-based, usage-based, tiered…) et produit une recommandation avec hypothèses explicites.
+**Ce qu'il fait :** Prépare une décision de prix : relie valeur perçue, segments et métrique de valeur ; compare les modèles tarifaires (abonnement, usage, paliers, freemium…) avec leurs conditions d'usage ; propose des méthodes pour mesurer le consentement à payer ; calcule le volume d'équilibre d'un changement de prix ; rappelle le droit français des prix. Il éclaire et propose une pente, sans trancher : `decision` (ix-skills) tranche ensuite.
 
-**Ce qu'il ne fait pas :** Ne produit pas une grille tarifaire. Ne recommande pas un prix sans énoncer les hypothèses qui le sous-tendent.
+**Ce qu'il ne fait pas :** Ne fixe pas la grille tarifaire et ne choisit pas à la place de l'utilisateur.
 
-**Quand l'utiliser :** Lancement produit, repositionnement, ou pression concurrentielle sur les prix. Nécessite du contexte sur l'offre, les clients cibles et les benchmarks concurrentiels si disponibles.
+**Quand l'utiliser :** Lancement, repositionnement, passage à un autre modèle de prix, ou pression concurrentielle.
 
 </details>
 
@@ -487,23 +478,17 @@ Du besoin cadré au document que l'équipe produit attend — PRD, specs, user s
 
 ---
 
-#### `feature-spec` — Spécification fonctionnelle au niveau feature
+#### `feature-spec` — Spécification fonctionnelle
 
-**Ce qu'il fait :** Produit une spec fonctionnelle complète pour une feature — user stories, exigences MoSCoW, critères d'acceptation, cas limites et métriques de succès.
+**Ce qu'il fait :** Produit la spec d'une fonctionnalité ou d'un écran : problème, périmètre et non-objectifs, user stories, exigences MoSCoW, critères d'acceptation avec un cas négatif, états de chaque vue et cas limites de contenu, modèle de données, métriques avec seuil et date. Découpe en documents compagnons quand la spec grossit. Reprend `product-spec` depuis 2.0.0.
 
-**Quand l'utiliser :** Une feature est validée et doit être spécifiée pour l'ingénierie. Plus granulaire qu'un PRD — opère au niveau d'une feature ou d'un epic.
+**Quand l'utiliser :** Une fonctionnalité est validée et doit être spécifiée pour l'ingénierie. Plus fin qu'un PRD.
 
----
+> Hiérarchie : `brief` → `prd` (le quoi et le pourquoi) → `feature-spec` (le comment).
 
-#### `product-spec` — Spec actionnable allégée
+#### `product-spec` — Fusionné dans `feature-spec`
 
-**Ce qu'il fait :** Produit une spec actionnable depuis un brief ou un besoin cadré. Plus légère qu'un PRD, plus structurée qu'un brief — une spec rapide sur laquelle les équipes peuvent agir.
-
-**Quand l'utiliser :** Vous avez besoin de quelque chose entre un brief et un PRD complet. Bien adapté aux petites features, MVPs ou contextes d'itération rapide.
-
-> Hiérarchie : `brief` → `prd` (le quoi et le pourquoi) → `product-spec` / `feature-spec` (le comment, de plus en plus détaillé).
-
----
+**Depuis 2.0.0 :** renvoie vers `feature-spec`, qui couvre aussi les écrans, les parcours, les états de chaque vue et le modèle de données. L'identifiant reste une version pour les installations existantes.
 
 #### `reformulation-us` — Réécriture de user stories mal rédigées
 
@@ -583,11 +568,11 @@ Concevoir et entretenir du logiciel — architecture, dette technique, triage su
 
 #### `mockup` — Mockup HTML autonome
 
-**Ce qu'il fait :** Produit un mockup HTML autonome et présentable depuis un brief, une spec ou des références visuelles. Un livrable visuel pour l'alignement et le feedback.
+**Ce qu'il fait :** Produit un mockup HTML autonome et présentable depuis un brief, une spec ou des références visuelles, au niveau de fidélité choisi (basse, moyenne, haute). Respecte une charte imposée, montre les états (vide, chargement, erreur), marque visiblement le provisoire, applique un socle d'accessibilité (WCAG 2.2 AA) et les formats français.
 
 **Ce qu'il ne fait pas :** Pas un prototype fonctionnel. Pas du code prêt pour la production.
 
-**Quand l'utiliser :** Vous avez besoin de quelque chose de visuel pour présenter à des stakeholders, valider avec des utilisateurs ou communiquer un layout avant d'investir en design ou ingénierie.
+**Quand l'utiliser :** Pour présenter à des parties prenantes, valider avec des utilisateurs ou fixer une mise en page avant d'investir en design ou en ingénierie.
 
 </details>
 
@@ -810,7 +795,7 @@ claude plugin install ix-skills@amiel-35
 
 Installer un plugin depuis une seule marketplace (`ix-recipes@ix-recipes` ou `ix-recipes@amiel-35`, pas les deux), sinon il apparaît en double ; les mises à jour passent alors par `claude plugin marketplace update amiel-35`. Testé dans Claude Code ; pas encore testé avec « Ajouter depuis un dépôt » de Cowork : pour Cowork, garder la marketplace propre à chaque dépôt, ci-dessous.
 
-Les 11 recettes RH qui déclarent des références par famille de métier (`partials/metier_*.md`, voir [Structure](#structure) ; tous les skills RH sauf `contrat-emploi`, `lettre-cadrage-disciplinaire` et `org-design-brief`) reçoivent leur dossier `references/` avec le plugin : rien de plus à faire.
+Les skills qui déclarent des références (`partials/`, voir [Structure](#structure) : les 11 skills RH à références par famille de métier, `contrat-emploi` avec le droit du travail, les deux skills d'entretien de recrutement avec leurs annexes, `contrat-fournisseur` avec ses jeux de clauses) reçoivent leur dossier `references/` avec le plugin : rien de plus à faire.
 
 > Transition : jusqu'à ix-skills 4.0.0, ces skills étaient aussi livrés dans ix-skills. Mettre ix-skills à jour pour ne pas les voir en double. ix-recipes 2.0.0 retire `code-review` et `contract-review` (voir `CHANGELOG.md`).
 
@@ -883,7 +868,7 @@ Ces cibles ne contiennent que `skill.md` et `manifest.json`, pas les dossiers `r
 
 ### GPT / Gemini / autre LLM (interfaces de chat)
 
-Pour les interfaces de chat simples, sans CLI : copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter YAML est ignoré sans effet de bord. Pour un skill qui déclare `references` dans son frontmatter (les skills RH), coller aussi le `partials/metier_<famille>.md` correspondant (`metier_tech`, `metier_rh`…), sinon le skill demandera le référentiel de compétences de l'organisation.
+Pour les interfaces de chat simples, sans CLI : copier-coller le contenu de `skills/<id>.md` comme system prompt. Le frontmatter YAML est ignoré sans effet de bord. Pour un skill qui déclare `references` dans son frontmatter (les skills RH), coller aussi le `partials/metier_<famille>.md` correspondant (`metier_tech`, `metier_rh`…), sinon le skill demandera le référentiel de compétences de l'organisation. Les deux skills d'entretien de recrutement déclarent aussi `transverse_anti_biais` (et `transverse_debrief` pour `interview-loop-planner`) : à coller aussi, sinon ils n'en gardent que les règles essentielles. De même, `contrat-emploi` déclare `droit_contrat_travail`, et `contrat-fournisseur` les jeux de clauses `clauses_cgv`, `clauses_contrat_fournisseur` et `clauses_saas_donnees` (coller celui du type de document).
 
 ---
 
@@ -892,7 +877,7 @@ Pour les interfaces de chat simples, sans CLI : copier-coller le contenu de `ski
 ```
 ix-recipes/
 ├── skills/                 ← source canonique (un .md + .mystaffy.json par skill)
-├── partials/               ← références par famille de métier (metier_*.md), copiées dans references/ des skills qui les déclarent
+├── partials/               ← références par famille de métier (metier_*.md), annexes d'entretien (transverse_*.md), droit du travail et jeux de clauses, copiées dans references/ des skills qui les déclarent
 ├── scripts/
 │   └── install-codex.sh    ← installateur Codex CLI
 ├── dist/                   ← racine du plugin, commité

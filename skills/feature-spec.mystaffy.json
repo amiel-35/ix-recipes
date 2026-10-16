@@ -9,12 +9,44 @@
       "type": "enum",
       "required": false,
       "default": "complet",
-      "help": "Profondeur de la spec produite.",
+      "help": "Profondeur de la spec produite. 'contexte_produit' ajoute utilisateurs, dependances et risques (ancienne valeur 'prd', renommee en 2.0.0).",
       "values": [
         "light",
         "complet",
-        "prd"
+        "contexte_produit"
       ]
+    },
+    "mode_spec": {
+      "label": "Mode de specification",
+      "type": "enum",
+      "required": false,
+      "default": "auto",
+      "help": "Cadre le niveau de la spec : une feature (auto), un ecran, un parcours ou un lot de specs.",
+      "values": [
+        "auto",
+        "ecran",
+        "flux",
+        "lot"
+      ]
+    },
+    "niveau_decoupage": {
+      "label": "Niveau de decoupage",
+      "type": "enum",
+      "required": false,
+      "default": "moyen",
+      "help": "Controle le niveau de separation des artifacts compagnons.",
+      "values": [
+        "faible",
+        "moyen",
+        "fort"
+      ]
+    },
+    "inclure_mermaid": {
+      "label": "Inclure mermaid",
+      "type": "boolean",
+      "required": false,
+      "default": true,
+      "help": "Ajouter un schema Mermaid par parcours qui comporte une branche."
     },
     "inclure_user_stories": {
       "label": "Inclure user stories",
@@ -45,11 +77,14 @@
   "ui": {
     "simple_fields": [
       "format_spec",
+      "mode_spec",
       "inclure_user_stories",
       "inclure_criteres_acceptation",
       "inclure_metriques"
     ],
     "advanced_fields": [
+      "niveau_decoupage",
+      "inclure_mermaid",
       "contexte_technique"
     ]
   },

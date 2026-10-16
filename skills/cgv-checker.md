@@ -1,9 +1,9 @@
 ---
 id: cgv-checker
 label: Analyse CGV / CGU
-version: 1.2.1
-description_fr: Repère les clauses déséquilibrées, inhabituelles ou sensibles d'un CGV ou CGU selon une position de lecture donnée (client, fournisseur, utilisateur). Déclenche sur "ces CGU sont-elles équilibrées", "relis ces CGV côté client", "y a-t-il des clauses abusives dans ces conditions générales", "check ces CGU avant publication", "quels points négocier sur ces CGV fournisseur". Ne fait pas une revue clause par clause avec redlines, ni un flash rapide tous documents — voir `legal-risk-flag` — et ne remplace pas un juriste.
-description_en: Surfaces unbalanced, unusual, or sensitive clauses in GTC/ToS from a given reading position (client, supplier, user). Triggers on "are these ToS balanced", "review these terms from the client's side", "any unfair clauses in these terms of service", "check these ToS before we publish them", "what should we renegotiate in this supplier's GTC". Not a full clause-by-clause contract review with redlines, nor a quick flash across any legal document — see `legal-risk-flag` — and does not replace a lawyer.
+version: 2.0.0
+description_fr: Fusionné dans contrat-fournisseur — utiliser contrat-fournisseur. Gardait les déclencheurs "ces CGU sont-elles équilibrées", "relis ces CGV côté vendeur avant publication", "y a-t-il des clauses abusives dans ces conditions générales", "check ces CGU avant publication", "quels points négocier sur ces CGV fournisseur" (lecture des CGV / CGU en droit français selon la position client, fournisseur ou utilisateur) — ces demandes se traitent désormais avec `contrat-fournisseur`, position et type de document « CGV / CGU ».
+description_en: Merged into contrat-fournisseur — use contrat-fournisseur. Kept the triggers "are these ToS balanced", "review these terms from the seller's side before we publish", "any unfair clauses in these terms of service", "check these ToS before we publish them", "what should we renegotiate in this supplier's GTC" (reading GTC / ToS under French law from the client, supplier or user position) — these requests are now handled with `contrat-fournisseur`, reading position and document type "GTC / ToS".
 icon: ⊞
 domain: legal
 category: critique
@@ -23,49 +23,10 @@ compatible:
 - mystaffy
 ---
 
-# Role
+# Merged into `contrat-fournisseur`
 
-You analyze general terms of sale or use and surface unbalanced, unusual, or sensitive clauses depending on the reading position.
-You help orient a more thorough review without replacing a lawyer.
+This skill no longer carries its own method. Follow `contrat-fournisseur` with the reading position the user gave (`client`, `fournisseur` or `utilisateur`, default `client`) and the document type `cgv_cgu` ("CGV / CGU"); for SaaS or cloud conditions, the type `saas_cloud`.
 
-# Absolute rule
+Why: reading standard terms and reading a negotiated contract are the same gesture (liability, term, price, data, ranked points with a wording and a fallback) over a shared body of knowledge. Keeping two skills made the clause sets drift apart, and the terms-only grid missed what the contract skill knew (Data Act, art. 28 GDPR on SaaS conditions). The standard-terms clause set (qualification of the parties, black and grey lists, withdrawal, B2B payment) is now `references/clauses_cgv.md` in `contrat-fournisseur`.
 
-You never replace professional legal advice.
-You must always recall this limit in the deliverable and never affirm that a clause is valid or invalid with certainty without reservation.
-You explicitly distinguish the observed text, the cautious interpretation, and the proposed negotiation point.
-If no clause is unbalanced for the reading position, you output « RAS — no unbalanced clause for this reading position. » and stop — balanced terms are a finding.
-
-# Expected inputs
-
-- brief
-- input_artifacts[]
-- GTC, ToS, or equivalent document text
-- reading position if provided
-
-# Method
-
-1. Identify whether the document is being read from the client, supplier, or user side.
-2. Note the structural clauses: liability, payment, termination, warranties, data, disputes, limitation of recourse.
-3. Test each structural clause against the reading position: balanced, unusual, or under-protective. A clause that passes yields no finding.
-4. Assess the overall risk level and points to negotiate or verify.
-5. Produce a usable summary for a more thorough review.
-
-# Constraints
-
-- Do not produce a generic analysis outside the provided text.
-- Do not present a negotiation point as settled.
-- Do not forget liability limitation, termination, and applicable law clauses.
-- Flag if the document is incomplete or if certain sections are missing.
-
-# Expected output format
-
-- `gtc_analysis`: summary of key clauses, sensitive points, and overall risk level
-- `negotiation_points`: clauses to discuss, correct, or have reviewed
-
-# Definition of done
-
-- Sensitive clauses are identified and explained.
-- The overall risk level is explicitly formulated.
-- The deliverable explicitly recalls that it does not replace professional legal advice.
-- Legal ambiguities remain visible.
-- « RAS » is a complete deliverable when no clause is unbalanced for the reading position.
+This redirect stays for one version so requests that name `cgv-checker` still arrive. Do not analyse the document from this page.

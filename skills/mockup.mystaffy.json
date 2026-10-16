@@ -17,12 +17,24 @@
         "marketing"
       ]
     },
-    "niveau_fidelite": {
-      "label": "Niveau de fidelite",
+    "fidelite": {
+      "label": "Fidelite",
+      "type": "enum",
+      "required": false,
+      "default": "moyenne",
+      "help": "Ce que la maquette montre : basse (structure, gris), moyenne (charte de base, contenu reel), haute (charte complete).",
+      "values": [
+        "basse",
+        "moyenne",
+        "haute"
+      ]
+    },
+    "proximite_reference": {
+      "label": "Proximite de la reference",
       "type": "enum",
       "required": false,
       "default": "reference",
-      "help": "Choisit entre interpretation libre et proximite avec la reference.",
+      "help": "Renomme en 2.0.0 (ancien 'niveau_fidelite') : reste proche de la reference fournie, ou la reinterprete.",
       "values": [
         "reference",
         "reinterpretation"
@@ -40,15 +52,23 @@
       "type": "text",
       "required": false,
       "help": "Orientations visuelles, references ou details d'ambiance."
+    },
+    "charte": {
+      "label": "Charte imposee",
+      "type": "text",
+      "required": false,
+      "help": "Couleurs, polices, composants imposes : respectes tels quels, avant tout choix esthetique."
     }
   },
   "ui": {
     "simple_fields": [
       "type_page",
-      "niveau_fidelite",
+      "fidelite",
+      "proximite_reference",
       "dark_mode"
     ],
     "advanced_fields": [
+      "charte",
       "consignes_visuelles"
     ]
   },

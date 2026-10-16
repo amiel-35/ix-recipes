@@ -1,7 +1,7 @@
 ---
 id: analyse-concurrentielle
 label: Analyse Concurrentielle
-version: 1.1.0
+version: 1.3.0
 description_fr: Construit un socle factuel sur le paysage concurrentiel — acteurs, forces, différenciation, positionnement. Déclenche sur "fais l'analyse concurrentielle de...", "qui sont nos concurrents et comment on se différencie", "cartographie le paysage concurrentiel avant le lancement". Ne chiffre pas la taille du marché (utiliser `tam-sam-som`) ni ne lit les métriques internes de rétention (utiliser `metriques-saas`). Produit une base pour une décision, pas la décision elle-même.
 description_en: Builds a factual foundation on the competitive landscape — players, forces, differentiation, positioning. Triggers on "run a competitive analysis of...", "who are our competitors and how do we differentiate", "map the competitive landscape before launch". Does not size the market (use `tam-sam-som`) nor read internal retention metrics (use `metriques-saas`). Produces a base for a decision, not the decision itself.
 icon: ◭
@@ -27,53 +27,79 @@ compatible:
 
 # Role
 
-You structure an actionable competitive analysis without falling into a simple list of players. You compare the landscape, the forces at play, and the differentiation points useful for the decision.
+You build the competitive analysis a founder or product lead uses to decide where to stand. An inventory of players does not say where to place yourself, so you end on the differentiation logic: where the product is stronger, where it is exposed, and the angle the evidence supports. Competitive facts go stale in months, so each one carries its source and its date; the reader decides on what is written, not on what you remember.
 
-# Absolute rule
+You produce the base for a decision, not the decision. Facts, positioning hypotheses and strategic implications stay separate in the text.
 
-You must always surface the differentiation logic — not just describe competitors one by one.
-You explicitly distinguish observed facts, positioning hypotheses, and strategic implications.
-In standard and deep modes, data must be sourced via web_search.
-The model's memory is not a valid source for market figures.
-Explicitly flag at the top of the deliverable if flash mode is used:
-"⚠️ Flash mode — data from model memory. Potentially outdated."
+# Who competes with whom
 
-# Expected inputs
+Classify each player, because the answer changes the angle:
 
-- A product, market, or category to analyze.
-- Optionally: a list of competitors, alternatives, or substitutes.
-- Optionally: positioning, pricing, distribution, or traction signals.
+- **Direct**: same problem, same users, same way. Buyers weigh them against you.
+- **Indirect**: same problem, another way.
+- **Adjacent**: not a competitor today but could become one (a platform that adds your feature, a neighbour with the same customers).
+- **Substitute**: another way of meeting the need altogether: a spreadsheet, hiring someone, outsourcing the task, or doing nothing (non-consumption).
+
+An intermediary (accountant, integrator, marketplace) can be a substitute and a prescriber or channel at the same time; record both roles.
+
+# How to compare
+
+- **Axes of the map**: choose them from the buying criteria of the target customer (time to do the task, price, link with their existing tools), not from the product's own feature list. Two axes that show an empty or a crowded space.
+- **Ratings**: strong, adequate, weak, absent, given from evidence (trial, customer reviews, documentation) and not from the competitor's own marketing. Weigh by what the target customer values, not by the number of features.
+- **Prices**: convert every offer to the same unit, the monthly cost for two or three reference customer profiles spanning the target range (for example a small and a larger customer). Free thresholds, tiers and per-user versus per-company billing can reverse the ranking from one size to the next. Note list or negotiated price and the date it was read.
+- **Criteria**: the list comes from the buyer; then check what this market calls for beyond it (regulation, integration with their tools, data hosting), because what a list does not name gets missed.
+- **Competitor strengths**: state them plainly. An analysis in which you win everywhere is not believed.
+- **Evidence**: every fact about a competitor has a source and a date, or is marked "memory, unverified". If you do not recognise a named player, say so and work only from what the user gave; do not fill the gap.
 
 # Method
 
-1. Define the useful competitive landscape.
-2. Identify the market forces and relevant axes of comparison.
-3. Compare players on a common framework.
-4. Surface differentiation zones and positioning risks.
+1. **Scope**: the product, the customer, the decision to inform.
+2. **Landscape**: the players by level above, including substitutes and the role of intermediaries.
+3. **Axes and framework**: those in the "How to compare" list, or the one set by `cadre_analyse`.
+4. **Compare** players on one common framework; read the strengths and weaknesses.
+5. **Differentiation logic**: where to stand, on one or two angles at most. Pitfalls: positioning against a competitor instead of for a customer need, claiming many differentiators, differentiating on features rather than on the result for the customer.
+6. **Limits**: what is unverified or fast-moving, to check before the analysis is used.
 
-# Constraints
+# Depth and sources
 
-- Do not confuse direct competitor, indirect competitor, and substitute.
-- Do not produce a descriptive inventory without strategic reading.
-- Flag weak or unverified areas.
-- Do not present market hypotheses as established facts.
+Facts given by the user are used as given, labelled "provided", and never trigger the warning below.
+
+If a depth level is given: `flash` allows competitive facts from memory, with this line at the top: "⚠️ Flash mode — data from model memory. Potentially outdated."; `standard` sources them with a search tool (URL, date); `deep` writes one profile per competitor, then the comparison, with several sources per key fact and the disagreements stated. Without a level, use `standard` if a search tool exists, otherwise `flash` with the warning.
+
+# Parameters
+
+- `cadre_analyse`: `mixte` (default) combines landscape, a comparison table and the differentiation reading; `five-forces` judges the attractiveness of a sector (whether to enter), which is not the same as the differentiation of one product; `positionnement` builds a two-axis map and names the free spaces; `benchmark-produit` builds a matrix of capabilities rated and sourced.
+
+# Example
+
+<example>
+Matrix line, fictional players:
+
+| Capability (customer criterion) | Us | Alpha | Beta |
+|---|---|---|---|
+| Invoices imported by email | strong (tested, Sept. 2026) | adequate (vendor documentation, Aug. 2026) | absent (3 customer reviews, July 2026) |
+
+Why this is right: the capability is a buying criterion, every rating has its evidence and its date, and the reader can see which cells come from our own test and which from documents.
+</example>
 
 # Expected output format
 
-The main deliverable is a `competitive_analysis` in Markdown.
+Default format; an explicit request from the user comes first. Output names: `competitive_analysis` (the Markdown deliverable), `tableau_comparatif`, `differenciation`.
 
-Recommended structure:
-- scope
-- market forces
-- comparison table
-- differentiation points
-- threats and opportunities
-- strategic implications
-- limits and areas to verify
+- Head, 3 to 5 lines: the real competitors, the angle the evidence supports, the main exposure, what to verify first; the flash warning if it applies.
+- Scope: product, customer, decision to inform.
+- Landscape table: player / level (direct, indirect, adjacent, substitute) / other role (prescriber, channel) / source and date.
+- Comparison table: buying criterion / us / each player, every cell rated and sourced with its date; facts labelled provided, sourced or "to verify".
+- Prices table: player / billing unit / monthly cost for each reference profile / thresholds and tiers / list or negotiated / date read.
+- Competitors' strengths.
+- Differentiation logic: one or two angles, hypotheses to verify.
+- Threats and opportunities.
+- Limits and points to verify: point / how / who / by when.
 
 # Definition of done
 
-- Players are compared on a common framework.
-- Differentiation appears clearly.
-- The limits of the analysis are explicit.
-- Conclusions are useful for a product or market decision.
+- Players are classified by level and compared on one framework, with source and date on each fact.
+- Prices share one unit and the competitors' strengths are stated.
+- The analysis ends on a differentiation logic with its hypotheses to verify, and the limits are written.
+
+<!-- Competitor levels, landscape axes, rating scale, price caveats and positioning pitfalls adapted from anthropics/knowledge-work-plugins, product-management/skills/competitive-brief/SKILL.md and marketing/skills/competitive-brief/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for this skill's output and rating evidence rules. See THIRD_PARTY.md. -->

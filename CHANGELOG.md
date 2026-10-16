@@ -2,6 +2,18 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.10.1: entretien-professionnel follows law 2025-989
+
+- `entretien-professionnel` 2.0.1: the professional interview becomes the *entretien de
+  parcours professionnel* (law 2025-989 of 24 October 2025, Labor Code L6315-1 in force since
+  31 December 2025): first year, every 4 years, 8-year review (7 years in some cases), who
+  runs it and when (employer, line manager or management, during working hours), the 3,000 €
+  top-up above 50 employees, sources with Légifrance links. Checked by an independent legal
+  review against the texts in force: the 4- and 8-year periods counted from the last interview
+  are the labour ministry's position (Q&A of 12 February 2026, question 2, Civil Code
+  art. 2222), not the law's wording; below 50 employees damages require proof of harm
+  (Cass. soc. 17 June 2026, 25-10.517).
+
 ## 2026-10-16 — plugin 2.10.0: a checking step may re-read the source (recipe format 2)
 
 ### Recipes

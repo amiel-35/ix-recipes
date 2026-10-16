@@ -1,7 +1,7 @@
 ---
 id: reponse-appel-offres
 label: Réponse à appel d'offres
-version: 1.6.0
+version: 1.6.1
 description_fr: "Conduit une réponse à appel d'offres de bout en bout — lecture du cahier des charges, questions à l'acheteur, go / no-go, stratégie de réponse, rédaction de l'offre, contrôle de conformité, mise en forme — chaque étape isolée, le dossier de consultation lu seulement par la première, une fiche de contexte validée par l'humain, et des pauses pour les réponses de l'acheteur et les décisions. Déclenche quand une consultation, un appel d'offres ou un cahier des charges reçu appelle une réponse complète. Déclenche sur \"on répond à cet appel d'offres\", \"prépare notre réponse à ce cahier des charges\", \"on y va ou pas sur cette consultation\", \"monte la réponse à cet AO\". Ne fait pas seulement l'analyse du cahier des charges — voir `analyse-cdc` — ni seulement l'offre — voir `offre-commerciale` ; pour une demande client informelle, voir `brief-client`."
 description_en: "Runs a tender response end to end — reading the specification, questions to the buyer, go / no-go, response strategy, writing the offer, compliance check, formatting — each step isolated, the tender file read only by the first, a human-validated context sheet, and pauses for the buyer's answers and the decisions. Triggers when a consultation, call for tenders or received specification calls for a full response. Triggers on \"we're answering this call for tenders\", \"prepare our response to this specification\", \"should we bid on this consultation\", \"build the response to this tender\". Does not only analyse the specification — see `analyse-cdc` — nor only write the offer — see `offre-commerciale`; for an informal client request, see `brief-client`."
 summary_fr: "Du cahier des charges à une offre vérifiée : analyse, questions à l’acheteur, décision, rédaction et contrôle de conformité."
@@ -26,6 +26,7 @@ compatible:
 - mystaffy
 requires: [ix-recipes:analyse-cdc, ix-skills:questioning, ix-skills:decision, ix-skills:brief, ix-recipes:offre-commerciale, ix-skills:controle-qualite, ix-skills:deliver]
 workflow:
+  format: 1
   context_sheet: [buyer, objective, constraints, recipient, format, deadlines, named_solutions]
   context_labels:
     buyer: "Acheteur"

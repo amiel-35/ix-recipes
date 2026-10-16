@@ -48,6 +48,7 @@ HERE = Path(__file__).resolve().parent
 PARCOURS_SCRIPT = HERE / "parcours.py"
 RECETTES_SCRIPT = HERE / "recettes.py"
 PAGE = HERE / "interface.html"
+PAGE_VERSION = "1.1.0"      # the page's own version (server + interface.html + its API), apart from the plugin's: see CHANGELOG « Page »
 DEFAULT_PORT = 8765
 TOKEN_FILE = ".interface-token"
 TOKEN_HEADER = "X-Parcours-Token"
@@ -81,6 +82,11 @@ LOG_TAIL = 100_000          # bytes of .next.log sent to the page
 QUICK_WAIT = 2.5            # seconds `next` is watched after launch, to report a refusal at once
 SYNC_TIMEOUT = 120          # seconds for the commands that do not call an engine
 STOP_GRACE = 15             # seconds between SIGTERM and SIGKILL when stopping a `next`
+
+
+def page_info():
+    """What the page is and which recipe formats it plays (its runner's), for the API and the footer."""
+    return {"version": PAGE_VERSION, "recipe_formats": list(parcours.RECIPE_FORMATS)}
 
 
 class ApiError(Exception):
@@ -260,7 +266,8 @@ class Space:
         archives = self.dir / parcours.ARCHIVES
         archived = sum(1 for e in archives.iterdir() if e.is_dir()) if archives.is_dir() else 0
         return {"parcours": items, "without_state": without_state, "broken": broken, "archived": archived,
-                "engines": self.engines, "dev": self.dev, "parcours_dir": str(self.dir), "essais": self.essais}
+                "engines": self.engines, "dev": self.dev, "parcours_dir": str(self.dir), "essais": self.essais,
+                "page": page_info()}
 
     def status(self, slug):
         self.parcours_dir(slug)
@@ -299,14 +306,18 @@ class Space:
         return self.run_json("unarchive", positionals=[slug])
 
     def recipes(self):
-        return self.run_json("recipes")
+        return dict(self.run_json("recipes"), page=page_info())
 
     def create(self, body):
         recipe, text = body.get("recipe"), body.get("text")
         title, engine = body.get("title") or "", body.get("engine")
         if not isinstance(recipe, str) or not SLUG_RE.match(recipe):
             raise ApiError(400, "bad_request", "recette invalide")
-        if recipe not in {r["id"] for r in self.recipes()["recipes"]}:
+        listing = self.recipes()
+        if recipe not in {r["id"] for r in listing["recipes"]}:
+            refused = next((p for p in listing.get("personal_problems") or [] if p.get("id") == recipe), None)
+            if refused:   # a personal recipe the runner cannot play (a newer format…): say why, not « introuvable »
+                raise ApiError(422, "recipe_refused", f"recette {recipe} : {refused['message']}")
             raise ApiError(404, "not_found", f"recette introuvable : {recipe}")
         if not isinstance(text, str) or not text.strip():
             raise ApiError(400, "bad_request", "la demande est vide : collez le texte ou déposez un fichier")
@@ -887,6 +898,9 @@ class Handler(BaseHTTPRequestHandler):
         if parts == ["recipes"]:
             self.only(method, "GET")
             return self.send_json(200, self.app.recipes())
+        if parts == ["version"]:
+            self.only(method, "GET")
+            return self.send_json(200, page_info())
         if parts and parts[0] == "parcours":
             return self.route_parcours(self.app, method, parts, query)
         raise ApiError(404, "not_found", "introuvable")
@@ -1008,7 +1022,8 @@ class Handler(BaseHTTPRequestHandler):
             css = (self.app.theme / "theme.css").read_text(encoding="utf-8").replace("</", "<\\/")
             theme = f'<style nonce="{nonce}">\n{css}\n</style>'
         html = (PAGE.read_text(encoding="utf-8").replace("{{THEME}}", theme)
-                .replace("{{NONCE}}", nonce).encode("utf-8"))
+                .replace("{{NONCE}}", nonce).replace("{{PAGE_VERSION}}", PAGE_VERSION)
+                .replace("{{RECIPE_FORMATS}}", ", ".join(str(f) for f in parcours.RECIPE_FORMATS)).encode("utf-8"))
         assets = "; font-src 'self'; img-src 'self'" if self.app.theme else ""
         csp = (f"default-src 'none'; script-src 'nonce-{nonce}'; style-src 'nonce-{nonce}'; "
                f"connect-src 'self'{assets}; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
@@ -1070,7 +1085,7 @@ def main(argv=None):
     print(f"Dossier des parcours : {server.app.dir}", flush=True)
     if server.app.dir == Path(LEGACY_DIR).expanduser().resolve() and not os.environ.get("PARCOURS_DIR"):
         print(f"(ancien emplacement : déplacez-le vers {DEFAULT_DIR} pour libérer votre dossier personnel)", flush=True)
-    print(f"Page de suivi : {url}", flush=True)
+    print(f"Page de suivi {PAGE_VERSION} : {url}", flush=True)
     print("Ctrl-C pour arrêter (une étape en cours continue sans le serveur).", flush=True)
     if not args.no_browser:
         webbrowser.open(url)

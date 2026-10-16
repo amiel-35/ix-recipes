@@ -1070,7 +1070,7 @@ class SkillResolutionTests(ParcoursTestCase):
         self.assertEqual([r["id"] for r in listed], ["brief-client", "reponse-appel-offres"])
         brief = listed[0]
         self.assertEqual(brief["label"], "Brief client")
-        self.assertEqual(brief["steps"][0], {"id": "cadrage", "label": "Cadrage de la demande", "pause": "validate", "optional": False})
+        self.assertEqual(brief["steps"][0], {"id": "cadrage", "label": "Cadrage de la demande", "pause": "validate", "optional": False, "reads_source": False})
         self.assertTrue(brief["description"])
         created = json.loads(self.ok("new", "brief-client", "--input", str(self.input_file), "--title", "  Offre   formation  ",
                                      "--slug", "Offre formation", "--engine", "fake", "--json"))
@@ -2440,6 +2440,246 @@ class InterfaceSupportTests(ParcoursTestCase):
                 time.sleep(1)
         self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
         self.assertEqual(signal.getsignal(signal.SIGTERM), before)
+
+
+# ---------------------------------------------------------------------------
+# Recipe format (docs/format-recette.md §2bis)
+# ---------------------------------------------------------------------------
+class RecipeFormatTests(ParcoursTestCase):
+    def set_format(self, line, recipe="brief-client"):
+        """Rewrites the `format:` line of a recipe of the temporary repository (None: removes it)."""
+        path = self.root / "skills" / f"{recipe}.md"
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("\n  format: 1\n", text)
+        path.write_text(text.replace("\n  format: 1\n", "\n" if line is None else f"\n  format: {line}\n", 1), encoding="utf-8")
+
+    def test_every_recipe_of_the_repository_declares_format_1(self):
+        recipes = [p for p in sorted((REPO / "skills").glob("*.md")) if "\nworkflow:" in p.read_text(encoding="utf-8")]
+        self.assertGreaterEqual(len(recipes), 2)
+        for path in recipes:
+            with self.subTest(recipe=path.stem):
+                fm, _ = parcours.split_frontmatter(path.read_text(encoding="utf-8"))
+                self.assertEqual(fm["workflow"].get("format"), 1)
+        for path in sorted((REPO / "dist" / "skills").glob("*/recipe.json")):
+            with self.subTest(bundled=path.parent.name):
+                self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["workflow"].get("format"), 1)
+
+    def test_a_recipe_at_the_right_format_runs_without_warning(self):
+        code, out, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "demo", "--engine", "fake")
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("format", err)
+        self.assertEqual(self.state()["recipe_format"], 1)
+        self.assertEqual(json.loads(self.ok("status", "demo", "--json"))["recipe_format"], 1)
+        listed = json.loads(self.ok("recipes", "--json"))
+        self.assertEqual(listed["formats"], [1, 2])
+        self.assertEqual({r["id"]: (r["format"], r["warnings"]) for r in listed["recipes"]},
+                         {"brief-client": (1, []), "reponse-appel-offres": (1, [])})
+
+    def test_a_recipe_without_format_is_read_as_format_1_with_a_warning(self):
+        self.set_format(None)
+        code, out, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "demo", "--engine", "fake")
+        self.assertEqual(code, 0, err)
+        self.assertIn("pas de champ format", err)
+        self.assertIn("lue comme format 1", err)
+        self.assertEqual(self.state()["recipe_format"], 1)
+        listed = {r["id"]: r for r in json.loads(self.ok("recipes", "--json"))["recipes"]}
+        self.assertEqual(listed["brief-client"]["format"], 1)
+        self.assertIn("ajoutez « format: 1 »", listed["brief-client"]["warnings"][0])
+        self.assertIn("avertissement : pas de champ format", self.ok("recipes"))
+        self.write_fakes("brief-client")
+        self.ok("next", "demo", "--yes")
+        self.assertEqual(self.step("cadrage")["status"], "paused")
+
+    def test_a_recipe_of_a_newer_format_is_refused_with_a_clear_message(self):
+        self.new()   # a dossier created while the recipe was still at format 1
+        self.set_format(3)
+        code, out, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "autre", "--engine", "fake")
+        self.assertEqual(code, 1)
+        self.assertIn("au format 3", err)
+        self.assertIn("mettez la page à jour", err)
+        self.assertFalse((self.pdir / "autre").exists())
+        code, out, _ = self.cli("new", "brief-client", "--input", str(self.input_file), "--json")
+        self.assertEqual(json.loads(out.strip().splitlines()[-1])["error"], "error")
+        self.assertNotIn("brief-client", [r["id"] for r in json.loads(self.ok("recipes", "--json"))["recipes"]])
+        report = json.loads(self.ok("status", "demo", "--json"))   # the dossier still reads, and says why it cannot go on
+        self.assertIn("mettez la page à jour", report["recipe_error"])
+        self.assertEqual(report["recipe_format"], 1)
+        code, out, _ = self.cli("next", "demo", "--yes", "--json")
+        self.assertEqual(code, 1)
+        self.assertIn("mettez la page à jour", json.loads(out.strip().splitlines()[-1])["message"])
+
+    def test_an_unknown_format_is_refused(self):
+        for value in ("deux", "1.0", "0", "true", "'1'"):
+            with self.subTest(format=value):
+                self.set_format(value)
+                code, _, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--engine", "fake")
+                self.assertEqual(code, 1)
+                self.assertIn("format de recette inconnu", err)
+                self.assertIn("mettez la page à jour", err)
+                self.set_format_back()
+
+    def set_format_back(self):
+        shutil.copy(REPO / "skills" / "brief-client.md", self.root / "skills")
+
+    def test_the_runner_announces_the_formats_it_plays(self):
+        self.assertEqual(json.loads(self.ok("formats", "--json")), {"formats": [1, 2], "current": 1, "source_format": 2})
+        self.assertIn("Formats de recette acceptés : 1, 2", self.ok("formats"))
+
+    def test_a_format_2_recipe_without_reads_source_runs_like_format_1(self):
+        self.set_format(2)
+        self.new()
+        self.write_fakes("brief-client")
+        self.assertEqual(self.drive()["status"], "completed")
+        self.assertEqual(self.state()["recipe_format"], 2)
+
+
+# ---------------------------------------------------------------------------
+# A checking step that reads the source (reads_source, format 2)
+# ---------------------------------------------------------------------------
+class SourceReadingTests(ParcoursTestCase):
+    """docs/format-recette.md §1.10: a checking step may read the raw request; a producing step never."""
+    SOURCE_BLOCK = "=== INPUT: source ===\n" + INPUT_TEXT + "\n=== END INPUT ==="
+
+    def declare(self, step="conformite", skill="ix-skills:controle-qualite", fmt="2", recipe="reponse-appel-offres", value="true"):
+        """Adds `reads_source` to a step of a recipe of the temporary repository, and sets its format."""
+        path = self.root / "skills" / f"{recipe}.md"
+        text = path.read_text(encoding="utf-8")
+        anchor = f"    - id: {step}\n"
+        start = text.index(anchor)
+        line = f"      skill: {skill}\n"
+        at = text.index(line, start) + len(line)
+        text = text[:at] + f"      reads_source: {value}\n" + text[at:]
+        path.write_text(text.replace("\n  format: 1\n", f"\n  format: {fmt}\n", 1), encoding="utf-8")
+
+    def test_a_checking_step_receives_the_source_and_no_other_step_does(self):
+        self.declare()
+        self.new("reponse-appel-offres", slug="rao")
+        self.write_fakes("reponse-appel-offres")
+        state = self.drive("rao")
+        self.assertEqual(state["status"], "completed")
+        self.assertEqual(state["recipe_format"], 2)
+        message = self.received("conformite")
+        self.assertIn(self.SOURCE_BLOCK, message)
+        self.assertIn("The input `source` is the original request", message)
+        self.assertIn("=== INPUT: offre.offer ===", message)   # what it checks still comes from upstream
+        trace = (self.pdir / "rao" / "06-conformite.in.md").read_text(encoding="utf-8")
+        self.assertIn(self.SOURCE_BLOCK, trace)
+        for other in ("questioning", "go-no-go", "strategie", "offre", "mise-en-forme"):
+            with self.subTest(step=other):
+                received = self.received(other)
+                self.assertNotIn("=== INPUT: source ===", received)
+                self.assertNotIn("Dupuis Menuiserie", received)
+        report = json.loads(self.ok("status", "rao", "--json"))
+        self.assertEqual([s["id"] for s in report["steps"] if s["reads_source"]], ["conformite"])
+        listed = {r["id"]: r for r in json.loads(self.ok("recipes", "--json"))["recipes"]}
+        self.assertEqual([s["id"] for s in listed["reponse-appel-offres"]["steps"] if s["reads_source"]], ["conformite"])
+        self.assertEqual(listed["reponse-appel-offres"]["format"], 2)
+
+    def test_without_reads_source_the_checking_step_never_sees_the_source(self):
+        self.new("reponse-appel-offres", slug="rao")
+        self.write_fakes("reponse-appel-offres")
+        self.drive("rao")
+        self.assertNotIn("=== INPUT: source ===", self.received("conformite"))
+        self.assertNotIn("Dupuis Menuiserie", self.received("conformite"))
+
+    def test_a_producing_step_asking_for_the_source_is_refused(self):
+        self.declare(step="offre", skill="ix-recipes:offre-commerciale")
+        code, _, err = self.cli("new", "reponse-appel-offres", "--input", str(self.input_file), "--slug", "rao", "--engine", "fake")
+        self.assertEqual(code, 1)
+        self.assertIn("étape 'offre' : reads_source est réservé aux étapes qui vérifient", err)
+        self.assertIn("'ix-recipes:offre-commerciale' produit", err)
+        self.assertIn("verbatim", err)
+        self.assertFalse((self.pdir / "rao").exists())
+        self.assertNotIn("reponse-appel-offres", [r["id"] for r in json.loads(self.ok("recipes", "--json"))["recipes"]])
+        fm, body = parcours.split_frontmatter((self.root / "skills" / "reponse-appel-offres.md").read_text(encoding="utf-8"))
+        errors = parcours.workflow_errors(fm, body, lambda ref: True)
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("réservé aux étapes qui vérifient", errors[0])
+
+    def test_a_dossier_whose_recipe_later_gives_the_source_to_a_producing_step_stops(self):
+        self.new("reponse-appel-offres", slug="rao")
+        self.write_fakes("reponse-appel-offres")
+        self.declare(step="offre", skill="ix-recipes:offre-commerciale")
+        code, out, _ = self.cli("next", "rao", "--yes", "--json")
+        self.assertEqual(code, 1)
+        self.assertIn("réservé aux étapes qui vérifient", json.loads(out.strip().splitlines()[-1])["message"])
+        self.assertFalse(self.was_called("analyse-cdc"))
+        self.assertIn("réservé aux étapes qui vérifient", json.loads(self.ok("status", "rao", "--json"))["recipe_error"])
+
+    def test_reads_source_needs_format_2(self):
+        self.declare(fmt="1")
+        code, _, err = self.cli("new", "reponse-appel-offres", "--input", str(self.input_file), "--engine", "fake")
+        self.assertEqual(code, 1)
+        self.assertIn("reads_source demande « format: 2 »", err)
+
+    def test_the_first_step_and_odd_values_are_refused(self):
+        self.declare(step="analyse-cdc", skill="ix-recipes:analyse-cdc")
+        code, _, err = self.cli("new", "reponse-appel-offres", "--input", str(self.input_file), "--engine", "fake")
+        self.assertEqual(code, 1)
+        self.assertIn("la première étape lit déjà la demande brute", err)
+        shutil.copy(REPO / "skills" / "reponse-appel-offres.md", self.root / "skills")
+        self.declare(value="'oui'")
+        code, _, err = self.cli("new", "reponse-appel-offres", "--input", str(self.input_file), "--engine", "fake")
+        self.assertEqual(code, 1)
+        self.assertIn("reads_source vaut true ou false", err)
+
+    def test_a_later_step_still_cannot_receive_brief(self):
+        fm, body = parcours.split_frontmatter((self.root / "skills" / "reponse-appel-offres.md").read_text(encoding="utf-8"))
+        fm["workflow"]["steps"][5]["receives"].append("brief")
+        fm["workflow"]["steps"][4]["receives"].append("source")
+        errors = parcours.workflow_errors(fm, body, lambda ref: True)
+        self.assertTrue(any("seule la première étape reçoit la demande brute" in e and "reads_source: true" in e for e in errors), errors)
+        self.assertTrue(any("« source » n'est pas une entrée possible" in e and "reads_source" in e for e in errors), errors)
+
+    def test_the_fields_of_a_checking_step_are_still_checked_for_copies(self):
+        self.declare()
+        self.new("reponse-appel-offres", slug="rao")
+        defn = self.recipe("reponse-appel-offres")["steps"][5]
+        copied = fake_output(defn).replace("VALUE[conformite.compliance_verdicts]", "Verdict : " + INPUT_TEXT)
+        self.write_fakes("reponse-appel-offres", conformite=copied)
+        code, _, _ = self.cli("next", "rao", "--yes")
+        for _ in range(10):
+            state = self.state("rao")
+            if self.step("conformite", "rao")["status"] == "failed" or state["status"] != "active":
+                break
+            pending = state["pending"]
+            if pending["type"] == "validate":
+                self.ok("validate", "rao")
+            elif pending["type"] == "answers":
+                self.ok("answer", "rao", "--file", str(self.answers_file))
+            self.cli("next", "rao", "--yes")
+        conformite = self.step("conformite", "rao")
+        self.assertEqual(conformite["status"], "failed")
+        self.assertIn("passage de la demande brute figure dans le champ 'compliance_verdicts'", conformite["error"])
+        self.assertIn(self.SOURCE_BLOCK, self.received("conformite"))   # it did read the source
+
+    def test_the_retry_of_a_checking_step_may_quote_the_source(self):
+        self.declare()
+        self.new("reponse-appel-offres", slug="rao")
+        quoting = "The offer leaves out part of the request: " + INPUT_TEXT + "\nNo handoff here.\n"
+        self.write_fakes("reponse-appel-offres", conformite=quoting)
+        state = self.drive("rao")
+        self.assertEqual(state["status"], "completed")
+        self.assertIn("No handoff here", self.received("conformite", "retry"))
+
+    def test_the_plan_says_which_step_reads_the_source(self):
+        self.declare(step="conformite")
+        self.new("reponse-appel-offres", slug="rao")
+        self.write_fakes("reponse-appel-offres")
+        for _ in range(10):
+            plan = json.loads(self.ok("plan", "rao", "--json"))
+            if any(r["id"] == "conformite" for r in plan.get("steps", [])):
+                break
+            self.ok("next", "rao", "--yes")
+            pending = self.state("rao")["pending"]
+            if pending and pending["type"] == "validate":
+                self.ok("validate", "rao")
+            elif pending and pending["type"] == "answers":
+                self.ok("answer", "rao", "--file", str(self.answers_file))
+        row = next(r for r in plan["steps"] if r["id"] == "conformite")
+        self.assertTrue(row["reads_source"])
+        self.assertGreater(row["chars"], len(INPUT_TEXT))
+
 
 if __name__ == "__main__":
     unittest.main()

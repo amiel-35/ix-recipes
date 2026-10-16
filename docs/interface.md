@@ -68,13 +68,20 @@ Une recette s'appelle ici un **dossier** pour la personne qui l'utilise. Trois �
 | GET | `/api/parcours/<slug>/plan` | `parcours.py plan --json` |
 | GET | `/api/parcours/<slug>/log` | `.next.log` |
 | GET | `/api/parcours/<slug>/document/<nom>` | le document d'une sortie d'étape, sans ses blocs de fin ni son en-tête YAML (`{document, meta}`) |
-| GET | `/api/recipes` | `parcours.py recipes --json` : recettes-workflows, libellés, étapes |
+| GET | `/api/recipes` | `parcours.py recipes --json` : recettes-workflows, libellés, étapes (+ `page`) |
+| GET | `/api/version` | `{"version", "recipe_formats"}` : la version de la page et les formats de recette qu'elle joue (aussi sous `page` dans `/api/parcours` et `/api/recipes`) |
 | POST | `/api/parcours` | créer un dossier : `{"recipe", "text", "title"?, "engine"?}` → `parcours.py new --input -` (texte sur l'entrée standard) |
 | POST | `/api/parcours/<slug>/<action>` | `next` (avec l'empreinte), `stop`, `validate`, `answer`, `choose`, `retry`, `rerun` |
 
 Toutes les routes `/api` exigent le jeton ; les réponses d'erreur reprennent le message de `parcours.py` (format JSON), un code de sortie 2 (erreur d'arguments) étant traité comme un bug de l'interface.
 
 Les POST exigent le jeton (en-tête `X-Parcours-Token`) et un corps JSON ; les fichiers fournis (fiche, réponses, champs) sont écrits dans un dossier temporaire puis passés à `parcours.py`. Le nom de fichier demandé en lecture ne peut pas sortir du dossier du parcours.
+
+### Version de la page (ajouté le 2026-10-16)
+
+La page a sa propre version, `PAGE_VERSION` dans `scripts/interface.py` (1.0.0 au 2026-10-16, 1.1.0 avec le format 2 le même jour), distincte de celle du plugin (`dist/.claude-plugin/plugin.json`) et de celle du skill `suivi-parcours`. Elle couvre le serveur, `interface.html` et l'API. Elle s'affiche discrètement en bas de la page (« Page de suivi 1.1.0 · recettes au format 1, 2 », écrit par le serveur dans la page, masqué à l'impression), au démarrage du serveur, et dans l'API (`GET /api/version`, et `page` dans `/api/parcours` et `/api/recipes`). Elle se relève en x.y.z : **majeure** quand un appelant de l'API (la page d'une autre version, le futur serveur MCP) doit changer — une route ou un champ retiré ou changé de sens, un format de recette qu'elle cesse de lire ; **mineure** pour une fonctionnalité ou une route de plus, ou un format de recette de plus ; **correctif** sinon. Chaque relève est notée dans la section « Page » du CHANGELOG.
+
+Les formats de recette joués sont ceux de l'exécuteur qu'elle embarque (`parcours.RECIPE_FORMATS`, [format-recette.md](format-recette.md) §2bis). Une recette personnelle d'un format trop récent n'est pas proposée à la création ; la demander répond 422 `recipe_refused` avec le message de l'exécuteur (« mettez la page à jour ») ; dans « Mes recettes », elle est marquée « Mettez la page à jour pour la lancer » (`format_error` dans `recettes.py list`), au lieu du conseil de la modifier.
 
 ## 5. Concurrence
 
@@ -227,6 +234,18 @@ Après comparaison avec l'organigramme, Amiel retient les **cartes** comme vue p
 - **« Écrire la recette »** (`recettes.py write-file`) produit le fichier sans appel au modèle : en-tête qui suit exactement la chaîne (l'étape 1 produit la fiche et s'arrête toujours ; la dernière étape non facultative donne le livrable ; Opus pour l'étape 1, Sonnet ensuite), corps d'orchestration générique (§4 du format), missions reprises des phrases saisies. Le fichier passe la vérification de build.py (testé). « Faire écrire par le concepteur » reste possible : il rédige en plus les missions.
 
 Une proposition du concepteur se reprend aussi en blocs (« Modifier moi-même en blocs »). Une recette remise en blocs perd au réécrire ses retouches manuelles du corps : la page le dit avant.
+
+### 9.7 quater Les étapes qui relisent la demande (format 2, 2026-10-16)
+
+Une étape qui vérifie et déclare `reads_source` ([format](format-recette.md) §1.10) relit le texte de départ ; la page le montre partout où une recette s'affiche, pour que le circuit des données reste lisible :
+
+- **cartes** : un badge vert « Relit votre demande » sur la carte (bulle d'explication au survol), et le bloc « Votre demande » dit qui le lit (« la première étape le lit, et l'étape « Vérification des faits » le relit pour vérifier (sans rien produire) ») ; sélectionner l'étape éclaire « Votre demande », comme la source de toute entrée ;
+- **organigramme** : une pastille « relit votre demande » sur l'étape, une entrée de légende, et le même éclairage ;
+- **détail d'une étape** (cartes, organigramme, liste dépliable) : « Reçoit » se termine par « votre demande, relue pour vérifier (le texte brut) » ;
+- **listes de recettes** (Recettes fournies, choix de la recette d'un nouveau dossier) : « · vérifie sur votre demande » dans le pied de la carte ; le chapeau de « Nouveau dossier » nomme l'étape qui relira le texte ;
+- **dossier** : « Source : relit votre demande pour vérifier » dans les détails techniques de l'étape (le message exact reçu montre le bloc `source`) ;
+- **construction en blocs** : un skill qui vérifie (`verifies` dans `recettes.py catalogue`) déposé après une autre étape arrive coché « Relit votre demande pour vérifier » ; la case se décoche, et l'explication dit ce que l'étape perd sans elle et que la recette passe au format 2. Elle n'existe pas pour un skill qui produit ni pour l'étape 1 (une proposition venue d'ailleurs qui la coche sur une étape qui produit est signalée par `proposal_problems`). « Écrire la recette » écrit `reads_source: true` et `format: 2`, et le corps dit qu'aucune étape qui produit ne relit la demande ;
+- **conception** : le message au concepteur porte la règle (poser `reads_source` sur une vérification placée après une étape qui produit, jamais ailleurs) et la forme de la proposition a le champ ; un fichier écrit avec `format: 1` et une étape qui relit la source passe en `format: 2` ; un oubli du réglage prévu par la proposition est signalé comme écart (« ne relit pas la demande, alors que la proposition le prévoyait »).
 
 ### 9.8 Routes ajoutées
 

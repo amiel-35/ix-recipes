@@ -183,6 +183,32 @@ def mutations(fm):
     variant(lambda f: f["workflow"]["steps"][0].pop("produces_context_sheet"))
     variant(lambda f: f["workflow"].update(steps=[]))
     variant(lambda f: f.update(requires=f["requires"] + ["ix-skills:does-not-exist"]))
+    variant(lambda f: f["workflow"].pop("format"))
+    variant(lambda f: f["workflow"].update(format=3))
+    # reads_source (format 2): on a producing step, on step 1, under format 1, not a boolean
+    variant(lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][1].update(reads_source=True)))
+    variant(lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][0].update(reads_source=True)))
+    variant(lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][1].update(reads_source="yes")))
+    for i in checking_steps(fm):   # a checking step may read the source, from format 2 on only
+        variant(lambda f, i=i: f["workflow"]["steps"][i].update(reads_source=True))
+    variant(lambda f: f["workflow"].update(format="un"))
+    return out
+
+
+def checking_steps(fm):
+    return [i for i, st in enumerate(fm["workflow"]["steps"]) if i and st.get("skill") in parcours.VERIFICATION_SKILLS]
+
+
+def valid_variants(fm):
+    """Variants of a valid recipe that stay valid: format 2 alone, reads_source false, a checking step reading the source."""
+    out = []
+    for change in [lambda f: f["workflow"].update(format=2),
+                   lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][1].update(reads_source=False))] + \
+                  [lambda f, i=i: (f["workflow"].update(format=2), f["workflow"]["steps"][i].update(reads_source=True))
+                   for i in checking_steps(fm)]:
+        clone = copy.deepcopy(fm)
+        change(clone)
+        out.append(clone)
     return out
 
 
@@ -197,7 +223,7 @@ class WorkflowCheckParityTests(unittest.TestCase):
 
         with mock.patch.object(self.build, "_skill_exists", exists):
             theirs = self.build.validate_workflow(fm, body)
-        mine = parcours.workflow_errors(fm, body, exists)
+        mine = parcours.workflow_errors(fm, body, exists, require_format=True)
         self.assertEqual(len(mine), len(theirs), f"build.py: {theirs}\nparcours.py: {mine}")
         return mine
 
@@ -213,11 +239,39 @@ class WorkflowCheckParityTests(unittest.TestCase):
             for n, broken in enumerate(mutations(fm)):
                 with self.subTest(recipe=path.stem, mutation=n):
                     self.assertTrue(self.compare(broken, body))
+            for n, valid in enumerate(valid_variants(fm)):
+                with self.subTest(recipe=path.stem, valid=n):
+                    self.assertEqual(self.compare(valid, body), [])
         self.assertGreaterEqual(recipes, 2)
+
+    def test_a_checking_step_reading_the_source_is_checked_alike(self):
+        fm, body = self.build.parse_skill(REPO / "skills" / "reponse-appel-offres.md")
+        self.assertTrue(checking_steps(fm))   # conformite: ix-skills:controle-qualite
+        self.assertGreaterEqual(len(valid_variants(fm)), 3)
 
     def test_a_skill_missing_from_the_body_is_an_error_for_both(self):
         fm, body = self.build.parse_skill(REPO / "skills" / "brief-client.md")
         self.assertTrue(self.compare(fm, body.replace("`ix-skills:brief`", "brief")))
+
+    def test_build_py_wants_format_1(self):
+        fm, body = self.build.parse_skill(REPO / "skills" / "brief-client.md")
+        self.assertEqual(fm["workflow"]["format"], 1)
+        self.assertEqual(self.compare(fm, body), [])
+        missing = copy.deepcopy(fm)
+        missing["workflow"].pop("format")
+        self.assertEqual(self.compare(missing, body), ["pas de champ format dans le bloc workflow : la recette est lue comme "
+                                                       "format 1 (ajoutez « format: 1 » en tête du bloc workflow)"])
+        with mock.patch.object(self.build, "_skill_exists", lambda ref: True):
+            self.assertIn("ajoutez « format: 1 »", self.build.validate_workflow(missing, body)[0])
+            for value in (3, "deux"):
+                newer = copy.deepcopy(fm)
+                newer["workflow"]["format"] = value
+                newer["workflow"]["steps"][1]["pause"] = "later"   # format 1's rules say nothing of another format
+                errors = self.build.validate_workflow(newer, body)
+                self.assertEqual(len(errors), 1, errors)
+                self.assertIn("mettez à jour build.py et la page de suivi", errors[0])
+        # a personal recipe without format is valid for the page (read as format 1)
+        self.assertEqual(parcours.workflow_errors(missing, body, lambda ref: True), [])
 
     def test_the_blank_model_passes_build_py(self):
         fm, body = parcours.parse_recipe_text(recettes.TEMPLATE)
@@ -808,6 +862,84 @@ class BlocksTests(RecettesTestCase):
         self.assertNotIn("path", skills[0])
 
 
+CHECKED = dict(PROPOSAL, steps=PROPOSAL["steps"] + [
+    {"id": "verif", "label": "Vérification", "skill": "ix-skills:controle-qualite", "role": "Contrôle le brief contre la demande.",
+     "receives": ["context_sheet", "livrable.deliverable"], "produces": ["verdicts"], "pause": "validate", "reads_source": True}])
+
+
+class SourceDesignTests(RecettesTestCase):
+    """A checking step that re-reads the request (reads_source), from the page: blocks, designer, format 2."""
+
+    def test_blocks_with_a_checking_step_give_a_valid_format_2_recipe(self):
+        slug = self.rok("draft-new", "--blocks", "--title", "Brief vérifié")["slug"]
+        path = self.tmp / "proposition.json"
+        path.write_text(json.dumps(CHECKED, ensure_ascii=False), encoding="utf-8")
+        saved = self.rok("proposal", slug, "--file", str(path))
+        self.assertEqual(saved["problems"], [])
+        self.assertTrue(saved["steps"][2]["reads_source"])
+        written = self.rok("write-file", slug)
+        self.assertEqual(written["errors"], [])
+        text = self.rok("show", slug)["text"]
+        fm, body = parcours.parse_recipe_text(text)
+        self.assertEqual(fm["workflow"]["format"], 2)
+        self.assertTrue(fm["workflow"]["steps"][2]["reads_source"])
+        self.assertNotIn("reads_source", fm["workflow"]["steps"][1])
+        self.assertIn("re-reads the raw request to check against it", body)
+        self.assertIn("the raw request (reads_source, to check against it)", body)
+        if yaml:   # build.py accepts it too
+            build = import_build()
+            with mock.patch.object(build, "_skill_exists", lambda ref: True):
+                self.assertEqual(build.validate_workflow(yaml.safe_load(text.split("---")[1]), body), [])
+        back = self.rok("to-blocks", slug)
+        self.assertEqual([s["reads_source"] for s in back["steps"]], [False, False, True])
+        # a recipe without a checking step stays at format 1
+        plain = recettes.proposal_to_recipe(recettes.normalize_proposal(PROPOSAL), "sans-verif")
+        self.assertEqual(parcours.parse_recipe_text(plain)[0]["workflow"]["format"], 1)
+
+    def test_a_producing_step_cannot_re_read_the_request(self):
+        producing = dict(CHECKED, steps=[dict(s, reads_source=True) for s in CHECKED["steps"]])
+        problems = recettes.proposal_problems(recettes.normalize_proposal(producing))
+        self.assertEqual(problems, [
+            "« Cadrage » : la première étape lit déjà la demande, elle n'a pas à la relire",
+            "« Livrable » : seule une étape qui vérifie (fact-check, audit de preuves, contrôle qualité) peut relire "
+            "la demande ; une étape qui produit ne la relit jamais"])
+        slug = self.rok("draft-new", "--blocks", "--title", "Mauvais")["slug"]
+        path = self.tmp / "proposition.json"
+        path.write_text(json.dumps(producing, ensure_ascii=False), encoding="utf-8")
+        self.rok("proposal", slug, "--file", str(path))
+        self.assertIn("une étape qui produit ne la relit jamais", self.rfail("write-file", slug)["message"])
+
+    def test_the_designer_is_told_to_set_it_on_a_checking_step(self):
+        slug = self.draft_with()
+        (self.fake / "concepteur-recette.md").write_text(proposal_output(CHECKED), encoding="utf-8")
+        self.rok("design", slug, "--engine", "fake")
+        message = (self.fake / "received" / "concepteur-recette.md").read_text(encoding="utf-8")
+        self.assertIn("`ix-skills:fact-check`, `ix-skills:quality-check`, `ix-skills:controle-qualite`, and no other skill", message)
+        self.assertIn("Set it yourself whenever such a step must check a deliverable", message)
+        self.assertIn('"reads_source": false', message)   # in the shape of the proposal
+        self.assertTrue(self.rok("show", slug)["proposal"]["steps"][2]["reads_source"])
+        # the file it writes: format 2 even when the engine wrote 1, and the drift is named when it forgets the field
+        written = recettes.proposal_to_recipe(recettes.normalize_proposal(CHECKED), "ma-recette")
+        as_format_1 = written.replace("\n  format: 2\n", "\n  format: 1\n", 1)
+        self.assertNotEqual(as_format_1, written)
+        (self.fake / "concepteur-recette.md").write_text(WRITTEN.format(recipe=as_format_1), encoding="utf-8")
+        result = self.rok("design", slug, "--mode", "write", "--engine", "fake")
+        self.assertEqual((result["errors"], result["drift"]), ([], []))
+        self.assertIn("`reads_source: true` on the steps the proposal marks so",
+                      (self.fake / "received" / "concepteur-recette.md").read_text(encoding="utf-8"))
+        self.assertEqual(parcours.parse_recipe_text((self.draft_path(slug) / "recipe.md").read_text(encoding="utf-8"))[0]["workflow"]["format"], 2)
+        forgot = written.replace("      reads_source: true\n", "")
+        self.assertNotEqual(forgot, written)
+        (self.fake / "concepteur-recette.md").write_text(WRITTEN.format(recipe=forgot), encoding="utf-8")
+        result = self.rok("design", slug, "--mode", "write", "--engine", "fake")
+        self.assertEqual(result["drift"], ["« Vérification » : ne relit pas la demande, alors que la proposition le prévoyait"])
+
+    def test_the_palette_says_which_skills_check(self):
+        skills = {s["ref"]: s for s in self.rok("catalogue")["skills"]}
+        self.assertTrue(skills["ix-skills:controle-qualite"]["verifies"])
+        self.assertFalse(skills["ix-skills:brief"]["verifies"])
+
+
 class RecueilCommandTests(RecettesTestCase):
     def test_promote_edit_retire(self):
         slug = self.draft_with(recettes.TEMPLATE.replace("pause: validate", "pause: later"))
@@ -1010,6 +1142,53 @@ class ContributionTests(RecettesTestCase):
             self.assertEqual(recettes.github_slug(url), "amiel-35/ix-recipes")
         for url in ("/tmp/x.git", "https://gitlab.com/a/b.git", "https://github.com.evil.io/a/b"):
             self.assertIsNone(recettes.github_slug(url))
+
+
+# ---------------------------------------------------------------------------
+# Recipe format (docs/format-recette.md §2bis): personal recipes
+# ---------------------------------------------------------------------------
+class PersonalRecipeFormatTests(RecettesTestCase):
+    def format_of(self, text):
+        fm, _ = parcours.parse_recipe_text(text)
+        return fm["workflow"].get("format", "absent")
+
+    def test_every_recipe_created_from_the_page_declares_format_1(self):
+        self.assertEqual(self.format_of(recettes.TEMPLATE), 1)
+        slug = self.rok("draft-new", "--template", "--title", "Modèle")["slug"]
+        self.assertEqual(self.format_of((self.draft_path(slug) / "recipe.md").read_text(encoding="utf-8")), 1)
+        forked = self.rok("fork", "brief-client")
+        self.assertEqual(self.format_of(self.rok("show", forked["slug"])["text"]), 1)
+        built = recettes.proposal_to_recipe(recettes.normalize_proposal(PROPOSAL), "par-blocs")
+        self.assertEqual(self.format_of(built), 1)
+        self.assertNotIn(parcours.FORMAT_MISSING, parcours.check_recipe_text(built)["contribution"])
+
+    def test_a_file_written_by_the_designer_without_format_gets_it(self):
+        without = recettes.TEMPLATE.replace("\n  format: 1\n", "\n", 1)
+        self.assertEqual(self.format_of(without), "absent")
+        self.assertEqual(recettes.with_format(without), recettes.TEMPLATE)
+        self.assertEqual(recettes.with_format(recettes.TEMPLATE), recettes.TEMPLATE)   # already there: unchanged
+        deeper = without.replace("\n  ", "\n    ")
+        self.assertEqual(self.format_of(recettes.with_format(deeper)), 1)
+        self.assertEqual(recettes.with_format("pas d'en-tête"), "pas d'en-tête")
+        slug = self.draft_with()
+        (self.fake / "concepteur-recette.md").write_text(proposal_output(), encoding="utf-8")
+        self.rok("design", slug, "--engine", "fake")
+        (self.fake / "concepteur-recette.md").write_text(WRITTEN.format(recipe=without), encoding="utf-8")
+        self.rok("design", slug, "--mode", "write", "--engine", "fake")
+        self.assertEqual((self.draft_path(slug) / "recipe.md").read_text(encoding="utf-8"), recettes.TEMPLATE)
+
+    def test_the_check_of_a_personal_recipe(self):
+        good = parcours.check_recipe_text(recettes.TEMPLATE)
+        self.assertEqual((good["errors"], good["format_error"], good["recipe"]["format"]), ([], None, 1))
+        without = parcours.check_recipe_text(recettes.TEMPLATE.replace("\n  format: 1\n", "\n", 1))
+        self.assertEqual(without["errors"], [])   # read as format 1: it can be tested and kept
+        self.assertEqual((without["recipe"]["format"], without["recipe"]["format_declared"]), (1, False))
+        self.assertIn(parcours.FORMAT_MISSING, without["contribution"])   # the repository wants it written
+        newer = parcours.check_recipe_text(recettes.TEMPLATE.replace("\n  format: 1\n", "\n  format: 3\n", 1)
+                                           .replace("pause: validate", "pause: later"))
+        self.assertEqual(newer["errors"], [newer["format_error"]])   # only the format: the rest is format 1's rules
+        self.assertIn("mettez la page à jour", newer["format_error"])
+        self.assertIsNone(newer["recipe"])
 
 
 if __name__ == "__main__":

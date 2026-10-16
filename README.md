@@ -44,16 +44,16 @@
 
 ix-recipes does the groundwork of consulting, HR, legal, finance and product jobs with Claude: answering a call for tenders, turning a vague client request into a brief, writing a job description, reviewing a contract… The bigger jobs are **recipes**: a series of steps you follow in a page on your computer, which stops whenever your judgement is needed.
 
-**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.10.0**:
+**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.11.0**:
 
 ```text
-Install ix-recipes (version 2.10.0 or later) on this computer and open its tracking page so I can try it
+Install ix-recipes (version 2.11.0 or later) on this computer and open its tracking page so I can try it
 (https://github.com/amiel-35/ix-recipes). Do everything yourself, without asking me to restart:
 1. Add the amiel-35/plugins marketplace (if that fails for lack of a GitHub SSH key, use
    https://github.com/amiel-35/plugins.git), then install ix-skills@amiel-35 and
    ix-recipes@amiel-35. If they are already installed, update them; if they come from another
    marketplace, keep that one and create no duplicate. Check the installed ix-recipes version:
-   if it is older than 2.10.0, update the marketplace and the plugin.
+   if it is older than 2.11.0, update the marketplace and the plugin.
 2. Check python3 (3.9 or later); if it is missing, tell me what to install and stop.
 3. Start, in the background, the script skills/suivi-parcours/scripts/interface.py of the
    installed ix-recipes plugin (under ~/.claude/plugins/cache/, the latest version); it opens
@@ -701,7 +701,7 @@ Recommendation deliverables for a decision-maker. Once planned as workflows, the
 
 ## Workflows
 
-A workflow chains skills for a recurring job. Format: [`docs/format-recette.md`](docs/format-recette.md). Each step runs isolated (a sub-agent in Claude Code) and receives only what it needs; only the first reads the raw input; a human-validated context sheet replaces it afterwards; pauses let the human validate, answer (client, buyer) or choose. A trace of each step is written to `./parcours/` when possible.
+A workflow chains skills for a recurring job. Format: [`docs/format-recette.md`](docs/format-recette.md). Each step runs isolated (a sub-agent in Claude Code) and receives only what it needs; only the first reads the raw input, plus, from recipe format 2, a checking step (`fact-check`, `quality-check`, `controle-qualite`) that declares it re-reads it to check against it; a human-validated context sheet replaces it for the others; pauses let the human validate, answer (client, buyer) or choose. A trace of each step is written to `./parcours/` when possible.
 
 Available: `brief-client`, `reponse-appel-offres` (see the catalog). Both tested end to end on real material (a client meeting transcript, a tender specification). `concepteur-recette` designs new ones.
 
@@ -730,6 +730,8 @@ The same runner works from the command line, for scripts:
 python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/.ix-recipes/parcours
 python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours        # runs until the next pause
 ```
+
+**Versions.** Each recipe declares its format in its `workflow` block (`format: 1`; [`docs/format-recette.md`](docs/format-recette.md) §2bis). The runner, the page and `build.py` refuse a format they do not know, or a newer one, with a plain message (« mettez la page à jour »: update the page); a personal recipe written before the field existed is read as format 1, with a warning. The page has its own version, apart from the plugin's: shown at the bottom of the page and returned by `GET /api/version` (also in the list of dossiers and of recipes); `python3 scripts/parcours.py formats` lists the formats the runner plays. Page changes are listed under « Page » in the [CHANGELOG](CHANGELOG.md).
 
 ### Your own recipes
 

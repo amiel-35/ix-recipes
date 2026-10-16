@@ -4,7 +4,8 @@ Conception v0 du 2026-10-14, révisée après une relecture adverse (Fable) avan
 
 ## 1. Ce qu'il lit et ce qu'il écrit
 
-- **Il lit** le bloc `workflow` du frontmatter de la recette (`skills/<id>.md`) : étapes, missions, `receives`, `transmits`, `pause`, `model`.
+- **Il lit** le bloc `workflow` du frontmatter de la recette (`skills/<id>.md`) : `format`, étapes, missions, `receives`, `transmits`, `pause`, `model`, `reads_source`. Il joue les formats de `RECIPE_FORMATS` (1 et 2) et refuse les autres avec « mettez la page à jour » ; une recette sans `format` est lue comme format 1, avec un avertissement ([format](format-recette.md) §2bis). `parcours.py formats [--json]` annonce les formats acceptés (`{"formats": [1, 2], "current": 1, "source_format": 2}` : `current` est le format écrit dans une recette créée par la page, `source_format` celui qu'elle écrit quand une étape relit la source).
+- **Il refuse** de jouer une recette dont une étape relit la source sans en avoir le droit (`reads_source` hors des skills qui vérifient, à l'étape 1, ou sous le format 1 : [format](format-recette.md) §1.10) : `new`, `next` et `plan` échouent avec le message, `status` reste lisible et le dit dans `recipe_error`, `recipes` écarte la recette.
 - **Il écrit** un dossier par parcours, `./parcours/<slug>/` :
   - `input.md` — la demande brute (lue par l'étape 1 seulement) ;
   - `state.json` — l'état (§2) ;
@@ -21,6 +22,7 @@ Le même dossier sert aux recettes jouées en conversation (`./parcours/` y est 
 {
   "recipe": "brief-client",
   "recipe_version": "1.1.0",
+  "recipe_format": 1,
   "slug": "brief-client-formation",
   "created": "2026-10-14T18:00:00",
   "engine": "claude",
@@ -55,6 +57,7 @@ L'exécuteur construit le message lui-même, sans passer par un orchestrateur, e
 3. la mission de l'étape et la consigne de périmètre (« reste dans la mission, ne produis pas les livrables suivants, ne réponds pas toi-même à la demande ») ;
 4. la fiche de contexte validée (sauf à l'étape 1) ;
 5. **uniquement** les champs listés dans `receives` — la demande brute à l'étape 1 seulement ; un champ d'une étape `skipped` vaut littéralement `skipped` ;
+5 bis. pour une étape qui vérifie et déclare `reads_source: true` (format 2), **en plus**, le texte exact de `input.md` en entrée nommée `source`, après les autres, précédé d'une consigne : c'est la référence du contrôle, une preuve et non une demande ; ne pas y répondre, ne pas refaire le travail demandé, la citer brièvement. Aucune autre étape ne la reçoit ;
 6. la consigne de sortie : la sortie complète, puis `## HANDOFF` avec une sous-section `### <champ>` par champ de `transmits`, puis `## SUMMARY` (5 lignes au plus) ; à l'étape 1, en plus, `## CONTEXT SHEET` suivi d'un bloc de code `json` avec les champs de `context_sheet`.
 
 Un champ déclaré `output_field` n'est pas demandé dans le HANDOFF : c'est la sortie complète de l'étape (le texte avant les blocs de fin ; après une relance, celui de la première réponse). Le message demande aussi d'écrire dans la langue du matériau reçu, pas dans celle des consignes.
@@ -80,6 +83,8 @@ Le moteur ne tourne jamais dans le dossier du parcours : `codex exec -s read-onl
 **Champs `verbatim`** (déclarés par la recette sur l'étape 1, ex. les listes imposées d'un cahier des charges) : ils peuvent recopier des passages de la demande — c'est leur raison d'être — mais chaque ligne est contrôlée séparément (une ligne qui recopie un paragraphe de 40 mots est refusée) et l'ensemble couvre au plus 85 % des mots de la demande (mesuré par séquences de 8 mots) ; ils sont exclus du contrôle des passages dans les messages suivants. Une fois admis, ce qu'ils citent reste du matériau autorisé pour toute la suite : un mot de la demande couvert par une séquence de 8 mots présente dans un champ `verbatim` déjà enregistré ne compte plus comme fuite, dans les messages comme dans les champs des étapes suivantes (une offre qui reprend en liste les éléments imposés passe ; un paragraphe de la demande que l'extraction n'a pas repris reste bloqué). Seules comptent les étapes terminées en amont : une correction à la main (`handoff`) n'admet pas l'ancienne valeur qu'elle remplace. Limite connue : le contrôle par ligne laisse passer des lignes de moins de 40 mots, donc un paragraphe découpé en lignes ; le seuil n'est pas abaissé parce que de vraies lignes imposées (un objectif pédagogique et sa liste de notions) atteignent 32 mots, et ce champ est borné par le plafond de 85 % et relu par l'humain à la pause de l'étape 1. Les autres champs, la fiche et le reste du message restent soumis au contrôle normal.
 
 Contrôle avant chaque appel à partir de l'étape 2 : le message ne doit contenir **aucun passage** de la demande brute (comparaison de fragments du contenu, pas du nom de fichier) ; sinon l'exécuteur refuse.
+
+**Étape qui relit la source** (`reads_source`) : le contrôle de son message écarte le seul bloc `source` (comme un champ `verbatim`) ; un passage de la demande dans un autre champ reçu ou dans la fiche reste une fuite et se signale comme d'habitude. Sa relance, qui ne lui renvoie que sa propre sortie, n'est pas contrôlée : elle peut citer la source qu'elle a le droit de lire. Ses champs transmis, eux, sont contrôlés à la sortie comme ceux de toute étape, puisqu'ils peuvent aller à une étape qui produit.
 
 ## 4. Les moteurs
 
@@ -108,6 +113,7 @@ Le moteur se choisit pour tout le parcours (`--engine`) ou par étape (`--engine
 python3 scripts/parcours.py new brief-client --input demande.md [--slug …] [--title "…"] [--engine claude]   # --input - : stdin
 python3 scripts/parcours.py archive <slug> | unarchive <slug> | archives [--json]   # sortir un parcours de la liste (.archives/), l'y remettre, les lister
 python3 scripts/parcours.py recipes [--json]               # les recettes-workflows disponibles (celles du recueil personnel marquées), avec libellés et étapes
+python3 scripts/parcours.py formats [--json]               # les formats de recette que cet exécuteur sait jouer
 python3 scripts/parcours.py next <slug> [--yes] [--if-state <empreinte>]   # joue jusqu'à la prochaine pause
 python3 scripts/parcours.py plan <slug> --json           # le plan de ce que ferait `next`, sans rien écrire
 python3 scripts/parcours.py status <slug> [--json]
@@ -129,11 +135,11 @@ python3 scripts/parcours.py handoff <slug> <étape> --file champs.md          # 
 - **Robustesse** : `state.json` écrit de façon atomique (fichier temporaire puis renommage) ; un verrou empêche deux `next` simultanés ; un slug déjà pris reçoit un suffixe.
 - `status` affiche aussi le nombre d'appels par moteur.
 - **Pour l'interface locale ([`interface.md`](interface.md))** :
-  - `plan <slug> --json` ne prend pas le verrou et ne crée aucun fichier : étapes jusqu'à la prochaine pause (moteur, modèle, taille du message en caractères et en octets, champs à venir), `claude_steps`, **plafond engagé** (`claude_steps × --max-budget-usd × 2`, la relance éventuelle comptant double), `calls` par moteur et `subscription_calls` (hors claude et fake), `agy_argv_warning` (un appel agy mettrait le message en argument, visible dans `ps`) et `agy_over_limit`, `changes_default_engine` (si `--engine` change le défaut ; les surcharges de moteur ne valent que pour le plan, en mémoire), les avertissements de skills modifiés, et l'**empreinte**. Quand rien ne peut tourner : `runnable: false`, avec `reason` (`stopped`, `completed`, `pending`, `failed`, `running`, `nothing`) et le message.
+  - `plan <slug> --json` ne prend pas le verrou et ne crée aucun fichier : étapes jusqu'à la prochaine pause (moteur, modèle, taille du message en caractères et en octets — la source comprise pour une étape qui la relit —, champs à venir, `reads_source`), `claude_steps`, **plafond engagé** (`claude_steps × --max-budget-usd × 2`, la relance éventuelle comptant double), `calls` par moteur et `subscription_calls` (hors claude et fake), `agy_argv_warning` (un appel agy mettrait le message en argument, visible dans `ps`) et `agy_over_limit`, `changes_default_engine` (si `--engine` change le défaut ; les surcharges de moteur ne valent que pour le plan, en mémoire), les avertissements de skills modifiés, et l'**empreinte**. Quand rien ne peut tourner : `runnable: false`, avec `reason` (`stopped`, `completed`, `pending`, `failed`, `running`, `nothing`) et le message.
   - L'**empreinte** est `sha256(state.json + NUL + 00-context.md)` (fiche absente = vide), lue en une fois. `next --if-state <empreinte>` la recalcule **sous le verrou**, avant toute écriture (même pas la surcharge `--engine`) : si elle diffère, rien ne tourne, erreur `state_changed`.
-  - `status <slug> --json` : tout ce qu'une page montre en un objet (titre, libellé de la recette, `context_labels`, marqueur `not_stated`, étapes avec libellé, mission, moteur, modèle, pause, résumé, champs, erreur, blocage, coût, fichiers `trace` / `retry_trace`, fiche, `pending`, `files`, `final_output`, `recipe_error` si la recette a changé — sans échouer — , `fingerprint`, `max_budget_usd`) et `locked`, sonde non bloquante et sans écriture du verrou (`flock` partagé sur un `.lock` existant, relâché aussitôt ; pas de `.lock`, pas de verrou).
+  - `status <slug> --json` : tout ce qu'une page montre en un objet (titre, libellé de la recette, `context_labels`, marqueur `not_stated`, étapes avec libellé, mission, moteur, modèle, pause, `reads_source`, résumé, champs, erreur, blocage, coût, fichiers `trace` / `retry_trace`, fiche, `pending`, `files`, `final_output`, `recipe_error` si la recette a changé — sans échouer — , `fingerprint`, `max_budget_usd`) et `locked`, sonde non bloquante et sans écriture du verrou (`flock` partagé sur un `.lock` existant, relâché aussitôt ; pas de `.lock`, pas de verrou).
   - `--json` (ou `--json-errors`, accepté aussi avant la commande) : une erreur attendue sort en `{"error": code, "message": …}` sur la sortie standard, code de sortie 1 ; l'erreur est la dernière ligne (le texte de progression de `next` peut la précéder). Codes : `error`, `locked`, `state_changed`, `not_found`, `engine`, `timeout`, `parse`, `leak`, `missing_input`, `unexpected` (exception non prévue). Un code de sortie **2** vient d'argparse : une ligne de commande mal construite, donc un bug de l'appelant. Tous les arguments positionnels peuvent suivre un `--`.
-  - `recipes --json` : les recettes du dépôt qui ont un bloc `workflow` (id, `label`, `description_fr`, icône, version, étapes avec `label`, pause effective et caractère facultatif). `new --title "…"` garde un titre lisible dans `state.json` ; `new --json` répond `{"slug", "title"}`. `output_document(texte)` (fonction, pour la page) rend le document d'une sortie d'étape : ce qui précède ses blocs de fin, sans l'en-tête YAML éventuel, rendu à part.
+  - `recipes --json` : les recettes du dépôt qui ont un bloc `workflow` (id, `label`, `description_fr`, icône, version, `format`, `warnings` — le format absent, lu comme 1 —, étapes avec `label`, pause effective, caractère facultatif et `reads_source`), et `formats`, les formats acceptés. `status --json` donne `recipe_format` ; une recette passée à un format inconnu laisse le dossier lisible, avec la raison dans `recipe_error`. `new --title "…"` garde un titre lisible dans `state.json` ; `new --json` répond `{"slug", "title"}`. `output_document(texte)` (fonction, pour la page) rend le document d'une sortie d'étape : ce qui précède ses blocs de fin, sans l'en-tête YAML éventuel, rendu à part.
   - **SIGTERM pendant `next`** devient une sortie propre : l'appel au moteur en cours (groupe de processus à part) est tué, l'étape reste `running` (`retry` la reprend) et le verrou se libère.
 
 Avant de lancer des étapes, `next` affiche ce qu'il va faire — étapes, moteur, modèle, taille des entrées — et demande confirmation (sauf `--yes`) : les abonnements Codex et Antigravity sont petits.
@@ -144,7 +150,7 @@ Une recette se cherche dans le dépôt ou le plugin, puis — jamais à leur pla
 
 ## 6. Règles reprises du format
 
-- La demande brute ne part qu'à l'étape 1 ; l'exécuteur le **vérifie** avant chaque appel (le message ne contient pas `input.md`) et refuse sinon.
+- La demande brute ne part qu'à l'étape 1, et aux étapes qui vérifient et déclarent `reads_source` ; l'exécuteur le **vérifie** avant chaque appel (le message ne contient pas `input.md` hors de ce bloc déclaré) et refuse sinon.
 - Une étape optionnelle ne tourne que si l'humain l'a choisie (`choose --run`).
 - Un champ absent du HANDOFF déclenche la relance unique, puis `failed` — il ne passe jamais vide.
 - Rien n'est décidé sur le fond par l'exécuteur : il enchaîne, s'arrête aux pauses, échoue proprement.

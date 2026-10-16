@@ -232,6 +232,11 @@ SIBLING_SKILL_DIRS = {
 }
 PAUSES = {"none", "validate", "answers", "choose"}
 MODELS = {"sonnet", "opus", "haiku"}
+RECIPE_FORMATS = (1, 2)  # workflow.format values this build.py knows (docs/format-recette.md §2bis)
+SOURCE_FORMAT = 2        # from format 2 on, a checking step may read the source (`reads_source`)
+# The only skills that may read the source: they check an upstream output against evidence
+# (docs/format-recette.md §1.10). Keep in step with VERIFICATION_SKILLS in scripts/parcours.py.
+VERIFICATION_SKILLS = ("ix-skills:fact-check", "ix-skills:quality-check", "ix-skills:controle-qualite")
 
 
 def _skill_exists(ref: str):
@@ -256,6 +261,13 @@ def validate_workflow(fm: dict, body: str) -> list:
     if not wf:
         return []
     errs = []
+    # Messages on the format in French: they reach the tracking page (a recipe proposed from it).
+    if "format" not in wf:
+        errs.append("pas de champ format dans le bloc workflow : ajoutez « format: 1 » en tête du bloc workflow")
+    elif not (type(wf["format"]) is int and wf["format"] in RECIPE_FORMATS):
+        known = ", ".join(str(f) for f in RECIPE_FORMATS)
+        return [f"format de recette {wf['format']!r} inconnu ou plus récent que ce build.py (formats connus : {known}) : "
+                "mettez à jour build.py et la page de suivi avant de publier cette recette"]
     requires = fm.get("requires") or []
     for ref in requires:
         ok = _skill_exists(ref)
@@ -295,6 +307,19 @@ def validate_workflow(fm: dict, body: str) -> list:
                 errs.append(f"step '{sid}': verbatim field '{field}' is not in transmits")
         if st.get("produces_context_sheet") and i != 0:
             errs.append(f"step '{sid}': only the first step produces the context sheet")
+        # Messages on reads_source in French, like those on the format: they reach the tracking page.
+        if "reads_source" in st and not isinstance(st["reads_source"], bool):
+            errs.append(f"étape '{sid}' : reads_source vaut true ou false")
+        elif st.get("reads_source") is True:
+            if i == 0:
+                errs.append(f"étape '{sid}' : la première étape lit déjà la demande brute (brief) ; reads_source est pour une étape qui vérifie, plus loin")
+            elif skill not in VERIFICATION_SKILLS:
+                errs.append(f"étape '{sid}' : reads_source est réservé aux étapes qui vérifient ({', '.join(VERIFICATION_SKILLS)}) ; "
+                            f"'{skill}' produit, il ne relit jamais la demande brute. Pour lui faire passer des éléments "
+                            "précis de la demande, déclarez-les verbatim à l'étape 1")
+            if not (type(wf.get("format")) is int and wf["format"] >= SOURCE_FORMAT):
+                errs.append(f"étape '{sid}' : reads_source demande « format: {SOURCE_FORMAT} » en tête du bloc workflow "
+                            "(une page qui ne lit que le format 1 jouerait l'étape sans la source, sans le dire)")
         for src in st.get("receives") or []:
             if src == "brief":
                 if i != 0:

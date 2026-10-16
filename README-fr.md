@@ -44,16 +44,16 @@
 
 ix-recipes fait avec Claude le travail de fond des métiers du conseil, des RH, du juridique, de la finance et du produit : répondre à un appel d'offres, transformer une demande client floue en brief, écrire une fiche de poste, relire un contrat… Les plus gros travaux sont des **recettes** : une suite d'étapes que vous suivez dans une page sur votre ordinateur, qui s'arrête chaque fois qu'il faut votre avis.
 
-**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page. Prompt pour la version **2.10.0** :
+**1. Collez ce texte dans Claude Code**, sur votre ordinateur. C'est tout : Claude installe et ouvre la page. Prompt pour la version **2.11.0** :
 
 ```text
-Installe ix-recipes (version 2.10.0 ou plus récente) sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
+Installe ix-recipes (version 2.11.0 ou plus récente) sur cet ordinateur et ouvre-moi sa page de suivi pour que je l'essaie
 (https://github.com/amiel-35/ix-recipes). Fais tout toi-même, sans me demander de redémarrer :
 1. Ajoute la marketplace amiel-35/plugins (si ça échoue faute de clé SSH GitHub, utilise
    https://github.com/amiel-35/plugins.git), puis installe ix-skills@amiel-35 et
    ix-recipes@amiel-35. S'ils sont déjà installés, mets-les à jour ; s'ils viennent d'une autre
    marketplace, garde celle-là et ne crée pas de doublon. Vérifie la version installée
-   d'ix-recipes : si elle est plus ancienne que 2.10.0, mets à jour la marketplace et le plugin.
+   d'ix-recipes : si elle est plus ancienne que 2.11.0, mets à jour la marketplace et le plugin.
 2. Vérifie python3 (3.9 ou plus) ; s'il manque, dis-moi quoi installer et arrête-toi.
 3. Lance en arrière-plan le script skills/suivi-parcours/scripts/interface.py du plugin
    ix-recipes installé (sous ~/.claude/plugins/cache/, la version la plus récente) ; il ouvre
@@ -701,7 +701,7 @@ Des livrables de recommandation pour un décideur. Un temps prévus pour devenir
 
 ## Workflows
 
-Un workflow enchaîne des skills pour un travail récurrent. Format : [`docs/format-recette.md`](docs/format-recette.md). Chaque étape tourne isolée (un sous-agent sous Claude Code) et ne reçoit que ce dont elle a besoin ; seule la première lit la demande brute ; une fiche de contexte validée par l'humain la remplace ensuite ; les pauses font valider, répondre (client, acheteur) ou choisir. Une trace de chaque étape est écrite dans `./parcours/` quand c'est possible.
+Un workflow enchaîne des skills pour un travail récurrent. Format : [`docs/format-recette.md`](docs/format-recette.md). Chaque étape tourne isolée (un sous-agent sous Claude Code) et ne reçoit que ce dont elle a besoin ; seule la première lit la demande brute, plus, depuis le format 2 des recettes, une étape qui vérifie (`fact-check`, `quality-check`, `controle-qualite`) et le déclare, pour contrôler ce qu'on en a fait ; une fiche de contexte validée par l'humain la remplace pour les autres ; les pauses font valider, répondre (client, acheteur) ou choisir. Une trace de chaque étape est écrite dans `./parcours/` quand c'est possible.
 
 Disponibles : `brief-client`, `reponse-appel-offres` (voir le catalogue). Tous deux testés de bout en bout sur du matériau réel (une transcription de réunion client, un cahier des charges de consultation). `concepteur-recette` en conçoit de nouvelles.
 
@@ -730,6 +730,8 @@ Le même exécuteur s'utilise en ligne de commande, pour des scripts :
 python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --parcours-dir ~/.ix-recipes/parcours
 python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours        # jusqu'à la prochaine pause
 ```
+
+**Versions.** Chaque recette déclare son format dans son bloc `workflow` (`format: 1` ; [`docs/format-recette.md`](docs/format-recette.md) §2bis). L'exécuteur, la page et `build.py` refusent un format qu'ils ne connaissent pas, ou plus récent, avec un message clair (« mettez la page à jour ») ; une recette personnelle écrite avant ce champ est lue comme format 1, avec un avertissement. La page a sa propre version, distincte de celle du plugin : affichée en bas de la page et renvoyée par `GET /api/version` (ainsi que dans la liste des dossiers et celle des recettes) ; `python3 scripts/parcours.py formats` donne les formats que l'exécuteur sait jouer. Les changements de la page sont listés sous « Page » dans le [CHANGELOG](CHANGELOG.md).
 
 ### Vos propres recettes
 

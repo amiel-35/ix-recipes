@@ -125,6 +125,15 @@ Textes vérifiés le 2026-10-16 : C. civ. 1170, 1171, 1231-3 ; C. com. L441-10 (
 9. Signale à l'art. 8 l'absence d'engagement de disponibilité et demande un taux de disponibilité mesuré, des délais d'intervention et des pénalités ou crédits de service.
 10. Classe les points par ordre de priorité de négociation et rappelle qu'une relecture par un juriste reste nécessaire avant signature.
 
+## Forme attendue
+
+1. En tête, avant toute analyse détaillée, une synthèse de quelques lignes donne la position d'ensemble (signer en l'état, négocier, ne pas signer sans tel point) et les trois points prioritaires.
+2. Un tableau des clauses examinées avec les colonnes : article, ce que dit la clause (résumé), risque concret pour le client, priorité de négociation, modification demandée.
+3. Chaque clause à négocier est suivie d'une proposition de réécriture rédigée en langage contractuel, citée à part et prête à transmettre à l'éditeur, pas seulement d'une intention (« à renégocier »).
+4. Les clauses examinées et jugées acceptables (pénalités de retard, indemnité de 40 €, juridiction) sont regroupées à part ou marquées comme telles, distinctes des clauses à négocier.
+5. Le fondement juridique de chaque appréciation figure en référence courte (article et texte), séparé de l'explication de l'enjeu pour l'entreprise, rédigée en langage d'affaires.
+6. Les documents à obtenir de l'éditeur en plus des CGV (accord de traitement des données, annexe de niveau de service, modalités de réversibilité) forment une liste séparée des modifications de clauses.
+
 ## Une mauvaise sortie
 
 - Invoque la loi Chatel ou les clauses abusives du code de la consommation comme si la PME était un consommateur.
@@ -139,3 +148,12 @@ Textes vérifiés le 2026-10-16 : C. civ. 1170, 1171, 1231-3 ; C. com. L441-10 (
 | 2026-10-16 | 1.3.0 | Sonnet 5.5 | **6.7 (6–7)** | banc 3 passages ; erreurs 1.0 (0–3) |
 | 2026-10-16 | 1.2.1 | Haiku 5.5 | 2.0 (2–2) | banc 3 passages, moyenne (min–max) ; erreurs relevées 5.7 (3–7) |
 | 2026-10-16 | 1.3.0 | Haiku 5.5 | **4.0 (3–5)** | banc 3 passages ; erreurs 6.7 (4–10) |
+| 2026-10-16 | sans skill | Sonnet 5.5, effort medium | 6.5 (6.0–7.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.2 (0.0–0.5) /6 ; coût moyen 0.062 $ |
+| 2026-10-16 | 1.2.1 | Sonnet 5.5, effort medium | 4.0 (3.5–4.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.0 (0.0–0.0) /6 ; coût moyen 0.037 $ |
+| 2026-10-16 | 1.3.0 | Sonnet 5.5, effort medium | 5.8 (5.5–6.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 1.8 (1.5–2.0) /6 ; coût moyen 0.054 $ |
+| 2026-10-16 | sans skill | Sonnet 5.5, effort high | 8.2 (6.0–9.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.3 (0.0–0.5) /6 ; coût moyen 0.142 $ |
+| 2026-10-16 | 1.2.1 | Sonnet 5.5, effort high | 6.3 (6.0–7.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.2 (0.0–0.5) /6 ; coût moyen 0.091 $ |
+| 2026-10-16 | 1.3.0 | Sonnet 5.5, effort high | 6.3 (5.5–7.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.2 (1.5–3.0) /6 ; coût moyen 0.131 $ |
+| 2026-10-16 | sans skill | Opus 5.5 | 7.7 (6.0–9.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 1.2 (0.5–1.5) /6 ; coût moyen 0.209 $ |
+| 2026-10-16 | 1.2.1 | Opus 5.5 | 7.3 (6.5–8.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.2 (0.0–0.5) /6 ; coût moyen 0.165 $ |
+| 2026-10-16 | 1.3.0 | Opus 5.5 | 7.3 (7.0–8.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 1.8 (1.0–2.5) /6 ; coût moyen 0.189 $ |

@@ -93,6 +93,15 @@ Textes vérifiés le 2026-10-16 : C. trav. L8222-1, R8222-1 (vérifications obli
 9. Inclut un critère sur la localisation des données et des accès et l'encadrement des transferts hors UE (RGPD, chapitre V), pertinent pour le support de niveau 1 de B à Casablanca, et un critère de réversibilité en fin de contrat.
 10. Prévoit une notation individuelle par chaque membre du comité avant consolidation, une case de justification par note, et ne désigne pas de lauréat : la grille est l'outil, la décision revient au comité.
 
+## Forme attendue
+
+1. Les critères éliminatoires forment un bloc placé avant la grille pondérée, sous forme de liste conforme / non conforme par offre, avec pour chacun la pièce justificative attendue.
+2. La grille pondérée est un tableau réutilisable avec les colonnes : critère, pondération en %, mode de mesure, note par offre (A, B, C), note pondérée, justification ; une ligne de total pondéré la ferme.
+3. Les critères pondérés sont regroupés par famille (coût, qualité de service, solidité du prestataire, sécurité et données, réversibilité) avec un sous-total de pondération par famille, le total faisant 100 %.
+4. L'échelle de notation est présentée en tableau à part (niveau, descripteur observable), par critère qualitatif ou en échelle commune à laquelle chaque critère renvoie.
+5. Les données des offres (coût sur 36 mois, engagement, délais garantis, plages, tickets inclus) sont reprises dans un tableau comparatif séparé de la grille, avec l'horizon et le volume de calcul (55 tickets par mois) écrits en tête.
+6. Le mode d'emploi pour le comité est séparé de la grille : étapes dans l'ordre (contrôle éliminatoire, notation individuelle, consolidation, discussion des écarts de notes), et une fiche de notation individuelle vierge à remplir par chaque membre.
+
 ## Une mauvaise sortie
 
 - Note le prix sur l'abonnement mensuel affiché et donne la meilleure note prix à B.
@@ -107,3 +116,12 @@ Textes vérifiés le 2026-10-16 : C. trav. L8222-1, R8222-1 (vérifications obli
 | 2026-10-16 | 1.2.0 | Sonnet 5.5 | **8.7 (8–9)** | banc 3 passages ; erreurs 0.7 (0–1) |
 | 2026-10-16 | 1.1.0 | Haiku 5.5 | 1.3 (1–2) | banc 3 passages, moyenne (min–max) ; erreurs relevées 8.7 (7–10) |
 | 2026-10-16 | 1.2.0 | Haiku 5.5 | **4.3 (4–5)** | banc 3 passages ; erreurs 11.7 (10–13) |
+| 2026-10-16 | sans skill | Sonnet 5.5, effort medium | 4.8 (4.5–5.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.3 (0.0–1.0) /6 ; coût moyen 0.067 $ |
+| 2026-10-16 | 1.1.0 | Sonnet 5.5, effort medium | 6.5 (6.0–7.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.0 (1.5–2.5) /6 ; coût moyen 0.065 $ |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5, effort medium | 8.2 (7.5–9.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.0 (0.0–0.0) /6 ; coût moyen 0.107 $ |
+| 2026-10-16 | sans skill | Sonnet 5.5, effort high | 5.8 (5.0–6.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.7 (0.0–1.0) /6 ; coût moyen 0.121 $ |
+| 2026-10-16 | 1.1.0 | Sonnet 5.5, effort high | 6.8 (6.5–7.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.2 (1.5–3.0) /6 ; coût moyen 0.109 $ |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5, effort high | 7.8 (7.5–8.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.3 (0.0–1.0) /6 ; coût moyen 0.173 $ |
+| 2026-10-16 | sans skill | Opus 5.5 | 6.5 (6.5–6.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.0 (0.0–0.0) /6 ; coût moyen 0.145 $ |
+| 2026-10-16 | 1.1.0 | Opus 5.5 | 7.3 (7.0–8.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.7 (2.0–3.0) /6 ; coût moyen 0.177 $ |
+| 2026-10-16 | 1.2.0 | Opus 5.5 | 8.0 (7.0–9.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.7 (0.0–1.0) /6 ; coût moyen 0.311 $ |

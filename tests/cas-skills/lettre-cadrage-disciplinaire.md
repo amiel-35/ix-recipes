@@ -115,6 +115,15 @@ Textes et décisions vérifiés le 2026-10-16 : C. trav. L1311-2 (règlement int
 9. Donne la date limite pour agir sur les faits retenus : avant le 6 décembre 2026 pour le retard du 6 octobre, avant le 9 décembre 2026 pour l'absence du 9 octobre.
 10. Indique que le projet doit être validé par un juriste avant envoi.
 
+## Forme attendue
+
+1. Avant la lettre, une note à la RRH, séparée du projet de courrier, contient un tableau des faits avec les colonnes : fait, date, source ou preuve, retenu / écarté, motif.
+2. Le projet de lettre est un bloc distinct, prêt à copier, qui porte les mentions de forme d'un courrier : expéditeur (employeur), destinataire avec adresse, lieu et date, mode d'envoi (lettre recommandée avec accusé de réception ou remise en main propre contre décharge), objet qui nomme la sanction, formule d'appel, formule de politesse, nom et qualité du signataire.
+3. Dans la lettre, chaque grief retenu forme un paragraphe ou une puce à part, dans l'ordre chronologique, avec date, heure ou durée et source.
+4. Les informations que l'entreprise doit compléter apparaissent comme des champs entre crochets ([adresse du salarié], [nom et fonction du signataire], [article du règlement intérieur]) et non comme des valeurs inventées.
+5. La lettre ne contient ni les faits écartés, ni la retenue sur salaire, ni aucun commentaire juridique ou interne destiné à la RRH : ceux-ci restent dans la note.
+6. Les démarches avant envoi (vérification du règlement intérieur, réponse sur la convocation, dates limites, validation par un juriste) forment une liste d'actions séparée, chacune avec sa date limite, la validation juridique en dernier.
+
 ## Une mauvaise sortie
 
 - Rédige une lettre qui « reprend tout » : altercation de mai, retards de septembre, mauvaise attitude générale et retenue de 100 €.
@@ -129,3 +138,12 @@ Textes et décisions vérifiés le 2026-10-16 : C. trav. L1311-2 (règlement int
 | 2026-10-16 | 1.2.0 | Sonnet 5.5 | **9.0 (9–9)** | banc 3 passages ; erreurs 0.7 (0–1) |
 | 2026-10-16 | 1.1.0 | Haiku 5.5 | 2.3 (1–4) | banc 3 passages, moyenne (min–max) ; erreurs relevées 6.7 (6–8) |
 | 2026-10-16 | 1.2.0 | Haiku 5.5 | **5.7 (5–6)** | banc 3 passages ; erreurs 1.3 (0–3) |
+| 2026-10-16 | sans skill | Sonnet 5.5, effort medium | 6.5 (5.5–7.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 3.2 (2.0–4.0) /6 ; coût moyen 0.058 $ |
+| 2026-10-16 | 1.1.0 | Sonnet 5.5, effort medium | 8.0 (6.0–9.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 3.0 (3.0–3.0) /6 ; coût moyen 0.062 $ |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5, effort medium | 8.5 (8.0–9.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 3.0 (3.0–3.0) /6 ; coût moyen 0.071 $ |
+| 2026-10-16 | sans skill | Sonnet 5.5, effort high | 7.3 (7.0–8.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.3 (2.0–3.0) /6 ; coût moyen 0.100 $ |
+| 2026-10-16 | 1.1.0 | Sonnet 5.5, effort high | 8.8 (8.0–9.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 3.0 (3.0–3.0) /6 ; coût moyen 0.101 $ |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5, effort high | 9.3 (9.0–9.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 3.2 (3.0–3.5) /6 ; coût moyen 0.106 $ |
+| 2026-10-16 | sans skill | Opus 5.5 | 7.8 (7.0–8.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 3.3 (3.0–3.5) /6 ; coût moyen 0.124 $ |
+| 2026-10-16 | 1.1.0 | Opus 5.5 | 9.0 (8.0–10.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 3.2 (2.5–4.0) /6 ; coût moyen 0.135 $ |
+| 2026-10-16 | 1.2.0 | Opus 5.5 | 9.7 (9.5–10.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 3.7 (3.5–4.0) /6 ; coût moyen 0.143 $ |

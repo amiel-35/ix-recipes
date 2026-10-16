@@ -5,8 +5,13 @@ Un fichier par skill : une ou plusieurs demandes réalistes, ce que doit conteni
 Le banc s'exécute avec [`banc.py`](banc.py) (bibliothèque standard, CLI `claude` connectée) ; il n'écrit rien dans le dépôt :
 
 ```bash
-python3 tests/cas-skills/banc.py --skills cgv-checker,ticket-triage --base cbe271c --models sonnet,haiku --passages 3 --out /tmp/banc
+python3 tests/cas-skills/banc.py --skills cgv-checker,ticket-triage --cases 3 --versions sans,avant,apres --configs sonnet:medium,sonnet:high,opus --passages 3 --judges opus,sonnet --out /tmp/banc
 ```
+
+- `--versions` : `sans` (même modèle, sans skill, invite neutre), `avant` (le skill au commit `--base`), `apres` (le skill du dépôt). Comparer à « sans » dit si le skill apporte quelque chose ; comparer à « avant » dit si la réécriture l'améliore.
+- `--configs` : `modèle[:effort]`, pour comparer un skill sur un modèle moins cher à un modèle plus cher sans skill.
+- `--judges` : plusieurs juges, dont la moyenne fait la note ; le rapport donne l'écart entre eux (un juge peut favoriser les sorties de son propre modèle).
+- Le rapport donne, par version et par réglage : le fond, la forme (si le cas a une section « Forme attendue »), les erreurs, la stabilité de structure entre passages, le coût et la durée.
 
 Comment un cas est joué :
 

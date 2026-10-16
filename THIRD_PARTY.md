@@ -65,6 +65,12 @@ Règle pour la suite : avant de reprendre quoi que ce soit d'un autre dépôt, v
 - **Skills inspirés :** `metriques-saas` (`plugins/startup-business-analyst/skills/startup-metrics-framework`), `analyse-concurrentielle` (`…/competitive-landscape`), `tam-sam-som` (`…/market-sizing-analysis`), `contrat-emploi` (`plugins/hr-legal-compliance/skills/employment-contract-templates`), `tableau-de-bord-kpi` (`plugins/business-analytics/skills/kpi-dashboard-design`)
 - **Ce qui en est repris :** le périmètre et l'idée de chaque skill, importés en mars 2026 via l'annuaire agentskill.sh. Aucun passage du texte d'origine ne subsiste dans les versions actuelles ; crédit donné par prudence.
 
+## romainsimon/paperasse (Romain Simon)
+
+- **Source :** https://github.com/romainsimon/paperasse, `evals/run_evals.py`, lu le 2026-10-16 (commit `f2e15c4`)
+- **Licence :** MIT, « Copyright (c) 2026 Romain Simon »
+- **Ce qui en est repris :** des idées pour le banc `tests/cas-skills/banc.py`, pas de code : jouer chaque cas avec et sans skill, réutiliser les passages et les notations déjà faits. Le banc d'ix-recipes est écrit séparément (CLI `claude` connectée au lieu de `claude --bare`, versions avant / après, réglages d'effort, critères de forme, stabilité de structure, juges croisés).
+
 ## davila7/claude-code-templates (Daniel Ávila)
 
 - **Source :** https://github.com/davila7/claude-code-templates, `cli-tool/components/skills/business-marketing/pricing-strategy`

@@ -120,6 +120,15 @@ ecrit: 2026-10-16
 9. Relève que le personnel augmente de 18 000 € alors que le volume baisse de 10 %, et propose des hypothèses à vérifier (intérim, heures supplémentaires, remplacement d'absences), sans en présenter aucune comme un fait.
 10. Formule le lien entre la hausse de prix au 1er juillet et la baisse de 10 % du volume comme une hypothèse à tester (volumes par client et par mois, clients perdus), pas comme une cause établie, et sépare dans toute la sortie ce qui est observé, ce qui est une hypothèse chiffrée et ce qui reste à vérifier.
 
+## Forme attendue
+
+1. En tête, avant tout tableau, une synthèse de trois à cinq lignes pour le comité donne l'écart de résultat en euros et ses deux ou trois causes principales chiffrées.
+2. Un tableau des écarts ligne par ligne avec les colonnes : budget, réel, écart en euros, écart en %, favorable / défavorable, puis budget flexible et écart réel / flexible ; il inclut les lignes de total des charges et de résultat, et indique la période et l'unité (€ HT).
+3. Un pont du résultat (tableau ou cascade) part du résultat budgété, liste chaque effet avec son signe et son montant, et arrive exactement au résultat réel ; la somme des effets égale l'écart total affiché.
+4. Chaque explication porte une étiquette visible de statut (observé, hypothèse, à vérifier), en colonne ou en marqueur, et chaque hypothèse est suivie de la donnée ou du document qui la confirmerait.
+5. Les éléments non récurrents (report du salon, honoraires d'avocat) sont regroupés dans un bloc à part, avec un résultat retraité présenté à côté du résultat réel, sans le remplacer.
+6. Les actions et vérifications forment une liste distincte du diagnostic, chacune avec la fonction qui la porte et l'échéance (avant le comité, clôture du T4).
+
 ## Une mauvaise sortie
 
 - Conclut que les charges sont maîtrisées (−6 000 €) et que l'écart vient « du chiffre d'affaires », sans budget flexible ni décomposition volume/prix.
@@ -134,3 +143,12 @@ ecrit: 2026-10-16
 | 2026-10-16 | 1.2.0 | Sonnet 5.5 | **6.7 (6–7)** | banc 3 passages ; erreurs 1.3 (0–4) |
 | 2026-10-16 | 1.1.0 | Haiku 5.5 | 4.0 (3–5) | banc 3 passages, moyenne (min–max) ; erreurs relevées 7.7 (7–8) |
 | 2026-10-16 | 1.2.0 | Haiku 5.5 | **5.0 (4–6)** | banc 3 passages ; erreurs 9.0 (7–12) |
+| 2026-10-16 | sans skill | Sonnet 5.5, effort medium | 4.2 (2.5–5.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 0.8 (0.5–1.0) /6 ; coût moyen 0.037 $ |
+| 2026-10-16 | 1.1.0 | Sonnet 5.5, effort medium | 6.2 (6.0–6.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.2 (1.5–3.0) /6 ; coût moyen 0.069 $ |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5, effort medium | 6.5 (6.5–6.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 1.5 (1.0–2.0) /6 ; coût moyen 0.092 $ |
+| 2026-10-16 | sans skill | Sonnet 5.5, effort high | 5.2 (4.5–6.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.3 (1.5–3.0) /6 ; coût moyen 0.047 $ |
+| 2026-10-16 | 1.1.0 | Sonnet 5.5, effort high | 6.3 (6.0–6.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.2 (1.0–3.0) /6 ; coût moyen 0.085 $ |
+| 2026-10-16 | 1.2.0 | Sonnet 5.5, effort high | 6.7 (6.5–7.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 1.7 (1.0–2.0) /6 ; coût moyen 0.116 $ |
+| 2026-10-16 | sans skill | Opus 5.5 | 5.5 (5.0–6.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.5 (2.0–3.0) /6 ; coût moyen 0.113 $ |
+| 2026-10-16 | 1.1.0 | Opus 5.5 | 6.5 (5.0–7.5) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.8 (2.5–3.0) /6 ; coût moyen 0.162 $ |
+| 2026-10-16 | 1.2.0 | Opus 5.5 | 7.2 (6.0–8.0) | banc « valeur », 3 passages, juges Opus et Sonnet ; forme 2.5 (2.0–3.0) /6 ; coût moyen 0.219 $ |

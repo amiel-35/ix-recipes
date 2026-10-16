@@ -200,6 +200,41 @@ Ce que le banc apprend :
 4. **`feature-spec`, cas 3** : le cas demande le droit des pénalités de retard, qu'un skill de spécification ne porte pas. Les deux versions échouent ; l'écart (5,0 → 4,3) reste dans le bruit d'un passage à l'autre.
 5. **Pour la suite** : 10 skills ont été joués (les 3 du pilote et ces 7). Les 36 autres ont leur cas de test écrit mais n'ont pas été joués. La mesure utile serait la même démarche : un cas de contrôle écrit sans voir le skill, puis le banc à 3 passages (`banc.py --skills …`).
 
+### Valeur du skill : sans skill, ancien, nouveau ; Sonnet ou Opus
+
+Deuxième banc, sur les quatre skills dont le cas 3 est resté indépendant (`lettre-cadrage-disciplinaire`, `cgv-checker`, `budget-variance-analysis`, `vendor-scorecard`). Chaque cas est joué :
+- en trois versions : **sans skill** (même modèle, invite neutre), ancien skill, nouveau skill ;
+- sur trois réglages : Sonnet 5.5 en effort medium, Sonnet 5.5 en effort high, Opus 5.5 ;
+- 3 passages par combinaison ;
+- avec une note de fond et une note de forme (six critères écrits sans voir le skill), plus le coût de chaque passage.
+
+Les notes sont celles des juges Opus et Sonnet, complètes. Codex (gpt-6-astra) sert de contrôle sur 67 des 108 sorties. Son quota a été épuisé en cours de route, et celui d'agy (Gemini) presque aussitôt (14 notations) : les notations manquantes seront retentées à la prochaine relance.
+
+| Réglage | Sans skill | Ancien skill | Nouveau skill | Coût moyen par demande (sans / ancien / nouveau) |
+|---|---|---|---|---|
+| Sonnet, effort medium | fond 55 %, forme 19 % | 62 %, 30 % | **72 %**, 26 % | 0,056 / 0,058 / 0,081 $ |
+| Sonnet, effort high | 66 %, 24 % | 71 %, 31 % | **75 %**, 31 % | 0,102 / 0,096 / 0,132 $ |
+| Opus | 69 %, 29 % | 75 %, 37 % | **80 %**, 36 % | 0,148 / 0,160 / 0,215 $ |
+
+Fond par skill, en % (sans / ancien / nouveau) :
+
+| Skill | Sonnet medium | Sonnet high | Opus |
+|---|---|---|---|
+| `lettre-cadrage-disciplinaire` | 65 / 80 / 85 | 73 / 88 / 93 | 78 / 90 / 97 |
+| `cgv-checker` | **65** / 40 / 58 | **82** / 63 / 63 | **77** / 73 / 73 |
+| `budget-variance-analysis` | 42 / 62 / 65 | 52 / 63 / 67 | 55 / 65 / 72 |
+| `vendor-scorecard` | 48 / 65 / 82 | 58 / 68 / 78 | 65 / 73 / 80 |
+
+Ce que ce banc apprend :
+
+1. **Le skill apporte du fond par rapport à l'absence de skill**, sur trois skills sur quatre et sur les trois réglages : +17 points avec Sonnet medium, +9 avec Sonnet high, +11 avec Opus. Le juge Codex voit le même écart (sans skill 50 %, avec skill 62 à 64 %).
+2. **Un bon skill sur Sonnet vaut Opus sans skill, pour moins cher.** Sonnet medium avec le nouveau skill fait 72 % pour 0,081 $, contre 69 % pour 0,148 $ avec Opus sans skill. Le meilleur résultat reste Opus avec le skill (80 %), au coût le plus élevé (0,215 $).
+3. **`cgv-checker` fait moins bien qu'aucun skill**, en ancienne comme en nouvelle version. Sur des CGV de SaaS, les modèles seuls pensent au règlement sur les données (Data Act) et à l'art. 28 du RGPD. Avec le skill, ils suivent sa grille, qui ne les porte pas, et les oublient. Une grille de lecture resserre l'attention : elle doit finir par « et ce que le sujet du document appelle en plus (données, secteur) ». À corriger, avec ton accord, puisque ce cas cesserait alors d'être un contrôle.
+4. **Le gain du nouveau skill sur l'ancien dépend du juge.** Il va de +4 à +10 points selon les juges Claude, et Codex ne le voit pas (64 % contre 62 %). Le gain « skill contre pas de skill » est solide, le gain « réécriture contre ancienne version » l'est moins.
+5. **La forme est le point faible.** Elle passe de 19-29 % sans skill à 26-37 % avec un skill, et la réécriture ne l'a pas améliorée. Sur `vendor-scorecard`, elle l'a même dégradée : la nouvelle version ne regroupe plus les critères par famille et ne présente plus l'échelle à part. Les critères de forme ont été écrits par un tiers, sans voir le skill. Ils disent ce qu'un professionnel attend, et les skills ne le donnent pas encore.
+6. **Le nouveau skill coûte environ 40 % de plus par demande** que l'ancien (consigne plus longue, sortie plus fournie).
+7. **La mesure de stabilité de structure** (titres et tableaux identiques d'un passage à l'autre) ne discrimine pas les versions dans cette première forme (0,0 à 0,3 partout). Elle est à revoir avant d'en tirer quoi que ce soit.
+
 ### Points laissés en l'état
 
 Parce qu'ils dépendent d'une question non tranchée de la revue (§3) :

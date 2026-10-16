@@ -2,6 +2,30 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.12.0: the calculation check is specified and may re-read the source
+
+### Recipes
+
+- **Calculation check** (Amiel's decision 8 of 2026-10-16): the atom that recomputes every derived
+  figure from the source values and reports the gaps is specified in
+  [`docs/atome-verification-calcul.md`](docs/atome-verification-calcul.md). It belongs to ix-skills
+  (`ix-skills:calc-check`), where it remains to be created. `fact-check` only checks that a figure is in
+  the source.
+- `ix-skills:calc-check` joins the closed list of the skills that may re-read the source
+  (`VERIFICATION_SKILLS` in `scripts/parcours.py` and `build.py`). Until the atom exists, `requires`
+  refuses it. The same change is to be carried over to ix-skills' copy of `build.py`.
+- **Decision on a corpus** ([`docs/decision-corpus.md`](docs/decision-corpus.md)): separate the request
+  (step 1 only, leak check) from the corpus (pieces a step consults when the recipe allows it). Decided,
+  not coded: no code before the checks of its §8. Isolation tests recorded there: Claude refuses to read
+  outside its step folder; Codex's read-only sandbox reads the whole disk (accepted, to be said in the page).
+
+### Page
+
+- **Page 1.1.1**: the designer is told only the checking skills the catalogue holds (`calc-check` is not
+  announced before it exists).
+- `suivi-parcours` 1.5.1 (its scripts).
+- README: the install prompt names version 2.12.0.
+
 ## 2026-10-16 — plugin 2.11.0: domain skills rewritten after Anthropic's skill-writing guidance, merges, output format
 
 - README: the install prompt names version 2.11.0.
@@ -53,6 +77,7 @@ Same release, first part (developed as 2.9.0 on its branch, renumbered at merge)
   are the labour ministry's position (Q&A of 12 February 2026, question 2, Civil Code
   art. 2222), not the law's wording; below 50 employees damages require proof of harm
   (Cass. soc. 17 June 2026, 25-10.517).
+
 
 ## 2026-10-16 — plugin 2.10.0: a checking step may re-read the source (recipe format 2)
 

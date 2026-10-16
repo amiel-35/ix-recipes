@@ -663,13 +663,18 @@ SOURCES_RULE = (
     "reports, tables, emails: step 1 receives `[brief]`, never names of documents), `context_sheet` "
     "(from step 2 on), `answers` (after a step with `pause: answers`), or `<step>.<field>` transmitted "
     "by an earlier step. Any other name is refused.")
-SOURCE_RULE = (
-    "A checking step — " + ", ".join(f"`{ref}`" for ref in P.VERIFICATION_SKILLS) + ", and no other skill — "
-    "placed after the step that produced what it checks may re-read the raw request: `reads_source: true`. "
-    "Set it yourself whenever such a step must check a deliverable against what was asked or given (figures, "
-    "imposed items, the requester's wording), not only against the fields handed down: the context sheet and "
-    "the upstream fields are summaries, and a checker that reads only them cannot see what they dropped. "
-    "A producing step never reads the raw request; pass it precise items with `verbatim` at step 1 instead.")
+def source_rule(refs=None):
+    """The reads_source rule for the designer, naming only the checking skills the catalogue holds
+    (`ix-skills:calc-check` is on the closed list before it exists in ix-skills)."""
+    refs = set(P.catalogue()) if refs is None else refs
+    checks = [ref for ref in P.VERIFICATION_SKILLS if ref in refs] or list(P.VERIFICATION_SKILLS)
+    return (
+        "A checking step — " + ", ".join(f"`{ref}`" for ref in checks) + ", and no other skill — "
+        "placed after the step that produced what it checks may re-read the raw request: `reads_source: true`. "
+        "Set it yourself whenever such a step must check a deliverable against what was asked or given (figures, "
+        "imposed items, the requester's wording), not only against the fields handed down: the context sheet and "
+        "the upstream fields are summaries, and a checker that reads only them cannot see what they dropped. "
+        "A producing step never reads the raw request; pass it precise items with `verbatim` at step 1 instead.")
 PROPOSAL_SHAPE = (
     '{"title": "<short French name of the recipe>", "summary": "<one French sentence: from what to what>",\n'
     ' "context_sheet": ["<French rubric of the context sheet>", "..."],\n'
@@ -682,6 +687,7 @@ PROPOSAL_SHAPE = (
 def design_message(skill, need, mode="propose", insist=False, previous=None, proposal=None, comments=None):
     """The message of one designer call. `propose` and `revise` ask for the chain only (a JSON
     proposal the user comments on), `write` for the recipe file implementing a validated proposal."""
+    refs = set(P.catalogue())
     parts = [
         "You are running ONE call of the recipe designer. This message is all you know: you have no "
         "other context, and you need no file and no tool.",
@@ -697,7 +703,7 @@ def design_message(skill, need, mode="propose", insist=False, previous=None, pro
         "frontmatter key it has; a `workflow` step may also use `optional: true` (run only if the human "
         "chooses it at the pause before), `verbatim` (step 1 only), `reads_source: true` (a checking step that "
         f"re-reads the raw request; the recipe then declares `format: {P.SOURCE_FORMAT}`) and `pause: answers` / `choose`.\n"
-        f"{SOURCES_RULE}\n{SOURCE_RULE}\n"
+        f"{SOURCES_RULE}\n{source_rule(refs)}\n"
         f"````markdown\n{TEMPLATE}````\n=== END FORMAT REFERENCE ===",
         f"=== JOB ===\n{need}\n=== END JOB ===",
     ]
@@ -742,7 +748,7 @@ def design_message(skill, need, mode="propose", insist=False, previous=None, pro
             "Give the skill's part A (verdict). When a recipe is justified, DO NOT write the recipe file: "
             "the user first comments on the chain. Give instead the PROPOSAL, in ONE ```json code block of "
             f"exactly this shape:\n{PROPOSAL_SHAPE}\n"
-            f"Sources in `receives` follow the rule above: {SOURCES_RULE} {SOURCE_RULE} At most {MAX_STEPS} steps.\n"
+            f"Sources in `receives` follow the rule above: {SOURCES_RULE} {source_rule(refs)} At most {MAX_STEPS} steps.\n"
             + ("Take every comment into account; when you do not follow one, say why in the rationale.\n"
                if mode == "revise" else "")
             + "Then the rationale and the questions to settle (the skill's part B, without the file). Leave "

@@ -914,7 +914,9 @@ class SourceDesignTests(RecettesTestCase):
         (self.fake / "concepteur-recette.md").write_text(proposal_output(CHECKED), encoding="utf-8")
         self.rok("design", slug, "--engine", "fake")
         message = (self.fake / "received" / "concepteur-recette.md").read_text(encoding="utf-8")
-        self.assertIn("`ix-skills:fact-check`, `ix-skills:quality-check`, `ix-skills:controle-qualite`, and no other skill", message)
+        # the checking skills the catalogue holds, and no other: calc-check is on the list before it exists in ix-skills
+        self.assertIn("A checking step — `ix-skills:controle-qualite`, and no other skill", message)
+        self.assertNotIn("calc-check", message)
         self.assertIn("Set it yourself whenever such a step must check a deliverable", message)
         self.assertIn('"reads_source": false', message)   # in the shape of the proposal
         self.assertTrue(self.rok("show", slug)["proposal"]["steps"][2]["reads_source"])

@@ -2681,5 +2681,19 @@ class SourceReadingTests(ParcoursTestCase):
         self.assertGreater(row["chars"], len(INPUT_TEXT))
 
 
+
+class CalcCheckTests(ParcoursTestCase):
+    """docs/atome-verification-calcul.md: the calculation check, to be created in ix-skills, may already read the source."""
+
+    def test_the_calculation_check_is_on_the_closed_list(self):
+        self.assertIn("ix-skills:calc-check", parcours.VERIFICATION_SKILLS)
+        wf = {"format": 2, "steps": [{"id": "ecarts", "skill": "ix-recipes:budget-variance-analysis"},
+                                     {"id": "calculs", "skill": "ix-skills:calc-check", "reads_source": True}]}
+        self.assertEqual(parcours.source_errors(wf), [])
+        self.assertTrue(parcours.normalize_step(dict(wf["steps"][1], mission="m", transmits=["x"]), 1)["reads_source"])
+        wf["format"] = 1
+        self.assertTrue(any("format: 2" in e for e in parcours.source_errors(wf)))
+
+
 if __name__ == "__main__":
     unittest.main()

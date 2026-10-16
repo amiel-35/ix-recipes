@@ -81,8 +81,10 @@ SOURCE_INPUT = "source"  # the name of the source in the message of a step that 
 # The skills that check an upstream output against evidence: the only ones that may read the source
 # (`reads_source`, docs/format-recette.md §1.10). A closed list on purpose: a role declared by the recipe
 # would be its own guarantee, and `category: critique` in ix-skills also holds skills that produce
-# (red-team, contrarian…). Keep in step with VERIFICATION_SKILLS in build.py.
-VERIFICATION_SKILLS = ("ix-skills:fact-check", "ix-skills:quality-check", "ix-skills:controle-qualite")
+# (red-team, contrarian…). Keep in step with VERIFICATION_SKILLS in build.py. `calc-check` is the
+# calculation check specified in docs/atome-verification-calcul.md, to be created in ix-skills.
+VERIFICATION_SKILLS = ("ix-skills:fact-check", "ix-skills:quality-check", "ix-skills:controle-qualite",
+                       "ix-skills:calc-check")
 
 
 class ParcoursError(Exception):

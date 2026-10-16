@@ -236,7 +236,9 @@ RECIPE_FORMATS = (1, 2)  # workflow.format values this build.py knows (docs/form
 SOURCE_FORMAT = 2        # from format 2 on, a checking step may read the source (`reads_source`)
 # The only skills that may read the source: they check an upstream output against evidence
 # (docs/format-recette.md §1.10). Keep in step with VERIFICATION_SKILLS in scripts/parcours.py.
-VERIFICATION_SKILLS = ("ix-skills:fact-check", "ix-skills:quality-check", "ix-skills:controle-qualite")
+# `calc-check`: the calculation check of ix-recipes docs/atome-verification-calcul.md, to be created in ix-skills.
+VERIFICATION_SKILLS = ("ix-skills:fact-check", "ix-skills:quality-check", "ix-skills:controle-qualite",
+                       "ix-skills:calc-check")
 
 
 def _skill_exists(ref: str):

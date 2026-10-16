@@ -21,6 +21,7 @@ Une recette qui n'enchaîne rien reste un skill ordinaire : c'est le cas par dé
     - Jamais à l'étape 1 (elle lit déjà la demande), jamais sur une étape qui produit : `build.py`, l'exécuteur et la page refusent en le disant (« reads_source est réservé aux étapes qui vérifient… ; pour lui faire passer des éléments précis de la demande, déclarez-les verbatim à l'étape 1 »).
     - Les champs `verbatim` restent le défaut ; `reads_source` sert quand le contrôle porte sur la demande elle-même (chiffres d'un tableau, éléments imposés, mots du demandeur), pas seulement sur ce que l'amont a transmis.
     - Ce qu'elle transmet reste contrôlé : un verdict qui recopie un passage long de la source (40 mots d'affilée) est refusé comme toute fuite, puisque ses champs peuvent aller à une étape qui produit (une offre refaite avec les verdicts).
+    - La vérification **de calcul** (recalculer un écart, un ratio, un total à partir des valeurs de la source) est un geste à part de `fact-check`, qui vérifie seulement qu'un chiffre est dans la source. Son atome, `ix-skills:calc-check`, est spécifié dans [`atome-verification-calcul.md`](atome-verification-calcul.md) et figure dans la liste fermée depuis le 2026-10-16 (décision 8) ; il reste à le créer dans ix-skills. Tant qu'il n'existe pas, `requires` le refuse et le concepteur de la page ne l'annonce pas.
 
 ## 2. Frontmatter
 
@@ -159,4 +160,4 @@ v1 : une recette ne lance pas une autre recette-workflow. Elle **réutilise ses 
 
 ## 7. Ce qui n'est pas dans la v1
 
-Sortie JSON des étapes (lot 2), état persistant et reprise automatique (lot 2), interface de suivi et serveur MCP (lot 3), imbrication de recettes, exécution parallèle, boucles. Pas non plus de vérification de calcul : `fact-check` vérifie qu'un chiffre est dans la source, il ne recalcule pas un écart ou un ratio dérivé (manque du catalogue relevé par la revue des skills métier, à traiter côté ix-skills).
+Sortie JSON des étapes (lot 2), état persistant et reprise automatique (lot 2), interface de suivi et serveur MCP (lot 3), imbrication de recettes, exécution parallèle, boucles. La vérification de calcul est spécifiée ([`atome-verification-calcul.md`](atome-verification-calcul.md)) et admise à relire la source, mais son atome n'existe pas encore dans ix-skills.

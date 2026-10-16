@@ -1925,7 +1925,7 @@ function essaisPanel(d) {
         blocked ? h('div', { class: 'banner warn' }, blocked) : null,
         h('div', { class: 'field' }, h('label', { for: 'essai-text' }, 'Un exemple de demande'), h('p', { class: 'hint' }, 'Seule la première étape le lit, comme dans un vrai dossier.'), area),
         h('div', { class: 'field' }, h('label', null, 'Nom de l’essai'), h('p', { class: 'hint' }, 'Facultatif.'), title),
-        h('div', { class: 'field' }, h('label', null, 'Moteur'), select,
+        h('div', { class: 'field' }, h('label', null, 'Moteur'), select, engineNote(f.engine),
           f.engine !== 'simulation' && f.engine !== 'fake' ? h('p', { class: 'hint', style: 'margin-top:8px' }, 'Essai réel : chaque étape appelle le moteur. Avant chaque lancement, la page montre les étapes prévues et le plafond de coût, et attend votre accord.')
             : h('p', { class: 'hint', style: 'margin-top:8px' }, 'Chaque étape produit une sortie simulée qui nomme ce qu’elle a reçu et transmet ses champs : on vérifie la mécanique sans rien dépenser.')),
         h('div', { class: 'btns' }, recipeBtn('Lancer l’essai', 'primary', function () { startEssai(d); }, 'Création de l’essai…', !!blocked)))));
@@ -1971,6 +1971,7 @@ async function confirmPaidEssai(plan) {
     'Moteur : ' + paid.map(function (e) { return (ENGINE_FR[e] || e) + ' × ' + plan.calls[e]; }).join(', ') + '.'];
   if (plan.claude_steps) body.push('Plafond de sécurité : ' + usd(plan.ceiling_usd) + ' (' + plural(plan.claude_steps, 'appel', 'appels') + ' Claude × ' + usd(plan.max_budget_usd) + ' × 2 pour une relance éventuelle). Le coût réel est en général bien plus bas.');
   if (plan.subscription_calls) body.push(plural(plan.subscription_calls, 'appel', 'appels') + ' sur votre abonnement Codex ou Antigravity.');
+  if (plan.calls && plan.calls.codex) body.push(CODEX_NOTE);
   return ask('Lancer un essai réel ?', body, 'Lancer');
 }
 
@@ -2239,7 +2240,7 @@ function viewNew() {
       }))),
     h('div', { class: 'field' }, h('label', null, 'Titre'), h('p', { class: 'hint' }, 'Pour retrouver le dossier dans la liste. Facultatif.'), title),
     h('div', { class: 'field' }, h('label', { for: 'new-text' }, 'La demande'), h('p', { class: 'hint' }, 'Le texte brut tel que vous l’avez reçu.'), text, fieldError('text'), h('div', { class: 'row', style: 'margin-top:6px' }, h('span', { class: 'grow' }), count), drop),
-    S.tech ? h('div', { class: 'field' }, h('label', null, 'Moteur'), engineSelect(dr.engine || 'claude', S.list ? S.list.engines : ['claude'], function (v) { dr.engine = v; })) : null,
+    S.tech ? h('div', { class: 'field' }, h('label', null, 'Moteur'), engineSelect(dr.engine || 'claude', S.list ? S.list.engines : ['claude'], function (v) { dr.engine = v; render(); }), engineNote(dr.engine)) : null,
     h('div', { class: 'form-foot' },
       h('button', { class: 'btn primary', type: 'button', 'aria-busy': S.busy ? 'true' : 'false', onclick: createDossier }, S.busy ? h('span', { class: 'spin' }) : null, S.busy || 'Créer et démarrer'),
       h('button', { class: 'btn ghost', type: 'button', onclick: function () { go('#/'); } }, 'Annuler'),
@@ -2446,9 +2447,10 @@ function actionCard(p, focus, selected) {
 // Technical mode only: the engine of the steps the next launch plays (it becomes the dossier's default).
 function engineLine(p) {
   if (!S.tech || p.status !== 'active' || p.locked) return null;
-  return h('div', { class: 'engine-pick', style: 'margin:12px 0 0' }, h('span', { style: 'color:var(--ink-2);font-size:13px' }, 'Moteur des prochaines étapes'),
+  return h('div', { class: 'engine-pick', style: 'margin:12px 0 0;flex-wrap:wrap' }, h('span', { style: 'color:var(--ink-2);font-size:13px' }, 'Moteur des prochaines étapes'),
     engineSelect(S.engine[p.slug] || p.engine, p.engines || [p.engine], function (v) { S.engine[p.slug] = v === p.engine ? undefined : v; render(); }),
-    S.engine[p.slug] ? h('span', { style: 'color:var(--ink-3);font-size:12.5px' }, 'deviendra le moteur par défaut du dossier') : null);
+    S.engine[p.slug] ? h('span', { style: 'color:var(--ink-3);font-size:12.5px' }, 'deviendra le moteur par défaut du dossier') : null,
+    engineNote(S.engine[p.slug] || p.engine, 'margin:6px 0 0;flex-basis:100%'));
 }
 function validateLabel(v, dirty) { return dirty ? 'Valider la fiche corrigée et continuer' : (v && v.blocking ? 'Continuer quand même' : 'Valider et continuer'); }
 // The primary button whose label follows the sheet being edited (the page is not re-rendered under a text field).
@@ -2570,6 +2572,8 @@ function techBlock(p, s) {
   if (s.output) files.push(['Sortie brute du moteur', 'raw:' + s.output, s.output]);
   if (s.trace) files.push(['Message exact reçu par l’étape', 'raw:' + s.trace, s.trace]);
   if (s.retry_trace) files.push(['Message de la relance', 'raw:' + s.retry_trace, s.retry_trace]);
+  if (s.events) files.push(['Commandes lancées par Codex (une lecture refusée n’y figure pas)', 'raw:' + s.events, s.events]);
+  if (s.retry_events) files.push(['Commandes lancées par Codex à la relance', 'raw:' + s.retry_events, s.retry_events]);
   var base = String(s.index).padStart(2, '0') + '-' + s.id;
   (p.files || []).filter(function (f) { return f.indexOf(base + '.') === 0 && /\.v\d+\.md$/.test(f); }).forEach(function (f) { files.push(['Version précédente (' + f + ')', 'raw:' + f, f]); });
   return h('div', { class: 'tech' },
@@ -2588,6 +2592,11 @@ function techBlock(p, s) {
       Object.keys(s.handoff).map(function (f) { return h('div', { style: 'margin:8px 0 14px' }, h('div', { style: 'font: 12px var(--mono);color:var(--ink-3);margin-bottom:4px' }, f), mdBox(s.handoff[f], 'compact')); })) : null,
     files.map(function (f) { return fileDetails(f[0], f[1], f[2]); }),
     s.status === 'running' || S.open.has('log') ? subDetails('Journal du lancement', 'log', h('pre', { class: 'raw' }, S.log && S.log.exists ? S.log.log : 'Aucun journal.')) : null);
+}
+// What an engine can still read beyond the step's folder (said when it is chosen).
+var CODEX_NOTE = 'Codex ne lit que le dossier de l’étape (profil de permission vérifié avant chaque appel, codex-cli 0.155.1 au moins) et n’écrit rien. Restent lisibles : /tmp et /var/tmp — n’y laissez rien de confidentiel — et les fichiers système.';
+function engineNote(engine, style) {
+  return engine === 'codex' ? h('p', { class: 'hint', style: style || 'margin-top:8px' }, CODEX_NOTE) : null;
 }
 function engineSelect(value, engines, onchange) {
   var list = engines.slice(); if (list.indexOf(value) < 0) list.unshift(value);

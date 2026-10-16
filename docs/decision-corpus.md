@@ -36,10 +36,11 @@ Dossier jetable contenant une référence et une pièce ; à côté, un faux dos
 | Moteur | Lit son dossier | Lit hors de son dossier | Trace mécanique |
 |---|---|---|---|
 | Claude (`claude -p --tools Read`, options de l'exécuteur) | oui | **non** : refusé par Claude, en chemin absolu comme en `../` ; le refus remonte dans `permission_denials` | **oui** en `--output-format stream-json --verbose` : chaque `Read` avec son chemin et son résultat. Le format `json` actuel ne donne que les refus |
-| Codex (`-s read-only`, testé par `codex sandbox`, sans appel au modèle) | oui | **oui** : son bac à sable interdit d'écrire, pas de lire ; il lit la demande d'un dossier, et tout le disque | non vérifié (quota atteint) : `--json` émet des évènements, à regarder |
+| Codex, avant (`-s read-only`, testé par `codex sandbox`, sans appel au modèle) | oui | **oui** : son bac à sable interdit d'écrire, pas de lire ; il lit la demande d'un dossier, et tout le disque | — |
+| Codex, depuis le plugin 2.13.0 (profil de permission `ixetape`, [exécuteur](executeur.md) §4 ; vrai appel `codex exec`, codex-cli 0.155.1) | oui | **non**, sauf `/tmp`, `/var/tmp` et des fichiers système : la demande à côté du dossier, celle d'un dossier de parcours et `~/.zshrc` sont refusées | **partielle** : `--json` donne les commandes lancées et leur sortie, pas les fichiers lus ; une commande refusée par le bac à sable n'y figure pas |
 | Antigravity, Vibe | — | non testé | non testé : trace déclarative seule |
 
-Conséquence pour Claude : « une étape ne voit que ce que l'exécuteur lui copie » est vrai, le droit se donne en copiant ou non. Conséquence pour Codex : **c'est déjà un trou dans l'isolation actuelle**, corpus ou pas ; une étape Codex qui chercherait `input.md` sur le disque le trouverait. Aujourd'hui, seule l'ignorance du chemin la protège.
+Conséquence pour Claude : « une étape ne voit que ce que l'exécuteur lui copie » est vrai, le droit se donne en copiant ou non. Conséquence pour Codex : **c'était un trou dans l'isolation**, corpus ou pas ; une étape Codex qui cherchait `input.md` sur le disque le trouvait. Refermé par le plugin 2.13.0 : un profil de permission limite ses lectures au dossier de l'étape, vérifié avant chaque appel ; le droit se donne alors en copiant ou non, comme pour Claude. Reste lisible `/tmp` (rien du parcours n'y est).
 
 ## 5. Ce que ça changerait (proposition)
 
@@ -64,12 +65,12 @@ Hors du sujet : les deux phases d'un même skill (décision 2) n'ont pas besoin 
 
 ## 7. Décidé le 2026-10-16
 
-1. **Codex lit tout le disque** : on l'accepte et on le dit dans la page, au moment de choisir Codex comme moteur. En parallèle, une session cherche un réglage qui limite ses lectures au dossier de l'étape (note attendue : `codex-lecture.md` dans les notes partagées).
+1. **Codex lit tout le disque** : on l'accepte et on le dit dans la page, au moment de choisir Codex comme moteur. En parallèle, une session cherche un réglage qui limite ses lectures au dossier de l'étape (note attendue : `codex-lecture.md` dans les notes partagées). **Suite (plugin 2.13.0)** : le réglage existe (profils de permission de Codex) et l'exécuteur l'utilise ; la page dit désormais, au choix de Codex, ce qui reste lisible (`/tmp`, `/var/tmp`, fichiers système).
 2. **La page attendra** : le corpus arrive d'abord en ligne de commande (`new --input demande.md --corpus pièces…`), pour le tester sur un cas réel ; les deux zones « votre demande » et « vos pièces » viendront dans la page ensuite, si le test de dérive (§8) passe.
 
 ## 8. À vérifier avant de coder
 
 - **La dérive** : sur un cas réel (notes de terrain → regroupement → personas), jouer l'étape persona avec et sans le corpus, et regarder si elle reste dans sa mission ou refait le regroupement. Quelques appels Sonnet, comme la preuve de `reads_source`.
-- **Codex** : lire ses évènements `--json` (trace des commandes) quand le quota revient ; chercher un réglage qui restreint ses lectures.
+- **Codex** : ~~lire ses évènements `--json` ; chercher un réglage qui restreint ses lectures~~ — fait (plugin 2.13.0, [exécuteur](executeur.md) §4) : le profil `ixetape` limite les lectures au dossier de l'étape ; `--json` est gardé comme trace, partielle (commandes lancées, pas les refus). Reste ouvert : `/tmp` lisible, profils en bêta (vérifiés avant chaque appel), sous-agents de Codex non testés.
 - **Antigravity, Vibe** : lecture hors du dossier.
 - **Les pièces non textuelles** (xlsx, pdf) : Claude lit les PDF ; un tableur demande une conversion à la création du dossier.

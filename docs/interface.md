@@ -127,6 +127,7 @@ Les erreurs sont `{"error": code, "message": …}` : 400 argument refusé par l'
 - Un POST dont le corps dépasse 4 Mo est refusé ; un fichier lu depuis la page est tronqué à 2 Mo ; l'en-tête `Origin`, s'il est présent, doit être celui du serveur (en plus du jeton).
 - La CSP ajoute `base-uri 'none'; form-action 'none'; frame-ancestors 'none'` à celle de la conception.
 - Le moteur `vibe` est proposé (marqué « non testé ») avec claude, codex et agy.
+- Quand Codex est choisi (nouveau dossier, moteur des prochaines étapes, essai, confirmation d'un essai), la page dit ce qu'il peut encore lire : il ne lit que le dossier de l'étape, mais `/tmp`, `/var/tmp` et les fichiers système restent lisibles ([exécuteur](executeur.md) §4). Les détails techniques d'une étape Codex montrent ses commandes (`events`).
 - La sonde de verrou (`flock` partagé non bloquant, relâché aussitôt) peut, une fois sur plusieurs milliers, faire échouer au même instant une commande lancée depuis un terminal avec « verrou pris » : il suffit de la relancer.
 
 ## 9. Recettes personnelles (ajouté le 2026-10-15)

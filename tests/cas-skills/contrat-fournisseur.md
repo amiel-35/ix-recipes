@@ -76,3 +76,42 @@ Redevance mensuelle 4 000 € HT. Plafond de responsabilité 12 000 € HT, soit
 
 | Date | Version | Modèle | Critères tenus (sur 8) | Note |
 |---|---|---|---|---|
+
+
+# Cas 4 — CGU d'un SaaS lues côté client (test de la fusion avec `cgv-checker`)
+
+## Demande
+
+> Nous sommes une SARL de 25 salariés (distribution de matériel de bureau). Nous allons souscrire à « Planibox », un logiciel en ligne de planification de tournées, 480 € HT par mois. Les conditions générales d'utilisation s'acceptent en ligne, elles ne sont pas négociables. Le service démarre le 1er janvier 2027. Lis-les de notre côté, nous sommes le client. Voici les articles principaux :
+>
+> - Art. 3 : « Le Fournisseur peut modifier les présentes CGU et ses tarifs à tout moment ; la poursuite de l'utilisation du service vaut acceptation. »
+> - Art. 6 : « La responsabilité du Fournisseur est limitée, tous dommages confondus, aux sommes versées par le Client au cours du mois précédant le fait générateur. »
+> - Art. 8 : « L'abonnement est conclu pour un an et se renouvelle tacitement par périodes d'un an, sauf résiliation par lettre recommandée au moins six mois avant l'échéance. »
+> - Art. 9 : « Le Client reste propriétaire de ses données. Le Fournisseur peut les utiliser, y compris les données des chauffeurs et des clients finaux du Client, pour améliorer ses services et entraîner ses modèles. Les données sont hébergées chez des prestataires situés hors de l'Union européenne. »
+> - Art. 10 : « À la fin du contrat, les données sont supprimées sous sept jours. Un export est disponible sur demande, pour 1 500 € HT. »
+> - Art. 14 : « Tout litige relève du tribunal de commerce du siège du Fournisseur. »
+
+Paramètres attendus : position `client`, type de document `saas_cloud` (ou `cgv_cgu`).
+
+## Une bonne sortie contient
+
+1. Qualifie les parties avant de lire : entre professionnels, le test est l'article L442-1 I 2° du Code de commerce ; elle n'applique ni les listes noire et grise des consommateurs (R212-1, R212-2) ni l'article 1171 du Code civil.
+2. Art. 3 (modification unilatérale des CGU et du tarif) : signale le risque et propose un préavis, un droit de résiliation sans frais en cas de hausse et une indexation plafonnée ; classe ce point en niveau 2.
+3. Art. 6 (plafond d'un mois de redevance) : calcule le plafond (480 € HT) et le rapporte à l'abonnement annuel (5 760 € HT, soit environ 8 %) ; propose un plafond d'au moins douze mois de prix, avec exclusion du plafond pour les données personnelles et la confidentialité ; rappelle que le plafond ne vaut pas pour la faute lourde ou dolosive.
+4. Art. 8 (reconduction) : préavis de six mois jugé orange ou défavorable, proposition de trois mois au plus, et calcul de la date limite de résiliation (autour du 30 juin 2027 pour une échéance au 31 décembre 2027, avec la réserve sur le mode de décompte).
+5. Art. 9 : voit que le Fournisseur traite des données personnelles (chauffeurs, clients finaux) pour le compte du Client, donc qu'un contrat de sous-traitance de l'article 28 du RGPD est requis et absent des CGU ; voit que l'usage « entraîner ses modèles » fait du Fournisseur un responsable de traitement pour cet usage, ce qui demande une base légale côté Client ; demande les garanties du transfert hors UE (cadre de protection des données UE-États-Unis ou clauses contractuelles types) ; renvoie vers `conformite-rgpd` sans refaire la checklist.
+6. Art. 10 (sortie) : applique le Data Act, règlement (UE) 2023/2854 : délai de récupération des données d'au moins 30 jours, liste exhaustive des données exportables, frais de changement limités au coût direct jusqu'au 12 janvier 2027 puis nuls ; un export facturé 1 500 € et une suppression à sept jours sont des constats de niveau 1 ou 2, avec rédaction et repli.
+7. Pas de faux constat : ne présente pas la clause de juridiction de l'art. 14 comme abusive (entre commerçants, elle vaut si elle est très apparente, CPC 48) ; au plus, la signale comme un point de négociation de faible niveau.
+8. Forme : synthèse de trois à cinq lignes avec la décision demandée (signer, renégocier, ne pas signer) ; tableau clause citée / constat / risque / rédaction proposée / repli / niveau 1-2-3 ; liste séparée de ce qui manque (contrat de sous-traitance RGPD, liste des données exportables) ; actions avec qui et quand ; une seule ligne finale rappelant que l'analyse n'est pas un avis juridique.
+
+## Une mauvaise sortie
+
+- Applique les listes de clauses abusives des consommateurs ou l'article 1171 du Code civil à un contrat entre professionnels.
+- Lit les six articles un à un sans voir le Data Act ni l'article 28 du RGPD, qui ne figurent dans aucun article cité : c'est le piège du cas, car une grille de clauses ne les nomme pas.
+- Donne un verdict général (« déséquilibré ») sans calcul du plafond ni de la date de résiliation.
+- Cite des articles inexistants ou des seuils du Data Act de mémoire.
+
+## Résultats
+
+| Date | Version | Modèle | Critères tenus (sur 8) | Note |
+|---|---|---|---|---|

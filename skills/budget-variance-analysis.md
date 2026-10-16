@@ -1,7 +1,7 @@
 ---
 id: budget-variance-analysis
 label: Analyse des ecarts budgetaires
-version: 1.2.0
+version: 1.3.0
 description_fr: Analyse des écarts budget/réel ligne par ligne  — montant, sens (favorable ou défavorable), décomposition volume / mix / prix quand les données le permettent, causes probables, hypothèses marquées et actions correctrices. Déclenche sur "pourquoi on a dépassé le budget", "analyse les écarts de ce trimestre", "explique ce dépassement de charges", "budget vs réalisé", "écart prix / volume", "on a un écart, à quoi c'est dû". Produit un diagnostic factuel, pas une décision de gestion  — ce qui est observé, ce qui est une hypothèse et ce qui reste à vérifier restent séparés.
 description_en: Analyzes budget-versus-actual variances line by line — amount, direction (favorable or unfavorable), volume / mix / price decomposition when the data allows, probable causes, flagged hypotheses and corrective actions. Triggers on "why did we overspend", "analyze this quarter's variances", "explain this budget overrun", "actual vs budget", "price / volume variance", "we have a gap, what's driving it". Produces a factual diagnosis, not a management decision — what is observed, what is a hypothesis and what still needs verification stay separate.
 icon: △
@@ -78,6 +78,7 @@ Explaining every line buries the ones that change a decision. Announce the thres
 - A net variance can be small while its effects are large and opposite: decompose any revenue or variable-cost line whose gross effects pass the thresholds.
 - When several variances qualify, take them in this order: largest amount, then largest percentage, unexpected direction, new variance (the line was on track), variance that grows each period.
 - Read a month with the year-to-date: a timing variance cancels out over the cumulative, which is the test for calling it timing.
+- These cases and thresholds focus attention; then check what the period itself calls for beyond them (a one-off event, a reclassification, a change of scope between budget and actual), because what a list does not name gets missed.
 
 # Method
 
@@ -114,10 +115,18 @@ Why this is right: formulas and inputs are visible, the effects close on the tot
 
 # Expected output format
 
-- `budget_variance_analysis`: conventions and thresholds, a table per analysed line (observed variance, nature, probable cause, confidence, verification needed), the bridge with its check, the single-line mentions of the variances not analysed.
-- `recommendations`: actions, hypotheses to verify, watch points.
+Default format; an explicit request from the user comes first.
 
-End with three lists: established facts, explanatory hypotheses, points to verify.
+- Head, 3 to 5 lines: net variance in € and %, the two or three drivers, what is timing or one-off, the decision or action asked, and the sign convention and thresholds used.
+- Conventions: sign, basis, thresholds.
+- Revenue decomposition table: product / budget / actual / volume / mix / price / total, in € with favorable or unfavorable; the total row equals actual − budget.
+- Analysed lines table: line / budget / actual / variance € / variance % / F-D / nature / explanation / confidence / status (fact, hypothesis, to verify).
+- Variances seen but not analysed: one line each.
+- Bridge: budget, 5 to 8 effects, other, actual, then the check line.
+- Actions, apart from the diagnosis: action / variance addressed / owner / by when.
+- Closing lists: established facts, hypotheses, points to verify.
+
+Output names: `budget_variance_analysis` (everything above except the actions) and `recommendations` (actions, hypotheses to verify, watch points).
 
 # Definition of done
 

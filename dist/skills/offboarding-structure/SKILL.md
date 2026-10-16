@@ -40,6 +40,8 @@ Non-compete clause: the employer who wants to waive it must do so, for a rupture
 
 The weekend and public-holiday rule for the retraction and approval deadlines is not verified here: give dates as landmarks "to confirm with the labour authority or the lawyer". Cite an article only if it is in these tables or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". This is not legal advice; say so once, in the deliverable.
 
+Then check what the departure (a protected mandate, an international or mobility clause, stock options or free shares, a company car or housing, a training-repayment clause) calls for beyond this list: a list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Role and criticality.** Identify the role and scope, and use the matching domain reference to judge how much knowledge is at risk.
@@ -63,8 +65,14 @@ Both reference pays are computed because the law takes the one that favours the 
 
 # Expected output format
 
-- `offboarding_plan`: legal checklist for the departure mode with dates, handover plan (knowledge, projects, access with dates), exit interview, last-week schedule.
-- `continuity_risks`: risks ranked, departure-date risk first, with mitigation actions.
+This is the default format; an explicit request from the user wins. Output names kept: `offboarding_plan`, `continuity_risks`.
+
+1. **Synthesis** (3 to 5 lines): departure mode and date, whether the handover window is enough, the main continuity risk, the three dated actions that cannot slip, the decision asked.
+2. `offboarding_plan`, legal checklist for the departure mode: table item / rule / deadline (a date) / owner / status, with the non-compete waiver date; the indemnity calculation shown (both reference pays, rate, result) when the data is given.
+3. **High-stakes access**, first: table access / holder / action (revoke or transfer) / date / owner.
+4. **Handover**: table component (knowledge, projects, tools) / what / to whom / format / by when.
+5. **Exit interview** (optional, confidential, aggregated) and **last-week schedule**: table day / activity / who.
+6. `continuity_risks`: table risk (the departure-date risk first) / cause / impact / mitigation / owner / by when; fact or hypothesis tagged.
 
 # Definition of done
 

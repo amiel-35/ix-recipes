@@ -44,16 +44,16 @@
 
 ix-recipes does the groundwork of consulting, HR, legal, finance and product jobs with Claude: answering a call for tenders, turning a vague client request into a brief, writing a job description, reviewing a contract… The bigger jobs are **recipes**: a series of steps you follow in a page on your computer, which stops whenever your judgement is needed.
 
-**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.9.0**:
+**1. Paste this into Claude Code**, on your computer. That's all: Claude installs and opens the page. Prompt for version **2.10.0**:
 
 ```text
-Install ix-recipes (version 2.9.0 or later) on this computer and open its tracking page so I can try it
+Install ix-recipes (version 2.10.0 or later) on this computer and open its tracking page so I can try it
 (https://github.com/amiel-35/ix-recipes). Do everything yourself, without asking me to restart:
 1. Add the amiel-35/plugins marketplace (if that fails for lack of a GitHub SSH key, use
    https://github.com/amiel-35/plugins.git), then install ix-skills@amiel-35 and
    ix-recipes@amiel-35. If they are already installed, update them; if they come from another
    marketplace, keep that one and create no duplicate. Check the installed ix-recipes version:
-   if it is older than 2.9.0, update the marketplace and the plugin.
+   if it is older than 2.10.0, update the marketplace and the plugin.
 2. Check python3 (3.9 or later); if it is missing, tell me what to install and stop.
 3. Start, in the background, the script skills/suivi-parcours/scripts/interface.py of the
    installed ix-recipes plugin (under ~/.claude/plugins/cache/, the latest version); it opens
@@ -217,7 +217,7 @@ Tools for the full employee lifecycle — recruiting, onboarding, development, a
 
 **What it doesn't do:** Does not prepare an upcoming interview (`performance-review-helper`, `entretien-professionnel`) and passes no judgement on the person.
 
-**Use when:** After an annual review, to turn it into an actionable summary for the manager or HR.
+**Use when:** After an annual review or a career-path interview, to turn it into an actionable summary for the manager or HR. Not for recruitment interview notes.
 
 ---
 
@@ -257,13 +257,11 @@ Tools for the full employee lifecycle — recruiting, onboarding, development, a
 
 #### `contrat-emploi` — Employment contract
 
-**What it does:** Analyzes or drafts an employment contract, job offer letter, or HR amendment. Surfaces key clauses and points of attention. Produces compliant draft language.
+**What it does:** Three modes: analyse a contract received, draft a contract, offer letter or amendment, revise an existing draft clause by clause. Relies on French labour law as an annex (`droit_contrat_travail`: trial period, fixed-term contracts, day-rate, part-time, non-compete, mobility, offer or promise) and corrects requests that break it, saying why.
 
 **What it doesn't do:** Does not provide legal advice. Requires validation by a labor lawyer before use.
 
-**Use when:** Drafting a new employment contract, reviewing one received, or preparing an amendment (role change, part-time arrangement…).
-
----
+**Use when:** Drafting a new contract, reviewing one received, correcting a draft, or preparing an amendment.
 
 #### `lettre-cadrage-disciplinaire` — Disciplinary framing letter
 
@@ -309,16 +307,9 @@ Pre-legal tools — all require professional validation before use. They orient 
 
 ---
 
-#### `cgv-checker` — Unbalanced clauses in T&Cs
+#### `cgv-checker` — Merged into `contrat-fournisseur`
 
-**What it does:** Identifies unbalanced, unusual, or sensitive clauses in General Terms and Conditions (sales or use), depending on the reading position (client, supplier, user), under French law: qualification of the parties, consumer-code black and grey lists, rules between businesses.
-
-**What it doesn't do:** Does not assess the full legal validity of the T&Cs. Does not replace legal advice.
-
-**Use when:** Before accepting T&Cs for a significant vendor or platform relationship, or to review your own T&Cs before publishing them.
-
-
----
+**Since 2.0.0:** hands over to `contrat-fournisseur`, position "client" or "supplier" and document type "GTC / ToS". The id stays for one version so existing installs keep working.
 
 #### `conformite-rgpd` — GDPR compliance checklist
 
@@ -350,13 +341,13 @@ Pre-legal tools — all require professional validation before use. They orient 
 
 ---
 
-#### `contrat-fournisseur` — Supplier contract, buyer's side
+#### `contrat-fournisseur` — Reading contracts and T&Cs
 
-**What it does:** Analyzes a supplier or service provider contract from the buyer's perspective. Surfaces unbalanced conditions, clauses to renegotiate (SLA, liability, termination, penalties, exclusivity, renewal, exit), and contractual risks, ranked by priority with a fallback position.
+**What it does:** Reads a supplier or service contract, general terms (sales or use) or SaaS terms of service from a given position (client or buyer, supplier publishing its terms, user), under French law. Qualifies the parties first, then flags unbalanced, unfair or missing clauses ranked by priority, each with a proposed rewording and a fallback position. Reads the clause set of the document type as an annex (`clauses_cgv`, `clauses_contrat_fournisseur`, `clauses_saas_donnees`) and checks what the subject calls for beyond it (data, portability, sector). Absorbs `cgv-checker` since 2.0.0.
 
-**What it doesn't do:** Does not replace legal advice. Requires professional validation before use.
+**What it doesn't do:** Does not draft a contract. Does not replace legal advice.
 
-**Use when:** Before signing a supplier contract or before entering negotiations.
+**Use when:** Before signing or accepting terms, before a negotiation, or to review your own T&Cs before publishing them.
 
 </details>
 
@@ -397,13 +388,13 @@ Quantify, explain and defend a money decision — budget variances, business cas
 
 ---
 
-#### `strategie-prix` — Pricing strategy with trade-offs
+#### `strategie-prix` — Pricing options and decision criteria
 
-**What it does:** Formulates a pricing strategy by linking perceived value, customer segmentation, and business trade-offs. Compares pricing models (freemium, value-based, usage-based, tiered…) and produces a recommendation with explicit hypotheses.
+**What it does:** Prepares a pricing decision: links perceived value, segments and value metric; compares pricing models (subscription, usage, tiers, freemium…) with when each works; proposes ways to measure willingness to pay; computes the break-even volume of a price change; recalls French pricing law. It informs and suggests a lean without deciding: `decision` (ix-skills) decides next.
 
-**What it doesn't do:** Does not produce a price list. Does not recommend a price without stating the assumptions behind it.
+**What it doesn't do:** Does not set the price list and does not choose for the user.
 
-**Use when:** Product launch, market repositioning, or under competitive pricing pressure. Requires context on the offer, target customers, and competitive benchmarks if available.
+**Use when:** Launch, repositioning, a move to another pricing model, or competitive pricing pressure.
 
 </details>
 
@@ -487,23 +478,17 @@ From a scoped need to the document a product team expects — PRD, specs, user s
 
 ---
 
-#### `feature-spec` — Feature-level functional specification
+#### `feature-spec` — Functional specification
 
-**What it does:** Produces a complete functional spec for a feature — user stories, MoSCoW requirements, acceptance criteria, edge cases, and success metrics.
+**What it does:** Produces the spec of a feature or a screen: problem, scope and non-goals, user stories, MoSCoW requirements, acceptance criteria with a negative case, view states and content edge cases, data model, metrics with threshold and date. Splits into companion documents when the spec grows. Absorbs `product-spec` since 2.0.0.
 
-**Use when:** A feature is approved and needs to be specified for engineering. More granular than a PRD — operates at the level of a single feature or epic.
+**Use when:** A feature is approved and needs to be specified for engineering. More granular than a PRD.
 
----
+> Hierarchy: `brief` → `prd` (the what and the why) → `feature-spec` (the how).
 
-#### `product-spec` — Lightweight actionable spec
+#### `product-spec` — Merged into `feature-spec`
 
-**What it does:** Produces an actionable specification from a brief or scoped need. Lighter than a PRD, more structured than a brief — a rapid spec that teams can act on.
-
-**Use when:** You need something between a brief and a full PRD. Good for smaller features, MVPs, or rapid iteration contexts.
-
-> Hierarchy: `brief` → `prd` (the what and the why) → `product-spec` / `feature-spec` (the how, increasingly detailed).
-
----
+**Since 2.0.0:** hands over to `feature-spec`, which also covers screens, flows, view states and the data model. The id stays for one version for existing installs.
 
 #### `reformulation-us` — Rewrite poorly-written user stories
 
@@ -583,11 +568,11 @@ Design and maintain software — architecture, tech debt, support triage, HTML m
 
 #### `mockup` — Standalone HTML mockup
 
-**What it does:** Produces a standalone, presentable HTML mockup from a brief, spec, or visual references. A visual deliverable for alignment and feedback.
+**What it does:** Produces a standalone, presentable HTML mockup from a brief, spec, or visual references, at the chosen fidelity (low, medium, high). Follows an imposed brand guide, shows states (empty, loading, error), marks what is provisional, applies an accessibility baseline (WCAG 2.2 AA) and French formats.
 
 **What it doesn't do:** Not a functional prototype. Not production-ready code.
 
-**Use when:** You need something visual to present to stakeholders, validate with users, or communicate a layout before investing in design or engineering.
+**Use when:** You need something visual to present to stakeholders, validate with users, or fix a layout before investing in design or engineering.
 
 </details>
 
@@ -808,7 +793,7 @@ claude plugin install ix-skills@amiel-35
 
 Install a plugin from one marketplace only (`ix-recipes@ix-recipes` or `ix-recipes@amiel-35`, not both), otherwise it shows up twice; updates then go through `claude plugin marketplace update amiel-35`. Tested in Claude Code; not yet tested with Cowork's "Add from repository", so for Cowork keep the per-repo marketplace below.
 
-The 11 HR recipes that list job-family references (`partials/metier_*.md`, see [Structure](#structure); every HR skill except `contrat-emploi`, `lettre-cadrage-disciplinaire` and `org-design-brief`) receive their `references/` folder with the plugin: nothing more to do.
+The skills that list references (`partials/`, see [Structure](#structure): the 11 HR skills with job-family references, `contrat-emploi` with labour law, the two recruitment-interview skills with their annexes, `contrat-fournisseur` with its clause sets) receive their `references/` folder with the plugin: nothing more to do.
 
 > Transition: until ix-skills 4.0.0, these skills also shipped inside ix-skills. Update ix-skills so they don't show up twice. ix-recipes 2.0.0 removes `code-review` and `contract-review` (see `CHANGELOG.md`).
 
@@ -881,7 +866,7 @@ These targets carry `skill.md` and `manifest.json` only, not the `references/` f
 
 ### GPT / Gemini / other LLMs (chat interfaces)
 
-For plain chat UIs with no CLI: paste the content of `skills/<id>.md` as a system prompt. The YAML frontmatter is ignored harmlessly. For a skill that lists `references` in its frontmatter (the HR skills), also paste the matching `partials/metier_<family>.md` (`metier_tech`, `metier_rh`…), or the skill will ask for the organisation's competency framework. The two recruitment-interview skills also list `transverse_anti_biais` (and `transverse_debrief` for `interview-loop-planner`): paste them too, or the skills keep only their essential rules.
+For plain chat UIs with no CLI: paste the content of `skills/<id>.md` as a system prompt. The YAML frontmatter is ignored harmlessly. For a skill that lists `references` in its frontmatter (the HR skills), also paste the matching `partials/metier_<family>.md` (`metier_tech`, `metier_rh`…), or the skill will ask for the organisation's competency framework. The two recruitment-interview skills also list `transverse_anti_biais` (and `transverse_debrief` for `interview-loop-planner`): paste them too, or the skills keep only their essential rules. Likewise, `contrat-emploi` lists `droit_contrat_travail`, and `contrat-fournisseur` the clause sets `clauses_cgv`, `clauses_contrat_fournisseur` and `clauses_saas_donnees` (paste the one for the document type).
 
 ---
 
@@ -890,7 +875,7 @@ For plain chat UIs with no CLI: paste the content of `skills/<id>.md` as a syste
 ```
 ix-recipes/
 ├── skills/                 ← canonical source (one .md + .mystaffy.json per skill)
-├── partials/               ← job-family references (metier_*.md) and interview annexes (transverse_*.md), copied into references/ of the skills that list them
+├── partials/               ← job-family references (metier_*.md), interview annexes (transverse_*.md), labour law and clause sets, copied into references/ of the skills that list them
 ├── scripts/
 │   └── install-codex.sh    ← Codex CLI installer
 ├── dist/                   ← plugin root, committed

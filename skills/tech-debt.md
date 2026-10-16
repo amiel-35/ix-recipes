@@ -1,7 +1,7 @@
 ---
 id: tech-debt
 label: Tech Debt
-version: 1.3.0
+version: 1.4.0
 description_fr: Inventorie la dette technique, la score sur impact, risque et effort, et produit un plan de remédiation entrelaçable avec les features, chaque item justifié par un impact métier et non seulement technique. Déclenche sur "fais l'audit de dette technique de ce projet", "qu'est-ce qu'on refactore en priorité", "cette codebase, elle porte quoi comme dette", "qu'est-ce qu'on met dans le sprint côté dette". Conclut "RAS" si aucun item n'atteint le seuil, plutôt que de remonter du bruit de backlog. Ne relit pas un diff ou une PR.
 description_en: Inventories technical debt, scores it on impact, risk and effort, and produces a remediation plan interleavable with feature work, every item justified by a business impact rather than a purely technical one. Triggers on "run a tech debt audit on this project", "what should we refactor first", "what debt is this codebase carrying", "what debt goes into the next sprint". Concludes "RAS" when no item reaches the threshold, rather than promoting backlog noise. Does not review a diff or a PR.
 icon: ⚠
@@ -49,6 +49,8 @@ A debt item that only has a technical argument loses to any feature in planning.
 | Dependencies | outdated or unmaintained libraries | security vulnerabilities |
 | Documentation | missing runbooks, outdated README, knowledge held by one person | slow onboarding |
 | Infrastructure | manual deploys, no monitoring, no infrastructure as code | incidents, slow recovery |
+
+   The table focuses attention on six categories; then check what this system's subject calls for beyond it (a regulated data store, a licence or end-of-support date, a vendor lock-in, the specific product), because a list names what it names and the rest gets missed.
 
 2. **Score each item on three axes from 1 to 5.** Effort is recorded raw, 1 = easy and 5 = heavy: the formula does the inversion, so inverting it here as well would put the easy items below the threshold and the heavy ones above it. The anchors below are defaults; the team's own scales replace them.
 
@@ -109,9 +111,14 @@ It states a score that can be recomputed, labels what is observed and what is a 
 
 # Expected output format
 
-- `tech_debt_audit`: the audit scope (and whether partial), the inventory with scores and horizons, the fragile scores.
-- `plan_remediation`: actions by horizon (sprint / quarter / backlog line), with the capacity share.
-- `questions_ouvertes`: what to clarify before planning (missing data behind a fragile score, team capacity, the scales to replace).
+Default skeleton; an explicit request from the user wins.
+
+1. **Summary, 3 to 5 lines**: scope audited (and whether partial), number of items per horizon, the share of capacity asked for, the decision asked. With no item at 15 or above, the « RAS — » verdict alone.
+2. **`tech_debt_audit`**, one table: # | item | category | impact | risk | effort (raw, 1 = easy) | score (shown as (I + R) × (6 − E) = result) | horizon (sprint / quarter / backlog) | business justification, labelled observed, probable or hypothesis.
+3. **Fragile scores**: item | axis that moves the horizon | why it is uncertain.
+4. **`plan_remediation`**: horizon | item | share of the sprint or quarter | order and what it unblocks. The backlog line groups everything under 15.
+5. **`questions_ouvertes`**: question | what it changes | who answers.
+6. **Next actions**, apart from the inventory: what | who | when.
 
 # Definition of done
 

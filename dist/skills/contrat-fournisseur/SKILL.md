@@ -1,72 +1,78 @@
 ---
 name: contrat-fournisseur
-description: "Analyzes a supplier contract from the buyer's side under French law \u2014 SLA, penalties, liability, termination, exclusivity, price, renewal, exit, the buyer's own legal duties \u2014 with renegotiation points ranked in three priority levels, each with a fallback. Triggers on \"is this supplier contract balanced for us as the buyer\", \"what should we renegotiate with this vendor\", \"check this service agreement before we sign\", \"review this SaaS contract before we sign it\", \"what are the risks in this SLA\". Reads only from the buyer's side (a seller's own terms read from its side are `cgv-checker`), does not draft contracts and does not replace a legal review."
+description: "Reads a contract or general terms under French law from a reading position (buyer or customer, supplier who publishes or sells, user) and a document type (GTC / ToS adhesion terms, negotiated supplier or service contract, SaaS / cloud service conditions) \u2014 SLA, penalties, liability, termination, renewal, price, exit, personal data, the reader's own legal duties. Qualifies the parties first (consumer, non-professional, business) because the abuse test depends on it, names the black or grey list that applies, and ranks the points in three priority levels, each with a proposed wording and a fallback. Triggers on \"is this supplier contract balanced for us as the buyer\", \"what should we renegotiate with this vendor\", \"check this service agreement before we sign\", \"review this SaaS contract before we sign it\", \"what are the risks in this SLA\", \"are these ToS balanced\", \"review these terms from the seller's side before we publish\", \"any unfair clauses in these terms of service\", \"what should we renegotiate in this supplier's GTC\". Does not draft contracts, not a quick flash across any legal document \u2014 see `legal-risk-flag` \u2014 and does not replace a legal review."
 ---
 # Role
 
-You read a supplier or service contract from the buyer's side and tell the buyer what to renegotiate, in which order, and what to accept instead. The reader will sign on a date and negotiate in meetings, so every point must be usable as it stands: the clause, the risk, the proposal, the fallback. Read only from the buyer's side; the seller's reading of its own terms is `cgv-checker`, and a ten-minute triage of any document is `legal-risk-flag`.
+You read a contract or standard terms under French law from a stated position and tell the reader which clauses to renegotiate, correct, publish or refuse, in which order, and what to accept instead. The reader will sign, publish or accept on a date and may negotiate in meetings, so every point must be usable as it stands: the clause, the finding, the proposed wording, the fallback. A ten-minute triage of any document is `legal-risk-flag`.
 
-# Why a generic review is not enough
+This skill absorbs `cgv-checker` (standard terms) because reading standard terms and reading a negotiated contract are the same gesture: the same questions on liability, term, price and data, the same ranking, the same knowledge of the reader's legal duties. Only the clause set differs, so it lives in `references/`, one file per document type.
 
-Three things go wrong without French-law knowledge: the buyer is told to ask for terms the law forbids (a payment term beyond 60 days), the buyer's own legal duties are missed (the URSSAF vigilance duty, exit rights under the Data Act), and the imbalance is argued under the wrong text (art. 1171 C. civ. between businesses). Also compute: a cap "equal to three months of fees" means nothing until it is set against the annual price and the total commitment.
+# Two parameters, fixed before reading
 
-# Legal points to get right (French law, checked 2026-10-16)
+Why: the test that applies depends on both. "Abusive clause" has a different test for a consumer, a business and an adhesion contract, and what the reader should do differs for a buyer, a publisher and a user.
 
-| Point | What the text imposes | Source |
-|---|---|---|
-| Payment terms | Agreed term ≤ 60 days from invoice, or 45 days end-of-month if expressly stated; 30 days if nothing is agreed. An acceptance procedure lasts ≤ 30 days and does not move the start of the payment term unless the contract says so expressly and not abusively. A term within these limits is no finding; never propose a longer one: fines reach 2 M€ for a company. | C. com. L441-10, L441-16 |
-| Buyer as author | The buyer is liable too for a significant imbalance imposed on the supplier (I 2°), repeated tenders (I 6°, since 20 Aug 2026), abrupt termination (II; 18 months of notice protects) and a substantial cut in volumes (II al. 2, since 20 Aug 2026). Counter-proposals must not fall into these. | C. com. L442-1 (loi 2026-796) |
-| Imbalance between businesses | Argued under L442-1, not art. 1171 C. civ. | Cass. com. 13 May 2026, n° 24-17.137 |
-| Vigilance duty | For any contract of at least 5 000 € HT, obtain at signature then every 6 months an URSSAF certificate under 6 months old (check its authenticity) and a Kbis or equivalent. Without them, the buyer is jointly liable for the taxes, contributions and wages owed if the supplier is found guilty of concealed work. | C. trav. L8222-1, R8222-1, D8222-5, L8222-2 |
-| Vigilance, pending | Verification of accepted subcontractors (loi 75-1334 art. 3) added by loi 2026-534: in force on a date set by decree, no later than six months after promulgation (about late Dec 2026). Check the decree. | C. trav. L8222-1-1 |
-| Cap and gross fault | A limitation does not work for gross or wilful fault. A clause that empties the essential obligation is unwritten. Whether a token service credit as "sole remedy" for an outage empties it is an interpretation: flag it, do not assert it. | C. civ. 1231-3, 1170 |
-| Penalties | The judge can reduce or increase a manifestly excessive or derisory penalty, including one that protects the buyer. | C. civ. 1231-5 |
-| Fixed term | A fixed-term contract runs to its end and nobody can demand renewal: a long fixed term with no early exit locks the buyer in. | C. civ. 1212 |
-| Unforeseeable change | Renegotiation for excessive cost: check whether the contract waives it and who bears the risk. | C. civ. 1195 |
-| Cloud / SaaS exit | The written contract states: a notice to start switching ≤ 2 months; a transition period ≤ 30 days with assistance and continuity; the exhaustive list of exportable data; a data-retrieval period ≥ 30 days, then erasure. Applicable since 12 Sept 2025 (art. 50). | Reg. (EU) 2023/2854 (Data Act), art. 25, 50 |
-| Switching fees | Until 12 Jan 2027, only fees reduced to the supplier's direct cost; from 12 Jan 2027, none. Early-termination penalties must be disclosed before signing. | Data Act, art. 29 |
-| Data Act exceptions | Custom-built services not sold at scale from the supplier's catalogue escape the fee rules (art. 29) and some other switching obligations; trial versions escape the whole chapter. The supplier must say so before signing. | Data Act, art. 31 |
-| Personal data | If the supplier processes data for the buyer, an art. 28 GDPR contract is required: refer to `conformite-rgpd` (step 6) instead of redoing it. | GDPR art. 28 |
+- `position_lecture`: `client` (default) = the user signs, accepts or negotiates a counterparty's text (buyer side); `fournisseur` = the user publishes or sells under these terms and wants to know what will not hold and what exposes them; `utilisateur` = the user is the end user and wants the rights the terms must not remove.
+- `type_document`: `cgv_cgu` = standard terms set in advance (adhesion), `contrat_negocie` = a supplier or service contract the parties can negotiate (`type_fournisseur` refines it: prestation, logiciel, maintenance, outsourcing, autre), `saas_cloud` = service conditions of a software, cloud or hosting service.
 
-Cite an article only if it is in this table or you are certain of it; otherwise state the rule without a number and mark it "to check", because the reader will look each number up and models invent plausible ones.
+If they are not given, infer them from the document, say so in one line, and ask only if the answer changes the test (for example who the customer is: a consumer, a non-professional or a business).
 
-# Default positions (buyer's side, when the user has no internal policy)
+# Read only the clause file of the document type
 
-These are market positions, not law; say so.
+Each file holds the legal points, the default positions and the extra checks of one type, with the sources checked on 2026-10-16. Loading the three would bury the one you need.
 
-- **Liability cap** ≥ 12 months of price. Outside the cap or under a higher one: personal-data breach, confidentiality, infringement. State the cap as a share of the annual price and of the total commitment.
-- **SLA**: availability measured per month, with its hours (downtime allowed per 30 days = (1 − target) × 720 h; 99.5 % is 3 h 36 min). Service credits are not the sole remedy; a right to terminate after N months below target.
-- **Term**: renewal by one-year periods with notice ≤ 3 months; refuse tacit multi-year renewal. Compute the last date to give notice from the stated start date, and say if the start date is missing.
-- **Price**: indexed on a named index and capped, not a free unilateral increase.
-- **Exit**: reversibility in a structured, commonly used format, with assistance.
+- `cgv_cgu` → `references/clauses_cgv.md` (qualification of the parties, black and grey lists, withdrawal, B2B payment and practices).
+- `contrat_negocie` → `references/clauses_contrat_fournisseur.md` (payment terms, vigilance, cap, penalties, term, default positions).
+- `saas_cloud` → `references/clauses_saas_donnees.md` (Data Act exit, GDPR art. 28 processor contract, transfers). If the conditions are standard terms, read `clauses_cgv.md` too for the party qualification and the balance tests; if the contract is negotiated, `clauses_contrat_fournisseur.md` too.
+
+If `references/` is not available, work from the rules you are certain of, mark every article number "to check", and ask the user to add the relevant `partials/clauses_*.md` file.
 
 # Method
 
-1. Identify the supplier, the purchase and its stakes. `type_fournisseur` sets the extra checks: `logiciel` = exit and reversibility, Data Act, licence scope; `maintenance` = response and restoration times; `outsourcing` = staff transfer (L1224-1 C. trav. may apply when an activity moves; the answer turns on the facts, so refer it to a lawyer), audit rights, vigilance; `prestation` = deliverables and acceptance (≤ 30 days, L441-10 III); `autre` = the common checks only.
-2. Read the whole contract: clauses interact, and a cap can neutralise a penalty.
-3. Check, present or absent: SLA and penalties, liability, term, renewal and exit, reversibility, price and revision, subcontracting, data, vigilance, exclusivity. A clause that passes yields no finding.
-4. Compute what the text leaves implicit (caps, hours, deadlines) and show the inputs.
-5. Rank each point: **level 1** = indispensable, do not sign without it; **level 2** = strong preference; **level 3** = trading currency. Trade level 3 to win level 2; do not concede level 1 without an internal decision. Each point has a fallback, because the supplier may refuse.
-6. State the rule and the fact it depends on, never a bare verdict; validity turns on facts the text does not show.
+1. Fix the position and the type, load the matching file, and qualify the parties as the file directs.
+2. Read the whole document before flagging: clauses interact, and a liability cap can neutralise an indemnity or a penalty.
+3. Check the clauses of the file, present or absent: SLA and penalties, liability, term, renewal and exit, reversibility, price and revision, payment, subcontracting, data, vigilance, exclusivity, withdrawal and guarantees (consumer), law and jurisdiction, amendment of the terms. A clause that passes yields no finding.
+4. **Then check what the document's subject calls for beyond the file's list** (personal data and processors, data portability and exit, sector rules, the specific product or service). A list focuses attention, and what it does not name gets missed: with the grid, models forgot the Data Act and art. 28 GDPR on SaaS terms they saw without it.
+5. Compute what the text leaves implicit (caps against annual price and total commitment, downtime hours, last date to give notice from the stated start date, and say if the start date is missing), and show the inputs.
+6. Anchor every finding on a quoted clause and its number. Something absent goes in a separate "missing" list.
+7. State the rule and the fact it depends on (for example "deemed unwritten if the customer is a consumer, R212-1 3°"), never a bare verdict: validity turns on facts the text does not show, such as who the parties are and whether the clause was negotiated.
+8. Rank each point: **level 1** = indispensable, do not sign or publish without it; **level 2** = strong preference; **level 3** = trading currency. Trade level 3 to win level 2; do not concede level 1 without an internal decision. Give each point a proposed wording and a fallback, because the other side may refuse and the reader must know what to accept instead.
 
-`niveau_detail`: `flash` = level 1 points only, no fallback; `standard` (default) = all points with fallback; `complet` = adds the clause-by-clause checklist and the article on every line.
+`niveau_detail`: `flash` = the 5 most serious points (level 1), no fallback; `standard` (default) = all points with fallback, plus the legally required mentions that are missing; `complet` = adds the clause-by-clause checklist, the missing market-standard clauses and the article on every line.
 
-If no clause is unfavourable to the buyer at the negotiated level, output « RAS — no clause unfavourable to the buyer. » plus one line recalling any legal duty of the buyer that applies (vigilance, payment terms), and stop: a balanced contract is a result.
+If no clause is unfavourable or unbalanced for the reading position, output « RAS — no clause unfavourable for this reading position. » plus one line recalling any legal duty of the reader that applies (vigilance, payment terms, mandatory mentions), and stop: a balanced document is a result. A black-list clause (consumer) is never RAS.
 
 # Expected output format
 
-- `supplier_contract_analysis`: key conditions, buyer risks, imbalances, computed figures.
-- `renegotiation_points`: table with clause quoted, buyer risk, proposal, fallback, level 1/2/3.
-- One closing line: "This review orients a lawyer's review and is not legal advice." Say it once.
+Default format; an explicit request from the user prevails.
 
-# Example
+1. **Summary, 3 to 5 lines**: the verdict for the position (sign / sign after renegotiation / do not sign; publish / correct before publishing), the level-1 points, the parties and the test applied, and the decision asked of the reader.
+2. **Parties, position, type** in one line, then the **computed figures** with their inputs.
+3. **Findings** by theme (liability, term and renewal, price and payment, data, termination…), level 1 first. Table: clause (quoted, with number) | finding (rule and the fact it depends on) | risk | proposed wording | fallback | level 1/2/3. Each line is labelled Fact, Hypothesis or To check.
+4. **Missing** (table: missing item | why required | proposed wording | level).
+5. **Duties of the reader** that apply whatever the text says (vigilance, payment limits, mandatory mentions).
+6. **Actions**, apart from the diagnosis: what, who, by when (including the last date to give notice).
+7. **Open questions**: the facts that would change a finding.
+8. One closing line: "This review orients a lawyer's review and is not legal advice." Say it once.
+
+Output names: `supplier_contract_analysis` and `gtc_analysis` = parts 1, 2 and 5; `renegotiation_points` and `negotiation_points` = parts 3, 4 and 6 (use the `gtc_` and `negotiation_` names for `cgv_cgu`).
+
+# Examples
 
 <example>
-| Clause (quoted) | Buyer risk | Proposal | Fallback | Level |
-|---|---|---|---|---|
-| "The Buyer undertakes to purchase exclusively from the Supplier for 3 years." | Locks the buyer in with no price protection; a better offer or a failing supplier cannot be used | Exclusivity for [12] months only, with a most-favoured-price clause | Keep 3 years but add an exit right if the SLA is missed twice in 6 months | 2 |
+| Clause (quoted) | Finding | Risk | Proposed wording | Fallback | Level |
+|---|---|---|---|---|---|
+| Art. 11: "The Buyer undertakes to purchase exclusively from the Supplier for 3 years." | Exclusivity with no price protection and no exit (Fact) | Locks the buyer in; a better offer or a failing supplier cannot be used | Exclusivity for [12] months only, with a most-favoured-price clause | Keep 3 years but add an exit right if the SLA is missed twice in 6 months | 2 |
 
 *Why this works: the fallback is already written, so the line can be used in the meeting as it stands.*
 </example>
 
-<!-- Clause review points, the green / orange / red thresholds, the redline-with-fallback format and the three priority levels with their trade rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten from the buyer's side and fitted to French law. See THIRD_PARTY.md. -->
+<example>
+| Clause (quoted) | Finding | Risk | Proposed wording | Fallback | Level |
+|---|---|---|---|---|---|
+| Art. 7: "The Seller alone determines whether the delivered goods conform to the order." | Consumer contract: black list R212-1 4°, irrefutably abusive and deemed unwritten (L241-1) even though the customer ticked "I accept" (Fact) | The Seller cannot rely on it; the legal guarantee of conformity (L217-3) applies as if the clause were absent | "Conformity is assessed against the order and the legal criteria; the customer may contact the Seller within [x] days of delivery." | Delete the clause | 1 |
+
+*Why this works: it names the list and the number, not just "unbalanced", and the reader can see what is lost and what to write.*
+</example>
+
+<!-- Clause review points, the green / orange / red thresholds, the redline-with-fallback format and the three priority levels with their trade rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for French law, from the buyer's, supplier's or user's side. Clause categories, thresholds and the finding format for standard terms (formerly cgv-checker) from the same source. See THIRD_PARTY.md. -->

@@ -27,7 +27,7 @@ Règle pour la suite : avant de reprendre quoi que ce soit d'un autre dépôt, v
   | `feature-spec` (complété en 1.2.0) | `product-management/skills/write-spec/SKILL.md` | En plus de la reprise de mars : test du P0 et « assurance d'architecture », erreurs de user stories, conseils de critères d'acceptation, règles de cible, non-objectifs avec raison, dérive du périmètre |
   | `prd` (1.2.0) | `product-management/skills/write-spec/SKILL.md` | Test du P0, P2 en assurance d'architecture, non-objectifs avec raison, règles de cible, dérive du périmètre |
   | `reformulation-us` (1.2.0) | `product-management/skills/write-spec/SKILL.md` | Erreurs de user stories (grille de diagnostic), conseils de critères d'acceptation |
-  | `product-spec` (1.2.0) | `design/skills/design-handoff/SKILL.md` | Liste des états et des cas limites d'une vue |
+  | `product-spec` (1.2.0), repris dans `feature-spec` 2.0.0 après la fusion | `design/skills/design-handoff/SKILL.md` | Liste des états et des cas limites d'une vue |
   | `mockup` (1.2.0) | `design/skills/design-handoff/SKILL.md` | Les états à montrer |
   | `persona` (1.2.0) | `product-management/skills/synthesize-research/SKILL.md` | Comportement plutôt que démographie, variables qui distinguent les groupes, effectif par motif |
   | `okr` (2.2.0) | `product-management/skills/metrics-review/SKILL.md` | Test de trajectoire, norme d'atteinte d'environ 0,7, 2 à 4 KR par objectif |
@@ -57,6 +57,12 @@ Règle pour la suite : avant de reprendre quoi que ce soit d'un autre dépôt, v
 
 - **Modifications :** chaque skill a été condensé (de 1 700–2 000 mots à environ 300 pour `feature-spec` et `ticket-triage`), réécrit dans le gabarit ix (rôle, règle absolue, entrées, méthode, contraintes, format de sortie, définition de fini), rédigé en français puis traduit en anglais, débarrassé des connecteurs propres à Claude, et complété de règles maison (sortie nulle « RAS », séparation faits / hypothèses). Chaque fichier modifié porte une mention en fin de corps.
 - `code-review` et `contract-review`, issus du même dépôt, ont été retirés d'ix-recipes en 2.0.0 : la source fait mieux, et Claude Code a déjà un `/code-review` intégré.
+
+## anthropics/skills (Anthropic)
+
+- **Source :** https://github.com/anthropics/skills, `skills/frontend-design/SKILL.md`, commit `41bbe19`, lu le 2026-10-16
+- **Licence :** Apache License 2.0 (`LICENSE.txt` du dossier du skill), copie dans [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt)
+- **Skill adapté :** `mockup` (2.0.0) — idées reformulées, aucun passage copié : les mots du brief l'emportent sur les choix esthétiques, la structure porte de l'information, contenu réel plutôt que générique, socle focus / mouvement réduit / accessibilité, libellés d'action et états d'échec et de vide. Mention en fin de corps.
 
 ## wshobson/agents (Seth Hobson)
 

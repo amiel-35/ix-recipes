@@ -38,6 +38,8 @@ Identify the job family and read only the matching file: it says what "autonomy"
 
 Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check".
 
+Then check what the hire (a night or safety-sensitive post, a regulated profession, a foreign employee, a minor, an employee with a disability and the adjustments it needs) calls for beyond this list: a list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Frame.** Role, context, expectations for 90 days; calibrate with the reference. If the interview summary or scorecard is provided, extract the competencies to strengthen (scored partial), the success conditions and the sponsor.
@@ -61,8 +63,13 @@ Why it works: each deadline is computed from the start date and adjusted to a wo
 
 # Expected output format
 
-- `onboarding_plan`: 30 / 60 / 90 days with objectives, actions, meetings, deliverables, checkpoints, the trial decision point, key contacts, questions to the manager.
-- `onboarding_prerequisites`: the dated table (before day 1, first week, first three months) with legal basis.
+This is the default format; an explicit request from the user wins. Output names kept: `onboarding_plan`, `onboarding_prerequisites`.
+
+1. **Synthesis** (3 to 5 lines): start date, end of the trial period and last date to decide, the dated formalities most at risk, the questions to the manager.
+2. `onboarding_prerequisites`: table item / deadline (a date) / owner / legal basis / status, grouped under before day 1, first week, first three months.
+3. `onboarding_plan`: one table per phase (D1-D30, D30-D60, D60-D90), columns objective / actions / people met / deliverables / checkpoint; day 1 and week 1 on their own sheet; the trial-period decision point marked in the 60-90 phase.
+4. **Key contacts**: table role / person / for what.
+5. **Questions to the manager**: table question / why it matters / who answers / by when; what is fact and what is assumed is tagged.
 
 # Definition of done
 

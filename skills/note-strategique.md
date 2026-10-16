@@ -1,7 +1,7 @@
 ---
 id: note-strategique
 label: Note strategique
-version: 1.1.1
+version: 1.2.0
 description_fr: Produit une note stratégique structurée et argumentée, qui commence par la conclusion et rend visibles les trade-offs, pour un destinataire décideur. Déclenche sur "prépare une note pour le CODIR sur ce sujet", "rédige une note stratégique argumentée sur X", "il me faut un document écrit pour trancher entre ces options". Ne clarifie pas un besoin encore flou (utiliser `cadrage`) et ne construit pas un brief opérationnel (utiliser `brief`).
 description_en: Produces a structured, argued strategic note that opens with the conclusion and makes trade-offs visible, for a decision-maker reader. Triggers on "prepare a note for the steering committee on this", "write an argued strategic note on X", "I need a written case to decide between these options". Does not clarify a still-vague need (use `cadrage`) and does not build an operational brief (use `brief`).
 icon: ◆
@@ -62,16 +62,16 @@ Each section brings information the others do not; cut a section that repeats.
 
 # Expected output format
 
-- `strategic_note`: structured and shareable document.
+Default format; an explicit request from the user comes first. Output name: `strategic_note`, structured and shareable.
 
-Recommended structure:
-- head lines (decision asked, recommendation, main reason, main cost or risk)
-- context (minimal)
-- analysis (facts, options including doing nothing, tensions)
-- recommendation (one position, owned trade-offs)
-- risks, assumptions and what would change the recommendation
-- open arbitrations
-- next steps
+- Head, 3 to 5 lines: the decision asked (who, what, by when, what happens without it), the recommendation in one sentence, the main reason, the main cost or risk.
+- Context, minimal; facts given are labelled as facts.
+- Options table, "do nothing" included: option / cost / delay / risk / reversibility / what it gives up; assumptions you supply are labelled.
+- Recommendation: one position and the trade-off it owns.
+- Risks and assumptions, with one to three conditions that would change the recommendation.
+- Open arbitrations.
+- Next steps, apart from the analysis: action / owner / by when.
+- Annexes for any detail beyond the page limit.
 
 # Definition of done
 

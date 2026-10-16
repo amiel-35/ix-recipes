@@ -1,7 +1,7 @@
 ---
 id: performance-review-helper
 label: Aide a l'entretien annuel
-version: 1.4.0
+version: 1.5.0
 description_fr: Prépare l'entretien annuel individuel d'évaluation — bilan factuel (réussites, axes de tension), questions pour le dialogue et objectifs mesurables pour N+1, dans le cadre légal de l'évaluation (méthodes connues à l'avance, absences protégées, forfait jours). Déclenche quand l'utilisateur prépare l'évaluation de performance d'une personne. Déclenche sur "prépare l'entretien annuel de cette personne", "prépare l'entretien d'évaluation de…", "bilan de performance de l'année", "trame pour l'évaluation annuelle". N'analyse jamais une grille déjà remplie — voir `analyse-entretien` — et ne traite pas les perspectives de carrière — voir `entretien-professionnel` (obligation légale) — ni la synthèse collective, voir `people-review`.
 description_en: Prepares the individual annual performance review — factual assessment (achievements, tension areas), dialogue questions and measurable objectives for next year, within the legal frame of evaluation (methods known in advance, protected absences, day-rate contracts). Triggers when the user prepares someone's performance evaluation. Triggers on "prepare this person's annual review", "prepare the evaluation interview for…", "performance assessment for the year", "template for the annual evaluation". Never analyzes an already-completed grid — see `analyse-entretien` — and does not cover career prospects — see `entretien-professionnel` (the legal obligation) — nor the collective summary, see `people-review`.
 icon: ◉
@@ -53,6 +53,8 @@ Leave a bracketed field when a result is not given (`[result to supply]`). An in
 
 Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". This is preparation, not legal advice; say so once, in the deliverable.
 
+Then check what the review (a protected representative, a day-rate contract, a new evaluation method, an employee back from a long absence) calls for beyond this list: a list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Frame.** Role, level, period, and the criteria and method the employee was told about. Ask whether they were communicated before the period (L1222-3) rather than assuming it; if not, flag it as a risk to fix before the interview. Use the matching domain reference to calibrate expectations by level: a progression axis for a junior is a given for a senior.
@@ -78,8 +80,17 @@ Each term can be checked at the next review: where it starts, where it must end,
 
 # Expected output format
 
-- `annual_review_framework`: context and legal checks, assessment table (fact / reading / question), protected-absence treatment, objectives, dialogue questions, development axes, points to clarify.
-- `smart_objectives`: the objectives as lines `objective | indicator | baseline | target | deadline`.
+This is the default format; an explicit request from the user wins. Output names kept: `annual_review_framework`, `smart_objectives`.
+
+`annual_review_framework`
+1. **Synthesis** (3 to 5 lines): role and period, objectives met or missed in figures, protected absences treated, what to fix before the interview (criteria communicated?), the decision asked of the manager.
+2. **Legal checks**: table check / status (done, to check) / action / who / by when.
+3. **Assessment**, objective by objective: table objective / target / result (source, date) / context / manager's reading (a hypothesis, labelled) / question to ask the employee.
+4. **Protected absences**: table absence / dates / treatment (prorated or neutralised).
+5. **Dialogue questions** (and the optional self-assessment outline), then development axes and points to clarify.
+
+`smart_objectives`
+6. Table objective / indicator / baseline (or "to measure") / target / deadline / measured by; five lines at most.
 
 # Definition of done
 

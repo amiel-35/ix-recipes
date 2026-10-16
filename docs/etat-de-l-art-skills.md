@@ -235,6 +235,22 @@ Ce que ce banc apprend :
 6. **Le nouveau skill coûte environ 40 % de plus par demande** que l'ancien (consigne plus longue, sortie plus fournie).
 7. **La mesure de stabilité de structure** (titres et tableaux identiques d'un passage à l'autre) ne discrimine pas les versions dans cette première forme (0,0 à 0,3 partout). Elle est à revoir avant d'en tirer quoi que ce soit.
 
+### Deuxième passe : décisions, fusions, forme (2026-10-16)
+
+Après les deux bancs, Amiel a tranché les questions de la revue (voir `revue-skills-metier.md`, « Décisions d'Amiel du 2026-10-16 »). Sur cette branche :
+
+- **Fusions** : `cgv-checker` entre dans `contrat-fournisseur` (2.0.0), `product-spec` dans `feature-spec` (2.0.0). Les deux anciens identifiants restent une version comme renvoi.
+- **Forme** : chaque skill a un squelette de sortie court, avec la synthèse en tête, les colonnes nommées des tableaux, les étiquettes faits / hypothèses / à vérifier, les actions avec qui et quand. C'est la réponse au point faible du banc. `vendor-scorecard` retrouve ses familles avec sous-totaux, son échelle à part et une fiche vierge par évaluateur.
+- **Grilles ouvertes** : toute liste de lecture se termine par « vérifie ce que le sujet appelle en plus ». C'est la réponse à `cgv-checker`, qui faisait moins bien qu'aucun skill.
+- **Enrichissements** : `strategie-prix` 2.0.0, `mockup` 2.0.0, `contrat-emploi` (droit du travail en annexe, trois modes), `people-review` (`production`), `analyse-entretien` (entretien annuel seulement).
+
+Ce qui en sort de la branche, en sessions à part :
+- le moteur : accès à la source, deux phases d'un même skill, vérification séparée ;
+- les recettes : entretien annuel, proposition commerciale avec `offre-commerciale` réduit, PRD depuis un sponsor, business case découpé ;
+- le banc des 36 skills non joués, avec de nouveaux cas de contrôle.
+
+Les cas 3 des quatre skills du banc « valeur » ont été vus pendant la correction. Ils ne mesurent donc plus cette deuxième passe : il faudra de nouveaux cas de contrôle.
+
 ### Points laissés en l'état
 
 Parce qu'ils dépendent d'une question non tranchée de la revue (§3) :

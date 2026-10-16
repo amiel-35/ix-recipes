@@ -1,7 +1,7 @@
 ---
 id: ticket-triage
 label: Ticket Triage
-version: 1.2.0
+version: 1.3.0
 description_fr: Catégorise, priorise P1 à P4 et route un ticket support entrant, avec les informations nécessaires à une prise en charge immédiate. Déclenche sur "triage ce ticket", "quelle priorité pour ce bug remonté par le client", "catégorise et route ce ticket support". En cas de doute, escalade toujours vers le haut. Ne fait pas de rétrospective sur un incident déjà clos — traite un ticket entrant unique.
 description_en: Categorizes, prioritizes P1 through P4, and routes an incoming support ticket, with the information needed for immediate handling. Triggers on "triage this ticket", "what priority for this bug the client reported", "categorize and route this support ticket". When in doubt, always escalates upward. Does not run a retrospective on a closed incident, it handles one incoming ticket.
 icon: ⋱
@@ -90,7 +90,7 @@ Checked 2026-10-16 on the text of Regulation (EU) 2016/679 (GDPR), EUR-Lex (CELE
 | Documentation | Every breach is documented: facts, effects, remedial action. Keep the ticket as the first trace. | GDPR art. 33(5) |
 | Individuals | Where the breach is likely to result in a high risk, the controller informs the persons concerned without undue delay. | GDPR art. 34(1) |
 
-Cite an article only if it is in this table or you are certain of it; otherwise state the rule without a number and mark it "to check". In the customer reply, do not call the event a breach, do not admit liability and do not guess at the cause. Do not ask the customer for screenshots or copies of the exposed data, which would spread it; ask them not to share or download it, and, if they already hold a capture, to keep it without forwarding it until security asks for it.
+Cite an article only if it is in this table or you are certain of it; otherwise state the rule without a number and mark it "to check". The table covers the breach case; then check what this ticket's subject calls for beyond it (a sector rule, a contractual security commitment, the specific product), because what a list does not name gets missed. In the customer reply, do not call the event a breach, do not admit liability and do not guess at the cause. Do not ask the customer for screenshots or copies of the exposed data, which would spread it; ask them not to share or download it, and, if they already hold a capture, to keep it without forwarding it until security asks for it.
 
 # First-reply templates
 
@@ -113,8 +113,14 @@ Both state the next step and the delay, and neither names a cause or accepts bla
 
 # Expected output format
 
-- `triage`: reported symptom; probable root cause (labelled hypothesis); category; retained priority with its reason and the delay (default or organisation's); product area; routing; duplicate status; missing elements; next action; internal notes (what is already checked, escalation triggers to watch, reproduction hints for a bug, whether a rollback should be considered when a release is the suspected cause); the first reply when requested.
-- `questions_ouvertes`: points to clarify for a finer handling, each with who can answer.
+Default skeleton; an explicit request from the user wins.
+
+1. **Summary, 3 lines**: priority and category, who it goes to, the next action and when.
+2. **`triage`**, one table: field | value | status (observed in the ticket / assumed / missing). Fields: reported symptom; probable root cause (always a hypothesis); category (primary, secondary); priority with its one-line reason and the escalation triggers that apply; first-response delay (default or organisation's); product area; routing; duplicate status (what was checked, or "no base provided"); possible personal data breach (yes / no / unknown, reception date and time).
+3. **Next action**: what | who | when.
+4. **Internal notes**: what is already checked, escalation triggers to watch, reproduction hints for a bug, whether a rollback should be considered (evidence preserved first).
+5. **First reply**, when requested, in the ticket's language, under its own heading.
+6. **`questions_ouvertes`**: question | what it changes | who can answer.
 
 # Definition of done
 

@@ -1,7 +1,7 @@
 ---
 id: system-design
 label: System Design
-version: 1.2.0
+version: 1.3.0
 description_fr: Conçoit un système ou une architecture technique — composants, flux de données, contrats d'API, stockage — avec trade-offs explicites et hypothèses de scale assumées. Déclenche sur "conçois l'architecture de ce système", "quel découpage de services pour X", "design l'API et le modèle de données avant qu'on code". Ne relit pas du code déjà écrit — travaille en amont, sur la conception.
 description_en: Designs a system or technical architecture, components, data flows, API contracts, storage, with explicit trade-offs and owned scale hypotheses. Triggers on "design the architecture for this system", "how should we split services for X", "design the API and data model before we code". Does not review already-written code, it works upstream, on the design itself.
 icon: ⬡
@@ -61,7 +61,7 @@ Apply when personal data passes through the system. They are constraints to plac
 
 Sources: GDPR, Regulation (EU) 2016/679, official text on EUR-Lex (CELEX 32016R0679); Public Health Code art. L1111-8 on Légifrance (LEGIARTI000049577902).
 
-Whether a given service handles "health data" (a wellness app's mood diary, for instance) is a qualification you pose as a blocking question before choosing a host; do not settle it yourself. Cite an article only if it is in this table or you are certain of it; otherwise state the rule without a number and mark it "to check".
+This table focuses attention on four rules; then check what the system's subject calls for beyond it (data portability, sector rules, payment or identity regulation, the specific product), because what a list does not name gets missed. Whether a given service handles "health data" (a wellness app's mood diary, for instance) is a qualification you pose as a blocking question before choosing a host; do not settle it yourself. Cite an article only if it is in this table or you are certain of it; otherwise state the rule without a number and mark it "to check".
 
 # Parameters
 
@@ -72,10 +72,17 @@ Whether a given service handles "health data" (a wellness app's mood diary, for 
 
 # Expected output format
 
-- `system_design`: the main document: requirements, load estimate, components and flows, the trade-off lines for each structuring decision, what to revisit as the system grows, regulatory constraints applied.
-- `modele_donnees`: entities, attributes, relationships and the rules that matter (uniqueness, retention), when relevant.
-- `api_contracts`: the main endpoints with method, input, output and error cases, when relevant.
-- `questions_ouvertes`: blocking points for the next design steps, each with who decides.
+Default skeleton; an explicit request from the user wins. `system_design` is the main document; the other outputs complement it.
+
+1. **Summary, 3 to 5 lines**: the recommended architecture in one sentence, the load figure it rests on, the riskiest hypothesis, the decision asked.
+2. **Requirements**: functional; non-functional (scale, latency, availability, cost); constraints, each labelled confirmed / hypothesis / open.
+3. **Load estimate**: the calculation written out, with the peak factor and its reason.
+4. **Components and flows**: component | role | technology | owner.
+5. **Trade-offs**: decision | what becomes easier | what becomes harder | what to revisit and at what trigger.
+6. **Regulatory constraints applied**: rule | consequence for the design | status (applies / to qualify).
+7. `modele_donnees`: entity | key attributes | relationships | rules (uniqueness, retention). `api_contracts`: endpoint | method | input | output | error cases.
+8. **`questions_ouvertes`**: question | blocking or not | who decides | by when.
+9. **Next steps**, apart from the diagnosis: what | who | when.
 
 # Definition of done
 

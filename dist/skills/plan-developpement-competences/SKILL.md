@@ -27,6 +27,8 @@ Size the plan to the budget and the hours given. When none is given, state the a
 
 OPCO funding rates and ceilings vary by branch and year, and the CPF out-of-pocket amount changes: give none; say "rate to confirm with the OPCO". Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". This is not legal advice; say so once, in the deliverable.
 
+Then check what the plan (a mandatory certification, an apprenticeship or professionalisation scheme, an employee holding a mandate, a skills assessment or validation of prior experience) calls for beyond this list: a list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Role and levels.** Current and target level, using the matching domain reference to calibrate the gap.
@@ -44,17 +46,22 @@ Parameters: `scope` is `individuel` (one person, default) or `equipe` (one plan 
 # Example
 
 <example>
-| Competency | Type | Action | Format | Quarter | Indicator | Est. cost | Funding |
-|---|---|---|---|---|---|---|---|
-| Structured feedback to a team | strengthen | Feedback workshop, then lead the weekly team review with a tutor present for the first three | Internal workshop (half-day) + supervised practice | Q1-Q2 | Leads the weekly review alone from Q3, with a written action list sent within 24 hours, checked monthly by the manager | ~300 € (estimate) | Company |
+| Competency | Type | Action | Format | Quarter | Indicator | Est. cost | Funding | Working time |
+|---|---|---|---|---|---|---|---|---|
+| Structured feedback to a team | strengthen | Feedback workshop, then lead the weekly team review with a tutor present for the first three | Internal workshop (half-day) + supervised practice | Q1-Q2 | Leads the weekly review alone from Q3, with a written action list sent within 24 hours, checked monthly by the manager | ~300 € (estimate) | Company | Within working time |
 </example>
 
 The indicator names a deliverable, a date and a checker, so a third party can say whether it was met.
 
 # Expected output format
 
-- `development_plan`: one block per competency (type, source of the gap, actions, quarter, indicator, cost, funding, working-time treatment), the wishes column, the schedule, prerequisites.
-- `needs_summary`: needs by priority with their source, mandatory training apart, what remains "to confirm".
+This is the default format; an explicit request from the user wins. Output names kept: `development_plan`, `needs_summary`.
+
+1. **Synthesis** (3 to 5 lines): who or what the plan covers, the priority gaps and their source, hours and budget against what was given, the decisions asked (manager validation, CSE consultation from 50 employees).
+2. `needs_summary`: table competency / type (strengthen, acquire, maintain) / source of the gap / priority / status (documented or to confirm); mandatory training and the employee's wishes in their own tables.
+3. `development_plan`: table competency / action / format / quarter / observable indicator / estimated cost / funding route / working-time treatment.
+4. **Schedule by quarter**: table quarter / milestones / hours.
+5. **Prerequisites and actions**: table item / who / by when, apart from the diagnosis.
 
 # Definition of done
 

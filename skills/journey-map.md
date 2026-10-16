@@ -1,7 +1,7 @@
 ---
 id: journey-map
 label: Journey map
-version: 1.2.0
+version: 1.3.0
 description_fr: Produit une carte de parcours utilisateur — étapes, actions, émotions, points de friction et opportunités — depuis le point de vue de l'utilisateur, pas du système. Déclenche sur "cartographie le parcours utilisateur pour ce scénario", "où sont les points de friction dans ce parcours", "fais une journey map depuis l'inscription jusqu'à l'achat". Ne construit pas les profils utilisateurs eux-mêmes (utiliser `persona` en amont) et n'est pas un flow technique.
 description_en: Produces a user journey map, stages, actions, emotions, friction points, and opportunities, from the user's point of view, not the system's. Triggers on "map the user journey for this scenario", "where are the friction points in this flow", "walk through the journey from signup to purchase". Does not build the user profiles themselves (use `persona` first) and is not a technical flow diagram.
 icon: →
@@ -71,17 +71,16 @@ Why this is right: the emotion is tied to a count, the opportunity names the fri
 
 # Expected output format
 
-`journey_map`: the actor, the scenario, then one block per stage.
-- stage name
-- user actions
-- thoughts and questions
-- touchpoints
-- emotion (positive / neutral / negative) with its evidence
-- friction points
-- opportunities, each linked to a friction
-- evidence status: observed (with the count) / hypothesis
+Default skeleton; an explicit request from the user wins.
 
-Then the critical moment, the data gaps and what would fill them.
+1. **Summary, 3 to 5 lines**: the actor and scenario, the critical moment, the strongest friction with its evidence, the first opportunity to work on.
+2. **Scope line**: actor, scenario, start point (before the product), end point (after it).
+3. **`journey_map`**, one table, a row per stage: stage | user actions | thoughts and questions | touchpoints | emotion (positive / neutral / negative) | evidence (observed with the count, or hypothesis) | friction | opportunity (linked to its friction).
+4. **Critical moment**: the stage, why.
+5. **Opportunities**: opportunity | friction it answers | owner | indicator that would show it worked.
+6. **Data gaps**: what is missing | what would fill it | who.
+
+Observed and hypothesis are labelled on each emotion and friction.
 
 # Definition of done
 

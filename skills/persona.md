@@ -1,7 +1,7 @@
 ---
 id: persona
 label: Persona
-version: 1.2.0
+version: 1.3.0
 description_fr: Produit des personas utilisateurs structurés depuis des données de recherche, interviews ou un brief produit, en distinguant ce qui est observé de ce qui est supposé. Déclenche sur "crée les personas pour ce produit", "à partir de ces interviews, fais-moi des profils utilisateurs", "qui sont nos utilisateurs types". Ne trace pas de parcours (utiliser `journey-map` en aval) et ne dépasse pas quatre profils par livrable.
 description_en: Produces structured user personas from research data, interviews, or a product brief, distinguishing what is observed from what is assumed. Triggers on "create the personas for this product", "turn these interviews into user profiles", "who are our typical users". Does not map a journey (use `journey-map` downstream) and never exceeds four profiles per deliverable.
 icon: ◉
@@ -82,17 +82,14 @@ Why this is right: the count says how solid the pattern is, the label says it is
 
 # Expected output format
 
-`personas`: one block per persona.
-- name and one-line description
-- context: role, situation, frequency and way of using the product
-- representative quote (by participant type)
-- main goals
-- frustrations and pain points
-- key behaviours, each with its label and count
-- unexpressed needs (assumed)
-- product implications
-- status: supported (n of N participants) or hypothesis
-- points to validate
+Default skeleton; an explicit request from the user wins. `personas` is one document.
+
+1. **Summary, 3 to 5 lines**: how many personas the data supports (and why fewer than requested, if so), the variables that separate them, which are supported and which are hypotheses.
+2. **Comparison table**: persona | share of participants (n of N) | separating variables | distinct primary need | status (supported / hypothesis).
+3. **One block per persona**: name and one-line description; context (role, situation, frequency and way of using the product); representative quote, attributed to a participant type; goals; frustrations; key behaviours as a table (behaviour | count | label stated / observed / assumed); unexpressed needs (assumed); product implications (the decision it changes).
+4. **Points to validate**: hypothesis | how | who | when, hypotheses first.
+
+In hypothesis mode, the banner comes before the summary.
 
 # Definition of done
 

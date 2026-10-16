@@ -1,7 +1,7 @@
 ---
 id: reformulation-us
 label: Reformulation US
-version: 1.2.0
+version: 1.3.0
 description_fr: Réécrit des user stories existantes mal formulées en US propres, testables, avec critères d'acceptation Given/When/Then, en respectant l'intention d'origine. Déclenche sur "reformule ces user stories", "ces US sont mal écrites, nettoie-les", "rends ce ticket testable avec des critères d'acceptation clairs". Ne rédige pas de nouvelles US depuis un brief (utiliser `feature-spec`) et signale les US trop vagues plutôt que de les réinventer.
 description_en: Rewrites existing poorly-written user stories into clean, testable US with Given/When/Then acceptance criteria, staying faithful to the original intent. Triggers on "rewrite these user stories", "these US are badly written, clean them up", "make this ticket testable with clear acceptance criteria". Does not draft new US from a brief (use `feature-spec`) and flags US too vague to rewrite rather than reinventing them.
 icon: ↺
@@ -79,8 +79,15 @@ Why this is right: the author's intent (be warned about low stock) is intact and
 
 # Expected output format
 
-- `user_stories`: for each story, the original, the mistake corrected, the rewritten story (or "kept as is"), its acceptance criteria, and a note if a split is recommended.
-- `us_problematiques`: technical tasks and unrecoverable stories, each with its reason and the question that would unblock it.
+Default skeleton; an explicit request from the user wins.
+
+1. **Summary, 3 to 4 lines**: how many stories were received, how many kept as is, rewritten, split, classed as tasks, and how many cannot be rewritten without an answer.
+2. **`user_stories`**, one table: # | original | mistake corrected (or "correct, kept as is") | rewritten story ("As a... I want... so that...") | suggested solution kept as a note | split? (yes + the parts).
+3. **Acceptance criteria**, under each story: Given | When | Then | type (nominal, error, edge, negative), at least one negative case.
+4. **`us_problematiques`**: # | item | class (task or too vague) | reason | question that would unblock it | who answers.
+5. **Next actions**, apart from the table: what | who | when.
+
+What is observed in the original is kept distinct from what you inferred (a benefit taken from the plain meaning of the request is marked "inferred").
 
 # Definition of done
 

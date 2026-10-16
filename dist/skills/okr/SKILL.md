@@ -128,13 +128,15 @@ Label the document at the top: **« session material — not a finished OKR »**
 
 ## Expected output format
 
-- `verdict_okr` (Mode 1): line-by-line verdict — the line, the failing brick or
-  « conforms », the profile, and the question it raises.
-- `materiau_okr` (Mode 2): candidate Objectives, families of results, forcing
-  mechanisms and traps.
-- `questions_ouvertes`: closed questions to settle with the person.
+Default skeleton; an explicit request from the user wins.
 
----
+1. **Summary, 3 to 5 lines**: Mode 1 or Mode 2, how many lines conform, the main failing brick, the decision to take with the person.
+2. **`verdict_okr`** (Mode 1), one table: line | O or KR | failing brick or "conforms" | KR or disguised task | outcome or output | baseline (sourced / missing) | profile (sandbagged, aspirational, stretch) | question it raises.
+3. **Count check** per Objective: Objective | number of KR | flag (beyond 4).
+4. **`materiau_okr`** (Mode 2), headed "session material — not a finished OKR": candidate Objectives (priority | what it deliberately excludes); then families of results: family | formulations | baseline or "to be measured" | stretch | acceptable minimum | forcing mechanism | classic trap.
+5. **`questions_ouvertes`**: closed question | to settle with | by when.
+
+Observed (from the sources), derived (a trend extended) and to be measured are labelled where they appear.
 
 ## Limits to state when they matter
 

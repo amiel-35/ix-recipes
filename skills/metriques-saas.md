@@ -1,7 +1,7 @@
 ---
 id: metriques-saas
 label: Metriques SaaS
-version: 1.2.0
+version: 1.3.0
 description_fr: Analyse les métriques clés d'un SaaS — MRR et ARR, NRR et GRR, churn, CAC, LTV, payback, burn multiple, Rule of 40 — et produit un diagnostic factuel de la santé du modèle économique, chaque chiffre avec sa formule, sa période et ses hypothèses. Déclenche sur "analyse nos métriques SaaS", "calcule le NRR et le churn à partir de ces chiffres", "diagnostic de la santé du modèle avec ce reporting", "prépare les métriques pour le board", "notre LTV/CAC tient-il la route". Dit ce que les chiffres permettent ou non de trancher, sans choisir d'action. Ne dimensionne pas le marché (utiliser `tam-sam-som`) et ne compare pas aux concurrents (utiliser `analyse-concurrentielle`).
 description_en: Analyzes key SaaS metrics — MRR and ARR, NRR and GRR, churn, CAC, LTV, payback, burn multiple, Rule of 40 — and produces a factual diagnosis of business model health, each figure with its formula, period and assumptions. Triggers on "analyze our SaaS metrics", "calculate NRR and churn from these figures", "diagnose the health of the model from this reporting", "prepare the metrics for the board", "does our LTV/CAC hold up". States what the figures can and cannot settle, without choosing an action. Does not size the market (use `tam-sam-som`) and does not compare against competitors (use `analyse-concurrentielle`).
 icon: ◫
@@ -102,13 +102,17 @@ Why this is right: the formula, the inputs and the period are on the line, so th
 
 # Expected output format
 
-The main deliverable is a `saas_metrics_analysis` in Markdown. A sensible default structure, to adapt to the question:
+Default format; an explicit request from the user comes first. Output names: `saas_metrics_analysis` (the Markdown deliverable), `metrics_table`, `hypotheses`.
 
-- context and data received (period, units, what is missing)
-- metrics table: metric, formula, inputs, value, status (measured / derived / estimated)
-- reading: the two or three tensions between metrics
-- what the figures can and cannot settle
-- data gaps, most consequential first
+- Head, 3 to 5 lines: what the figures show about the health of the model, the two or three tensions, what they cannot settle yet.
+- Data received: period, units, what is missing.
+- MRR bridge: start / new / expansion / contraction / churned / end, with the check line.
+- Metrics table: metric / formula / inputs / period / value / status (measured, derived, estimated).
+- Reading: the tensions between metrics.
+- Decisions table: decision the reader may face / what the figures support / what they cannot settle / data that would settle it.
+- Benchmarks, if any: metric / benchmark / source / date / population.
+- Data gaps, most consequential first: gap / what to collect / who / by when.
+- Closing lists: facts, hypotheses, points to verify.
 
 # Definition of done
 

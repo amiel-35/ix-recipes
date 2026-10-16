@@ -1,7 +1,7 @@
 ---
 id: analyse-concurrentielle
 label: Analyse Concurrentielle
-version: 1.2.0
+version: 1.3.0
 description_fr: Construit un socle factuel sur le paysage concurrentiel — acteurs, forces, différenciation, positionnement. Déclenche sur "fais l'analyse concurrentielle de...", "qui sont nos concurrents et comment on se différencie", "cartographie le paysage concurrentiel avant le lancement". Ne chiffre pas la taille du marché (utiliser `tam-sam-som`) ni ne lit les métriques internes de rétention (utiliser `metriques-saas`). Produit une base pour une décision, pas la décision elle-même.
 description_en: Builds a factual foundation on the competitive landscape — players, forces, differentiation, positioning. Triggers on "run a competitive analysis of...", "who are our competitors and how do we differentiate", "map the competitive landscape before launch". Does not size the market (use `tam-sam-som`) nor read internal retention metrics (use `metriques-saas`). Produces a base for a decision, not the decision itself.
 icon: ◭
@@ -47,6 +47,7 @@ An intermediary (accountant, integrator, marketplace) can be a substitute and a 
 - **Axes of the map**: choose them from the buying criteria of the target customer (time to do the task, price, link with their existing tools), not from the product's own feature list. Two axes that show an empty or a crowded space.
 - **Ratings**: strong, adequate, weak, absent, given from evidence (trial, customer reviews, documentation) and not from the competitor's own marketing. Weigh by what the target customer values, not by the number of features.
 - **Prices**: convert every offer to the same unit, the monthly cost for two or three reference customer profiles spanning the target range (for example a small and a larger customer). Free thresholds, tiers and per-user versus per-company billing can reverse the ranking from one size to the next. Note list or negotiated price and the date it was read.
+- **Criteria**: the list comes from the buyer; then check what this market calls for beyond it (regulation, integration with their tools, data hosting), because what a list does not name gets missed.
 - **Competitor strengths**: state them plainly. An analysis in which you win everywhere is not believed.
 - **Evidence**: every fact about a competitor has a source and a date, or is marked "memory, unverified". If you do not recognise a named player, say so and work only from what the user gave; do not fill the gap.
 
@@ -83,15 +84,17 @@ Why this is right: the capability is a buying criterion, every rating has its ev
 
 # Expected output format
 
-The main deliverable is a `competitive_analysis` in Markdown:
+Default format; an explicit request from the user comes first. Output names: `competitive_analysis` (the Markdown deliverable), `tableau_comparatif`, `differenciation`.
 
-- scope
-- landscape by level (with intermediaries' roles)
-- comparison table (axes, ratings, prices in one unit, source and date)
-- strengths of competitors
-- differentiation logic
-- threats and opportunities
-- limits and points to verify
+- Head, 3 to 5 lines: the real competitors, the angle the evidence supports, the main exposure, what to verify first; the flash warning if it applies.
+- Scope: product, customer, decision to inform.
+- Landscape table: player / level (direct, indirect, adjacent, substitute) / other role (prescriber, channel) / source and date.
+- Comparison table: buying criterion / us / each player, every cell rated and sourced with its date; facts labelled provided, sourced or "to verify".
+- Prices table: player / billing unit / monthly cost for each reference profile / thresholds and tiers / list or negotiated / date read.
+- Competitors' strengths.
+- Differentiation logic: one or two angles, hypotheses to verify.
+- Threats and opportunities.
+- Limits and points to verify: point / how / who / by when.
 
 # Definition of done
 

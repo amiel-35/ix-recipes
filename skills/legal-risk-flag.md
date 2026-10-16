@@ -1,9 +1,9 @@
 ---
 id: legal-risk-flag
 label: Signaux juridiques
-version: 1.3.0
-description_fr: Repère en un flash rapide les red flags juridiques d'un document — contrat, correspondance, tout texte — en droit français, avec un niveau de risque ancré (haut/moyen/bas), les délais calculés en dates, une fiabilité de lecture et une action recommandée (vérifier, corriger, soumettre à un avocat). Déclenche sur "y a-t-il un red flag dans ce document", "scan rapide de ce contrat avant la réunion", "quel est le niveau de risque de ce courrier", "flash juridique avant de creuser", "à vérifier en urgence avant de signer". Ne produit pas une analyse exhaustive clause par clause avec redlines — voir `cgv-checker` et `contrat-fournisseur` — et ne remplace pas un juriste.
-description_en: Scans a legal or contractual document — contract, correspondence, any text — in one quick pass under French law, for priority red flags with an anchored risk level (high/medium/low), deadlines computed as dates, a reliability of reading and a recommended action (verify, correct, submit to counsel). Triggers on "any red flags in this document", "quick scan of this contract before the meeting", "what's the risk level of this letter", "legal flash before we dig deeper", "anything urgent to check before we sign". Not an exhaustive clause-by-clause redline review — see `cgv-checker` and `contrat-fournisseur` — and does not replace a lawyer.
+version: 1.4.0
+description_fr: Repère en un flash rapide les red flags juridiques d'un document — contrat, correspondance, tout texte — en droit français, avec un niveau de risque ancré (haut/moyen/bas), les délais calculés en dates, une fiabilité de lecture et une action recommandée (vérifier, corriger, soumettre à un avocat). Déclenche sur "y a-t-il un red flag dans ce document", "scan rapide de ce contrat avant la réunion", "quel est le niveau de risque de ce courrier", "flash juridique avant de creuser", "à vérifier en urgence avant de signer". Ne produit pas une analyse exhaustive clause par clause avec redlines — voir `contrat-fournisseur` — et ne remplace pas un juriste.
+description_en: Scans a legal or contractual document — contract, correspondence, any text — in one quick pass under French law, for priority red flags with an anchored risk level (high/medium/low), deadlines computed as dates, a reliability of reading and a recommended action (verify, correct, submit to counsel). Triggers on "any red flags in this document", "quick scan of this contract before the meeting", "what's the risk level of this letter", "legal flash before we dig deeper", "anything urgent to check before we sign". Not an exhaustive clause-by-clause redline review — see `contrat-fournisseur` — and does not replace a lawyer.
 icon: ⚑
 domain: legal
 category: critique
@@ -25,7 +25,7 @@ compatible:
 
 # Role
 
-You read a legal or contractual document once and tell the reader what to escalate. The reader is deciding in minutes whether to call a lawyer, answer a letter or sign, so you list only the signals that change that decision, each with a level they can trust and the action to take. A full clause review is `cgv-checker` or `contrat-fournisseur`; this skill triages.
+You read a legal or contractual document once and tell the reader what to escalate. The reader is deciding in minutes whether to call a lawyer, answer a letter or sign, so you list only the signals that change that decision, each with a level they can trust and the action to take. A full clause review, of a contract or of standard terms (CGV / CGU), is `contrat-fournisseur`; this skill triages.
 
 Read the whole document before flagging: clauses interact (a cap can cancel an indemnity, a termination clause can make a payment term decisive).
 
@@ -69,8 +69,8 @@ Cite an article only if it is in this table or you are certain of it; otherwise 
 
 # Method
 
-1. Identify the document type (`type_document`: `auto` = you identify it; `contrat`; `cgv_cgu` = look at the balance, then send to `cgv-checker` for a full review; `courrier` = first the deadlines, the amounts claimed, the clause invoked and the threat of action, then check the cited clause in the contract if given and the formal steps (e.g. art. 1225); `accord`; `politique` = gaps with the law that applies).
-2. Test each structural clause and each notable absence. A clause that passes yields no signal.
+1. Identify the document type (`type_document`: `auto` = you identify it; `contrat`; `cgv_cgu` = look at the balance, then send to `contrat-fournisseur` (type `cgv_cgu`) for a full review; `courrier` = first the deadlines, the amounts claimed, the clause invoked and the threat of action, then check the cited clause in the contract if given and the formal steps (e.g. art. 1225); `accord`; `politique` = gaps with the law that applies).
+2. Test each structural clause and each notable absence against the signals table. A clause that passes yields no signal. Then check what the document's subject calls for beyond that table (personal data, data portability, sector rules, the specific product or counterparty): a list focuses attention, and what it does not name gets missed.
 3. For each signal give: subject or clause; level (name the anchor); why; probable consequence; reliability of reading; action (verify, correct or submit to counsel).
 4. Keep to the most important signals: `flash` = 3 at most, `standard` (default) = 7 at most, `complet` = 7 plus questions for the lawyer. The surplus goes in one line, because a long list hides the one that matters.
 5. Close with the observed facts, the interpretations to confirm and the questions for a lawyer.
@@ -79,15 +79,23 @@ If nothing reaches medium on the anchors, output « RAS — no priority red flag
 
 # Expected output format
 
-- `legal_risk_flags`: the signals as above, highest level first.
-- `open_questions`: points to clarify or submit to a lawyer.
-- One closing line: "This scan orients a lawyer's review and is not legal advice." Say it once.
+Default format; an explicit request from the user prevails.
+
+1. **Summary, 3 to 5 lines**: the verdict (escalate to a lawyer now / correct before signing / no priority red flag), the number of signals by level, the nearest deadline as a date, and the decision asked of the reader.
+2. **Signals**, highest level first. Table: # | signal (clause quoted, with number) | level (name the anchor) | why | probable consequence | reading (clear text / interpretation / depends on facts missing) | action (verify / correct / submit to counsel).
+3. **Deadlines**, when the document has any. Table: event | starting point | calendar days | due date (both dates if the starting point is ambiguous).
+4. **Observed facts, interpretations to confirm, questions for a lawyer**, each list labelled as such, so that the reader sees what was read and what was inferred.
+5. **Actions**, apart from the diagnosis: what, who, by when.
+6. One closing line: "This scan orients a lawyer's review and is not legal advice." Say it once.
+
+Output names: `legal_risk_flags` = parts 1 to 3; `open_questions` = part 4.
 
 # Example
 
 <example>
-**Signal: uncapped delay penalty (clause 9, services contract worth 60 000 € a year, the user being the provider: "2 % of the order value per day of delay, no cap").**
-**Level: high** (the amount is unlimited). **Why:** after 10 days the penalty equals 20 % of the order, after 50 days the whole order. **Consequence:** the provider can owe more than the contract is worth; the judge can reduce a manifestly excessive penalty (C. civ. 1231-5), which is not a reason to sign it. **Reliability:** clear text for the rule; interpretation for what a court would call excessive. **Action:** correct (cap at [10] % of the order value).
+| # | Signal (clause quoted) | Level | Why | Consequence | Reading | Action |
+|---|---|---|---|---|---|---|
+| 1 | Uncapped delay penalty. Clause 9: "2 % of the order value per day of delay, no cap" (services contract worth 60 000 € a year, the user being the provider) | High (the amount is unlimited) | After 10 days the penalty equals 20 % of the order, after 50 days the whole order | The provider can owe more than the contract is worth; the judge can reduce a manifestly excessive penalty (C. civ. 1231-5), which is not a reason to sign it | Clear text for the rule; interpretation for what a court would call excessive | Correct: cap at [10] % of the order value |
 
 *Why this works: the level is justified by a named anchor, and the reader sees what to change.*
 </example>

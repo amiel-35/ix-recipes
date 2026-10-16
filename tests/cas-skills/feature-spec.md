@@ -101,3 +101,41 @@ Textes vérifiés le 2026-10-16 : C. com. L441-9 et L441-10 (versions en vigueur
 | 2026-10-16 | 1.1.1 | Haiku 5.5 | 2.0 (1–3) | banc 3 passages, moyenne (min–max) ; erreurs relevées 10.3 (8–12) |
 | 2026-10-16 | 1.2.0 brouillon | Haiku 5.5 | 3.0 (1–4) | banc 3 passages ; erreurs 7.0 (6–9) |
 | 2026-10-16 | 1.2.0 | Haiku 5.5 | **2.3 (2–3)** | banc 3 passages, après correction (cas 3 lu avant la correction : plus indépendant) ; erreurs 8.3 (6–12) |
+
+# Cas 4 — spec d'écran avec ses états
+
+Écrit le 2026-10-16 pour la fusion de `product-spec` dans `feature-spec` (version 2.0.0), à partir de la seule demande d'un écran, sans lire le corps du skill. Il vérifie que `feature-spec` couvre ce que faisait `product-spec` : les états d'une vue, les cas limites de contenu et la règle de calcul d'un statut dérivé.
+
+## Demande
+
+> Écris la spec de l'écran « Demandes de congés à valider », que verra chaque manager dans notre outil RH. Contexte : un manager voit la liste des demandes de congés en attente de son équipe, avec le nom du collaborateur, les dates, le nombre de jours, la date de la demande ; il peut accepter ou refuser (avec un motif) depuis la liste. Une demande en attente depuis plus de 5 jours ouvrés doit apparaître « à relancer ». Une équipe compte de 3 à 120 personnes. Les collaborateurs qui ne sont pas managers ne doivent pas voir cet écran. L'écran sera livré dans deux semaines à l'équipe de développement et à la designer.
+
+## Valeurs de référence
+
+- Seuil de relance : 5 jours ouvrés après la date de la demande (donnée de la demande).
+- Taille d'équipe : de 3 à 120 personnes (donnée de la demande) : la liste peut dépasser une page.
+
+## Une bonne sortie contient
+
+1. Le même document couvre la feature (problème, périmètre, exigences, critères d'acceptation) et l'écran (états, données) ; il ne renvoie pas vers un autre skill pour l'écran.
+2. Les états de la vue sont décrits un par un, avec ce que voit l'utilisateur et ce qu'il peut faire : chargement, erreur récupérable, absence d'accès, partiel ou désactivé.
+3. Deux états vides distincts avec deux messages et deux actions : aucune demande en attente (rien à faire, état normal) et filtre ou recherche sans résultat.
+4. L'absence de droits est un état : un collaborateur non manager n'accède pas à l'écran (message ou redirection, à préciser), et la donnée n'est pas non plus servie par l'interface de programmation.
+5. Les cas limites de contenu sont réglés avec un chiffre quand il existe : nom très long, nombre de demandes (pagination ou chargement progressif, avec le nombre par page), plusieurs demandes d'un même collaborateur, dates qui se chevauchent, demande déjà traitée par un autre manager pendant que l'écran est ouvert.
+6. Le statut « à relancer » est calculé par une règle écrite : comparaison (strictement plus de 5 jours ouvrés), date de départ (date de la demande), calendrier des jours ouvrés (jours fériés ?), date et fuseau horaire de référence. Les points qu'on ne peut pas trancher sont des questions ouvertes.
+7. Le cycle de vie de la demande est donné : états (en attente, acceptée, refusée, annulée par le collaborateur), ce qui déclenche chaque transition, qui voit quoi, ce qui se passe quand le collaborateur annule une demande en attente.
+8. Des critères d'acceptation Given/When/Then avec des valeurs concrètes, dont au moins un cas négatif (refus sans motif impossible, ou non-manager refusé), et une exigence de refus avec motif obligatoire ou non, posée comme question si l'énoncé ne tranche pas.
+9. Chaque règle et chaque comportement porte une étiquette (décidé, hypothèse, proposé) ; les questions ouvertes sont classées bloquantes ou non, avec qui répond.
+10. Pas de solution imposée à la designer (pas de description de composant), pas de métrique inventée sans valeur de départ (« à mesurer »).
+
+## Une mauvaise sortie
+
+- Décrit seulement le parcours nominal (la liste avec des demandes) et oublie les états vide, erreur et sans accès.
+- Écrit « à relancer » sans règle de calcul, ou compte des jours calendaires sans le dire.
+- Confond liste vide parce que rien à valider et liste vide parce qu'un filtre est actif.
+
+## Résultats
+
+| Date | Version | Modèle | Critères tenus (sur 10) | Note |
+|---|---|---|---|---|
+| | | | | à jouer sur 2.0.0 avec `tests/cas-skills/banc.py` ; écrit avant la fusion, donc contrôle pour elle |

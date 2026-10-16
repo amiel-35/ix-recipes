@@ -1,7 +1,7 @@
 ---
 id: tableau-de-bord-kpi
 label: Tableau de bord KPI
-version: 1.2.0
+version: 1.3.0
 description_fr: Définit et structure un tableau de bord KPI complet — métrique, unité, cible, fréquence, source — à partir d'objectifs ou d'un contexte métier. Déclenche sur "définis le tableau de bord pour...", "quels KPI suivre pour cette équipe", "structure les indicateurs de pilotage", "quel dashboard mettre en place". Ne formule pas l'Objectif et les Key Results eux-mêmes — utiliser `okr` pour ça ; ne définit pas les signaux ponctuels de confirmation d'un plan précis — utiliser `indicateurs` pour ça. Exige pour chaque KPI une définition mesurable et une source ; la cible vient d'une mesure de départ, sinon elle est datée « à fixer ».
 description_en: Defines and structures a full KPI dashboard — metric, unit, target, frequency, data source — from business objectives or context. Triggers on "define the dashboard for...", "which KPIs should this team track", "structure the piloting indicators", "what dashboard should we set up". Does not formulate the Objective and Key Results themselves — use `okr` for that; does not define one-off confirmation or alert signals for a specific plan — use `indicateurs` for that. Requires a measurable definition and a source for every KPI; the target comes from a baseline, otherwise it is dated "to be set".
 icon: ▦
@@ -72,10 +72,16 @@ Why this is right: two people would compute the same figure, the target comes fr
 
 # Expected output format
 
-- `dashboard`: the views, each KPI with name, definition, unit, baseline, target (commit and stretch, or "to be set"), frequency, source, owner, recipient, counterweight, alert threshold and the decision or action it triggers.
-- `problematic_kpis`: indicators that are hard to measure, with what to collect.
+Default format; an explicit request from the user comes first. Output names: `dashboard` and `problematic_kpis`.
 
-End with: validated KPIs, KPIs under hypothesis, problematic or non-measurable KPIs.
+- Head, 3 to 5 lines: what the dashboard pilots, KPIs per view, how many are validated, under hypothesis or problematic, the first thing to build.
+- Views by recipient (strategic, operational), each with its KPIs on the same period.
+- Definition table: KPI / definition (numerator, denominator, filter, period) / unit / frequency / source / leading or lagging / status.
+- Steering table: KPI / baseline / commit target / stretch target or "to be set (date)" / counterweight / owner / alert threshold and reaction / decision or action.
+- Excluded KPIs: KPI / reason.
+- Problematic KPIs: KPI / why / what to collect / who / by when.
+- A blank KPI sheet (the steering columns) for owners to complete when the dashboard goes to other teams.
+- Closing lists: validated KPIs, KPIs under hypothesis, problematic or non-measurable KPIs.
 
 # Definition of done
 

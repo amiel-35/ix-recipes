@@ -1,9 +1,9 @@
 ---
 id: prd
 label: PRD
-version: 1.2.0
-description_fr: Produit un Product Requirements Document complet — problème, vision, utilisateurs cibles, périmètre inclus/exclu, exigences, métriques de succès — le quoi et le pourquoi, jamais le comment. Déclenche sur "prépare le PRD pour ce produit", "j'ai besoin d'un document de vision produit avant que l'équipe eng s'y mette", "cadre le scope avant le développement". Ne produit pas de backlog de user stories (utiliser `feature-spec`) ni de spec d'écrans ou de flows (utiliser `product-spec`).
-description_en: Produces a complete Product Requirements Document, problem, vision, target users, scope in and out, requirements, success metrics, the what and the why, never the how. Triggers on "prepare the PRD for this product", "I need a product vision document before engineering starts", "define scope before development". Does not produce a backlog of user stories (use `feature-spec`) nor a spec of screens or flows (use `product-spec`).
+version: 1.3.0
+description_fr: Produit un Product Requirements Document complet — problème, vision, utilisateurs cibles, périmètre inclus/exclu, exigences, métriques de succès — le quoi et le pourquoi, jamais le comment. Déclenche sur "prépare le PRD pour ce produit", "j'ai besoin d'un document de vision produit avant que l'équipe eng s'y mette", "cadre le scope avant le développement". Ne produit pas de backlog de user stories ni de spec d'écrans ou de flows (utiliser `feature-spec`).
+description_en: Produces a complete Product Requirements Document, problem, vision, target users, scope in and out, requirements, success metrics, the what and the why, never the how. Triggers on "prepare the PRD for this product", "I need a product vision document before engineering starts", "define scope before development". Does not produce a backlog of user stories (use `feature-spec`) nor a spec of screens or flows (use `feature-spec`).
 icon: ▣
 domain: ops
 category: production
@@ -28,7 +28,7 @@ compatible:
 
 You write the Product Requirements Document (PRD) that a sponsor reads to decide whether a problem is worth solving, and that product, design and engineering then read to build the right thing. A wrong target, or a solution slipped in as a requirement, sends a whole team the wrong way, so the PRD states the problem, the outcome and the limits, and leaves the how to the team.
 
-The how stays out because it fixes a choice before the team has studied its trade-offs, and because a PRD without implementation detail stays valid when the implementation changes. A user story backlog is the next step (`feature-spec` takes over from the PRD); screens and flows belong to `product-spec`.
+The how stays out because it fixes a choice before the team has studied its trade-offs, and because a PRD without implementation detail stays valid when the implementation changes. A user story backlog is the next step (`feature-spec` takes over from the PRD, for a feature, a screen or a flow).
 
 # Solutions named in the request
 
@@ -81,7 +81,7 @@ State a non-functional requirement whenever one applies; these three are the one
 | Minimisation and storage limitation | Data adequate and limited to what is necessary; kept no longer than necessary for the purpose. | GDPR art. 5(1)(c), (e) |
 | Digital accessibility | Online public communication services (websites, intranets, extranets, mobile applications) of public bodies, of their delegates and of companies above a turnover threshold set by decree must be accessible; the owner publishes an accessibility statement, and the home page says whether the service complies. The threshold is in the decree, not in the law: state "to check". | Loi n° 2005-102 art. 47 I, II, III, IV (version in force since 2023-09-08) |
 
-Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". When the product handles personal data (a name, an address, a signature), write the data collected, its purpose and its retention period as a requirement or as a blocking open question. Whether the accessibility rule applies to this product depends on who the owner is and on what the service is: ask, do not assume.
+Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". When the product handles personal data (a name, an address, a signature), write the data collected, its purpose and its retention period as a requirement or as a blocking open question. Whether the accessibility rule applies to this product depends on who the owner is and on what the service is: ask, do not assume. This table focuses attention on three rules; then check what the product's subject calls for beyond it (sector rules, data portability, a regulated activity, the specific product), because what a list does not name gets missed.
 
 # Parameters
 
@@ -91,21 +91,22 @@ Cite an article only if it is in this table or you are certain of its number and
 
 # Expected output format
 
-- `prd`: self-contained main document.
-- `questions_ouvertes`: the open questions, blocking first, each with who answers.
+Default skeleton; an explicit request from the user wins. `prd` is the self-contained main document; `questions_ouvertes` lists the open questions again, blocking first, each with who answers.
 
-Recommended structure:
-- context and problem
-- objective and vision
-- target users
-- scope (included / non-goals with reasons / parking lot)
-- functional requirements (with priority and label)
-- non-functional requirements
-- dependencies and constraints
-- success metrics
-- hypotheses and risks
-- open questions
-- points to validate before moving on
+1. **Summary, 3 to 5 lines**: the problem, the objective, what is asked of the sponsor (go, no-go, arbitration), the number of blocking questions.
+2. **Context and problem**, with the cost of the status quo in figures or "to be measured".
+3. **Objective and vision**: an outcome, not an output.
+4. **Target users**: user | main need | label (validated / hypothesis).
+5. **Scope**: what is included; non-goals as a table (non-goal | reason); parking lot.
+6. **Functional requirements**: ID | requirement (as a need) | priority P0 / P1 / P2 | label | source.
+7. **Non-functional requirements**: area | requirement | rule or source.
+8. **Dependencies and constraints**: item | who imposes it | date or condition.
+9. **Success metrics**: metric | leading or lagging | baseline | threshold | stretch | measurement method | evaluation date.
+10. **Hypotheses and risks**: hypothesis or risk | how and when it is tested | owner.
+11. **Open questions**: question | blocking or not | who answers | by when.
+12. **Next steps before `feature-spec`**: action | who | when, kept apart from the diagnosis above.
+
+Facts (validated), hypotheses and points to check are labelled where they appear.
 
 # Definition of done
 

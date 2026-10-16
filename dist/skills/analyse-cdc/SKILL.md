@@ -58,6 +58,8 @@ Cite an article only if it is in this table or you are certain of its number and
 
 **Contract clauses to flag as risks:** penalties without a cap, firm prices over several years without revision, payment period, transfer of intellectual property, reversibility. They go in "main risks".
 
+**These lists are a starting point, not the edge of the reading.** After them, check what the file's subject calls for beyond: personal data and processor terms, data portability and reversibility, sector rules, the specific product or service. A list focuses attention, and what it does not name gets missed.
+
 # Expected inputs
 
 - Raw specification document or requirements expression document (for a public file: all the documents, not only the RC).
@@ -78,31 +80,28 @@ Parameters: `profil_repondant` sets which risks weigh most. `prestataire`: staff
 
 # Example
 
-One requirement, labelled:
+One row of `requirements`:
 
 <example>
-- "The candidate must attach to its offer a professional liability insurance certificate covering at least €2,000,000." (RC art. 4.2)
-  Label: **knockout**, explicit. Missing certificate: incomplete offer, therefore irregular (CCP L2152-2).
+| Ref | Requirement | Source | Explicit / inferred | Class | Criterion |
+|---|---|---|---|---|---|
+| R12 | "The candidate must attach to its offer a professional liability insurance certificate covering at least €2,000,000." | RC art. 4.2 | explicit | **knockout**: missing certificate means an incomplete, therefore irregular, offer (CCP L2152-2) | none |
 
 Why this is right: the verb "must" and a document required at submission make it a knockout; the line gives the passage, the place and the consequence, so the team can check it in seconds.
 </example>
 
 # Expected output format
 
-- `spec_analysis`: structured analysis of the specification document
-- `open_questions`: questions to ask before committing
+Default format; an explicit request from the user overrides it. The section names below are the ones the next step of `reponse-appel-offres` reads: add information inside a section, never rename or merge them. Mark each line as fact (quoted, with document and article), inference or point to check.
 
-Recommended structure (the section names are the ones a downstream step reads; add information inside a section rather than renaming or merging):
-- summary (nature of the need, main stake, estimated complexity)
-- explicit requirements
-- implicit or inferred requirements
-- imposed items, copied verbatim and item by item (objectives, sequences and their sub-topics, exercises, deliverables, tools, documents to submit) — a respondent will have to cover each one by its wording
-- evaluation criteria (with their weighting when stated; "not stated" otherwise; the price formula and what it produces)
-- submission rules (expected documents, format, page or length limits, language, channel, deadlines for questions and for submission)
-- grey areas and ambiguities
-- identified contradictions
-- main risks
-- blocking open questions
+1. **Summary** (3 to 5 lines): nature of the need, main stake, complexity, the points that could change the go / no-go or the price, number of blocking questions, and whether the file is too incomplete to rely on.
+2. `requirements` (table): ref / requirement / source (document, article) / explicit or inferred (with what it is inferred from) / knockout, scored or informative / criterion that carries it.
+3. `imposed_items`: copied verbatim, item by item, each with its place in the file.
+4. `evaluation_criteria` (table): criterion / weighting ("not stated" if so) / sub-criteria / how it is scored. Under it, the price formula and what it produces on example prices.
+5. `submission_rules` (table): item / rule / source / date. Then the calendar counted backwards from the deadline (signatures, documents, visit).
+6. `grey_zones` (table): point / passage(s), both quoted for a contradiction / ambiguity or contradiction / precedence rule if the file gives one / risk if misread.
+7. **Main risks** (table): risk / category (technical, planning, scope, contractual, price) / source clause / severity / how to cover it.
+8. `blocking_questions`, most blocking first: question / passage / what the answer changes (price, go / no-go, compliance) / working assumption if unanswered / to ask before the question deadline.
 
 # Definition of done
 

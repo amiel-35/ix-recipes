@@ -1,7 +1,7 @@
 ---
 id: org-design-brief
 label: Brief de reorganisation
-version: 1.2.0
+version: 1.3.0
 description_fr: Formalise une cible organisationnelle — diagnostic actuel, rationale, risques humains, séquencement — avant la consultation du CSE et avant toute annonce ou mise en œuvre d'une réorganisation. Déclenche quand l'utilisateur doit cadrer une reorg avant de l'annoncer. Déclenche sur "prépare le brief de réorganisation de l'équipe", "cible organisationnelle avant l'annonce", "cadre cette reorg avant qu'on en parle au comité", "formalise le nouvel organigramme cible". N'arbitre pas entre options organisationnelles concurrentes — voir `decision` — et ne remplace pas la revue de talents individuelle, voir `people-review`.
 description_en: Formalizes an organizational target — current diagnosis, rationale, human risks, sequencing — before the works-council (CSE) consultation and before any announcement or implementation of a reorganization. Triggers when the user must frame a reorg before announcing it. Triggers on "prepare the team's reorganization brief", "organizational target before the announcement", "frame this reorg before we bring it to the exec committee", "formalize the new target org chart". Does not arbitrate between competing organizational options — see `decision` — nor replace the individual talent review, see `people-review`.
 icon: ◇
@@ -51,6 +51,8 @@ You formalize a team or department reorganization brief from a context, an objec
 
 Not verified here: the exact powers of a CSE under 50 employees, and where the line falls between a change of the contract and a change of working conditions (loss of management, new hours). Write "to be qualified by a lawyer" and list the point in the open decisions. Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". This is not legal advice; say so once, in the deliverable.
 
+Then check what the reorganisation (a transfer of the business to another employer, remote-work and mobility terms, protected employees in the affected roles, a procedure set by the collective agreement) calls for beyond this list: a list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Current situation:** tensions, objective, constraints. Put first, if present, the signals that change the procedure: a job eliminated or transformed, a change to pay, qualification or responsibilities, new hours, 10 or more people affected by a contract change.
@@ -75,8 +77,19 @@ The announcement comes last because a decision taken or announced before the opi
 
 # Expected output format
 
-- `brief_reorganisation`: current situation, target, interfaces and overlapping zones, rationale, risks and watchpoints, sequencing (with the consultation), internal communication, open decisions.
-- `questions_ouvertes`: decisions and points to clarify before the decision, including the points for a lawyer.
+This is the default format; an explicit request from the user wins. Output names kept: `brief_reorganisation`, `questions_ouvertes`. The brief reads as a project, never as a decision.
+
+`brief_reorganisation`
+1. **Synthesis** (3 to 5 lines): the change in one sentence, why, whether the CSE consultation applies, the date by which the file must reach the CSE, the decisions asked.
+2. **Current situation**: tensions, objective, constraints; signals that change the procedure first.
+3. **Target**: table role / responsibilities / reports to / interfaces / overlap zones; span-of-control check.
+4. **Rationale and gains**: table gain / indicator / fact or hypothesis.
+5. **Risks** (psychosocial ones included): table risk / who is affected / mitigation / owner / by when.
+6. **Sequencing**: table step / content / who / date computed (file to the CSE, opinion deadline, decision, announcement).
+7. **Internal communication**: table audience / message / when.
+
+`questions_ouvertes`
+8. Open decisions and points for a lawyer: table decision or point / who decides / by when.
 
 # Definition of done
 

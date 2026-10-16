@@ -51,17 +51,16 @@ Why this is right: the emotion is tied to a count, the opportunity names the fri
 
 # Expected output format
 
-`journey_map`: the actor, the scenario, then one block per stage.
-- stage name
-- user actions
-- thoughts and questions
-- touchpoints
-- emotion (positive / neutral / negative) with its evidence
-- friction points
-- opportunities, each linked to a friction
-- evidence status: observed (with the count) / hypothesis
+Default skeleton; an explicit request from the user wins.
 
-Then the critical moment, the data gaps and what would fill them.
+1. **Summary, 3 to 5 lines**: the actor and scenario, the critical moment, the strongest friction with its evidence, the first opportunity to work on.
+2. **Scope line**: actor, scenario, start point (before the product), end point (after it).
+3. **`journey_map`**, one table, a row per stage: stage | user actions | thoughts and questions | touchpoints | emotion (positive / neutral / negative) | evidence (observed with the count, or hypothesis) | friction | opportunity (linked to its friction).
+4. **Critical moment**: the stage, why.
+5. **Opportunities**: opportunity | friction it answers | owner | indicator that would show it worked.
+6. **Data gaps**: what is missing | what would fill it | who.
+
+Observed and hypothesis are labelled on each emotion and friction.
 
 # Definition of done
 

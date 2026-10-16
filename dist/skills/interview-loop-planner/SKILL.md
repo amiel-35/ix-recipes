@@ -36,6 +36,8 @@ The process you design is what candidates will go through, so it must hold legal
 - No one may be excluded from recruitment on a discriminatory ground (art. L1132-1: origin, sex, age, family situation, pregnancy, health, disability, place of residence, and the other listed grounds). An unstructured "culture fit" round is where these grounds slip in: give it observable criteria or drop it.
 - Interview notes and scorecards are personal data. For an unsuccessful candidate, the CNIL HR retention referential (updated 20 May 2026) keeps them for the duration of the procedure, then up to 5 years from the date the post is filled as evidence against discrimination claims (art. L1134-5); keeping a profile in a talent pool needs the candidate not to object, for up to 2 years from the last contact. Mention this in the debrief section so records are kept and purged accordingly.
 
+Then check what the recruitment (an internal candidate and the confidentiality of the process, a role needing a regulated check, a test or tool that profiles candidates) calls for beyond this list: a list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Job family and level.** Identify them and read the matching competency reference. List the core competencies (x3), secondary (x2) and complementary (x1) that the role needs.
@@ -84,14 +86,16 @@ Questions are left to `interview-guide-recruteur`, which writes them per round f
 
 # Expected output format
 
-- `overview`: role, level, number of rounds, total duration, schedule
-- `coverage_table`: competency × round matrix with coefficients
-- `rounds[]`: name, objective, competencies, format, duration, interviewer profile, weight
-- `round_briefs[]`: one structured brief per round
-- `consolidated_scorecard`: weighting, bands, core-competency floor
-- `logistics`: interviewer preparation, material, candidate communication
-- `debrief_protocol`: schedule, rules, record template, retention
-- `alerts`: uncovered competencies, redundancies, vague or missing job description, disproportionate loop
+This is the default format; an explicit request from the user wins. Output names kept; `round_briefs[]` keeps exactly the format of step 8, because `interview-guide-recruteur` reads it.
+
+1. **Synthesis** (3 to 5 lines): role and level, number of rounds, total duration and days, the main alert, the decision asked (for instance validating a working job description).
+2. `overview` and `rounds[]` in one table: round / name and objective / competencies / format / minutes / interviewer profile / coefficient / day; totals row (minutes per day and in total).
+3. `coverage_table`: competency x round, with coefficient (x3, x2, x1); uncovered core competencies flagged.
+4. `round_briefs[]`: one brief per round, in the step 8 format.
+5. `consolidated_scorecard`: table competency / round(s) / coefficient; the formula with its maximum computed; a separate table of the four bands in points; the core-competency floor.
+6. `logistics`: table item / owner / when, with the candidate communication (rounds and methods, L1221-8) as its own block.
+7. `debrief_protocol`: when, who, how long; the 1.5-point rule; a blank record template; retention.
+8. `alerts`: table alert / fact or hypothesis / consequence / action / who / by when.
 
 # Definition of done
 

@@ -41,16 +41,16 @@ Each section brings information the others do not; cut a section that repeats.
 
 # Expected output format
 
-- `strategic_note`: structured and shareable document.
+Default format; an explicit request from the user comes first. Output name: `strategic_note`, structured and shareable.
 
-Recommended structure:
-- head lines (decision asked, recommendation, main reason, main cost or risk)
-- context (minimal)
-- analysis (facts, options including doing nothing, tensions)
-- recommendation (one position, owned trade-offs)
-- risks, assumptions and what would change the recommendation
-- open arbitrations
-- next steps
+- Head, 3 to 5 lines: the decision asked (who, what, by when, what happens without it), the recommendation in one sentence, the main reason, the main cost or risk.
+- Context, minimal; facts given are labelled as facts.
+- Options table, "do nothing" included: option / cost / delay / risk / reversibility / what it gives up; assumptions you supply are labelled.
+- Recommendation: one position and the trade-off it owns.
+- Risks and assumptions, with one to three conditions that would change the recommendation.
+- Open arbitrations.
+- Next steps, apart from the analysis: action / owner / by when.
+- Annexes for any detail beyond the page limit.
 
 # Definition of done
 

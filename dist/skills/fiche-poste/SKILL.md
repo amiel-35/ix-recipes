@@ -43,6 +43,8 @@ Consequences for the writing:
 
 Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". A wrong article number looks authoritative and survives review.
 
+Then check what the role (a regulated profession or a legal condition of access, night or safety-sensitive work, a posting on behalf of a client, an apprenticeship or a fixed-term contract) calls for beyond this list: a list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Title and position.** Take the title from the brief; place the role in the organisation (team, reporting line).
@@ -66,16 +68,12 @@ Why it works: it can be verified on a CV or by one interview question, and it de
 
 # Expected output format
 
-- `job_description`: structured, shareable document:
-  - title and positioning
-  - main mission
-  - main responsibilities
-  - required competencies
-  - desirable competencies
-  - work context and environment
-  - pay (if given)
-  - success criteria (optional)
-  - points to clarify, including the lines changed for legal reasons
+This is the default format; an explicit request from the user wins. Output name kept: `job_description`.
+
+1. **Synthesis for the hiring manager** (3 to 5 lines, not published): the role in one sentence, the lines changed for legal reasons, what is still to confirm, the decision asked.
+2. **Publishable part**, in this order: title (epicene) and positioning (team, reporting line) / mission (2 to 3 sentences) / responsibilities (5 to 8 outcomes) / competencies as a table, columns competency / required or desirable / how it is checked (CV or interview) / work context (mode, location, travel) / pay (figures given, fixed and variable apart, or the section omitted) / success criteria at 6 and 12 months.
+3. **Not published**, after a separator: table of points to clarify, columns point / fact or to confirm / who decides / by when; table of lines changed, columns manager's line / change / rule behind it.
+4. A field the brief does not give stays in brackets (`[to confirm]`), so that the manager fills it in rather than the model inventing it.
 
 # Definition of done
 

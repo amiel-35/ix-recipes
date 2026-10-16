@@ -44,6 +44,8 @@ If `references/` is not available (skill pasted without its folder), ask for the
 
 Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check".
 
+Then check what the role calls for beyond this list (a regulated condition of access, a safety-sensitive post, a job exposed to minors or to customers' data): a requirement that is legitimate for the job is put to every candidate in the same words and tied to a competency. A list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Frame the round.** Role, level, target competencies and their coefficients, format, duration. Identify whether the role involves management or cross-team exposure; this adds a competency only if the brief includes it.
@@ -81,12 +83,16 @@ Why it is right: each level differs by something the candidate did, so two inter
 
 # Expected output format
 
-- `recruiter_instructions`: posture, method, STAR reminder, legal reminders, pointer to the anti-bias reference.
-- `interview_structure`: timed schedule per block, adding up to the round's `duration_minutes`.
-- `recruiter_interview_guide`: by competency, with questions, recruiter notes, probes, scenarios, scoring grid, note-taking template.
-- `watch_points`: red and orange flags, angles to clarify.
-- `expected_response_profile`.
-- `debrief_sheet`: individual sheet: 3 strengths, 3 watch points, red flags, weighted average and band, floor check, Go / Conditional Go / No-go, conditions of success if hired (onboarding, sponsor), with a retention note (unsuccessful candidates: length of the procedure, then up to 5 years from the date the post is filled).
+This is the default format; an explicit request from the user wins. Output names kept (the guide is a form for the interviewers, so the sheets are left blank for them).
+
+1. **Synthesis** (3 to 5 lines): the round, target competencies with coefficients, format and duration, what the interviewer decides at the end and the floor.
+2. `recruiter_instructions`: posture, STAR reminder, legal reminders, pointer to the anti-bias reference.
+3. `interview_structure`: table block / minutes / competency / format; the total equals the round's `duration_minutes`.
+4. `recruiter_interview_guide`, by competency: table question / probes / recruiter note (what we are probing) / competency. Then the **scoring grid in a separate table**: competency / coefficient / 1 / 2 / 3 / 4, each cell a behaviour. Scenarios on their own sheet (situation, what to observe, positive signals, red flags).
+5. **Note-taking template**: per competency, facts and quotes / score / what was observed, weak signal, to check later; a separate line for gut feeling.
+6. `watch_points`: table level (red or orange) / observable behaviour / what it probably reveals.
+7. `expected_response_profile` (5 to 6 lines).
+8. `debrief_sheet`, blank and individual: score per competency, weighted average and band, floor check, 3 strengths, 3 watch points, red flags, Go / Conditional Go / No-go, conditions of success, retention note.
 
 # Definition of done
 

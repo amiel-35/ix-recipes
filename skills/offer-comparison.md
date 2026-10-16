@@ -1,7 +1,7 @@
 ---
 id: offer-comparison
 label: Comparaison d'offres
-version: 1.2.0
+version: 1.3.0
 description_fr: Compare des offres fournisseurs déjà normalisées sur la grille validée avant leur réception et conclut par une recommandation argumentée — note du prix selon la formule de la grille, repondération après ouverture traitée en sensibilité étiquetée, mesure de la fragilité du classement, offres non comparables chiffrées avant d'être notées. Déclenche sur "on a reçu trois devis, lequel on prend", "compare ces offres sur la grille", "quelle proposition fournisseur est la meilleure et pourquoi", "départage ces prestataires". Nécessite des offres normalisables — ne parse pas des PDF bruts. Ne construit pas la grille de critères elle-même, voir `vendor-scorecard` — et ne chiffre pas le coût complet de possession, voir `total-cost-analysis`.
 description_en: Compares already-normalized supplier offers on the grid validated before they were received and closes with an argued recommendation — price mark by the grid's formula, reweighting after opening treated as a labelled sensitivity, a measure of how fragile the ranking is, non-comparable offers priced before being scored. Triggers on "we got three quotes, which one do we take", "compare these offers against the grid", "which supplier proposal is best and why", "settle between these vendors". Requires normalizable offers — it does not parse raw PDFs. Does not build the criteria grid itself, see `vendor-scorecard` — and does not work out the full cost of ownership, see `total-cost-analysis`.
 icon: ⇄
@@ -26,13 +26,14 @@ compatible:
 
 # Role
 
-You compare already-normalized supplier offers on their grid and conclude on one offer. The recommendation will be challenged on its figures, so each number is **given** (source), **computed** (method shown) or **assumed** (marked), and the conclusion says how solid the ranking is. You commit to an offer and the condition that would change the choice, rather than ending in neutrality.
+You compare already-normalized supplier offers on their grid and conclude on one offer. The recommendation will be challenged on its figures, so each number is **given** (source), **computed** (method shown) or **assumed** (marked), and the conclusion says how solid the ranking is. You commit to an offer and the condition that would change the choice, rather than ending in neutrality. The scope is a private-sector purchase; public procurement has its own rules for scoring and for reasoning about offers, to be handled separately.
 
 # What to check before scoring
 
 1. **Comparability.** Same scope, same horizon, same tax basis, same quantities. An offer with an item "on quote" is not comparable on price: ask for the figure, or score it with a range (low and high) and say whether the ranking changes inside the range. Its price changes the price marks of the others whenever it is, or becomes, the lowest.
 2. **Origin of the grid.** Was it fixed before the offers were opened? If the user says so, use it as the official grid. Without a grid, take the priorities written before receipt (specification, brief); otherwise propose weights marked "fixed after opening, risk of bias", and show whether the ranking holds across a reasonable range of weights.
-3. **Raw offers.** Normalizing is making choices (scope, horizon, tax basis) that decide the comparison, so do not do it silently. If the offers are raw, list what each must state before being scored and stop there, or score with the gaps marked.
+3. **Gaps in the grid.** The grid is a list, and a list focuses attention: after applying it, check what the offers' subject calls for beyond it (personal data and processor terms, data portability and exit, sector rules, the specific product). Report such a gap as a reservation on the offers concerned, not as a new criterion or a new weight: the grid stays as it was fixed.
+4. **Raw offers.** Normalizing is making choices (scope, horizon, tax basis) that decide the comparison, so do not do it silently. If the offers are raw, list what each must state before being scored and stop there, or score with the gaps marked.
 
 # Scoring
 
@@ -73,25 +74,18 @@ Why this is right: the reader sees that the tie is measured, not a style of caut
 
 # Expected output format
 
-- `offer_comparison`: multi-criteria comparison table with scoring and gap summary
-- `recommendation`: argued recommendation with explicit trade-offs
+Default format; an explicit request from the user overrides it. Keep the two output names below.
 
-Recommended table structure:
-- criterion
-- weighting
-- offer A / B / C
-- score per offer if calculable
-- reservation or missing data
+- `offer_comparison`:
+  1. **Summary** (3 to 5 lines): the recommended offer, its score and the gap to the second, the confidence level, the condition that would change the choice, the decision asked.
+  2. **Comparability** (table): offer / scope / horizon / tax basis / items "on quote" / comparable, ranged or set aside.
+  3. **Scoring** (table): criterion / weight / measurement mode / mark per offer / weighted mark per offer / justification with the evidence. Last rows: total per offer, ranking. Price mark on its own line, with the scoring method retained, the formula and its effect.
+  4. **Fragility and sensitivities** (table): scenario (lowest offer removed, one point on the most subjective criterion, reweighting after opening, range for the offer "on quote") / label / ranking obtained / does the first place change. Then the confidence level (high, medium, low) with its measured basis.
+  5. **Recommendation**: the offer, the trade-offs accepted, the weak points to watch.
+  6. **Before signing** (list): action / who / by when.
+- `recommendation`: the recommendation and the "before signing" list on their own, for whoever decides.
 
-If a score is produced, also indicate:
-- the retained scoring method (and the price formula)
-- assumed elements
-- ranking confidence level: high / medium / low
-
-Add at the end of the deliverable:
-- established facts
-- comparison hypotheses and sensitivities (labelled)
-- missing or non-comparable data
+At the end, three labelled blocks: established facts, assumptions and sensitivities, missing or non-comparable data.
 
 # Definition of done
 

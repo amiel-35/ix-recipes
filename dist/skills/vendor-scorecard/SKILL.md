@@ -30,6 +30,8 @@ You build the scoring grid for a private-sector purchase before the offers arriv
 
    When the purchase is critical, add concentration risk and business continuity.
 
+   This table is a start, not the edge of the grid. Then check what the purchase's subject calls for beyond it (personal data and processor terms, data portability and exit, sector rules, the specific product or service) and add it as a knockout or a criterion now, while the grid is still open: a list focuses attention, and what it does not name gets missed.
+
 3. **Weight of price**, a practitioner's default, unsourced, to give as adjustable: commodity purchase, price at 50 % or more; standard service, 30 to 40 %; strategic software or intellectual service, 20 to 30 %.
 
 4. **Fixed before the offers.** Fix criteria, weights, scale and price formula before receiving offers, give them to the suppliers (with `rfp-draft`), and leave them. After reading, weights drift towards the offer already preferred; suppliers built their offers on the announced priorities; and the choice must be defensible to the losers and internally. A change after opening is a labelled sensitivity (see `offer-comparison`), never the grid.
@@ -81,20 +83,21 @@ Why this is right: each level is observable, so two evaluators reading the same 
 
 # Expected output format
 
-- `vendor_scorecard`: knockouts, then the scored grid, scale, price formula and its simulation, with comment zones
-- `framing_notes`: how to use the grid, the freeze rule, sensitive weights, criteria needing an internal definition
+Default format; an explicit request from the user overrides it. Keep the two output names below.
 
-Recommended structure per criterion:
-- dimension
-- criterion
-- weighting and its reason
-- anchored scale
-- expected evidence and comment
-- reservation or internal definition needed
+- `vendor_scorecard`:
+  1. **Summary** (3 to 5 lines): purchase type, number of knockouts and scored criteria, weight of price and formula, the weights to validate first, and the decision asked (validate, then freeze before the specification goes out).
+  2. **Knockouts** (table): condition / why it is a knockout / evidence required with the offer / source.
+  3. **Weighted criteria, grouped by family** (table): family / criterion / weight % / measurement mode (what evidence, which source) / reason for the weight. One subtotal row per family and a final row at **100 %**; recompute them before writing.
+  4. **Scale** (separate table): level / meaning, 0 to 4; then the per-criterion anchors: criterion / 0 / 1 / 2 / 3 / 4, each level observable.
+  5. **Price**: formula, its parameter, exchange rate between price and quality, simulation on fictional prices, ranking test without the lowest offer. Technical threshold if any.
+  6. **Blank scoring sheet**, one per evaluator, whenever a committee will use the grid: offer and evaluator / knockouts met yes or no / rows criterion, weight, mark 0 to 4, weighted mark, justification and page of the offer / total / date and signature. Each evaluator fills it alone before the joint meeting, so that the first voice does not anchor the others.
+- `framing_notes`: how to use the grid, the freeze rule, sensitive weights, criteria needing an internal definition, who validates and by when. Facts, assumptions and points to check labelled apart.
 
 # Definition of done
 
-- Knockouts are separate from the scored criteria; every scored criterion has a weight with its reason, and the weights total 100.
+- Knockouts are separate from the scored criteria; criteria are grouped by family with a subtotal each, every one has a weight with its reason, and the weights total 100.
 - Each scale is anchored and reusable; the price formula, its exchange rate and its dependence on the other offers are written.
 - The freeze rule is stated, and no weight is presented as a standard without a source.
+- A blank scoring sheet is attached when a committee will score.
 - The grid can be shared as is with the business and procurement teams.

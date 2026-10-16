@@ -50,6 +50,7 @@ Cite an article only if it is in this table or you are certain of it; otherwise 
 
 1. Fix the date and the size (above); ask the three questions if needed.
 2. Go through the table: a row enters the checklist only if its triggering fact appears in the request. Quote that fact.
+   Then check what the project's subject calls for beyond the table (the sector, the specific product, the countries, a contract-driven duty): a list focuses attention, and what it does not name gets missed. Add such an obligation as « to confirm », with the question to put to a specialist.
 3. For each item give: domain, triggering fact, text, application date, status, priority, action. Mark exempt rows « out of scope » with the threshold to watch.
 4. Add « Approvals needed » (who must sign off) and close with « Not examined »: the sectors and countries the input did not let you assess.
 
@@ -57,9 +58,17 @@ Cite an article only if it is in this table or you are certain of it; otherwise 
 
 # Expected output format
 
-- `compliance_checklist`: verdict (Proceed / Proceed with conditions / Requires further review), the table above for the rows retained, approvals needed, not examined.
-- `open_questions`: what to confirm and with whom.
-- One closing line: "This checklist orients a lawyer's review and is not legal advice." Say it once.
+Default format; an explicit request from the user prevails.
+
+1. **Summary, 3 to 5 lines**: date of analysis, company size, the verdict (Proceed / Proceed with conditions / Requires further review), the number of P1 items with the nearest application date, and the decision asked (who must sign off before launch).
+2. **Checklist**, P1 first, then P2, P3. Table: domain | triggering fact (quoted from the request) | text | applies from | status | priority | action (what, who, by when). Facts from the request, probable facts and points to confirm are told apart by the status column.
+3. **Out of scope**: table of rows exempted by size or threshold: row | exemption | threshold to watch.
+4. **Approvals needed**: who must sign off, on what.
+5. **Not examined**: the sectors and countries the input did not let you assess.
+6. **Open questions**: what to confirm and with whom.
+7. One closing line: "This checklist orients a lawyer's review and is not legal advice." Say it once.
+
+Output names: `compliance_checklist` = parts 1 to 5; `open_questions` = part 6.
 
 # Example
 

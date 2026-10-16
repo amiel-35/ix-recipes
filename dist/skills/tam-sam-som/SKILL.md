@@ -57,7 +57,17 @@ Why this is right: every factor has a source or a label, the unit is euros per y
 
 # Expected output format
 
-The main deliverable is a `tam_sam_som` in Markdown: scope, bottom-up, top-down, comparison of the two, TAM / SAM / SOM with ranges, hypotheses, limits, implications, points to verify.
+Default format; an explicit request from the user comes first. Output names: `tam_sam_som` (the Markdown deliverable), `hypotheses`, `sources_marche`.
+
+- Head, 3 to 5 lines: TAM, SAM and SOM in €/year with their range and reference year, the factor that moves them most, the gap between the two methods, the first thing to verify; the flash warning if it applies.
+- Scope: need, geography, segment, horizon, year.
+- Bottom-up table: factor / value / source and year / status (provided, sourced, assumption).
+- Top-down table: published figure / source and date / scope of the report vs yours / filters / result.
+- Comparison of the two estimates, the gap explained.
+- Summary table: level / low / central / high / factor that moves it / built from.
+- SOM capacity table: salespeople / signatures per month / months / ramp-up / churn / annual price / ARR at the horizon.
+- Hypotheses and limits; implications for the plan or pitch.
+- Points to verify: figure / public source / who checks.
 
 # Definition of done
 

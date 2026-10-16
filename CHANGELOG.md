@@ -2,6 +2,28 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.10.0: merges, output format, decisions on the review
+
+- README: the install prompt names version 2.10.0.
+- **Decisions** on the open questions of the 2026-10-16 review, recorded in `docs/revue-skills-metier.md`.
+- **Merges**: `cgv-checker` is merged into `contrat-fournisseur` (2.0.0), which now reads supplier contracts, GTC / ToS
+  and SaaS terms from a given position, with clause sets as annexes (`partials/clauses_cgv.md`,
+  `clauses_contrat_fournisseur.md`, `clauses_saas_donnees.md`); `product-spec` is merged into `feature-spec` (2.0.0),
+  which now covers screens, view states and the data model. `cgv-checker` and `product-spec` stay one version as
+  hand-overs, so existing installs keep working.
+- **Output format**: every rewritten skill gets a short default output skeleton (summary first, named table columns,
+  facts / hypotheses / to-verify labels, actions with owner and date), because the bench showed form was the weak point.
+- **Open reading lists**: every checklist now ends by checking what the document's subject calls for beyond the list
+  (the bench showed a list makes models miss what they would see without it, e.g. the Data Act on SaaS terms).
+- **Enriched**: `strategie-prix` 2.0.0 (pricing models, value metric, willingness to pay, break-even volume, pricing
+  law; it prepares options and `decision` decides; category `research`), `mockup` 2.0.0 (fidelity levels, imposed
+  brand guide, WCAG 2.2 AA baseline, French formats; adapted ideas from anthropics/skills `frontend-design`).
+- `contrat-emploi` 1.3.0: labour law moved to `partials/droit_contrat_travail.md`; modes analyse, generation and
+  revision defined. `people-review` 1.4.0: category `production`, no calibration session. `analyse-entretien` 1.2.0:
+  annual and career-path interviews only.
+- `tests/cas-skills/banc.py`: compares with no skill, across model and effort settings, with cost, form criteria
+  and judges from several vendors (claude, codex, agy).
+
 ## 2026-10-16 — plugin 2.9.0: domain skills rewritten after Anthropic's skill-writing guidance
 
 - README: the install prompt names version 2.9.0.

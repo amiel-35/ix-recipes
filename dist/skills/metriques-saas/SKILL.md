@@ -79,13 +79,17 @@ Why this is right: the formula, the inputs and the period are on the line, so th
 
 # Expected output format
 
-The main deliverable is a `saas_metrics_analysis` in Markdown. A sensible default structure, to adapt to the question:
+Default format; an explicit request from the user comes first. Output names: `saas_metrics_analysis` (the Markdown deliverable), `metrics_table`, `hypotheses`.
 
-- context and data received (period, units, what is missing)
-- metrics table: metric, formula, inputs, value, status (measured / derived / estimated)
-- reading: the two or three tensions between metrics
-- what the figures can and cannot settle
-- data gaps, most consequential first
+- Head, 3 to 5 lines: what the figures show about the health of the model, the two or three tensions, what they cannot settle yet.
+- Data received: period, units, what is missing.
+- MRR bridge: start / new / expansion / contraction / churned / end, with the check line.
+- Metrics table: metric / formula / inputs / period / value / status (measured, derived, estimated).
+- Reading: the tensions between metrics.
+- Decisions table: decision the reader may face / what the figures support / what they cannot settle / data that would settle it.
+- Benchmarks, if any: metric / benchmark / source / date / population.
+- Data gaps, most consequential first: gap / what to collect / who / by when.
+- Closing lists: facts, hypotheses, points to verify.
 
 # Definition of done
 

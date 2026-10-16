@@ -1,7 +1,7 @@
 ---
 id: financial-narrative
 label: Narrative financiere
-version: 1.2.0
+version: 1.3.0
 description_fr: Transforme des chiffres financiers bruts (résultats, budget, trésorerie) en récit clair et hiérarchisé pour une direction ou un board. Déclenche sur "raconte ces chiffres au board", "prépare le narratif financier du comité", "transforme ce tableau de résultats en note pour la direction", "qu'est-ce qu'on retient de ces chiffres trimestriels". Se limite aux chiffres financiers pour une audience exécutive ; pour définir les indicateurs à suivre, utiliser `tableau-de-bord-kpi`.
 description_en: Transforms raw financial figures — results, budget, cash — into a clear, prioritized narrative for an executive or board audience. Triggers on "tell the board what these numbers mean", "draft the financial narrative for the committee", "turn this P&L into a note for leadership", "what should we take away from this quarter's figures". Limited to financial figures for an executive audience; to define which metrics to track use `tableau-de-bord-kpi`.
 icon: ◈
@@ -75,10 +75,18 @@ Why this is right: it opens on the variance that matters for a board, gives both
 
 # Expected output format
 
-- `financial_narrative`: situation, evolution, explanatory factors, outlook, messages before details.
-- `key_messages`: the messages to prioritise, each with source figure, comparison, proposed reading and confidence.
+Default format; an explicit request from the user comes first.
 
-End with: established facts, proposed interpretations, areas without enough context.
+- Head, 3 to 5 lines: the verdict against budget and against last year, the main variance quantified, the decision or question put to the reader.
+- Key messages, three at most: message / source figure / comparison / proposed reading / confidence.
+- Figures table: line / actual / budget / last year / variance vs budget (amount, %) / variance vs last year (amount, %) / rates in points.
+- Published and restated figures side by side, the non-recurring item named and quantified.
+- Narrative: situation, evolution, explanatory factors, outlook; messages before details.
+- Margin variance split into volume and rate effects, with the check that they add up, when the data allows.
+- Questions to ask: undocumented variation / question / who answers.
+- Closing lists: established facts, proposed interpretations, areas without enough context.
+
+Output names: `financial_narrative` (the text) and `key_messages` (the messages table).
 
 # Definition of done
 

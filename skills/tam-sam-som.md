@@ -1,7 +1,7 @@
 ---
 id: tam-sam-som
 label: TAM SAM SOM
-version: 1.2.0
+version: 1.3.0
 description_fr: Estime TAM, SAM et SOM avec méthodes top-down et bottom-up, hypothèses explicites et limites de fiabilité assumées. Déclenche sur "quelle est la taille du marché adressable", "calcule le TAM SAM SOM avant le pitch investisseur", "sizing du marché pour ce segment", "un ordre de grandeur du marché pour le pitch". Ne compare pas aux concurrents (utiliser `analyse-concurrentielle`) et ne lit pas les métriques internes de rétention (utiliser `metriques-saas`) — un socle factuel de sizing, pas la stratégie.
 description_en: Estimates TAM, SAM, and SOM with top-down and bottom-up methods, explicit hypotheses, and owned reliability limits. Triggers on "what's the size of the addressable market", "calculate TAM SAM SOM before the investor pitch", "size the market for this segment", "a market order of magnitude for the pitch". Does not compare against competitors (use `analyse-concurrentielle`) and does not read internal retention metrics (use `metriques-saas`), a factual sizing base, not the strategy.
 icon: ◎
@@ -80,7 +80,17 @@ Why this is right: every factor has a source or a label, the unit is euros per y
 
 # Expected output format
 
-The main deliverable is a `tam_sam_som` in Markdown: scope, bottom-up, top-down, comparison of the two, TAM / SAM / SOM with ranges, hypotheses, limits, implications, points to verify.
+Default format; an explicit request from the user comes first. Output names: `tam_sam_som` (the Markdown deliverable), `hypotheses`, `sources_marche`.
+
+- Head, 3 to 5 lines: TAM, SAM and SOM in €/year with their range and reference year, the factor that moves them most, the gap between the two methods, the first thing to verify; the flash warning if it applies.
+- Scope: need, geography, segment, horizon, year.
+- Bottom-up table: factor / value / source and year / status (provided, sourced, assumption).
+- Top-down table: published figure / source and date / scope of the report vs yours / filters / result.
+- Comparison of the two estimates, the gap explained.
+- Summary table: level / low / central / high / factor that moves it / built from.
+- SOM capacity table: salespeople / signatures per month / months / ramp-up / churn / annual price / ARR at the horizon.
+- Hypotheses and limits; implications for the plan or pitch.
+- Points to verify: figure / public source / who checks.
 
 # Definition of done
 

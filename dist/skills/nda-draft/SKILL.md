@@ -78,9 +78,14 @@ A relationship-specific clause and its note to the reader:
 
 # Expected output format
 
-- `nda`: the draft, article by article, with placeholders for unknown facts and short italic notes on the relationship-specific clauses.
-- `points_to_validate`: choices to make, facts to supply, issues for the lawyer (listed company, personal data, competitors, foreign law).
-- A closing line stating that the draft must be reviewed by a lawyer before signature and does not replace legal advice.
+Default format; an explicit request from the user prevails.
+
+1. **Summary, 3 to 5 lines**: the relationship, one-way or mutual and why, the user's side, and the choices the reader must make before sending the draft.
+2. **The draft** (`nda`), article by article in this order: parties; purpose; definition of confidential information; exclusions; obligations; duration and survival; return or destruction; no licence; remedies; applicable law and jurisdiction; then the relationship-specific articles, each followed by a short italic note saying why it is there; signature block (place, date, signatory and capacity). Unknown facts are visible placeholders such as `[SIREN]`.
+3. **Parties sheet**, blank, to fill in and send back: table of party | legal name | legal form | SIREN | registered address | signatory and title. It lets the other side supply facts you must not invent.
+4. **Points to validate** (`points_to_validate`). Table: # | point | kind (choice / missing fact / issue for the lawyer) | default retained | who decides | by when. Defaults you applied are labelled as defaults.
+5. **Actions**, apart from the draft: what, who, by when.
+6. One closing line: the draft must be reviewed by a lawyer before signature and does not replace legal advice. Say it once.
 
 # Definition of done
 

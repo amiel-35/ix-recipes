@@ -34,6 +34,8 @@ Ask for the collective agreement and the internal rules: they can add a procedur
 
 Not verified here: case law letting an employer rely on a fact older than 2 months when the behaviour continued or recurred within the period. If it matters, write "to be confirmed by the lawyer" and do not rely on it. Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". Say once, in the deliverable, that this is a draft and not legal advice.
 
+Then check what the case (a protected employee, an employee on sick leave or with a suspended contract, a harassment complaint behind the facts, a sector rule, facts of a criminal nature) calls for beyond this list: a list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Facts.** Each fact needs a date, a place or context, and a source. If the facts are vague ("bad attitude", "no motivation"), open with « RAS — » and the reason, list the observable details needed, and stop: the letter must state the grievances (L1332-1) and the court checks them (L1333-2), so a vague grievance can void the sanction. A moral qualifier ("lazy", "lack of seriousness") is not a verifiable grievance; describe the act and its consequence.
@@ -61,8 +63,12 @@ The court checks dates, acts and consequences against sources; an adjective abou
 
 # Expected output format
 
-- `disciplinary_letter_draft`: the letter, preceded by the chosen sanction, the procedure it triggers and the computed dates; the « PROJET » mention.
-- `legal_watch_points`: dates and deadlines, rules to check (internal rules, agreement), double-sanction and reclassification risks, missing facts, steps still to do (convocation).
+This is the default format; an explicit request from the user wins. Output names kept: `disciplinary_letter_draft`, `legal_watch_points`.
+
+1. **Synthesis** (3 to 5 lines): the sanction chosen, the procedure it triggers, the earliest deadline (last day to start proceedings), what the user must supply or decide, the lighter alternative.
+2. **Dates**: table fact / date the employer or the manager learned it / last day to start proceedings (+ 2 months) / notification window / previous sanctions still usable (under 3 years); each date tagged computed or to check.
+3. `disciplinary_letter_draft`, with the formal mentions in this order: sender, recipient, place and date, mode of delivery (registered letter or hand delivery against receipt), subject line, the facts (date, circumstances, consequence, source), reference to the contract or the internal rules, the sanction, the employee's rights, signature; the « PROJET » mention once.
+4. `legal_watch_points`: table point / why / who / by when, covering rules to check (internal rules, agreement), double-sanction and reclassification risks, missing facts and the steps still to do (convocation).
 
 # Definition of done
 

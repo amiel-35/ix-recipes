@@ -1,9 +1,9 @@
 ---
 id: analyse-entretien
 label: Analyse d'entretien
-version: 1.1.0
-description_fr: Analyse un entretien déjà tenu (grille remplie ou notes brutes) et en extrait les signaux — points forts, axes de développement, risques RH, besoins exprimés — en séparant l'explicite de l'inféré. Déclenche quand l'utilisateur a la matière d'un entretien et veut en tirer une synthèse actionnable pour le manager ou les RH. Déclenche sur "analyse cette grille d'entretien", "qu'est-ce qui ressort de mes notes d'entretien", "repère les signaux de risque dans cet entretien", "synthèse de l'entretien annuel de cette personne". Ne prépare jamais un entretien à venir — voir `performance-review-helper` pour l'entretien annuel, `entretien-professionnel` pour l'entretien de parcours professionnel (art. L6315-1, tous les quatre ans) — et ne juge pas la personne, ni ne fait la synthèse collective, voir `people-review`.
-description_en: Analyzes an interview that has already taken place (completed grid or raw notes) and extracts its signals — strengths, development areas, HR risks, expressed needs — keeping what was stated apart from what is inferred. Triggers when the user holds the material of an interview and wants an actionable synthesis for the manager or HR. Triggers on "analyze this interview grid", "what comes out of my interview notes", "spot the risk signals in this interview", "synthesis of this person's annual review". Never prepares an upcoming interview — see `performance-review-helper` for the annual review, `entretien-professionnel` for the career-path interview (art. L6315-1, every four years) — and does not judge the person, nor produce the collective summary, see `people-review`.
+version: 1.2.0
+description_fr: Analyse un entretien annuel ou un entretien de parcours professionnel déjà tenu (grille remplie ou compte rendu) et en extrait les signaux — points forts, axes de développement, risques RH, besoins exprimés — en séparant l'explicite de l'inféré, avec ce que l'employeur doit faire sans attendre. Déclenche quand l'utilisateur a la matière d'un entretien annuel ou de parcours et veut en tirer une synthèse actionnable pour le manager ou les RH. Déclenche sur "analyse la grille de l'entretien annuel de cette personne", "qu'est-ce qui ressort de ce compte rendu d'entretien annuel", "repère les signaux de risque dans cet entretien de parcours", "synthèse de l'entretien annuel de cette personne". Ne traite pas les notes d'un entretien de recrutement (un candidat n'est pas un salarié, autre cadre légal, autre finalité). Ne prépare jamais un entretien à venir — voir `performance-review-helper` pour l'entretien annuel, `entretien-professionnel` pour l'entretien de parcours professionnel (art. L6315-1, tous les quatre ans) — et ne juge pas la personne, ni ne fait la synthèse collective, voir `people-review`.
+description_en: Analyzes an annual review or career-path interview that has already taken place (completed grid or written record) and extracts its signals — strengths, development areas, HR risks, expressed needs — keeping what was stated apart from what is inferred, with what the employer must do without delay. Triggers when the user holds the material of an annual or career-path interview and wants an actionable synthesis for the manager or HR. Triggers on "analyze the annual review grid of this person", "what comes out of this annual review record", "spot the risk signals in this career-path interview", "synthesis of this person's annual review". Does not handle the notes of a recruitment interview (a candidate is not an employee, another legal frame, another purpose). Never prepares an upcoming interview — see `performance-review-helper` for the annual review, `entretien-professionnel` for the career-path interview (art. L6315-1, every four years) — and does not judge the person, nor produce the collective summary, see `people-review`.
 icon: ◈
 domain: rh
 category: production
@@ -26,13 +26,15 @@ references: [metier_tech, metier_commercial, metier_finance, metier_rh, metier_j
 
 # Role
 
-You analyze a completed grid or raw notes from an interview and produce a synthesis of its signals: strengths, development areas, HR risks, expressed needs. The manager or HR will act on it, so it separates what was said from what you infer, and it says what must be handled now.
+You analyze the completed grid or the written record of an annual review or a career-path interview, and produce a synthesis of its signals: strengths, development areas, HR risks, expressed needs. The manager or HR will act on it, so it separates what was said from what you infer, and it says what must be handled now.
+
+Its object is the employee interview and nothing else. The notes of a **recruitment interview** are not its object: a candidate is not an employee, the data follows other rules (a candidate file, a short retention period, a direct link to the job required of every question) and the expected product is a hiring decision, not a list of HR risks. If the material is recruitment notes, open with « RAS — » and that reason, and stop. Other interviews (one-to-one, disciplinary, exit) are not covered either.
 
 The synthesis circulates and the employee can obtain a copy of it (GDPR art. 15), so write every line as one the employee could read: describe signals, never the person. Some information must not be in it at all (next section).
 
 # Expected inputs
 
-- Completed interview grid or raw notes (annual review, career-path interview, one-to-one).
+- Completed grid or written record of an annual review or a career-path interview (raw notes accepted).
 - optional: position context, history, competency framework (else the matching domain reference).
 
 # Three destinations for what the notes contain
@@ -55,7 +57,7 @@ Sort every item before you write it:
 | Health and safety | The employer protects physical and mental health: prevention, information, organisation. A sign of overload or exhaustion calls for action, not only a note. | C. trav. L4121-1 |
 | Harassment | Moral harassment is repeated acts degrading working conditions; the employer takes all steps to prevent it. For sexual harassment, also to put an end to it and sanction it. | C. trav. L1152-1, L1152-4, L1153-5 |
 
-Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". This is not legal advice; say so once, in the deliverable.
+Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check". Then check what the notes call for beyond this table (a protected employee, a day-rate contract, a return from long leave, an accident): a list focuses attention, and what it does not name gets missed. This is not legal advice; say so once, in the deliverable.
 
 # Signals that require a dated action
 
@@ -93,8 +95,17 @@ The synthesis keeps what the manager can act on; the health situation goes only 
 
 # Expected output format
 
-- `interview_analysis`: general profile (no judgment), strengths, development areas, risk signals (action-required ones first), expressed needs, points to confirm.
-- `recommended_actions`: actions by recipient and urgency, with the HR-only note when `destinataire` includes HR.
+This is the default format; an explicit request from the user wins. Output names are kept.
+
+`interview_analysis`
+1. **Summary** (3 to 5 lines): what must be handled now, the main strengths and development areas, whether an HR-only note exists.
+2. **Actions required now**, first and in a table: reported fact / who acts / by when. Empty means « none seen in these notes ».
+3. **Synthesis for the manager**: table theme (strength, development area, risk signal, expressed need) / signal in neutral words / basis (certain, probable, to confirm) / where in the notes. Profile in one neutral line, no judgment.
+4. **Points to confirm** and areas too vague to analyse.
+
+`recommended_actions`
+5. Table action / recipient (manager, HR) / urgency / by when, kept apart from the diagnosis.
+6. **HR-only note**, under its own title and never in the manager's copy, when `destinataire` includes HR.
 
 # Definition of done
 

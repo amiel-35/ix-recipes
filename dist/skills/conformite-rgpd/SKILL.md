@@ -27,7 +27,8 @@ A DPO or qualified professional reviews the checklist before operational use. To
 6. **Processors (art. 28)**: a written contract or other legal act (art. 28(9)) that sets out the subject-matter, duration, nature and purpose of the processing, the types of data, the categories of data subjects and the controller's rights and obligations, and carries the art. 28(3) clauses — processing on documented instructions only, including for transfers; confidentiality of staff; art. 32 measures; sub-processor conditions; help with data-subject rights and with arts. 32–36; deletion or return at the end unless law requires retention; information and audits; immediate warning when the processor considers an instruction unlawful; sub-processors only with the controller's prior written authorisation, specific or general — under a general authorisation the controller is told of every change and may object (art. 28(2)) — and with the same data protection obligations imposed on them (art. 28(4)).
 7. **Personal data breaches (arts. 33–34)**: a procedure to notify the supervisory authority without undue delay and, where feasible, within 72 hours after becoming aware of the breach — giving the reasons for any delay — unless the breach is unlikely to result in a risk (art. 33(1)); to communicate the breach to the people concerned without undue delay when it is likely to result in a high risk to them (art. 34(1)), unless one of the art. 34(3) exceptions applies (data made unintelligible, e.g. encrypted; later measures removing the high risk; disproportionate effort, replaced by a public communication); to document every breach (art. 33(5)); processors alert the controller without undue delay (art. 33(2)).
 8. **Transfers outside the EEA (arts. 44–49)**: adequacy decision (art. 45 — for the United States it covers only recipients certified under the EU-US Data Privacy Framework, so check each US vendor's certification, and that the adequacy decision is still in force on the date of analysis), otherwise appropriate safeguards such as standard contractual clauses or binding corporate rules (arts. 46–47), derogations (art. 49) only where neither is available and read restrictively. When relying on art. 46 safeguards, a transfer impact assessment checks that the law of the destination country does not undermine them (CJEU, C-311/18, *Schrems II*). Name every non-EEA recipient, including hosting and SaaS tools.
-9. **Produce the prioritized checklist**, one status per item: in place / to do / to confirm.
+9. **Keep the grid open.** After these steps, check what the processing's subject calls for beyond them (children, health or biometric data, employee monitoring, profiling and AI, sector rules, the specific product). A list focuses attention, and what it does not name gets missed: flag such a point as « to confirm » with the DPO.
+10. **Produce the prioritized checklist**, one status per item: in place / to do / to confirm.
 
 # Constraints
 
@@ -59,15 +60,16 @@ A DPO or qualified professional reviews the checklist before operational use. To
 
 # Expected output format
 
-- `gdpr_checklist`: prioritized list of compliance points with status and article
-- `open_questions`: points to clarify with the DPO or lawyer
+Default format; an explicit request from the user prevails.
 
-Recommended structure:
-- one-line legal disclaimer (the checklist does not replace a DPO or a lawyer) and the reference date
-- summary (identified processing, roles, overall risk level)
-- checklist by category (principles and accountability, legal bases, rights, record and DPIA, DPO, security and breaches, processors, transfers)
-- priority actions
-- open questions
+1. **Legal limit and reference date**, in one line (the checklist does not replace a DPO or a lawyer; the GDPR as in force on that date). Say it once.
+2. **Summary, 3 to 5 lines**: the processing identified, the role held for each (controller / processor), the overall risk level, and the decisions asked (DPIA needed or not, DPO mandatory or not, the blocking points before production).
+3. **Processing map**. Table: processing | data and data subjects | purpose | role | legal basis (art. 6, and art. 9 if any) | recipients and non-EEA transfers.
+4. **Checklist by category** (principles and accountability, legal bases, rights, record and DPIA, DPO, security and breaches, processors, transfers). Table: item | article | basis (observed / inferred / to confirm) | status (in place / to do / to confirm) | priority | owner (controller or processor column) | action.
+5. **Priority actions**, apart from the diagnosis: what, who, by when.
+6. **Open questions** for the DPO or the lawyer.
+
+Output names: `gdpr_checklist` = parts 1 to 5; `open_questions` = part 6.
 
 # Definition of done
 

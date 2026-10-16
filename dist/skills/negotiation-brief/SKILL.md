@@ -44,20 +44,17 @@ Parameters: `contexte_relation` sets the angle. `premier_achat`: no history, so 
 
 # Expected output format
 
-- `negotiation_brief`: structured sheet with objective, BATNA, levers, opening position, target and red line
-- `open_questions`: points to clarify before entering negotiations
+Default format, built for a five-minute read before the meeting; an explicit request from the user overrides it. Keep the two output names below.
 
-Recommended structure:
-- objective
-- negotiation-useful facts
-- levers
-- possible concessions
-- expected counterparts
-- opening position
-- target
-- red line
-- BATNA
-- main risks
+- `negotiation_brief`:
+  1. **Summary** (3 to 5 lines): objective, opening / target / red line in one unit, BATNA, whether a zone of agreement exists, the biggest risk, what to confirm before the meeting.
+  2. **Figures** (table): position / value / unit and horizon / status (fact, assumption or to verify) / source or calculation. Rows: supplier's offer, opening, target, red line, BATNA, supplier's estimated floor.
+  3. **BATNA** (table): component (alternative's price over the horizon, transition, double running, internal time, continuity risk) / amount / source; then the reservation price per year and the red line derived from it.
+  4. **Levers** (table): lever / supporting fact and its source / assumption it rests on / what we offer in exchange / tier (1, 2 or 3). Facts can be shown at the table; assumptions stay in the brief.
+  5. **Concessions as trades**, largest first: "if you..., then we...", with the tier conceded from and the tier won.
+  6. **Guardrails check** (table): point of the table below / what this brief proposes / compliant or to adjust.
+  7. **Risks and blind spots**, then **open questions** (table): question / who answers / before when.
+- `open_questions`: the points to clarify before entering negotiations, with the same owner and date columns.
 
 # Example
 

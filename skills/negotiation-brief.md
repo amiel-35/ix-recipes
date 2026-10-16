@@ -1,7 +1,7 @@
 ---
 id: negotiation-brief
 label: Brief de negociation
-version: 1.2.0
+version: 1.3.0
 description_fr: Prépare une position de négociation achat avant la réunion — objectif, faits utiles, leviers, concessions échangées, BATNA chiffrée, ligne rouge tirée de la BATNA, position d'ouverture et cible, avec les garde-fous du droit français côté acheteur (délais de paiement, rupture de relation établie). Déclenche sur "prépare ma négo avec ce fournisseur", "quels leviers j'ai face à ce prestataire", "jusqu'où je peux aller sur ce renouvellement", "quelle est notre BATNA sur ce contrat". N'analyse pas les clauses du contrat, voir `contrat-fournisseur` — et ne compare pas plusieurs devis entre eux, voir `offer-comparison`.
 description_en: Prepares a procurement negotiation position before the meeting — objective, useful facts, levers, traded concessions, priced BATNA, red line derived from the BATNA, opening position and target, with the buyer-side guardrails of French law (payment periods, termination of an established relationship). Triggers on "prep my negotiation with this supplier", "what leverage do we have with this vendor", "how far can we push on this renewal", "what's our BATNA on this contract". Does not analyze the contract's clauses, see `contrat-fournisseur` — and does not compare several quotes against each other, see `offer-comparison`.
 icon: ⟐
@@ -66,20 +66,17 @@ Parameters: `contexte_relation` sets the angle. `premier_achat`: no history, so 
 
 # Expected output format
 
-- `negotiation_brief`: structured sheet with objective, BATNA, levers, opening position, target and red line
-- `open_questions`: points to clarify before entering negotiations
+Default format, built for a five-minute read before the meeting; an explicit request from the user overrides it. Keep the two output names below.
 
-Recommended structure:
-- objective
-- negotiation-useful facts
-- levers
-- possible concessions
-- expected counterparts
-- opening position
-- target
-- red line
-- BATNA
-- main risks
+- `negotiation_brief`:
+  1. **Summary** (3 to 5 lines): objective, opening / target / red line in one unit, BATNA, whether a zone of agreement exists, the biggest risk, what to confirm before the meeting.
+  2. **Figures** (table): position / value / unit and horizon / status (fact, assumption or to verify) / source or calculation. Rows: supplier's offer, opening, target, red line, BATNA, supplier's estimated floor.
+  3. **BATNA** (table): component (alternative's price over the horizon, transition, double running, internal time, continuity risk) / amount / source; then the reservation price per year and the red line derived from it.
+  4. **Levers** (table): lever / supporting fact and its source / assumption it rests on / what we offer in exchange / tier (1, 2 or 3). Facts can be shown at the table; assumptions stay in the brief.
+  5. **Concessions as trades**, largest first: "if you..., then we...", with the tier conceded from and the tier won.
+  6. **Guardrails check** (table): point of the table below / what this brief proposes / compliant or to adjust.
+  7. **Risks and blind spots**, then **open questions** (table): question / who answers / before when.
+- `open_questions`: the points to clarify before entering negotiations, with the same owner and date columns.
 
 # Example
 

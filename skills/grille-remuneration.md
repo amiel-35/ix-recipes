@@ -1,7 +1,7 @@
 ---
 id: grille-remuneration
 label: Grille de remuneration
-version: 1.3.0
+version: 1.4.0
 description_fr: Structure une grille de rémunération par famille de métier et niveau — fourchettes calculées avec leur convention, plancher conventionnel, critères de positionnement, égalité femmes-hommes, règles de gouvernance. Déclenche quand l'utilisateur doit cadrer ou refondre une politique salariale. Déclenche sur "construis une grille de salaires par niveau", "structure nos fourchettes de rémunération", "quels critères pour positionner ce salaire", "grille salariale par famille de métier". Ne produit aucun chiffre de marché sans source et sans date — structure la grille et signale les données à intégrer. Ne traite pas les clauses d'un contrat individuel, voir `contrat-emploi`.
 description_en: Structures a compensation grid by job family and level — ranges computed with a stated convention, collective-agreement floor, positioning criteria, gender pay equality checks, governance rules. Triggers when the user must frame or rebuild a compensation policy. Triggers on "build a salary grid by level", "structure our compensation ranges", "what criteria position this salary", "compensation grid by job family". Produces no market figure without a source and a date — structures the grid and flags data still to integrate. Does not handle an individual contract's clauses, see `contrat-emploi`.
 icon: 💰
@@ -75,6 +75,8 @@ Recompute each range from its inputs before writing the table; a grid is copied 
 
 Cite an article only if it is in this table or you are certain of its number and content; otherwise state the rule without a number and mark it "to check".
 
+Then check what the grid's subject (a sector pay scale, a profit-sharing or incentive scheme, equity, a workforce under another country's law or working remotely) calls for beyond this list: a list focuses attention, and what it does not name gets missed. Mark what you add "to check" unless you can source it.
+
 # Method
 
 1. **Families and levels.** Identify the families to cover; use the references to define the levels. Ask for the collective agreement and classification.
@@ -101,10 +103,17 @@ Why it is complete: the spread convention and the source are stated, the figures
 
 # Expected output format
 
-The deliverable keeps two outputs; they are the `grille_remuneration` and `alertes_remuneration` outputs of the frontmatter.
+This is the default format; an explicit request from the user wins. Output names kept: `compensation_grid`, `compensation_alerts`.
 
-- `compensation_grid`: convention at the top, then the grid by family and level (ranges, midpoint, spread, overlap, placement criteria, next-level condition, source and date), governance rules.
-- `compensation_alerts`: positions under tension, floor conflicts, gender-gap alerts by category, missing data, legal points to check.
+`compensation_grid`
+1. **Synthesis** (3 to 5 lines): families and levels covered, ranges built or left "to populate", floor conflicts, gaps of 5 % or more, the decision asked.
+2. **Conventions**: spread convention, percentile, survey and date, collective agreement and classification, floor used.
+3. **Grid**, grouped by family with a sub-heading per family, columns level / min / midpoint / max / spread % / overlap with the next level % / floor check / placement criteria / next-level condition / source and date (the example below shows the core columns).
+4. **Governance**: revision frequency, who arbitrates exceptions, what is communicated.
+
+`compensation_alerts`
+5. **Equality check**, when pay by gender is given: category / average pay M / average pay F / gap % / compa-ratio M and F / alert / objective criteria to ask for.
+6. **Alerts**: table item / type (floor conflict, market tension, missing data, legal point to check) / fact or hypothesis / action / who / by when.
 
 # Definition of done
 

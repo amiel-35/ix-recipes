@@ -54,10 +54,18 @@ Why this is right: it opens on the variance that matters for a board, gives both
 
 # Expected output format
 
-- `financial_narrative`: situation, evolution, explanatory factors, outlook, messages before details.
-- `key_messages`: the messages to prioritise, each with source figure, comparison, proposed reading and confidence.
+Default format; an explicit request from the user comes first.
 
-End with: established facts, proposed interpretations, areas without enough context.
+- Head, 3 to 5 lines: the verdict against budget and against last year, the main variance quantified, the decision or question put to the reader.
+- Key messages, three at most: message / source figure / comparison / proposed reading / confidence.
+- Figures table: line / actual / budget / last year / variance vs budget (amount, %) / variance vs last year (amount, %) / rates in points.
+- Published and restated figures side by side, the non-recurring item named and quantified.
+- Narrative: situation, evolution, explanatory factors, outlook; messages before details.
+- Margin variance split into volume and rate effects, with the check that they add up, when the data allows.
+- Questions to ask: undocumented variation / question / who answers.
+- Closing lists: established facts, proposed interpretations, areas without enough context.
+
+Output names: `financial_narrative` (the text) and `key_messages` (the messages table).
 
 # Definition of done
 

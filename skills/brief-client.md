@@ -1,7 +1,7 @@
 ---
 id: brief-client
 label: Brief client
-version: 1.4.0
+version: 1.4.1
 description_fr: "Transforme une demande client floue (mail, notes, transcription de réunion) en brief exploitable, en enchaînant cadrage, questions au client et brief — chaque étape isolée, le brief brut lu seulement par la première, une fiche de contexte validée par l'humain pour la suite, et une pause pour les réponses du client. Déclenche quand une demande client est trop floue pour être chiffrée ou produite telle quelle. Déclenche sur \"mon client m'a envoyé un brief dégueulasse\", \"aide-moi à cadrer cette demande client\", \"quelles questions poser au client avant de répondre\", \"transforme ces notes de réunion client en brief\". Ne rédige pas l'offre — voir `offre-commerciale` — et ne lit pas un cahier des charges formel de consultation — voir `analyse-cdc`."
 description_en: "Turns a vague client request (email, notes, meeting transcript) into an actionable brief by chaining scoping, questions to the client and a brief — each step isolated, the raw brief read only by the first, a human-validated context sheet for the rest, and a pause for the client's answers. Triggers when a client request is too vague to price or produce as is. Triggers on \"my client sent me a messy brief\", \"help me scope this client request\", \"what should I ask the client before answering\", \"turn these client meeting notes into a brief\". Does not write the offer — see `offre-commerciale` — and does not read a formal tender specification — see `analyse-cdc`."
 summary_fr: "D’une demande client floue à un brief clair : cadrage, questions au client, puis brief final."
@@ -24,6 +24,7 @@ compatible:
 - mystaffy
 requires: [ix-skills:cadrage, ix-skills:questioning, ix-skills:explorer, ix-skills:decision, ix-skills:brief]
 workflow:
+  format: 1
   context_sheet: [client, objective, constraints, recipient, format, deadlines, named_solutions]
   context_labels:
     client: "Client"

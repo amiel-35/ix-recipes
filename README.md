@@ -746,6 +746,8 @@ python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --
 python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours        # runs until the next pause
 ```
 
+**Versions.** Each recipe declares its format in its `workflow` block (`format: 1`; [`docs/format-recette.md`](docs/format-recette.md) §2bis). The runner, the page and `build.py` refuse a format they do not know, or a newer one, with a plain message (« mettez la page à jour »: update the page); a personal recipe written before the field existed is read as format 1, with a warning. The page has its own version, apart from the plugin's: shown at the bottom of the page and returned by `GET /api/version` (also in the list of dossiers and of recipes); `python3 scripts/parcours.py formats` lists the formats the runner plays. Page changes are listed under « Page » in the [CHANGELOG](CHANGELOG.md).
+
 ### Your own recipes
 
 Under **Recipes**, the page shows the supplied recipes and yours, each as cards (or as a standard flowchart, one click away; click a step for its mission, inputs and outputs); a supplied recipe can be launched, or copied to make your own version. It also makes recipes, outside the repository:

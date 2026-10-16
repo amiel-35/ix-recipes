@@ -2441,5 +2441,90 @@ class InterfaceSupportTests(ParcoursTestCase):
         self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
         self.assertEqual(signal.getsignal(signal.SIGTERM), before)
 
+
+# ---------------------------------------------------------------------------
+# Recipe format (docs/format-recette.md §2bis)
+# ---------------------------------------------------------------------------
+class RecipeFormatTests(ParcoursTestCase):
+    def set_format(self, line, recipe="brief-client"):
+        """Rewrites the `format:` line of a recipe of the temporary repository (None: removes it)."""
+        path = self.root / "skills" / f"{recipe}.md"
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("\n  format: 1\n", text)
+        path.write_text(text.replace("\n  format: 1\n", "\n" if line is None else f"\n  format: {line}\n", 1), encoding="utf-8")
+
+    def test_every_recipe_of_the_repository_declares_format_1(self):
+        recipes = [p for p in sorted((REPO / "skills").glob("*.md")) if "\nworkflow:" in p.read_text(encoding="utf-8")]
+        self.assertGreaterEqual(len(recipes), 2)
+        for path in recipes:
+            with self.subTest(recipe=path.stem):
+                fm, _ = parcours.split_frontmatter(path.read_text(encoding="utf-8"))
+                self.assertEqual(fm["workflow"].get("format"), 1)
+        for path in sorted((REPO / "dist" / "skills").glob("*/recipe.json")):
+            with self.subTest(bundled=path.parent.name):
+                self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["workflow"].get("format"), 1)
+
+    def test_a_recipe_at_the_right_format_runs_without_warning(self):
+        code, out, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "demo", "--engine", "fake")
+        self.assertEqual(code, 0, err)
+        self.assertNotIn("format", err)
+        self.assertEqual(self.state()["recipe_format"], 1)
+        self.assertEqual(json.loads(self.ok("status", "demo", "--json"))["recipe_format"], 1)
+        listed = json.loads(self.ok("recipes", "--json"))
+        self.assertEqual(listed["formats"], [1])
+        self.assertEqual({r["id"]: (r["format"], r["warnings"]) for r in listed["recipes"]},
+                         {"brief-client": (1, []), "reponse-appel-offres": (1, [])})
+
+    def test_a_recipe_without_format_is_read_as_format_1_with_a_warning(self):
+        self.set_format(None)
+        code, out, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "demo", "--engine", "fake")
+        self.assertEqual(code, 0, err)
+        self.assertIn("pas de champ format", err)
+        self.assertIn("lue comme format 1", err)
+        self.assertEqual(self.state()["recipe_format"], 1)
+        listed = {r["id"]: r for r in json.loads(self.ok("recipes", "--json"))["recipes"]}
+        self.assertEqual(listed["brief-client"]["format"], 1)
+        self.assertIn("ajoutez « format: 1 »", listed["brief-client"]["warnings"][0])
+        self.assertIn("avertissement : pas de champ format", self.ok("recipes"))
+        self.write_fakes("brief-client")
+        self.ok("next", "demo", "--yes")
+        self.assertEqual(self.step("cadrage")["status"], "paused")
+
+    def test_a_recipe_of_a_newer_format_is_refused_with_a_clear_message(self):
+        self.new()   # a dossier created while the recipe was still at format 1
+        self.set_format(2)
+        code, out, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "autre", "--engine", "fake")
+        self.assertEqual(code, 1)
+        self.assertIn("au format 2", err)
+        self.assertIn("mettez la page à jour", err)
+        self.assertFalse((self.pdir / "autre").exists())
+        code, out, _ = self.cli("new", "brief-client", "--input", str(self.input_file), "--json")
+        self.assertEqual(json.loads(out.strip().splitlines()[-1])["error"], "error")
+        self.assertNotIn("brief-client", [r["id"] for r in json.loads(self.ok("recipes", "--json"))["recipes"]])
+        report = json.loads(self.ok("status", "demo", "--json"))   # the dossier still reads, and says why it cannot go on
+        self.assertIn("mettez la page à jour", report["recipe_error"])
+        self.assertEqual(report["recipe_format"], 1)
+        code, out, _ = self.cli("next", "demo", "--yes", "--json")
+        self.assertEqual(code, 1)
+        self.assertIn("mettez la page à jour", json.loads(out.strip().splitlines()[-1])["message"])
+
+    def test_an_unknown_format_is_refused(self):
+        for value in ("deux", "1.0", "0", "true", "'1'"):
+            with self.subTest(format=value):
+                self.set_format(value)
+                code, _, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--engine", "fake")
+                self.assertEqual(code, 1)
+                self.assertIn("format de recette inconnu", err)
+                self.assertIn("mettez la page à jour", err)
+                self.set_format_back()
+
+    def set_format_back(self):
+        shutil.copy(REPO / "skills" / "brief-client.md", self.root / "skills")
+
+    def test_the_runner_announces_the_formats_it_plays(self):
+        self.assertEqual(json.loads(self.ok("formats", "--json")), {"formats": [1], "current": 1})
+        self.assertIn("Formats de recette acceptés : 1", self.ok("formats"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -2,6 +2,34 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-16 — plugin 2.9.0: the recipe format and the page get their own versions
+
+### Recipes
+
+- **Recipe format**: every recipe declares `format: 1` at the head of its `workflow` block
+  ([`docs/format-recette.md`](docs/format-recette.md) §2bis: what the field means, when the format
+  changes, how to move to format 2). `brief-client` 1.4.1 and `reponse-appel-offres` 1.6.1 declare it
+  (no other change); `concepteur-recette` 1.1.1 writes it.
+- A format the runner does not know, or a newer one, is refused with a plain message
+  (« mettez la page à jour »). A recipe without the field is read as format 1, with a warning: every
+  recipe written before it followed format 1's rules, and the absence will mean format 1 for good.
+- Personal recipes created from the page get `format: 1` (blank model, blocks, copy of a supplied
+  recipe, file written by the designer); an existing recipe of the recueil is never rewritten.
+- `build.py`: `workflow.format` required, and a known one (1); an unknown or newer format stops the
+  workflow checks with one error. The same change is to be carried over to ix-skills' copy.
+
+### Page
+
+- **Page 1.0.0**, the first numbered version of the tracking page (server, page and API), apart from
+  the plugin's version: shown at the bottom of the page and at start-up, returned by `GET /api/version`
+  (`{"version", "recipe_formats"}`) and under `page` in `/api/parcours` and `/api/recipes`.
+- Creating a dossier with a personal recipe of a newer format answers 422 `recipe_refused` with the
+  runner's message (it used to say « introuvable »); "My recipes" tells to update the page rather than
+  to edit such a recipe.
+- Runner: `parcours.py formats [--json]` lists the formats it plays; `recipes --json` gives `formats`
+  and, per recipe, `format` and `warnings`; `recipe_format` in `state.json` and `status --json`.
+- `suivi-parcours` 1.4.0 (the page and its scripts).
+
 ## 2026-10-15 — plugin 2.8.0: recipes shown as cards, built in blocks
 
 - README: the install prompt names version 2.8.0.

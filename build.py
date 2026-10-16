@@ -232,6 +232,7 @@ SIBLING_SKILL_DIRS = {
 }
 PAUSES = {"none", "validate", "answers", "choose"}
 MODELS = {"sonnet", "opus", "haiku"}
+RECIPE_FORMATS = (1,)   # workflow.format values this build.py knows (docs/format-recette.md §2bis)
 
 
 def _skill_exists(ref: str):
@@ -256,6 +257,13 @@ def validate_workflow(fm: dict, body: str) -> list:
     if not wf:
         return []
     errs = []
+    # Messages on the format in French: they reach the tracking page (a recipe proposed from it).
+    if "format" not in wf:
+        errs.append("pas de champ format dans le bloc workflow : ajoutez « format: 1 » en tête du bloc workflow")
+    elif not (type(wf["format"]) is int and wf["format"] in RECIPE_FORMATS):
+        known = ", ".join(str(f) for f in RECIPE_FORMATS)
+        return [f"format de recette {wf['format']!r} inconnu ou plus récent que ce build.py (formats connus : {known}) : "
+                "mettez à jour build.py et la page de suivi avant de publier cette recette"]
     requires = fm.get("requires") or []
     for ref in requires:
         ok = _skill_exists(ref)

@@ -33,6 +33,7 @@ a { color: var(--accent); text-underline-offset: 2px; }
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 .muted { color: var(--ink-3); }
+.page-foot { padding: 28px 16px 20px; text-align: center; font-size: 11.5px; color: var(--ink-3); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---- chrome */
@@ -440,6 +441,7 @@ pre.raw.diff { max-height: 560px; }
   .print-head .p-title { font-size: 16pt; font-weight: 600; } .print-head .p-sub { font-size: 10pt; color: #555; }
   .sheet { padding: 0 0 14pt; border: 0; } .doc-bar + .sheet { padding-top: 0; }
   main { padding: 0; max-width: none; }
+  .page-foot { display: none; }
   .layout { display: block; }
   .doc-card { border: 0; }
   .doc { padding: 0; }
@@ -467,6 +469,7 @@ pre.raw.diff { max-height: 560px; }
 <main id="app"></main>
 <div id="toast" role="status" aria-live="polite"></div>
 <dialog id="dialog" aria-labelledby="dlg-title"></dialog>
+<footer class="page-foot">Page de suivi {{PAGE_VERSION}} · recettes au format {{RECIPE_FORMATS}}</footer>
 
 <script nonce="{{NONCE}}">
 'use strict';
@@ -1224,7 +1227,7 @@ function viewRecipes() {
         var bad = r.errors.length || r.shadowed, sent = r.contribution && r.contribution.status === 'pushed';
         return h('a', { class: 'card', href: '#/recettes/p/' + r.id }, h('div', { class: 'ttl' }, r.label, h('span', { class: 'badge mine' }, 'Personnelle')), h('div', { class: 'sub' }, r.id + (r.version ? ' · version ' + r.version : '')),
           h('div', { class: 'state' }, h('span', { class: 'dot ' + (bad ? 'bad' : 'ok') }),
-            r.shadowed ? 'Masquée par une recette du plugin' : r.errors.length ? 'Ne peut plus être lancée' : sent ? 'Proposée au dépôt' : plural(r.steps, 'étape', 'étapes')),
+            r.shadowed ? 'Masquée par une recette du plugin' : r.format_error ? 'Mettez la page à jour pour la lancer' : r.errors.length ? 'Ne peut plus être lancée' : sent ? 'Proposée au dépôt' : plural(r.steps, 'étape', 'étapes')),
           h('div', { class: 'foot' }, h('span', null, r.summary ? firstSentence(r.summary) : ''), h('span', null, ago(r.updated))));
       })) : h('div', { class: 'empty small' }, h('p', null, 'Aucune pour l’instant. Copiez une recette fournie pour l’adapter, ou créez-en une à partir d’un besoin.'),
         h('button', { class: 'btn', type: 'button', onclick: function () { go('#/recettes/nouvelle'); } }, icon('plus'), 'Nouvelle recette'))),
@@ -2075,8 +2078,9 @@ function viewPersonal() {
     h('div', { class: 'dossier-head' }, h('h1', null, r.label),
       h('div', { class: 'meta' }, h('span', null, 'Recette personnelle'), h('span', null, 'id ' + r.id), r.version ? h('span', null, 'version ' + r.version) : null, h('span', null, 'modifiée ' + ago(r.updated)))),
     h('div', { class: 'action' + (r.errors.length || r.shadowed ? ' bad' : '') },
-      h('h2', null, r.shadowed ? 'Masquée par une recette du plugin' : r.errors.length ? 'Cette recette ne peut plus être lancée' : 'Dans votre recueil'),
+      h('h2', null, r.shadowed ? 'Masquée par une recette du plugin' : r.format_error ? 'Un format de recette que cette page ne sait pas lire' : r.errors.length ? 'Cette recette ne peut plus être lancée' : 'Dans votre recueil'),
       h('p', { class: 'lead' }, r.shadowed ? 'Une recette du plugin porte le même id : c’est elle qui se lance. Modifiez la vôtre pour lui donner un autre id.'
+        : r.format_error ? 'Elle a sans doute été écrite par une version plus récente de la page : mettez la page à jour (dernière version du plugin ix-recipes) plutôt que de la modifier.'
         : r.errors.length ? 'Elle ne passe plus les contrôles (un skill a peut-être disparu du catalogue). Modifiez-la pour la corriger.'
           : 'Elle apparaît dans « Nouveau dossier » avec la mention « Personnelle ».'),
       r.errors.length ? h('div', { class: 'checks bad' }, h('ul', null, r.errors.map(function (e) { return h('li', null, e); }))) : null,

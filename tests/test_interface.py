@@ -1120,5 +1120,68 @@ process.stdout.write(String(worst));"""
         self.assertNotIn("<em>", self.render("snake_case_name et mot_composé"))
 
 
+# ---------------------------------------------------------------------------
+# The page's version and the recipe format (docs/format-recette.md §2bis, docs/interface.md §4)
+# ---------------------------------------------------------------------------
+class VersionAndFormatTests(InterfaceTestCase):
+    def personal(self, recipe_id, format_line):
+        """A personal recipe in the recueil: the blank model, its `format:` line replaced (None: removed)."""
+        text = recettes.TEMPLATE.replace("id: ma-recette", f"id: {recipe_id}", 1)
+        self.assertIn("\n  format: 1\n", text)
+        text = text.replace("\n  format: 1\n", "\n" if format_line is None else f"\n  format: {format_line}\n", 1)
+        folder = parcours.recueil_dir(self.pdir)
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"{recipe_id}.md").write_text(text, encoding="utf-8")
+
+    def test_the_page_gives_its_version_and_the_formats_it_plays(self):
+        expected = {"version": interface.PAGE_VERSION, "recipe_formats": [1]}
+        self.assertRegex(interface.PAGE_VERSION, r"^\d+\.\d+\.\d+$")
+        self.assertEqual(self.api("GET", "/api/version"), expected)
+        self.assertEqual(self.api("GET", "/api/parcours")["page"], expected)
+        recipes = self.api("GET", "/api/recipes")
+        self.assertEqual((recipes["page"], recipes["formats"]), (expected, [1]))
+        self.assertEqual(self.request("GET", "/api/version", token=False)[0], 403)
+        status, _, html = self.get("/", token=False)
+        self.assertEqual(status, 200)
+        self.assertIn(f'<footer class="page-foot">Page de suivi {interface.PAGE_VERSION} · recettes au format 1</footer>', html)
+        self.assertNotIn("{{", html)
+
+    def test_a_recipe_at_the_right_format_is_offered_without_warning(self):
+        self.personal("bon-format", 1)
+        listed = next(r for r in self.api("GET", "/api/recipes")["recipes"] if r["id"] == "bon-format")
+        self.assertEqual((listed["format"], listed["warnings"]), (1, []))
+        mine = next(r for r in self.api("GET", "/api/recettes")["personal"] if r["id"] == "bon-format")
+        self.assertEqual((mine["errors"], mine["format_error"]), ([], None))
+
+    def test_a_recipe_without_format_is_offered_as_format_1_with_a_warning(self):
+        self.personal("sans-format", None)
+        listed = next(r for r in self.api("GET", "/api/recipes")["recipes"] if r["id"] == "sans-format")
+        self.assertEqual(listed["format"], 1)
+        self.assertIn("lue comme format 1", listed["warnings"][0])
+        shown = self.api("GET", "/api/recettes/personnelles/sans-format")
+        self.assertEqual(shown["errors"], [])
+        self.assertTrue(any("format: 1" in gap for gap in shown["check"]["contribution"]))   # only the proposal needs it
+        slug = self.api("POST", "/api/parcours", {"recipe": "sans-format", "text": "une demande", "engine": "fake"})["slug"]
+        self.assertEqual(self.status_of(slug)["recipe_format"], 1)
+
+    def test_a_recipe_of_a_newer_format_is_refused_with_a_clear_message(self):
+        self.personal("format-futur", 2)
+        self.assertNotIn("format-futur", [r["id"] for r in self.api("GET", "/api/recipes")["recipes"]])
+        status, _, data = self.post("/api/parcours", {"recipe": "format-futur", "text": "une demande", "engine": "fake"})
+        self.assertEqual((status, data["error"]), (422, "recipe_refused"))
+        self.assertIn("mettez la page à jour", data["message"])
+        mine = next(r for r in self.api("GET", "/api/recettes")["personal"] if r["id"] == "format-futur")
+        self.assertIn("mettez la page à jour", mine["format_error"])
+        self.assertEqual(mine["errors"], [mine["format_error"]])
+        # a dossier whose recipe moved to a newer format: still shown, cannot go on
+        self.new()
+        path = self.root / "skills" / "brief-client.md"
+        path.write_text(path.read_text(encoding="utf-8").replace("\n  format: 1\n", "\n  format: 2\n", 1), encoding="utf-8")
+        self.assertIn("mettez la page à jour", self.status_of()["recipe_error"])
+        status, _, data = self.get("/api/parcours/demo/plan")
+        self.assertEqual(status, 422)
+        self.assertIn("mettez la page à jour", data["message"])
+
+
 if __name__ == "__main__":
     unittest.main()

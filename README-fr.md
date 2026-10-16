@@ -746,6 +746,8 @@ python3 scripts/parcours.py new reponse-appel-offres --input cdc.md --slug ao --
 python3 scripts/parcours.py next ao --parcours-dir ~/.ix-recipes/parcours        # jusqu'à la prochaine pause
 ```
 
+**Versions.** Chaque recette déclare son format dans son bloc `workflow` (`format: 1` ; [`docs/format-recette.md`](docs/format-recette.md) §2bis). L'exécuteur, la page et `build.py` refusent un format qu'ils ne connaissent pas, ou plus récent, avec un message clair (« mettez la page à jour ») ; une recette personnelle écrite avant ce champ est lue comme format 1, avec un avertissement. La page a sa propre version, distincte de celle du plugin : affichée en bas de la page et renvoyée par `GET /api/version` (ainsi que dans la liste des dossiers et celle des recettes) ; `python3 scripts/parcours.py formats` donne les formats que l'exécuteur sait jouer. Les changements de la page sont listés sous « Page » dans le [CHANGELOG](CHANGELOG.md).
+
 ### Vos propres recettes
 
 Sous **Recettes**, la page montre les recettes fournies et les vôtres, chacune en cartes (ou en organigramme standard, à un clic ; cliquer une étape pour sa mission, ses entrées et ses sorties) ; une recette fournie se lance, ou se copie pour en faire votre version. Elle fabrique aussi des recettes, hors du dépôt :

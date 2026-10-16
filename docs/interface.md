@@ -68,13 +68,20 @@ Une recette s'appelle ici un **dossier** pour la personne qui l'utilise. Trois �
 | GET | `/api/parcours/<slug>/plan` | `parcours.py plan --json` |
 | GET | `/api/parcours/<slug>/log` | `.next.log` |
 | GET | `/api/parcours/<slug>/document/<nom>` | le document d'une sortie d'étape, sans ses blocs de fin ni son en-tête YAML (`{document, meta}`) |
-| GET | `/api/recipes` | `parcours.py recipes --json` : recettes-workflows, libellés, étapes |
+| GET | `/api/recipes` | `parcours.py recipes --json` : recettes-workflows, libellés, étapes (+ `page`) |
+| GET | `/api/version` | `{"version", "recipe_formats"}` : la version de la page et les formats de recette qu'elle joue (aussi sous `page` dans `/api/parcours` et `/api/recipes`) |
 | POST | `/api/parcours` | créer un dossier : `{"recipe", "text", "title"?, "engine"?}` → `parcours.py new --input -` (texte sur l'entrée standard) |
 | POST | `/api/parcours/<slug>/<action>` | `next` (avec l'empreinte), `stop`, `validate`, `answer`, `choose`, `retry`, `rerun` |
 
 Toutes les routes `/api` exigent le jeton ; les réponses d'erreur reprennent le message de `parcours.py` (format JSON), un code de sortie 2 (erreur d'arguments) étant traité comme un bug de l'interface.
 
 Les POST exigent le jeton (en-tête `X-Parcours-Token`) et un corps JSON ; les fichiers fournis (fiche, réponses, champs) sont écrits dans un dossier temporaire puis passés à `parcours.py`. Le nom de fichier demandé en lecture ne peut pas sortir du dossier du parcours.
+
+### Version de la page (ajouté le 2026-10-16)
+
+La page a sa propre version, `PAGE_VERSION` dans `scripts/interface.py` (1.0.0 au 2026-10-16), distincte de celle du plugin (`dist/.claude-plugin/plugin.json`) et de celle du skill `suivi-parcours`. Elle couvre le serveur, `interface.html` et l'API. Elle s'affiche discrètement en bas de la page (« Page de suivi 1.0.0 · recettes au format 1 », écrit par le serveur dans la page, masqué à l'impression), au démarrage du serveur, et dans l'API (`GET /api/version`, et `page` dans `/api/parcours` et `/api/recipes`). Elle se relève en x.y.z : **majeure** quand un appelant de l'API (la page d'une autre version, le futur serveur MCP) doit changer — une route ou un champ retiré ou changé de sens, un format de recette qu'elle cesse de lire ; **mineure** pour une fonctionnalité ou une route de plus, ou un format de recette de plus ; **correctif** sinon. Chaque relève est notée dans la section « Page » du CHANGELOG.
+
+Les formats de recette joués sont ceux de l'exécuteur qu'elle embarque (`parcours.RECIPE_FORMATS`, [format-recette.md](format-recette.md) §2bis). Une recette personnelle d'un format trop récent n'est pas proposée à la création ; la demander répond 422 `recipe_refused` avec le message de l'exécuteur (« mettez la page à jour ») ; dans « Mes recettes », elle est marquée « Mettez la page à jour pour la lancer » (`format_error` dans `recettes.py list`), au lieu du conseil de la modifier.
 
 ## 5. Concurrence
 

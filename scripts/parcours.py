@@ -16,6 +16,7 @@ Usage:
     python3 scripts/parcours.py choose <slug> --run explorer,decision | --skip
     python3 scripts/parcours.py rerun <slug> <step> [--extra <step>.<field>]
     python3 scripts/parcours.py retry <slug>
+    python3 scripts/parcours.py formats [--json]     (the recipe formats this runner plays)
     python3 scripts/parcours.py handoff <slug> <step> --file champs.md   (failed, done or paused step)
 
 Common options: --engine claude|codex|agy|vibe|fake, --engine-step <step>=<engine>
@@ -73,6 +74,8 @@ SKIPPED = "skipped"
 NOT_STATED = "not stated"
 NO_ANSWERS = "none — open points remain hypotheses"
 PAUSES = ("none", "validate", "answers", "choose")
+RECIPE_FORMATS = (1,)    # the recipe formats this runner (and the page that bundles it) can play
+RECIPE_FORMAT = 1        # the format written into a new recipe; a recipe without `format` is read as 1
 
 
 class ParcoursError(Exception):
@@ -856,11 +859,38 @@ def recipe_ids(places=None):
     return sorted(plugin_recipe_ids() | personal_recipe_ids(places))
 
 
+def format_error(workflow):
+    """Why this runner cannot play a recipe of this format (docs/format-recette.md §2bis), or None.
+    A missing `format` is not an error: it reads as format 1 (see format_missing)."""
+    if not isinstance(workflow, dict) or "format" not in workflow:
+        return None
+    value = workflow["format"]
+    accepted = ", ".join(str(f) for f in RECIPE_FORMATS)
+    if type(value) is int and value in RECIPE_FORMATS:
+        return None
+    if type(value) is int and value > max(RECIPE_FORMATS):
+        return (f"cette recette est au format {value}, plus récent que ce que la page de suivi sait lire (format {accepted}) : "
+                "mettez la page à jour (installez la dernière version du plugin ix-recipes)")
+    return (f"format de recette inconnu : {value!r} (la page de suivi lit le format {accepted}, un nombre entier) ; "
+            "si la recette vient d'une version plus récente, mettez la page à jour")
+
+
+def format_missing(workflow):
+    return isinstance(workflow, dict) and "format" not in workflow
+
+
+FORMAT_MISSING = (f"pas de champ format dans le bloc workflow : la recette est lue comme format {RECIPE_FORMAT} "
+                  f"(ajoutez « format: {RECIPE_FORMAT} » en tête du bloc workflow)")
+
+
 def load_recipe(recipe_id, places=None):
     fm, body, origin, path = recipe_origin(recipe_id, places)
     workflow = fm.get("workflow") or {}
     if not isinstance(workflow, dict) or not workflow.get("steps"):
         raise ParcoursError(f"'{recipe_id}' n'a pas de bloc workflow")
+    problem = format_error(workflow)
+    if problem:
+        raise ParcoursError(f"recette '{recipe_id}' : {problem}")
     if not isinstance(workflow["steps"], list) or not all(isinstance(s, dict) for s in workflow["steps"]):
         raise ParcoursError(f"'{recipe_id}' : les étapes doivent être une liste de « clé: valeur »")
     steps = [normalize_step(raw, i) for i, raw in enumerate(workflow["steps"])]
@@ -869,6 +899,8 @@ def load_recipe(recipe_id, places=None):
         "origin": origin,
         "source_sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest(),
         "version": str(fm.get("version", "")),
+        "format": workflow.get("format", RECIPE_FORMAT),
+        "format_declared": "format" in workflow,
         "label": str(fm.get("label") or recipe_id),
         "description": str(fm.get("description_fr") or ""),
         "summary": str(fm.get("summary_fr") or ""),
@@ -891,12 +923,14 @@ CANONICAL_FIELDS = ("id", "label", "version", "description_fr", "description_en"
                     "input_types", "output_types", "compatible")
 
 
-def workflow_errors(fm, body, skill_exists=None):
+def workflow_errors(fm, body, skill_exists=None, require_format=False):
     """The mechanical checks of build.py's validate_workflow (docs/format-recette.md §2), in French.
 
     `skill_exists(ref)` answers True, False, or None when it cannot tell (then no error). Kept
     rule for rule in step with build.py: tests/test_recettes.py compares both on every recipe of
     the repository and on broken variants of them. Returns a list of messages, empty when valid.
+    A missing `format` is an error for build.py only (`require_format`): a personal recipe written
+    before the field existed is read as format 1, and the gap only blocks its proposal to the repository.
     """
     wf = fm.get("workflow")
     if not wf:
@@ -905,6 +939,11 @@ def workflow_errors(fm, body, skill_exists=None):
         return ["le bloc workflow doit être une suite de « clé: valeur »"]
     skill_exists = skill_exists or catalogue_has
     errs = []
+    if format_missing(wf):
+        if require_format:
+            errs.append(FORMAT_MISSING)
+    elif format_error(wf):   # the rules below are those of format 1: they say nothing of another format
+        return [format_error(wf)]
     requires = fm.get("requires") or []
     if not isinstance(requires, list):
         errs.append("requires doit être une liste")
@@ -1003,6 +1042,8 @@ def runner_errors(fm):
 def contribution_gaps(fm):
     """What the repository asks of a skill file (CLAUDE.md §3) that a personal recipe may lack."""
     gaps = [f"champ '{k}' manquant" for k in CANONICAL_FIELDS if fm.get(k) in (None, "", [])]
+    if format_missing(fm.get("workflow")):
+        gaps.append(FORMAT_MISSING)
     if fm.get("version") and not re.fullmatch(r"\d+\.\d+\.\d+", str(fm["version"])):
         gaps.append("version doit être de la forme 1.0.0")
     if fm.get("domain") and fm["domain"] not in DOMAINS:
@@ -1025,11 +1066,11 @@ def check_recipe_text(text, places=None, exists=None):
         return _check_recipe_text(text, places, exists)
     except (TypeError, AttributeError, ValueError) as exc:   # a value of an unexpected shape (a list for a text…)
         return {"errors": [f"structure inattendue dans l'en-tête ({type(exc).__name__}: {exc})"],
-                "contribution": [], "recipe": None, "id": None}
+                "contribution": [], "recipe": None, "id": None, "format_error": None}
 
 
 def _check_recipe_text(text, places, exists):
-    result = {"errors": [], "contribution": [], "recipe": None, "id": None}
+    result = {"errors": [], "contribution": [], "recipe": None, "id": None, "format_error": None}
     try:
         fm, body = parse_recipe_text(text)
     except ParcoursError as exc:
@@ -1046,7 +1087,11 @@ def _check_recipe_text(text, places, exists):
     if not fm.get("workflow"):
         result["errors"].append("pas de bloc workflow : ce fichier n'est pas une recette-workflow")
         return result
-    result["errors"] += workflow_errors(fm, body, exists) + runner_errors(fm)
+    result["errors"] += workflow_errors(fm, body, exists)
+    if format_error(fm["workflow"]):   # a format this runner does not know: nothing more to check
+        result["format_error"] = format_error(fm["workflow"])
+        return result
+    result["errors"] += runner_errors(fm)
     result["contribution"] = contribution_gaps(fm)
     if not result["errors"]:
         try:
@@ -1063,6 +1108,7 @@ def recipe_view(fm, body):
     labels = {str(k): str(v) for k, v in (wf.get("context_labels") or {}).items()}
     return {
         "id": fm.get("id"), "label": str(fm.get("label") or fm.get("id")), "version": str(fm.get("version") or ""),
+        "format": wf.get("format", RECIPE_FORMAT), "format_declared": "format" in wf,
         "summary": str(fm.get("summary_fr") or ""), "description": str(fm.get("description_fr") or ""),
         "context_sheet": [{"key": str(k), "label": labels.get(str(k)), "definition": context_definitions(body).get(str(k))}
                           for k in wf.get("context_sheet") or []],
@@ -1280,6 +1326,7 @@ def new_state(recipe, slug, engine, engine_steps, skills, title=None):
     return {
         "recipe": recipe["id"],
         "recipe_version": recipe["version"],
+        "recipe_format": recipe["format"],
         "recipe_sha256": recipe.get("source_sha256"),
         "recipe_origin": recipe.get("origin"),
         "slug": slug,
@@ -2420,6 +2467,8 @@ def read_text_arg(path):
 
 def cmd_new(args):
     recipe = load_recipe(args.recipe)
+    if not recipe["format_declared"]:
+        warn(f"recette '{recipe['id']}' : {FORMAT_MISSING}")
     text = read_text_arg(args.input)
     engine_steps = parse_engine_steps(args.engine_step, recipe)
     skills = resolve_recipe_skills(recipe)  # fail early, naming every missing skill
@@ -2468,22 +2517,35 @@ def list_recipes(places=None, problems=None):
             "id": recipe["id"], "label": recipe["label"], "description": recipe["description"],
             "icon": recipe["icon"], "version": recipe["version"], "summary": recipe["summary"],
             "origin": recipe["origin"], "personal": recipe["origin"] != "plugin",
+            "format": recipe["format"], "warnings": [] if recipe["format_declared"] else [FORMAT_MISSING],
             "steps": [{"id": s["id"], "label": s["label"], "pause": effective_pause(s),
                        "optional": s["optional"]} for s in recipe["steps"]],
         })
     return found
 
 
+def cmd_formats(args):
+    """The recipe formats this runner plays (docs/format-recette.md §2bis)."""
+    if args.json:
+        emit_json({"formats": list(RECIPE_FORMATS), "current": RECIPE_FORMAT})
+        return 0
+    say(f"Formats de recette acceptés : {', '.join(str(f) for f in RECIPE_FORMATS)} "
+        f"(une recette nouvelle est écrite au format {RECIPE_FORMAT} ; sans champ format, elle est lue comme format {RECIPE_FORMAT})")
+    return 0
+
+
 def cmd_recipes(args):
     problems = []
     recipes = list_recipes(problems=problems)
     if args.json:
-        emit_json({"recipes": recipes, "personal_problems": problems,
+        emit_json({"recipes": recipes, "personal_problems": problems, "formats": list(RECIPE_FORMATS),
                    "recueil": str(PLACES["recueil"]) if PLACES.get("recueil") else None})
         return 0
     for r in recipes:
         mark = " [personnelle]" if r["personal"] else ""
         say(f"{r['id']} — {r['label']} ({len(r['steps'])} étapes){mark}")
+        for warning in r["warnings"]:
+            say(f"    avertissement : {warning}")
     for problem in problems:
         say(f"{problem['id']} — écartée : {problem['message']}")
     return 0
@@ -2697,6 +2759,7 @@ def status_report(directory, state, fingerprint):
     return {
         "slug": state["slug"], "title": state.get("title"), "recipe": state["recipe"],
         "recipe_version": state["recipe_version"], "recipe_label": recipe["label"] if recipe else state["recipe"],
+        "recipe_format": recipe["format"] if recipe else state.get("recipe_format"),
         "recipe_origin": recipe["origin"] if recipe else state.get("recipe_origin"),
         "recipe_sha256": state.get("recipe_sha256"),
         "recipe_current": bool(recipe and state.get("recipe_sha256") == recipe.get("source_sha256")),
@@ -3165,6 +3228,7 @@ def build_parser():
     p.add_argument("--slug")
     p.add_argument("--title", help="titre lisible du parcours (affiché par la page de suivi)")
     add("recipes", cmd_recipes, "les recettes-workflows disponibles")
+    add("formats", cmd_formats, "les formats de recette que cet exécuteur sait jouer")
     p = add("next", cmd_next, "jouer jusqu'à la prochaine pause", "slug")
     p.add_argument("--if-state", metavar="FINGERPRINT",
                    help="empreinte de l'état (donnée par `plan --json`) ; refusé sous le verrou si l'état a changé")

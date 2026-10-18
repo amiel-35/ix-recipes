@@ -2624,6 +2624,10 @@ class InterfaceSupportTests(ParcoursTestCase):
 # Recipe format (docs/format-recette.md §2bis)
 # ---------------------------------------------------------------------------
 class RecipeFormatTests(ParcoursTestCase):
+    # Every recipe declares format 1, but the one of the upstream of the procedure (format 4, tests/test_format4.py):
+    # a recipe uses the lowest format that expresses it.
+    FORMATS_OF_THE_REPOSITORY = (1, 4)
+
     def set_format(self, line, recipe="brief-client"):
         """Rewrites the `format:` line of a recipe of the temporary repository (None: removes it)."""
         path = self.root / "skills" / f"{recipe}.md"
@@ -2631,16 +2635,16 @@ class RecipeFormatTests(ParcoursTestCase):
         self.assertIn("\n  format: 1\n", text)
         path.write_text(text.replace("\n  format: 1\n", "\n" if line is None else f"\n  format: {line}\n", 1), encoding="utf-8")
 
-    def test_every_recipe_of_the_repository_declares_format_1(self):
+    def test_every_recipe_of_the_repository_declares_format_1(self):   # or 4 for the upstream recipe
         recipes = [p for p in sorted((REPO / "skills").glob("*.md")) if "\nworkflow:" in p.read_text(encoding="utf-8")]
         self.assertGreaterEqual(len(recipes), 2)
         for path in recipes:
             with self.subTest(recipe=path.stem):
                 fm, _ = parcours.split_frontmatter(path.read_text(encoding="utf-8"))
-                self.assertEqual(fm["workflow"].get("format"), 1)
+                self.assertIn(fm["workflow"].get("format"), self.FORMATS_OF_THE_REPOSITORY)
         for path in sorted((REPO / "dist" / "skills").glob("*/recipe.json")):
             with self.subTest(bundled=path.parent.name):
-                self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["workflow"].get("format"), 1)
+                self.assertIn(json.loads(path.read_text(encoding="utf-8"))["workflow"].get("format"), self.FORMATS_OF_THE_REPOSITORY)
 
     def test_a_recipe_at_the_right_format_runs_without_warning(self):
         code, out, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "demo", "--engine", "fake")
@@ -2649,7 +2653,7 @@ class RecipeFormatTests(ParcoursTestCase):
         self.assertEqual(self.state()["recipe_format"], 1)
         self.assertEqual(json.loads(self.ok("status", "demo", "--json"))["recipe_format"], 1)
         listed = json.loads(self.ok("recipes", "--json"))
-        self.assertEqual(listed["formats"], [1, 2, 3])
+        self.assertEqual(listed["formats"], [1, 2, 3, 4])
         self.assertEqual({r["id"]: (r["format"], r["warnings"]) for r in listed["recipes"]},
                          {"brief-client": (1, []), "reponse-appel-offres": (1, [])})
 
@@ -2670,10 +2674,10 @@ class RecipeFormatTests(ParcoursTestCase):
 
     def test_a_recipe_of_a_newer_format_is_refused_with_a_clear_message(self):
         self.new()   # a dossier created while the recipe was still at format 1
-        self.set_format(4)
+        self.set_format(5)
         code, out, err = self.cli("new", "brief-client", "--input", str(self.input_file), "--slug", "autre", "--engine", "fake")
         self.assertEqual(code, 1)
-        self.assertIn("au format 4", err)
+        self.assertIn("au format 5", err)
         self.assertIn("mettez la page à jour", err)
         self.assertFalse((self.pdir / "autre").exists())
         code, out, _ = self.cli("new", "brief-client", "--input", str(self.input_file), "--json")
@@ -2701,8 +2705,8 @@ class RecipeFormatTests(ParcoursTestCase):
 
     def test_the_runner_announces_the_formats_it_plays(self):
         self.assertEqual(json.loads(self.ok("formats", "--json")),
-                         {"formats": [1, 2, 3], "current": 1, "source_format": 2, "corpus_format": 3})
-        self.assertIn("Formats de recette acceptés : 1, 2, 3", self.ok("formats"))
+                         {"formats": [1, 2, 3, 4], "current": 1, "source_format": 2, "corpus_format": 3, "loop_format": 4})
+        self.assertIn("Formats de recette acceptés : 1, 2, 3, 4", self.ok("formats"))
 
     def test_a_format_2_recipe_without_reads_source_runs_like_format_1(self):
         self.set_format(2)

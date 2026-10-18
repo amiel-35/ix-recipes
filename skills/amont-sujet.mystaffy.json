@@ -1,0 +1,22 @@
+{
+  "metier": ["fondateur_ceo", "transverse"],
+  "category": "workflow",
+  "params": {
+    "type_de_sujet": {
+      "label": "Type de sujet",
+      "type": "enum",
+      "required": true,
+      "options": ["code"],
+      "help": "Seul le type « code » a ses réglages, ses annexes de critères et ses skills de format."
+    }
+  },
+  "ui": {"simple_fields": ["type_de_sujet"], "advanced_fields": []},
+  "execution": {"supports_async": false, "supports_review_gate": true, "max_input_artifacts": 6, "max_estimated_tokens": 200000},
+  "color": "#3D5A80",
+  "kind": "llm",
+  "launch_mode": "run",
+  "transport": "json",
+  "output_format": "markdown",
+  "enabled": true,
+  "visibility": "public"
+}

@@ -1164,8 +1164,25 @@ class VersionAndFormatTests(InterfaceTestCase):
         slug = self.api("POST", "/api/parcours", {"recipe": "sans-format", "text": "une demande", "engine": "fake"})["slug"]
         self.assertEqual(self.status_of(slug)["recipe_format"], 1)
 
+    def test_the_page_refuses_a_recipe_of_format_4_that_the_runner_plays(self):
+        (self.root / "docs" / "harnais").mkdir(parents=True, exist_ok=True)   # the settings a format 4 recipe is checked against
+        shutil.copy(REPO / "docs" / "harnais" / "A4-reglages.yaml", self.root / "docs" / "harnais")
+        self.personal("format-quatre", 4)
+        recipe = parcours.recueil_dir(self.pdir) / "format-quatre.md"   # a format 4 step names the role whose model it takes
+        recipe.write_text(recipe.read_text(encoding="utf-8")
+                          .replace("      model: opus\n", "      role: cadrage_et_criteres\n      model: opus\n", 1)
+                          .replace("      model: sonnet\n", "      role: redaction_goal\n      model: sonnet\n", 1), encoding="utf-8")
+        self.assertEqual(parcours.format_error({"format": 4}), None)   # the runner plays it…
+        self.assertNotIn("format-quatre", [r["id"] for r in self.api("GET", "/api/recipes")["recipes"]])   # …the page does not offer it
+        status, _, data = self.post("/api/parcours", {"recipe": "format-quatre", "text": "une demande", "engine": "fake"})
+        self.assertEqual((status, data["error"]), (422, "recipe_refused"))
+        self.assertIn("format 4", data["message"])
+        self.assertIn("mettez la page à jour", data["message"])
+        mine = next(r for r in self.api("GET", "/api/recettes")["personal"] if r["id"] == "format-quatre")
+        self.assertIn("mettez la page à jour", mine["format_error"])
+
     def test_a_recipe_of_a_newer_format_is_refused_with_a_clear_message(self):
-        self.personal("format-futur", 4)
+        self.personal("format-futur", 5)
         self.assertNotIn("format-futur", [r["id"] for r in self.api("GET", "/api/recipes")["recipes"]])
         status, _, data = self.post("/api/parcours", {"recipe": "format-futur", "text": "une demande", "engine": "fake"})
         self.assertEqual((status, data["error"]), (422, "recipe_refused"))
@@ -1176,7 +1193,7 @@ class VersionAndFormatTests(InterfaceTestCase):
         # a dossier whose recipe moved to a newer format: still shown, cannot go on
         self.new()
         path = self.root / "skills" / "brief-client.md"
-        path.write_text(path.read_text(encoding="utf-8").replace("\n  format: 1\n", "\n  format: 4\n", 1), encoding="utf-8")
+        path.write_text(path.read_text(encoding="utf-8").replace("\n  format: 1\n", "\n  format: 5\n", 1), encoding="utf-8")
         self.assertIn("mettez la page à jour", self.status_of()["recipe_error"])
         status, _, data = self.get("/api/parcours/demo/plan")
         self.assertEqual(status, 422)

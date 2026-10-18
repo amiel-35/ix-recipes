@@ -16,7 +16,8 @@ knowledge or produces an artefact a profession defines.
 | `build.py` | Packaging entry point — **a copy of ix-skills' `build.py`** (see §7) |
 | `partials/` | Domain references shared by several skills, copied next to each SKILL.md that lists them (§3bis) |
 | `THIRD_PARTY.md`, `LICENSES/` | Every public source a skill draws on, with its licence and a copy of the licence text (Apache-2.0) |
-| `docs/` | Banner (`docs/assets/`) and working notes |
+| `docs/` | Banner (`docs/assets/`) and working notes; `docs/format-4.md` describes the format 4 of the recipes |
+| `harnais/`, `docs/harnais/` | The harness of the « treat a subject end to end » procedure: tools of the pilot, hook, A3 trace, manifest (`harnais/points-d-entree.env`), and the pieces of the procedure (A3 to A8, spec and architecture of the harness) |
 
 ## 2. The dependency rule
 
@@ -66,7 +67,7 @@ it for later steps, steps hand over named fields only, the human decides at paus
 `build.py` checks the `workflow` block mechanically (requires exist, brief only at
 step 1, every received field transmitted by an earlier step…).
 
-Reference recipes: `brief-client` and `reponse-appel-offres`. A chain must buy
+Reference recipes: `brief-client` and `reponse-appel-offres`. The upstream recipe of the harness, `amont-sujet`, is the only format 4 recipe (bounded loops, hidden field, stop before an external step; [`docs/format-4.md`](docs/format-4.md)): the tracking page does not play it. A chain must buy
 something — isolation, a human pause, a third party's answers; otherwise keep a
 single skill (that is why `note-strategique` and `offer-comparison` stay skills,
 decided 2026-10-15 after the designer benchmark). `concepteur-recette` drafts a

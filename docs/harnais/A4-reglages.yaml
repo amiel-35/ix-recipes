@@ -1,0 +1,257 @@
+# A4 : fichier de réglages de la procédure « traiter un sujet de bout en bout ».
+#
+# Ce fichier est le seul endroit où une valeur de réglage est écrite. Les autres pièces (A3, A5,
+# A6, A7, A8, le goal) y renvoient par le nom de la clé et n'en recopient pas la valeur.
+# Il se charge par un programme (YAML 1.1 ou 1.2, `yaml.safe_load`) : la clé `version` est à la racine.
+#
+# Sigles des sources, tous tirés de `trace/01e-cadrage-clos.md` (le cadrage clos) :
+#   D = décision de la pause 1, C = contrainte, LR = lecture retenue.
+# « Procédure » = `corpus/procedure-traitement-sujet.md`.
+#
+# Chaque valeur porte deux commentaires : ce qu'elle règle, et d'où elle vient.
+# Changer une valeur : ne modifier que ce fichier, monter `version`, puis consigner la
+# nouvelle version dans la trace du sujet suivant (A3, table T1). Voir A8.
+
+# Version de ce fichier de réglages. Règle : majeure si une clé change de sens ou disparaît,
+# mineure si une clé est ajoutée, correctif si seule une valeur change.
+# Source : C5 exige que la trace consigne la version des réglages utilisés.
+version: "1.0.0"
+
+# ----------------------------------------------------------------------------------------------
+# Plafonds
+# ----------------------------------------------------------------------------------------------
+plafonds:
+  # Nombre maximal de passes d'une vérification qui renvoie vers l'étape d'écriture : évaluation
+  # du cadrage (1d), vérification du goal (2A), contre-vérification des critères (2B). Au-delà, on
+  # s'arrête, on trace l'échec et on rend la main (suites : `suites_au_plafond.passes_verification`).
+  # Source : procédure, « Garde-fous » (« 2 passes pour chaque contre-vérification ») ; C8 ; D7.
+  passes_verification_max: 2
+
+  # Nombre maximal de tours de correction après le jugement (étape 6), dans la session de
+  # production. Ces tours ne se décomptent pas des tours du goal.
+  # Source : procédure, étape 6 (« 3 tours au maximum ») ; C8 ; D7.
+  tours_correction_max: 3
+
+  # Nombre maximal de tours de la boucle de production : un tour est une itération de la boucle du
+  # goal, entre deux rendus de la main. À ce plafond sans condition d'arrêt satisfaite, la main
+  # revient au pilote.
+  # Source : procédure, étape 2 (« ou arrête après 40 tours ») ; C14 ; D10 (ni plafond en dollars
+  # ni échéance : le coût est mesuré, pas plafonné).
+  tours_goal_max: 40
+
+# ----------------------------------------------------------------------------------------------
+# Production
+# ----------------------------------------------------------------------------------------------
+production:
+  # Mode de la production : la session est menée sous la boucle autonome `/goal`, qui relance
+  # l'agent jusqu'à la condition d'arrêt ou jusqu'au plafond de tours. C'est un réglage de mode :
+  # le corps du skill de rédaction du goal, lui, ne dépend d'aucun outil (RA7).
+  # Source : procédure, étape 4 (« Production : `/goal`, Sonnet par défaut ») ; C8.
+  mode: "/goal"
+
+  # Nombre maximal de niveaux d'imbrication des sous-agents lancés par la session de production.
+  # Source : procédure, étape 4 (« au plus 3 niveaux d'imbrication et 20 en parallèle »).
+  sous_agents_niveaux_max: 3
+
+  # Nombre maximal de sous-agents en parallèle.
+  # Source : procédure, étape 4.
+  sous_agents_parallele_max: 20
+
+  # Un appel de sous-agent sans modèle explicite est interdit : le modèle de session serait hérité
+  # sans qu'on le voie.
+  # Source : C13 ; procédure, étape 4 (« Ton hook impose `model` sur chaque appel »).
+  modele_explicite_obligatoire: true
+
+# ----------------------------------------------------------------------------------------------
+# Gel du script de recette et de la grille
+# ----------------------------------------------------------------------------------------------
+gel:
+  # Le script de recette, la grille visible des critères et leurs fixtures sont figés à l'étape 3,
+  # avant la production : on relève l'empreinte sha256 de chaque fichier, puis le producteur n'en
+  # modifie aucun et le contrôle des empreintes précède chaque tour.
+  # Source : procédure, étape 3 (« On fige : le script et la grille sont commités ») ; C8 ; D7.
+  script_et_grille_figes: true
+
+  # « Grille » désigne ici la grille de critères du sujet. La grille fixe du cadrage (A5) n'est pas
+  # concernée : elle ne change pas pendant un passage, seule la maintenance la modifie (A8).
+  # Le gel s'applique avant le premier tour de production et jusqu'à la fin du jugement. Une
+  # grille revue après coup passe par la suite « contourner » (retour en 2B, dérogation tracée),
+  # jamais par une modification silencieuse.
+  # Source : procédure, étape 6 (« si le juge déclare un critère ambigu ou faux, on retourne en 2B ») ; D8.
+  gele_jusqu_a: "fin du jugement"
+
+  # La part cachée de la grille reste hors de portée du producteur jusqu'à la fin du jugement ;
+  # elle n'entre dans la trace qu'ensuite. Le producteur ne la lit pas, ne la cherche pas.
+  # Source : D5 ; C6 ; procédure, « Garde-fous » (« La part cachée vit dans un fichier que le
+  # producteur ne lit pas »).
+  part_cachee_scellee_jusqu_a: "fin du jugement"
+
+# ----------------------------------------------------------------------------------------------
+# Modèle de chaque rôle. Les valeurs sont celles du paramètre `model` d'un appel d'agent :
+# opus, sonnet, haiku, fable.
+# ----------------------------------------------------------------------------------------------
+modeles:
+  # Lire la source brute, déduire l'implicite : cadrage, questions, taille, clôture, critères.
+  # Ce que ce rôle rate est perdu pour toute la suite.
+  # Source : procédure, « Qui fait quoi » (ligne « Lire la source brute »).
+  cadrage_et_criteres: opus
+
+  # Évaluer le cadrage contre la grille fixe (1d), avec le skill de contrôle en mode verdict.
+  # Source : procédure, tableau de l'étape 1, ligne 1d.
+  evaluation_cadrage: opus
+
+  # Rédiger le goal (2A) et traduire, produire contre une grille complète.
+  # Source : procédure, « Qui fait quoi » (ligne « Traduire (goal) »).
+  redaction_goal: sonnet
+
+  # Vérifier le goal (2A), avec le skill de critique et ses angles imposés.
+  # Source : procédure, tableau de l'étape 2, ligne 2A.
+  verification_goal: opus
+
+  # Réconciliation du goal, du script et du cadrage (étape 3).
+  # Source : procédure, étape 3 (« Sonnet, ou un script »).
+  reconciliation: sonnet
+
+  # Produire le livrable (étape 4) et corriger (étape 6) : même session, cache chaud.
+  # Source : procédure, étape 4 (« Sonnet par défaut ») et étape 6.
+  production: sonnet
+
+  # Sous-agents de lecture, d'expertise cadrée ou d'application d'un skill, lancés par la session
+  # de production.
+  # Source : procédure, étape 4 ; autorisations du goal de la partie A (sonnet par défaut).
+  sous_agents_lecture: sonnet
+
+  # Sous-agents qui vérifient une sortie (contrôle d'un cadrage ou critique d'un goal), lancés par la
+  # session de production ou par le pilote.
+  # Source : procédure, étape 2 (tableau, colonne « Vérifie ») ; autorisations du goal de la partie A.
+  sous_agents_verification: opus
+
+  # Vérifications de forme en masse (présence de sections, correspondances) : mécanique.
+  # Source : procédure, « Qui fait quoi » (ligne « Vérifications de forme ») ; cadrage clos C8.
+  verification_mecanique: haiku
+
+  # Juger le livrable (étape 5), en contexte neuf, distinct du producteur. Lui seul voit la part
+  # cachée.
+  # Source : procédure, « Qui fait quoi » (ligne « Juger le livrable »).
+  juge: opus
+
+  # Test du nouveau venu : un agent neuf qui utilise le livrable avec la seule documentation.
+  # Source : procédure, étape 5 (« un sous-agent neuf (Sonnet) »).
+  nouveau_venu: sonnet
+
+  # Contre-vérifier la grille de critères (2B) et relire la grille fixe du cadrage. Un autre modèle
+  # que celui qui écrit, pour l'indépendance. Chez Amiel : fable. Ailleurs : opus.
+  # `chez_amiel` s'applique quand le pilote du sujet est Amiel, `ailleurs` sinon.
+  # L'accord est demandé dans la session, à la personne qui pilote le sujet, avant l'appel ; l'appel
+  # est un appel d'agent à part, jamais à l'intérieur d'un enchaînement automatisé.
+  # Source : D11 ; C13 ; procédure, « Qui fait quoi » (ligne « Contre-vérifier »).
+  contre_verification:
+    chez_amiel: fable
+    ailleurs: opus
+    accord_demande_a: "la personne qui pilote le sujet"
+
+# ----------------------------------------------------------------------------------------------
+# Suites proposées quand un plafond est atteint
+# ----------------------------------------------------------------------------------------------
+# Règle générale : à tout plafond atteint, on s'arrête, on trace l'échec (dernier résultat, ce
+# qui reste en échec, ce qui est livré) et on rend la main au pilote, qui choisit une suite.
+# Chaque choix est tracé (A3, table des plafonds atteints).
+# Source : D8 ; LR4.
+suites_au_plafond:
+  # Plafond des passes de vérification : trois suites. « Contourner » n'est pas offerte, car il
+  # n'y a pas encore de critère en échec à revoir (LR4).
+  passes_verification:
+    - relancer
+    - livrer_avec_reserve
+    - abandonner
+
+  # Plafond des tours de correction : quatre suites, dont « contourner » (retour en 2B).
+  # Source : D8 ; LR4.
+  tours_correction:
+    - relancer
+    - contourner
+    - livrer_avec_reserve
+    - abandonner
+
+  # Plafond des tours du goal : quatre suites, comme pour les tours de correction.
+  # Source : D8 ; LR4.
+  tours_goal:
+    - relancer
+    - contourner
+    - livrer_avec_reserve
+    - abandonner
+
+# Définition de chaque suite. Les libellés sont repris par la trace (A3) et par le guide (A7).
+# Source : D8 (« relancer quelques tours de plus ; contourner l'échec ; livrer avec une réserve ;
+# abandonner »).
+definition_des_suites:
+  # Quelques tours de plus. Le nombre de tours est choisi par le pilote au moment où il prend
+  # cette suite, puis tracé ; il n'est pas un réglage de ce fichier. Source : LR4.
+  relancer: "quelques tours de plus ; le pilote fixe le nombre à ce moment, et il est tracé"
+
+  # Revoir le critère en échec : retour en 2B, avec une dérogation tracée (quel critère, pourquoi,
+  # qui l'a décidé). Source : D8 ; procédure, étape 6.
+  contourner: "revoir le critère en échec, retour en 2B, avec une dérogation tracée"
+
+  # Livrer l'état courant avec une réserve écrite dans la trace : ce qui reste en échec et
+  # pourquoi on livre quand même. Source : D8.
+  livrer_avec_reserve: "livrer l'état courant avec une réserve tracée"
+
+  # Arrêter le sujet ; la trace garde l'échec et ce qui est livré. Source : D8.
+  abandonner: "abandonner le sujet ; l'échec et ce qui est livré restent dans la trace"
+
+# ----------------------------------------------------------------------------------------------
+# Sujets enfants
+# ----------------------------------------------------------------------------------------------
+sujets_enfants:
+  # Pas de sujets enfants dans la première version : si le cadrage découpe le sujet, chaque partie
+  # est lancée comme un sujet distinct, avec sa propre grille, et la trace du parent renvoie aux
+  # sujets enfants (renvoi seulement, aucune copie de pièce).
+  # Source : D12 ; C7.
+  geres_par_la_procedure: false
+
+# ----------------------------------------------------------------------------------------------
+# Types de sujet : une entrée par type. Seul « code » est rempli (C2, D3).
+# ----------------------------------------------------------------------------------------------
+types_de_sujet:
+  # Le code : le premier type, éprouvé dans la partie A.
+  # Source : D3 ; C2 ; procédure, tableau « Par type de sujet », colonne « Code ».
+  code:
+    # Skills de format : pour chaque livrable d'un sujet de code, le skill qui en fixe la forme.
+    # Cette association vit ici ; A6 la décrit et renvoie à ce fichier ; elle n'est jamais écrite dans un
+    # skill d'ix-skills (C9). Un livrable
+    # qui n'a pas de ligne ici n'a pas de skill de format (par exemple le code lui-même).
+    skills_de_format:
+      # Spec fonctionnelle, quand le sujet s'y prête. Source : D9 ; LR5.
+      specification: "ix-recipes:feature-spec"
+      # Architecture : composants, flux, compromis, quand le sujet s'y prête. Source : D9 ; LR5.
+      architecture: "ix-recipes:system-design"
+      # Documentation destinée à un lecteur : guide, note d'exploitation. Le profil de lecteur
+      # est imposé au skill par le livrable. Source : procédure, tableau « Par type de sujet »
+      # (« doc via `deliver` avec profil de lecteur »).
+      documentation: "ix-skills:deliver"
+    # Skill facultatif, avant de coder. Source : procédure, tableau « Par type de sujet »
+    # (`mockup` avant de coder). À confirmer : le cadrage clos ne le nomme pas pour le code.
+    skills_facultatifs:
+      maquette: "ix-recipes:mockup"
+    # Annexe de domaine du skill de critères (`criteres-reussite`, d'ix-skills), qui écrit la
+    # grille de l'étape 2B. Source : procédure, tableau « Par type de sujet » ; §10 du cadrage
+    # clos (« `criteres_logiciel` pour A1, A2 et `build.py` »).
+    annexes_criteres:
+      - criteres_logiciel
+      # Annexe pour les livrables qui sont des documents (guide, note, spec) d'un sujet de code.
+      # Source : cadrage clos §10 (« `criteres_document` pour A3 à A8 »).
+      - criteres_document
+
+  # Réponse commerciale : non rempli. Source : D3 (les trois autres types viennent en partie C).
+  reponse_commerciale:
+    statut: "partie C"
+
+  # Audit UX : non rempli. Source : D3 ; il manque l'annexe de critères et le skill d'audit.
+  audit_ux:
+    statut: "partie C"
+
+  # Formation : non remplie. Source : D3 ; il manque l'annexe de critères et le skill d'ingénierie
+  # pédagogique.
+  formation:
+    statut: "partie C"

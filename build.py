@@ -232,9 +232,14 @@ SIBLING_SKILL_DIRS = {
 }
 PAUSES = {"none", "validate", "answers", "choose"}
 MODELS = {"sonnet", "opus", "haiku"}
-RECIPE_FORMATS = (1, 2, 3)  # workflow.format values this build.py knows (docs/format-recette.md §2bis)
+RECIPE_FORMATS = (1, 2, 3, 4)  # workflow.format values this build.py knows (docs/format-recette.md §2bis)
 SOURCE_FORMAT = 2        # from format 2 on, a checking step may read the source (`reads_source`)
 CORPUS_FORMAT = 3        # from format 3 on, a step may consult the dossier's pieces (`receives: [corpus]`)
+LOOP_FORMAT = 4          # from format 4 on: bounded loops, hidden fields, external steps (docs/format-recette.md §2quinquies)
+FORMAT4_STEP_KEYS = ("loop", "hidden", "external", "verdict_field")   # step keys that only a format 4 recipe may use
+FORMAT4_REFUSED = (("parallel", "une étape parallèle"), ("writes", "une étape qui écrit ou lance des commandes"))
+RECIPE_FORMAT = 1
+REGLAGES_PATH = Path(__file__).resolve().parent / "docs" / "harnais" / "A4-reglages.yaml"   # the settings (A4): the ceilings and the models of the roles
 # The only skills that may read the source: they check an upstream output against evidence
 # (docs/format-recette.md §1.10). Keep in step with VERIFICATION_SKILLS in scripts/parcours.py.
 # `calc-check`: the calculation check of ix-recipes docs/atome-verification-calcul.md, to be created in ix-skills.
@@ -256,6 +261,142 @@ def _skill_exists(ref: str):
     if not d.is_dir():
         return None
     return (d / f"{sid}.md").is_file()
+
+
+def suites_key(ceiling):
+    """The `suites_au_plafond` key of a ceiling: `passes_verification_max` -> `passes_verification`."""
+    return ceiling[:-4] if str(ceiling).endswith("_max") else str(ceiling)
+
+
+def reglages_errors(workflow, reglages):
+    """What a format 4 recipe must agree with in the settings (A4): the ceiling of each loop exists and has its
+    suites, and the model of each step is the one of its role (`role`, a key of `modeles`). In French."""
+    errs = []
+    steps = workflow.get("steps") if isinstance(workflow, dict) else None
+    if not (isinstance(steps, list) and isinstance(reglages, dict)):
+        return errs
+    plafonds = reglages.get("plafonds") or {}
+    suites = reglages.get("suites_au_plafond") or {}
+    modeles = reglages.get("modeles") or {}
+    for st in steps:
+        if not isinstance(st, dict):
+            continue
+        sid, loop = st.get("id"), st.get("loop")
+        if isinstance(loop, dict) and isinstance(loop.get("ceiling"), str):
+            if type(plafonds.get(loop["ceiling"])) is not int:
+                errs.append(f"étape '{sid}' : loop.ceiling '{loop['ceiling']}' n'est pas un plafond des réglages (plafonds : "
+                            f"{', '.join(plafonds) or 'aucun'})")
+            if not suites.get(suites_key(loop["ceiling"])):
+                errs.append(f"étape '{sid}' : les réglages n'offrent aucune suite pour le plafond '{loop['ceiling']}' "
+                            f"(suites_au_plafond.{suites_key(loop['ceiling'])})")
+        if st.get("external"):
+            continue
+        role = st.get("role")
+        if not isinstance(role, str) or not isinstance(modeles.get(role), str):
+            errs.append(f"étape '{sid}' : role doit nommer une clé de modeles des réglages (modeles : "
+                        f"{', '.join(k for k, v in modeles.items() if isinstance(v, str))})")
+        elif st.get("model") != modeles[role]:
+            errs.append(f"étape '{sid}' : le modèle '{st.get('model')}' n'est pas celui du rôle '{role}' dans les réglages "
+                        f"('{modeles[role]}') : un appel d'agent prend le modèle de la clé de son rôle")
+    return errs
+
+
+def format4_errors(workflow):
+    """Why a recipe may not use what the format 4 adds (docs/format-recette.md §2quinquies), in French.
+
+    Before format 4: the keys `loop`, `hidden`, `external`, `verdict_field` ask for « format: 4 ». At format 4:
+    the minimal format refuses a parallel step (`parallel: true`), a step that writes or runs commands
+    (`writes: true`) and the model fable; a loop goes back to an earlier step, from a step with a verdict
+    field; a hidden field is never received by a later step, an external step apart.
+    """
+    steps = workflow.get("steps") if isinstance(workflow, dict) else None
+    if not isinstance(steps, list):
+        return []
+    errs = []
+    fmt = workflow.get("format", RECIPE_FORMAT)
+    if not (type(fmt) is int and fmt >= LOOP_FORMAT):
+        for st in steps:
+            for key in FORMAT4_STEP_KEYS:
+                if isinstance(st, dict) and key in st:
+                    errs.append(f"étape '{st.get('id')}' : {key} demande « format: {LOOP_FORMAT} » en tête du bloc workflow "
+                                "(un exécuteur ou une page plus ancien jouerait l'étape sans la boucle, le champ caché "
+                                "ou l'arrêt, sans le dire)")
+        return errs
+    ids = [st.get("id") for st in steps if isinstance(st, dict)]
+    hidden_by = {st.get("id"): list(st.get("hidden") or []) for st in steps if isinstance(st, dict)
+                 if isinstance(st.get("hidden") or [], list)}
+    spans = []
+    for i, st in enumerate(steps):
+        if not isinstance(st, dict):
+            continue
+        sid, transmits = st.get("id"), st.get("transmits") or []
+        for key, what in FORMAT4_REFUSED:
+            if st.get(key):
+                errs.append(f"étape '{sid}' : {what} est refusée en format {LOOP_FORMAT} ({key}: true) : le format 4 est minimal, "
+                            "ses étapes se suivent et ne font que lire")
+        if st.get("model") == "fable":
+            errs.append(f"étape '{sid}' : le modèle fable est refusé en format {LOOP_FORMAT} : Fable ne s'appelle qu'après accord, "
+                        "à part, sur une étape « external: true » que la recette ne joue pas elle-même")
+        if "stage" in st and not (isinstance(st["stage"], str) and st["stage"].strip()):
+            errs.append(f"étape '{sid}' : stage doit être un texte non vide (l'étape de la procédure, pour la trace)")
+        if "role" in st and not (isinstance(st["role"], str) and st["role"].strip()):
+            errs.append(f"étape '{sid}' : role doit être un texte non vide (une clé de modeles des réglages)")
+        field = st.get("verdict_field")
+        if field is not None and field not in transmits:
+            errs.append(f"étape '{sid}' : verdict_field '{field}' ne figure pas dans transmits")
+        if "external" in st and not isinstance(st["external"], bool):
+            errs.append(f"étape '{sid}' : external vaut true ou false")
+        if st.get("external"):
+            if i == 0:
+                errs.append(f"étape '{sid}' : la première étape ne peut pas être external")
+            for key in ("pause", "produces_context_sheet", "optional", "model"):
+                if st.get(key) not in (None, False, "none"):
+                    errs.append(f"étape '{sid}' : une étape external s'arrête d'elle-même, sans {key} (son modèle est celui "
+                                "de l'appel que fait le pilote)")
+        hidden = st.get("hidden")
+        if hidden is not None:
+            if not isinstance(hidden, list) or not all(isinstance(h, str) for h in hidden):
+                errs.append(f"étape '{sid}' : hidden est une liste de champs")
+            else:
+                for h in hidden:
+                    if h not in transmits:
+                        errs.append(f"étape '{sid}' : le champ caché '{h}' ne figure pas dans transmits")
+                    if h == st.get("output_field"):
+                        errs.append(f"étape '{sid}' : le champ caché '{h}' ne peut pas être output_field (un document entier)")
+        for src in st.get("receives") or []:
+            origin, _, name = str(src).partition(".")
+            if name and name in (hidden_by.get(origin) or []) and not st.get("external"):
+                errs.append(f"étape '{sid}' : reçoit '{src}', un champ caché : seule une étape external le reçoit "
+                            "(les autres ne voient jamais la part cachée)")
+        loop = st.get("loop")
+        if loop is None:
+            continue
+        if not (isinstance(loop, dict) and isinstance(loop.get("to"), str) and isinstance(loop.get("ceiling"), str)):
+            errs.append(f"étape '{sid}' : loop est « to: <étape antérieure>, ceiling: <plafond des réglages> »")
+            continue
+        if field is None:
+            errs.append(f"étape '{sid}' : loop demande verdict_field (c'est son verdict qui renvoie en arrière)")
+        if loop["to"] not in ids or ids.index(loop["to"]) >= i:
+            errs.append(f"étape '{sid}' : loop.to '{loop['to']}' doit être une étape antérieure")
+        else:
+            spans.append((ids.index(loop["to"]), i, sid))
+    for a in range(len(spans)):
+        for b in range(a + 1, len(spans)):
+            if spans[a][0] <= spans[b][1] and spans[b][0] <= spans[a][1]:
+                errs.append(f"étapes '{spans[a][2]}' et '{spans[b][2]}' : leurs boucles se recouvrent (le format 4 minimal "
+                            "n'a pas de boucles imbriquées)")
+    return errs
+
+
+def load_reglages():
+    """The settings file (A4) as a dict, or a message when it cannot be read."""
+    try:
+        data = yaml.safe_load(REGLAGES_PATH.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        return None, f"réglages introuvables ou illisibles : {REGLAGES_PATH} ({type(exc).__name__})"
+    if not isinstance(data, dict) or not isinstance(data.get("plafonds"), dict):
+        return None, f"réglages : {REGLAGES_PATH} n'a pas de groupe « plafonds »"
+    return data, None
 
 
 def validate_workflow(fm: dict, body: str) -> list:
@@ -355,6 +496,10 @@ def validate_workflow(fm: dict, body: str) -> list:
         errs.append("summary_fr must be a non-empty string (one sentence shown to the user)")
     if not steps[0].get("produces_context_sheet"):
         errs.append("the first step must produce the context sheet (produces_context_sheet: true)")
+    errs += format4_errors(wf)
+    if type(wf.get("format")) is int and wf["format"] >= LOOP_FORMAT:
+        reglages, problem = load_reglages()
+        errs += [problem] if problem else reglages_errors(wf, reglages)
     return errs
 
 

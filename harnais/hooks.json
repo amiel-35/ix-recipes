@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {"type": "command", "command": "python3 \"$R/harnais/harnais.py\" hook"}
+        ]
+      }
+    ]
+  }
+}

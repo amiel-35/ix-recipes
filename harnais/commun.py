@@ -27,6 +27,7 @@ ETAT_FILE = "etat.json"
 EMPREINTES_FILE = "empreintes.sha256"
 JETON_FILE = "jeton"             # au scellé : la preuve que l'appelant tient le scellé du sujet (voir `exiger_pilote`)
 PILOTE_FILE = "pilote.json"      # au scellé : la copie de ce que seul le pilote écrit dans l'état (suites, gel)
+
 PARCOURS_SLUG = "amont"          # le parcours de l'amont, dans ./parcours/ du sujet
 TRACE_SCHEMA = 1
 
@@ -111,53 +112,85 @@ def reglages():
         raise HarnaisError(str(exc)) from None
 
 
-def scelle(sujet):
-    """Le dossier scellé de ce sujet : `$IX_SCELLE_DIR/<clé du sujet>`. Refusé comme le refuse l'exécuteur : variable
-    absente, dossier dans un dépôt git, ou lié à un chemin que lit le producteur."""
+def scelle(sujet, creer=False):
+    """Le dossier scellé de ce sujet, sous `$IX_SCELLE_DIR` : son nom est tiré au hasard au lancement et gardé dans l'index du
+    scellé, jamais calculé depuis le chemin du sujet (`P.seal_dir`). Refusé comme le refuse l'exécuteur : variable absente, dossier
+    dans un dépôt git, ou lié à un chemin que lit le producteur. Refusé aussi quand le sujet n'a pas de scellé sous cet emplacement
+    (`creer` : seul le lancement en crée un)."""
     try:
         racine = P.seal_root(sujet)
+        dossier = P.seal_dir(racine, sujet, create=creer)
     except P.ParcoursError as exc:
         raise HarnaisError(str(exc)) from None
-    dossier = racine / P.seal_key(sujet)
-    dossier.mkdir(parents=True, exist_ok=True)
-    os.chmod(dossier, 0o700)
+    if dossier is None:
+        raise HarnaisError(f"ce sujet n'a pas de scellé sous {P.SEAL_ENV} : l'emplacement donné n'est pas celui de son lancement")
     return dossier
 
 
-def scelle_si_fourni(sujet):
-    """Le dossier scellé quand l'appelant fournit `IX_SCELLE_DIR` (le pilote), None sinon (la session de production, qui ne
-    la reçoit pas). Une variable fournie mais refusée (dépôt git, chemin que lit le producteur) est refusée comme ailleurs."""
-    if not os.environ.get(P.SEAL_ENV, "").strip():
+POINTEUR = re.compile(r"--garde\s+\"([0-9a-f]+)\"")
+
+
+def coder_pointeur(dossier):
+    """Le pointeur tel que les réglages le portent : l'emplacement en hexadécimal. Ce n'est pas un secret (le décoder est trivial) : c'est
+    ce qui évite qu'un `grep`, un affichage de réglages ou une erreur écrive le nom de l'emplacement en clair dans une sortie que la
+    production lit. Ce qui le lui ferme est le refus de lire ces réglages (hook)."""
+    return str(dossier).encode("utf-8").hex()
+
+
+def decoder_pointeur(valeur):
+    return Path(bytes.fromhex(valeur).decode("utf-8"))
+
+
+def pointeur_declare(sujet):
+    """Le scellé que les hooks déclarés au gel désignent (`--garde` dans `.claude/settings.json` du sujet), ou None avant le gel.
+    Le hook de fin de tour lit la garde à cet endroit : il ne reçoit pas `IX_SCELLE_DIR`."""
+    try:
+        reglages = json.loads((Path(sujet) / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
         return None
-    return scelle(sujet)
+    for entrees in (reglages.get("hooks") or {}).values():
+        for entree in entrees if isinstance(entrees, list) else []:
+            for hook in (entree.get("hooks") or []) if isinstance(entree, dict) else []:
+                trouve = POINTEUR.search(str(hook.get("command", "")))
+                if trouve:
+                    return decoder_pointeur(trouve.group(1))
+    return None
 
 
 def creer_jeton(dossier_scelle):
-    """Écrit au scellé un jeton neuf et rend son sha256, que l'état du harnais garde : l'état prouve qu'un jeton existe,
-    il ne le donne pas. Détenir le scellé du sujet, c'est pouvoir lire ce jeton."""
+    """Écrit au scellé un jeton neuf et rend son sha256, que la garde (au scellé) garde : elle prouve qu'un jeton existe, elle ne le
+    donne pas. Détenir le scellé du sujet, c'est pouvoir lire ce jeton. La référence n'est ni dans l'état du sujet ni dans aucun
+    fichier que la production écrit."""
     jeton = secrets.token_hex(32)
     write_atomic(Path(dossier_scelle) / JETON_FILE, jeton + "\n", mode=0o600)
     return sha256_text(jeton)
 
 
-def exiger_pilote(sujet, etat, commande):
+def exiger_pilote(sujet, commande):
     """Rend le dossier scellé du sujet, ou refuse : c'est la garde de toute commande réservée au pilote. Elle ne regarde
     ni la chaîne de la commande ni la façon dont l'outil a été appelé (chemin, variable, import, copie du script) : elle
     exige de **tenir le scellé de ce sujet**, ce que la session de production ne peut pas faire puisqu'elle ne reçoit pas
-    `IX_SCELLE_DIR` et que le jeton n'est écrit dans aucun fichier qu'elle lit. Un dossier fabriqué ne porte pas le jeton."""
+    `IX_SCELLE_DIR`. Ce qu'une commande du pilote change vit au scellé (la garde, les suites, les empreintes) : une copie
+    du script qui sauterait cette garde ne changerait rien de ce que les hooks appliquent."""
     if not os.environ.get(P.SEAL_ENV, "").strip():
         raise HarnaisError(f"« {commande} » est une commande du pilote : elle exige l'emplacement des scellés ({P.SEAL_ENV}), "
                            "que la session de production ne reçoit pas")
-    dossier = scelle(sujet)
-    attendu = (etat or {}).get("pilote_sha256")
-    jeton = dossier / JETON_FILE
+    faux = f"« {commande} » est une commande du pilote : le scellé donné par {P.SEAL_ENV} n'est pas celui de ce sujet"
     try:
-        valide = bool(attendu) and sha256_text(jeton.read_text(encoding="utf-8").strip()) == attendu
-    except OSError:
+        dossier = scelle(sujet)
+    except HarnaisError as exc:
+        raise HarnaisError(f"{faux} ({exc})") from None
+    try:
+        garde = json.loads((dossier / "garde.json").read_text(encoding="utf-8"))
+        attendu = garde.get("pilote_sha256")
+        valide = bool(attendu) and sha256_text((dossier / JETON_FILE).read_text(encoding="utf-8").strip()) == attendu
+    except (OSError, ValueError):
         valide = False
     if not valide:
-        raise HarnaisError(f"« {commande} » est une commande du pilote : le scellé donné par {P.SEAL_ENV} n'est pas celui de ce sujet "
-                           "(jeton absent ou différent)")
+        raise HarnaisError(faux + " (jeton absent ou différent)")
+    declare = pointeur_declare(sujet)
+    if declare is not None and declare.resolve() != dossier.resolve():
+        raise HarnaisError(faux + " (ce n'est pas le scellé que les hooks du gel désignent)")
     return dossier
 
 

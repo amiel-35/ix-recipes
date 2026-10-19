@@ -5,7 +5,7 @@
     harnais.py trace                                       écrit ou met à jour la trace A3 du sujet
     harnais.py suite CLE SUITE [NOMBRE|TEXTE]              consigne la suite choisie par le pilote à un plafond atteint
     harnais.py contre-verif FICHIER                        rend à l'amont la sortie de la contre-vérification
-    harnais.py geler DOSSIER_LIVRABLE FICHIER...           fige les fichiers, scelle la part cachée, déclare le hook
+    harnais.py geler DOSSIER_LIVRABLE FICHIER...           fige les fichiers, scelle la part cachée, declare le hook
     harnais.py sceau                                       (pilote) le chemin du scellé du sujet
     harnais.py empreintes                                  vérifie les empreintes des fichiers figés
     harnais.py tour | tour-correction                      avant un tour de production | de correction
@@ -14,11 +14,15 @@
     harnais.py juge                                        lance le juge du sujet
     harnais.py ouvrir                                      fin du jugement : verse la part cachée et la trace du juge
     harnais.py hook                                        événement PreToolUse (JSON sur l'entrée standard)
+    harnais.py hook-stop --garde DOSSIER                   événement Stop : compte le tour, arrête la boucle au plafond
+    harnais.py hook-prompt --garde DOSSIER                 événement UserPromptSubmit : refuse un tour que le plafond ou un écart interdit
 
 Chaque commande tourne dans le dossier du sujet (variables S, R, L), avec IX_SCELLE_DIR donné par l'appelant.
-La session de production ne reçoit pas IX_SCELLE_DIR : elle ne lance que `tour`, `tour-correction`, `fin-production` (et le
-hook), qui n'en ont pas besoin. Les autres commandes l'exigent ; `sceau`, `suite`, `contre-verif`, `geler`, `regeler`, `juge`
-et `ouvrir` exigent de plus de tenir le scellé du sujet (le jeton), quelle que soit la façon dont l'outil est appelé.
+La session de production ne reçoit pas IX_SCELLE_DIR et ne lance rien de ce harnais : les tours sont comptés par les hooks de
+Claude Code (`hook-stop` à chaque fin de tour, `hook-prompt` au début, `hook` avant chaque outil), qui lisent la garde au scellé.
+`tour` et `tour-correction` font le même compte pour le pilote (et les essais) ; `fin-production` n'exige rien. Toute autre
+commande exige IX_SCELLE_DIR ; `sceau`, `suite`, `contre-verif`, `geler`, `regeler`, `juge` et `ouvrir` exigent de plus de tenir
+le scellé du sujet (le jeton), quelle que soit la façon dont l'outil est appelé.
 Code de sortie 0 : accepté ; 1 : refusé, avec une ligne qui nomme la cause ; 2 : ligne de commande mal construite.
 """
 
@@ -33,13 +37,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import commun as C                      # noqa: E402
+import garde as G                       # noqa: E402
 import trace_a3                         # noqa: E402
 from commun import HarnaisError, P      # noqa: E402
 
-GOAL_FILE = "goal.md"                    # le goal du sujet, quand il est posé à la racine ; sinon la sortie de l'étape du goal
 CONSTAT_FILE = "constat-juge.md"         # le constat destiné au producteur : l'exigence de chaque ligne en échec
 JUGEMENT_DIR = "jugement"                # là où le jugement s'ouvre, à la fin
-SLOT = re.compile(r"<[A-Z][A-Z0-9_]+>")
 LIGNE_VERDICT = re.compile(r"^\|(.+)\|\s*$")
 SUITES_AVEC_NOMBRE = ("relancer",)
 SUITES_AVEC_TEXTE = ("contourner", "livrer_avec_reserve")
@@ -48,6 +51,15 @@ SUITES_AVEC_TEXTE = ("contourner", "livrer_avec_reserve")
 # ---------------------------------------------------------------------------
 # Petits outils
 # ---------------------------------------------------------------------------
+# ce qui se contrôle avant un tour vit dans garde.py, où les hooks le trouvent aussi
+GOAL_FILE = G.GOAL_FILE
+lire_empreintes = G.lire_empreintes
+verifier_empreintes = G.verifier_empreintes
+trouver_goal = G.trouver_goal
+emplacements_vides = G.emplacements_vides
+controle_avant_tour = G.controle_avant_tour
+
+
 def ligne_etat(etat, cle, row, t=None):
     """Consigne un geste du harnais comme une ligne de T3 (la trace est reconstruite de l'état)."""
     etat.setdefault("lignes", []).append({"t": t or P.now_us(), "cle": cle, "row": row})
@@ -125,52 +137,6 @@ def ecrire_empreintes(sujet, fichiers, scelle):
     return lignes
 
 
-def lire_empreintes(chemin):
-    attendu = {}
-    for ligne in Path(chemin).read_text(encoding="utf-8").splitlines():
-        if not ligne.strip():
-            continue
-        empreinte, _, nom = ligne.partition("  ")
-        attendu[nom] = empreinte
-    return attendu
-
-
-def verifier_empreintes(sujet, etat, scelle=None):
-    """Le premier écart, en nommant le fichier, ou None. Les empreintes du sujet sont comparées aux fichiers.
-    Avec le scellé (le pilote), elles sont comparées en plus à la copie qu'il garde : un producteur qui récrit les deux
-    fichiers ne rattrape pas la copie qu'il ne voit pas. Sans le scellé (`tour`, lancé par la session de production, qui
-    ne le reçoit pas), le fichier d'empreintes est comparé à son sha256 gardé dans l'état : un écart y est vu, mais un
-    producteur qui récrirait l'état et le fichier ne serait vu qu'au prochain geste du pilote (`empreintes`, `juge`)."""
-    if not etat.get("gel"):
-        return "le sujet n'est pas gelé"
-    chez_sujet = Path(sujet) / C.ETAT_DIR / C.EMPREINTES_FILE
-    if not chez_sujet.is_file():
-        return f"le fichier d'empreintes {C.ETAT_DIR}/{C.EMPREINTES_FILE} a disparu"
-    if scelle is not None:
-        chez_scelle = scelle / C.EMPREINTES_FILE
-        if not chez_scelle.is_file():
-            return "la copie des empreintes gardée au scellé a disparu"
-        if chez_sujet.read_bytes() != chez_scelle.read_bytes():
-            return f"le fichier d'empreintes {C.ETAT_DIR}/{C.EMPREINTES_FILE} ne correspond plus à la copie du scellé"
-        reference = chez_scelle
-    else:
-        gardee = etat["gel"].get("empreintes_sha256")
-        if gardee and C.sha256_file(chez_sujet) != gardee:
-            return f"le fichier d'empreintes {C.ETAT_DIR}/{C.EMPREINTES_FILE} ne correspond plus à l'empreinte gardée dans l'état du harnais"
-        reference = chez_sujet
-    attendu = lire_empreintes(reference)
-    figes = etat["gel"]["fichiers"]
-    if sorted(attendu) != sorted(figes):
-        return "la liste des fichiers figés a changé"
-    for fichier in figes:
-        chemin = Path(sujet) / fichier
-        if not chemin.is_file():
-            return f"{fichier} : fichier figé disparu"
-        if C.sha256_file(chemin) != attendu[fichier]:
-            return f"{fichier} : l'empreinte a changé"
-    return None
-
-
 def enregistrement_pilote(etat):
     """Ce que seul le pilote écrit dans l'état (les suites consignées, les tours ajoutés, le gel) : la copie qui en est gardée
     au scellé permet de voir qu'une main autre que la sienne l'a changé. Les compteurs de tours n'y sont pas : ils sont écrits
@@ -212,30 +178,53 @@ def exiger_etat_scelle(etat, scelle):
         raise HarnaisError(f"écart d'état : {cause}")
 
 
-def trouver_goal(sujet):
-    """Le goal du sujet : `goal.md` à la racine du sujet, sinon la sortie de l'étape du goal de l'amont."""
-    direct = Path(sujet) / GOAL_FILE
-    if direct.is_file():
-        return direct.read_text(encoding="utf-8")
-    amont = C.etat_amont(sujet)
-    if amont:
-        etape = C.manifeste().get("ETAPE_GOAL")
-        for step in amont["steps"]:
-            if step["id"] == etape and (step.get("handoff") or {}).get("goal"):
-                return step["handoff"]["goal"]
-    return None
+def ligne_tour(sujet, etat, ev):
+    """La ligne de T3 d'un tour compté (par un hook de fin de tour ou par `tour`), reconstruite de l'événement de la garde."""
+    nom, n, limite = ev["nom"], ev["n"], ev["limite"]
+    cle = f"tours_{nom}_max"
+    modele = etat["reglages"]["modeles"].get("production")
+    entree = " ; ".join(etat["gel"]["fichiers"])
+    if (Path(sujet) / GOAL_FILE).is_file():
+        entree = f"{GOAL_FILE} ; " + entree
+    ligne_etat(etat, f"tour:{nom}:{n}", {
+        "étape": "4" if nom == "goal" else "6", "occurrence": f"tour {n}", "granularité": "session",
+        "entrée": entree, "sortie": livrable_affiche(sujet, etat), "agent": "agent de production, contexte repris",
+        "modèle": C.modele_nom(modele), "durée": "n.c.", "jetons": "n.c.", "portée_jetons": "session", "coût": "n.c.",
+        "source_coût": "n.c.",
+        "méthode_coût": "la session sous /goal n'expose au harnais ni jetons ni dollars : à relever dans la session",
+        "note": "tour compté par le hook de fin de tour (garde au scellé), empreintes vérifiées avant le tour ; jetons non relevés"
+                + (f" ; plafond {cle} atteint : la main revient au pilote, qui seul choisit la suite" if ev["atteint"] else "")}, ev["t"])
+    if ev["atteint"]:
+        etat["plafonds_atteints"].append({
+            "id": f"tours_{nom}:{len(etat['plafonds_atteints']) + 1}", "plafond": cle, "cle_ligne": f"tour:{nom}:{n}", "at": ev["t"],
+            "constat": (f"dernier résultat : {n} tour(s) comptés sur {limite}, plafond atteint ; reste en échec : la condition d'arrêt "
+                        "du goal n'est pas établie (dernier lancement du script à lire dans la session) ; livré : "
+                        f"{livrable_affiche(sujet, etat)}"),
+            "suites_proposees": etat["reglages"]["suites"][f"tours_{nom}"]})
 
 
-def emplacements_vides(goal):
-    """Les emplacements réservés encore en chevrons hors de la section « Valeurs fixées plus tard » du goal."""
-    texte, dedans = [], False
-    for ligne in goal.splitlines():
-        titre = re.match(r"#{1,6}\s+(.*)", ligne)
-        if titre:
-            dedans = bool(re.match(r"(values fixed later|valeurs fixées)", titre.group(1).strip(), re.I))
-        if not dedans:
-            texte.append(ligne)
-    return sorted(set(SLOT.findall("\n".join(texte))))
+def synchroniser(sujet, etat, garde):
+    """Recopie la garde dans l'état du sujet, qui n'est qu'un affichage : les compteurs, et les tours comptés par les hooks depuis la
+    dernière fois (lignes de T3, plafonds atteints). L'état ne fait jamais foi pour un compteur : s'il annonce plus de tours que la
+    garde, c'est une écriture étrangère, et on la refuse."""
+    for nom in G.COMPTEURS:
+        if etat["tours"].get(nom, 0) > garde["tours"][nom]:
+            raise HarnaisError(f"écart de compteur : l'état annonce {etat['tours'][nom]} tour(s) de {nom}, la garde en compte "
+                               f"{garde['tours'][nom]} : .harnais/etat.json a été modifié autrement que par les commandes du harnais")
+    for ev in garde["journal"]:
+        if ev["seq"] > etat.get("seq_journal", 0):
+            ligne_tour(sujet, etat, ev)
+            etat["seq_journal"] = ev["seq"]
+    etat["tours"] = dict(garde["tours"])
+
+
+def charger_synchro(sujet, scelle):
+    """(état, garde) : l'état du sujet recopié de la garde, que le commande enregistre ensuite ; refuse sur un écart de compteur."""
+    etat = C.charger_etat(sujet)
+    garde = G.charger(scelle, sujet)
+    if etat.get("gel"):
+        synchroniser(sujet, etat, garde)
+    return etat, garde
 
 
 # ---------------------------------------------------------------------------
@@ -243,7 +232,7 @@ def emplacements_vides(goal):
 # ---------------------------------------------------------------------------
 def cmd_lancer(args):
     sujet = C.dossier_sujet()
-    C.scelle(sujet)
+    C.scelle(sujet, creer=True)
     if C.charger_etat(sujet, requis=False):
         raise HarnaisError("ce sujet est déjà lancé (voir .harnais/etat.json)")
     demande = sujet / "demande.md"
@@ -288,9 +277,10 @@ def cmd_lancer(args):
         "suites": [], "plafonds_atteints": [], "elements": [], "points": [], "juge": {"appels": []},
         "gel": None, "livrable": None, "ouvert": None,
     }
-    etat["pilote_sha256"] = C.creer_jeton(C.scelle(sujet))
+    scelle = C.scelle(sujet)
+    G.sauver(scelle, sujet, G.neuve(sujet, C.creer_jeton(scelle), etat["reglages"]["plafonds"]))
     C.sauver_etat(sujet, etat)
-    sceller_pilote(C.scelle(sujet), etat)
+    sceller_pilote(scelle, etat)
     trace_a3.ecrire(sujet)
     print(f"Sujet lancé : {sujet.name} (type {args.type}). Parcours de l'amont : parcours/{C.PARCOURS_SLUG}. Trace : {trace_a3.TRACE_FILE}.")
     return 0
@@ -301,7 +291,9 @@ def cmd_lancer(args):
 # ---------------------------------------------------------------------------
 def cmd_trace(args):
     sujet = C.dossier_sujet()
-    C.scelle(sujet)
+    scelle = C.scelle(sujet)
+    etat, _garde = charger_synchro(sujet, scelle)
+    C.sauver_etat(sujet, etat)
     chemin = trace_a3.ecrire(sujet)
     print(f"Trace A3 écrite : {chemin.relative_to(sujet)}")
     return 0
@@ -309,8 +301,8 @@ def cmd_trace(args):
 
 def cmd_suite(args):
     sujet = C.dossier_sujet()
-    etat = C.charger_etat(sujet)
-    scelle = C.exiger_pilote(sujet, etat, "suite")
+    scelle = C.exiger_pilote(sujet, "suite")
+    etat, garde = charger_synchro(sujet, scelle)
     exiger_etat_scelle(etat, scelle)
     suites = etat["reglages"]["suites"]
     cle = args.cle[:-4] if args.cle.endswith("_max") else args.cle   # `tours_goal_max` (le plafond) ou `tours_goal` (ses suites)
@@ -336,6 +328,7 @@ def cmd_suite(args):
         pending = (amont or {}).get("pending")
         if not pending or pending["type"] != "ceiling":
             raise HarnaisError("aucun plafond des passes de vérification n'est atteint dans l'amont")
+        C.sauver_etat(sujet, etat)
         options = ["--suite", args.suite, "--by", pilote]
         if nombre:
             options += ["--n", str(nombre)]
@@ -355,6 +348,14 @@ def cmd_suite(args):
                            "une suite ne se consigne qu'à un plafond atteint")
     enregistrement = {"cle": cle, "suite": args.suite, "n": nombre, "texte": texte, "par": pilote, "at": P.now(),
                       "t": P.now_us(), "atteint_id": atteint["id"], "apres_gel": (etat["gel"] or {}).get("regels", 0), "utilise": False}
+    def appliquer(g):   # la garde : ce que les hooks appliquent au prochain tour
+        if nombre:
+            g["extra"][compteur] += nombre
+        if args.suite == "abandonner":
+            g["abandonne"] = True
+        if args.suite == "livrer_avec_reserve":
+            g["livre_avec_reserve"] = True
+    G.modifier(scelle, sujet, appliquer)
     if nombre:
         etat["extra"][cle] += nombre
     if args.suite == "abandonner":
@@ -371,7 +372,7 @@ def cmd_suite(args):
 
 def cmd_contre_verif(args):
     sujet = C.dossier_sujet()
-    C.exiger_pilote(sujet, C.charger_etat(sujet), "contre-verif")
+    C.exiger_pilote(sujet, "contre-verif")
     etape = C.manifeste()["ETAPE_CONTRE_VERIF"]
     amont = C.etat_amont(sujet)
     pending = (amont or {}).get("pending")
@@ -409,13 +410,15 @@ def part_cachee(sujet, etat, scelle):
     return trouves
 
 
-def declarer_hook(sujet):
-    """Déclare le hook de HOOKS_FICHIER dans les réglages de projet du sujet (`.claude/settings.json`), mot pour mot et sans
-    toucher à ce qui s'y trouve déjà. La commande du hook cite `$R`, la racine d'ix-recipes : le pilote l'exporte dans
-    l'environnement de la session de production, comme il le fait pour toutes les commandes du harnais."""
+def declarer_hook(sujet, scelle):
+    """Déclare les hooks de HOOKS_FICHIER dans les réglages de projet du sujet (`.claude/settings.json`), mot pour mot et sans
+    toucher à ce qui s'y trouve déjà : `PreToolUse` tel quel ; `Stop` (le compte des tours) et `UserPromptSubmit` (le refus d'un tour
+    interdit), où `{GARDE}` devient le scellé du sujet (la commande le garde en argument `--garde`, le hook ne reçoit pas
+    IX_SCELLE_DIR). La commande des hooks cite `$R`, la racine d'ix-recipes : le pilote l'exporte dans l'environnement de la session de
+    production, comme il le fait pour toutes les commandes du harnais."""
     source = C.chemin_manifeste("HOOKS_FICHIER")
     try:
-        entrees = json.loads(source.read_text(encoding="utf-8"))["hooks"]["PreToolUse"]
+        declares = json.loads(source.read_text(encoding="utf-8").replace("{GARDE}", C.coder_pointeur(scelle)))["hooks"]
     except (OSError, ValueError, KeyError) as exc:
         raise HarnaisError(f"fichier des hooks illisible : {source} ({exc})") from None
     cible = Path(sujet) / ".claude" / "settings.json"
@@ -425,10 +428,11 @@ def declarer_hook(sujet):
             reglages = json.loads(cible.read_text(encoding="utf-8"))
         except ValueError:
             raise HarnaisError(f"{cible.relative_to(sujet)} n'est pas du JSON : je n'y touche pas") from None
-    reglages.setdefault("hooks", {}).setdefault("PreToolUse", [])
-    for entree in entrees:
-        if entree not in reglages["hooks"]["PreToolUse"]:
-            reglages["hooks"]["PreToolUse"].append(entree)
+    for evenement, entrees in declares.items():
+        deja = reglages.setdefault("hooks", {}).setdefault(evenement, [])
+        for entree in entrees:
+            if entree not in deja:
+                deja.append(entree)
     C.write_atomic(cible, json.dumps(reglages, indent=2, ensure_ascii=False) + "\n")
     return cible
 
@@ -459,8 +463,8 @@ def elements_caches(etat, cachees, cle_ligne):
 
 def cmd_geler(args):
     sujet = C.dossier_sujet()
-    etat = C.charger_etat(sujet)
-    scelle = C.exiger_pilote(sujet, etat, "geler")
+    scelle = C.exiger_pilote(sujet, "geler")
+    etat, garde = charger_synchro(sujet, scelle)
     exiger_etat_scelle(etat, scelle)
     if etat.get("gel"):
         raise HarnaisError("ce sujet est déjà gelé : après un « contourner », c'est `regeler`")
@@ -475,39 +479,53 @@ def cmd_geler(args):
     t = P.now_us()
     cle = "gel"
     ecrire_empreintes(sujet, fichiers, scelle)
-    declarer_hook(sujet)
+    declarer_hook(sujet, scelle)
     C.write_atomic(scelle / "gel.json", json.dumps({"fichiers": fichiers, "livrable": args.livrable, "t": t}, indent=2) + "\n", mode=0o600)
     pointer_sujet(livrable, sujet)
     etat["gel"] = {"at": t[:19], "t": t, "livrable": args.livrable, "fichiers": fichiers, "regels": 0,
                    "empreintes_sha256": C.sha256_file(Path(sujet) / C.ETAT_DIR / C.EMPREINTES_FILE)}
     etat["elements"] = elements_gel(sujet, fichiers, cle) + elements_caches(etat, cachees, cle)
+
+    def ouvrir_la_garde(g):   # la production commence : les hooks comptent à partir d'ici
+        g["gel"] = {"fichiers": fichiers, "regels": 0}
+        g["phase"] = "goal"
+    G.modifier(scelle, sujet, ouvrir_la_garde)
     ligne_etat(etat, cle, {
         "étape": "3", "occurrence": "gel", "entrée": " ; ".join(fichiers), "sortie": f"{C.ETAT_DIR}/{C.EMPREINTES_FILE}",
-        "note": "empreintes relevées ; hook de gel déclaré dans .claude/settings.json ; part cachée "
+        "note": "empreintes relevées ; hooks du harnais déclarés dans .claude/settings.json ; part cachée "
                 + ("scellée" if cachees else "absente : l'amont n'en a pas produit")}, t)
     C.sauver_etat(sujet, etat)
     sceller_pilote(scelle, etat)
     trace_a3.ecrire(sujet)
-    print(f"Gel : {len(fichiers)} fichier(s) figé(s), {len(cachees)} champ(s) caché(s) scellé(s), hook déclaré dans .claude/settings.json.")
+    print(f"Gel : {len(fichiers)} fichier(s) figé(s), {len(cachees)} champ(s) caché(s) scellé(s), hooks déclarés dans .claude/settings.json.")
     return 0
 
 
 def cmd_empreintes(args):
     sujet = C.dossier_sujet()
-    etat = C.charger_etat(sujet)
-    scelle = C.exiger_pilote(sujet, etat, "empreintes")
-    ecart = verifier_empreintes(sujet, etat, scelle)
+    scelle = C.exiger_pilote(sujet, "empreintes")
+    etat, garde = charger_synchro(sujet, scelle)
+    if not etat.get("gel"):
+        raise HarnaisError("le sujet n'est pas gelé")
+    ecart = verifier_empreintes(sujet, garde["gel"]["fichiers"], scelle)
     if ecart:
         raise HarnaisError(f"écart d'empreinte : {ecart}")
     exiger_etat_scelle(etat, scelle)
+    if sorted(etat["gel"]["fichiers"]) != sorted(garde["gel"]["fichiers"]):
+        raise HarnaisError("écart d'état : la liste des fichiers figés de .harnais/etat.json n'est pas celle de la garde")
+    declare = C.pointeur_declare(sujet)
+    if declare is None or declare.resolve() != scelle.resolve():
+        raise HarnaisError("écart de réglages : les hooks déclarés dans .claude/settings.json ne désignent pas le scellé de ce sujet "
+                           "(compteur et plafond ne sont plus appliqués)")
+    C.sauver_etat(sujet, etat)
     print(f"Empreintes intactes ({len(etat['gel']['fichiers'])} fichier(s)).")
     return 0
 
 
 def cmd_regeler(args):
     sujet = C.dossier_sujet()
-    etat = C.charger_etat(sujet)
-    scelle = C.exiger_pilote(sujet, etat, "regeler")
+    scelle = C.exiger_pilote(sujet, "regeler")
+    etat, garde = charger_synchro(sujet, scelle)
     if not etat.get("gel"):
         raise HarnaisError("le sujet n'est pas gelé : `geler` d'abord")
     exiger_etat_scelle(etat, scelle)
@@ -516,7 +534,7 @@ def cmd_regeler(args):
     if not derogation:
         raise HarnaisError("aucun « contourner » n'est consigné depuis le dernier gel : un critère ne se revoit que par cette suite, "
                            "avec une dérogation tracée (`suite tours_goal|tours_correction contourner \"critère et raison\"`)")
-    fichiers = etat["gel"]["fichiers"]
+    fichiers = garde["gel"]["fichiers"]   # la liste de la garde, pas celle de l'état
     for f in fichiers:
         if not (Path(sujet) / f).is_file():
             raise HarnaisError(f"{f} : fichier figé disparu, rien à regeler")
@@ -531,6 +549,14 @@ def cmd_regeler(args):
     etat["tours"] = {"goal": 0, "correction": 0}
     etat["extra"] = {"tours_goal": 0, "tours_correction": 0}
     etat["abandonne"] = False
+
+    def rouvrir_la_garde(g):   # les compteurs repartent de zéro, la production reprend
+        g["tours"] = {k: 0 for k in G.COMPTEURS}
+        g["extra"] = {k: 0 for k in G.COMPTEURS}
+        g["abandonne"] = False
+        g["gel"]["regels"] = regels + 1
+        g["phase"] = "goal"
+    G.modifier(scelle, sujet, rouvrir_la_garde)
     for e in etat["elements"]:
         if e["état"] == "figé" and e["emplacement"] in fichiers:
             e["empreinte_sha256"], e["cle_ligne"] = C.sha256_file(Path(sujet) / e["emplacement"]), cle
@@ -552,64 +578,27 @@ def cmd_regeler(args):
 # tour, tour-correction
 # ---------------------------------------------------------------------------
 def cmd_tour(args, nom="goal"):
-    """Lancé par la session de production, qui ne reçoit pas IX_SCELLE_DIR : sans la variable, les empreintes sont vérifiées
-    sans la copie du scellé (voir `verifier_empreintes`) ; avec elle (le pilote), avec la copie."""
+    """Compte un tour pour le pilote (et pour les essais) : le même compte, dans la même garde, que le hook de fin de tour fait à
+    chaque tour sans que la production lance quoi que ce soit. Il exige le scellé (IX_SCELLE_DIR) : la session de production, qui
+    ne le reçoit pas, n'a rien à lancer ici. Un appel refusé ne compte pas de tour ; un tour compté deux fois (par le hook et par cet
+    appel) ne fait qu'avancer le plafond."""
     sujet = C.dossier_sujet()
-    scelle = C.scelle_si_fourni(sujet)
+    if not os.environ.get(P.SEAL_ENV, "").strip():
+        raise HarnaisError("tour refusé : les tours sont comptés par les hooks de fin de tour ; cette commande est celle du pilote "
+                           f"et exige l'emplacement des scellés ({P.SEAL_ENV})")
+    scelle = C.scelle(sujet)
     etat = C.charger_etat(sujet)
     cle = "tours_goal" if nom == "goal" else "tours_correction"
-    if not etat.get("gel"):
-        raise HarnaisError("tour refusé : le sujet n'est pas gelé")
-    ecart = verifier_empreintes(sujet, etat, scelle)
-    if ecart:
-        raise HarnaisError(f"tour refusé, écart d'empreinte : {ecart}")
-    goal = trouver_goal(sujet)
-    if goal is None:
-        raise HarnaisError(f"tour refusé : aucun goal ({GOAL_FILE} à la racine du sujet, ou la sortie de l'étape du goal de l'amont)")
-    vides = emplacements_vides(goal)
-    if vides:
-        raise HarnaisError(f"tour refusé : le goal contient encore des emplacements réservés non remplis : {', '.join(vides)}")
-    if etat.get("abandonne"):
-        raise HarnaisError("tour refusé : le sujet est abandonné (suite consignée)")
-    if etat.get("livre_avec_reserve"):
-        raise HarnaisError("tour refusé : la livraison avec réserve est consignée")
-    limite = plafond_valeur(etat, f"{cle}_max") + etat["extra"][cle]
-    n = etat["tours"][nom]
-    if n >= limite:
-        atteint = next((a for a in etat["plafonds_atteints"] if a["plafond"] == f"{cle}_max"
-                        and not any(s.get("atteint_id") == a["id"] for s in etat["suites"])), None)
-        autre = next((s for s in reversed(etat["suites"]) if s["cle"] == cle and s["apres_gel"] == etat["gel"]["regels"]
-                      and not s["utilise"]), None)
-        if atteint or not autre:
-            raise HarnaisError(f"tour refusé : le plafond {cle}_max est atteint ({n} tour(s) sur {limite}) et aucune suite n'est "
-                               "consignée : la main revient au pilote, qui seul en choisit une")
-        raise HarnaisError(f"tour refusé : le plafond {cle}_max est atteint ({n} tour(s) sur {limite}) et la suite consignée "
-                           f"est « {autre['suite']} », qui n'ajoute pas de tour")
-    t = P.now_us()
-    n += 1
-    etat["tours"][nom] = n
-    ligne_cle = f"tour:{nom}:{n}"
-    etape = "4" if nom == "goal" else "6"
-    modele = etat["reglages"]["modeles"].get("production")
-    ligne_etat(etat, ligne_cle, {
-        "étape": etape, "occurrence": f"tour {n}", "granularité": "session",
-        "entrée": f"{GOAL_FILE} ; " + " ; ".join(etat["gel"]["fichiers"]) if (Path(sujet) / GOAL_FILE).is_file()
-        else " ; ".join(etat["gel"]["fichiers"]),
-        "sortie": livrable_affiche(sujet, etat), "agent": "agent de production, contexte repris", "modèle": C.modele_nom(modele),
-        "durée": "n.c.", "jetons": "n.c.", "portée_jetons": "session", "coût": "n.c.", "source_coût": "n.c.",
-        "méthode_coût": "la session sous /goal n'expose au harnais ni jetons ni dollars : à relever dans la session",
-        "note": "tour compté par le harnais, empreintes vérifiées avant le tour ; jetons non relevés"
-                + (f" ; plafond {cle}_max atteint : la main revient au pilote, qui seul choisit la suite" if n >= limite else "")}, t)
-    if n >= limite:
-        etat["plafonds_atteints"].append({
-            "id": f"{cle}:{len(etat['plafonds_atteints']) + 1}", "plafond": f"{cle}_max", "cle_ligne": ligne_cle, "at": t,
-            "constat": (f"dernier résultat : {n} tour(s) comptés sur {limite}, plafond atteint ; reste en échec : la condition d'arrêt "
-                        "du goal n'est pas établie (dernier lancement du script à lire dans la session) ; livré : "
-                        f"{livrable_affiche(sujet, etat)}"),
-            "suites_proposees": etat["reglages"]["suites"][cle]})
+
+    def compter(garde):
+        controle_avant_tour(sujet, scelle, garde, nom)
+        return G.compter(garde, nom, P.now_us())
+    ev = G.modifier(scelle, sujet, compter)
+    garde = G.charger(scelle, sujet)
+    synchroniser(sujet, etat, garde)
     C.sauver_etat(sujet, etat)
     trace_a3.ecrire(sujet)
-    print(f"Tour {n} sur {limite} ({'production' if nom == 'goal' else 'correction'}).")
+    print(f"Tour {ev['n']} sur {ev['limite']} ({'production' if nom == 'goal' else 'correction'}).")
     return 0
 
 
@@ -656,8 +645,7 @@ def manifeste_livrable(livrable, exclus=()):
 
 
 def cmd_fin_production(args):
-    sujet = C.dossier_sujet()
-    C.scelle_si_fourni(sujet)   # la session de production peut la lancer : elle n'a pas besoin du scellé
+    sujet = C.dossier_sujet()   # la session de production peut la lancer : elle n'a pas besoin du scellé
     etat = C.charger_etat(sujet)
     if not etat.get("gel"):
         raise HarnaisError("fin de production refusée : le sujet n'est pas gelé")
@@ -807,14 +795,14 @@ def nettoyer_session(dossier):
 
 def cmd_juge(args):
     sujet = C.dossier_sujet()
-    etat = C.charger_etat(sujet)
-    scelle = C.exiger_pilote(sujet, etat, "juge")
+    scelle = C.exiger_pilote(sujet, "juge")
+    etat, garde = charger_synchro(sujet, scelle)
     if not etat.get("gel"):
         raise HarnaisError("jugement refusé : le sujet n'est pas gelé")
     cause = verifier_pilote(etat, scelle)
     if cause:
         raise HarnaisError(f"jugement refusé, écart d'état : {cause}")
-    ecart = verifier_empreintes(sujet, etat, scelle)
+    ecart = verifier_empreintes(sujet, garde["gel"]["fichiers"], scelle)
     if ecart:
         raise HarnaisError(f"jugement refusé, écart d'empreinte : {ecart}")
     cause = livrable_inchange(sujet, etat)
@@ -892,6 +880,7 @@ def cmd_juge(args):
     etat["elements"] = [e for e in etat["elements"] if not (e["élément"] == "trace du juge" and e.get("appel") == n)] + [{
         "élément": "trace du juge", "état": "scellé", "empreinte_sha256": C.sha256_file(chemin_sortie), "emplacement": "non écrit",
         "cle_ligne": cle, "ouvert_à": "à venir", "appel": n}]
+    G.modifier(scelle, sujet, lambda g: g.update(phase="correction") if g.get("phase") in ("goal", "correction") else None)
     C.sauver_etat(sujet, etat)
     trace_a3.ecrire(sujet)
     print(f"Jugement {n} : {len(lignes)} exigence(s), {len(echecs)} en échec dont {sum(1 for l in echecs if l[1] == 'cachée')} cachée(s). "
@@ -904,8 +893,8 @@ def cmd_juge(args):
 # ---------------------------------------------------------------------------
 def cmd_ouvrir(args):
     sujet = C.dossier_sujet()
-    etat = C.charger_etat(sujet)
-    scelle = C.exiger_pilote(sujet, etat, "ouvrir")
+    scelle = C.exiger_pilote(sujet, "ouvrir")
+    etat, garde = charger_synchro(sujet, scelle)
     exiger_etat_scelle(etat, scelle)
     appels = etat["juge"]["appels"]
     if not appels:
@@ -941,6 +930,7 @@ def cmd_ouvrir(args):
         if cle in verses:
             e["état"], e["emplacement"], e["ouvert_à"] = "ouvert", verses[cle], t[:19]
     etat["ouvert"] = {"at": t[:19], "fichiers": sorted(verses.values())}
+    G.modifier(scelle, sujet, lambda g: g.update(phase="ouvert"))
     C.sauver_etat(sujet, etat)
     trace_a3.ecrire(sujet)
     print(f"Jugement ouvert : {', '.join(sorted(verses.values())) or 'rien à verser'}.")
@@ -949,14 +939,23 @@ def cmd_ouvrir(args):
 
 def cmd_sceau(args):
     sujet = C.dossier_sujet()
-    etat = C.charger_etat(sujet, requis=False)
-    print(C.exiger_pilote(sujet, etat, "sceau") if etat else C.scelle(sujet))
+    print(C.exiger_pilote(sujet, "sceau") if C.charger_etat(sujet, requis=False) else C.scelle(sujet))
     return 0
 
 
 def cmd_hook(args):
     import hook
     return hook.main()
+
+
+def cmd_hook_stop(args):
+    import hook
+    return hook.main_stop(C.decoder_pointeur(args.garde))
+
+
+def cmd_hook_prompt(args):
+    import hook
+    return hook.main_prompt(C.decoder_pointeur(args.garde))
 
 
 # ---------------------------------------------------------------------------
@@ -993,6 +992,11 @@ def construire_parseur():
                                 ("ouvrir", cmd_ouvrir, "fin du jugement"),
                                 ("hook", cmd_hook, "événement PreToolUse")):
         sub.add_parser(nom, help=aide).set_defaults(func=fonction)
+    for nom, fonction, aide in (("hook-stop", cmd_hook_stop, "événement Stop : compte le tour"),
+                                ("hook-prompt", cmd_hook_prompt, "événement UserPromptSubmit : refuse un tour interdit")):
+        p = sub.add_parser(nom, help=aide)
+        p.add_argument("--garde", required=True, help="le scellé du sujet (en hexadécimal), déclaré au gel")
+        p.set_defaults(func=fonction)
     return parser
 
 

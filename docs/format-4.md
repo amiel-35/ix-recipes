@@ -57,7 +57,7 @@ Le plafond n'est écrit nulle part dans la recette : `ceiling` nomme une clé de
 
 Un champ déclaré `hidden` est sorti du HANDOFF dès qu'il est produit : l'exécuteur le range dans le **scellé** et ne laisse dans le dossier du parcours qu'une marque (`[champ caché : scellé]`) et son empreinte, dans la sortie de l'étape, dans l'état et dans la trace du message de relance. Aucune étape jouée par l'exécuteur ne le reçoit ; une étape `external` le reçoit, et son message est écrit au scellé.
 
-Le scellé est le dossier donné par la variable d'environnement **`IX_SCELLE_DIR`**, à l'exécution. L'exécuteur le refuse si la variable manque, si le dossier est dans un dépôt git, ou s'il contient, ou s'il est sous, le dossier du sujet, le dossier du livrable (`$L`) ou ix-recipes. Aucune valeur par défaut, aucun chemin déduit, aucun chemin écrit dans un fichier.
+Le scellé est le dossier donné par la variable d'environnement **`IX_SCELLE_DIR`**, à l'exécution. L'exécuteur le refuse si la variable manque, si le dossier est dans un dépôt git, ou s'il contient, ou s'il est sous, le dossier du sujet, le dossier du livrable (`$L`) ou ix-recipes. Aucune valeur par défaut, aucun chemin déduit, aucun chemin écrit dans un fichier. Le dossier de chaque sujet, sous ce scellé, porte un nom **tiré au hasard** la première fois, gardé dans `index.json` à la racine du scellé (clé : le chemin du sujet) : il ne se calcule pas depuis le chemin du sujet et l'état du parcours ne le porte pas.
 
 L'instruction à l'étape qui produit le champ est dans sa mission : la part cachée va dans ce champ **et nulle part ailleurs**.
 

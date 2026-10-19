@@ -1722,10 +1722,30 @@ def subject_dir(parcours_dir):
     return pdir.parent if pdir.name == "parcours" else pdir
 
 
-def seal_key(subject):
-    """The name, inside the sealed place, of the part kept for a subject: its folder name and a hash of its place."""
-    subject = Path(subject).resolve()
-    return f"{slugify(subject.name) or 'sujet'}-{hashlib.sha256(str(subject).encode('utf-8')).hexdigest()[:8]}"
+def seal_dir(root, subject, create=True):
+    """The folder, inside the sealed place, of the part kept for a subject. Its name is drawn at random the first time and
+    kept in `<root>/index.json`, in the sealed place itself: it is computed from nothing the producer reads (not the
+    subject's path), and written in no file of the dossier. None when the subject has none and `create` is false."""
+    root = Path(root)
+    key = str(Path(subject).resolve())
+    index_path = root / "index.json"
+    try:
+        index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.is_file() else {}
+    except ValueError:
+        raise ParcoursError(f"{index_path.name} du scellé est illisible") from None
+    name = index.get(key)
+    if name is None:
+        if not create:
+            return None
+        name = secrets.token_hex(16)
+        index[key] = name
+        write_atomic(index_path, json.dumps(index, indent=2, sort_keys=True) + "\n")
+        os.chmod(index_path, 0o600)
+    folder = root / name
+    if create:
+        folder.mkdir(parents=True, exist_ok=True)
+        os.chmod(folder, 0o700)
+    return folder
 
 
 def seal_root(subject):
@@ -1753,13 +1773,13 @@ def seal_root(subject):
     return root
 
 
-def sealed_path(root, state, step_id, field):
-    return root / state["seal_key"] / state["slug"] / f"{step_id}.{field}.md"
+def sealed_path(root, subject, state, step_id, field):
+    return seal_dir(root, subject) / state["slug"] / f"{step_id}.{field}.md"
 
 
-def write_sealed(root, state, step_id, field, value):
+def write_sealed(root, subject, state, step_id, field, value):
     """Keep a hidden field in the sealed place (an older value is kept as .vN there)."""
-    path = sealed_path(root, state, step_id, field)
+    path = sealed_path(root, subject, state, step_id, field)
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         path.rename(versioned_name(path))
@@ -1769,7 +1789,7 @@ def write_sealed(root, state, step_id, field, value):
 
 
 def read_sealed(state, step_id, field, subject):
-    path = sealed_path(seal_root(subject), state, step_id, field)
+    path = sealed_path(seal_root(subject), subject, state, step_id, field)
     if not path.is_file():
         raise MissingInput(f"{step_id}.{field} : champ caché, absent du scellé")
     return path.read_text(encoding="utf-8")
@@ -1807,13 +1827,14 @@ def seal_hidden(directory, state, defn, step, handoff):
     """Move the hidden fields of a step's HANDOFF into the sealed place; the dossier keeps a mark and a hash."""
     if not defn.get("hidden"):
         return
-    root = seal_root(subject_dir(directory.parent))
+    subject = subject_dir(directory.parent)
+    root = seal_root(subject)
     step["hidden"] = {}
     for field in defn["hidden"]:
         value = handoff.get(field)
         if value is None or value == HIDDEN_MARK:
             continue
-        write_sealed(root, state, defn["id"], field, value)
+        write_sealed(root, subject, state, defn["id"], field, value)
         step["hidden"][field] = hashlib.sha256(value.encode("utf-8")).hexdigest()
         handoff[field] = HIDDEN_MARK
 
@@ -1920,8 +1941,8 @@ def hold_external(directory, state, recipe, idx, skill, message):
                          ((d["id"], h) for d in recipe["steps"] for h in d.get("hidden", ())))
     name = trace_name(idx, defn["id"], "main")
     if carries_hidden:
-        root = seal_root(subject_dir(directory.parent))
-        path = root / state["seal_key"] / state["slug"] / name
+        subject = subject_dir(directory.parent)
+        path = seal_dir(seal_root(subject), subject) / state["slug"] / name
         path.parent.mkdir(parents=True, exist_ok=True)
         write_atomic(path, message)
         os.chmod(path, 0o600)
@@ -3542,7 +3563,6 @@ def cmd_new(args):
     state = new_state(recipe, slug, args.engine or "claude", engine_steps, skills, title)
     if settings:
         data = settings[0]
-        state["seal_key"] = seal_key(subject_dir(base))
         # an agent call takes the model of its role in the settings read now, whatever the recipe file says (CB8)
         state["models"] = {d["id"]: data["modeles"][d["role"]] for d in recipe["steps"] if d["role"] and not d["external"]}
         state["reglages"] = {

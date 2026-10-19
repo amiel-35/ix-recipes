@@ -16,6 +16,9 @@
     harnais.py hook                                        événement PreToolUse (JSON sur l'entrée standard)
 
 Chaque commande tourne dans le dossier du sujet (variables S, R, L), avec IX_SCELLE_DIR donné par l'appelant.
+La session de production ne reçoit pas IX_SCELLE_DIR : elle ne lance que `tour`, `tour-correction`, `fin-production` (et le
+hook), qui n'en ont pas besoin. Les autres commandes l'exigent ; `sceau`, `suite`, `contre-verif`, `geler`, `regeler`, `juge`
+et `ouvrir` exigent de plus de tenir le scellé du sujet (le jeton), quelle que soit la façon dont l'outil est appelé.
 Code de sortie 0 : accepté ; 1 : refusé, avec une ligne qui nomme la cause ; 2 : ligne de commande mal construite.
 """
 
@@ -132,20 +135,30 @@ def lire_empreintes(chemin):
     return attendu
 
 
-def verifier_empreintes(sujet, etat, scelle):
-    """Le premier écart, en nommant le fichier, ou None. Les empreintes du sujet sont comparées aux fichiers, et celles du
-    sujet à la copie gardée au scellé : un producteur qui récrit les deux ne rattrape pas la copie qu'il ne voit pas."""
+def verifier_empreintes(sujet, etat, scelle=None):
+    """Le premier écart, en nommant le fichier, ou None. Les empreintes du sujet sont comparées aux fichiers.
+    Avec le scellé (le pilote), elles sont comparées en plus à la copie qu'il garde : un producteur qui récrit les deux
+    fichiers ne rattrape pas la copie qu'il ne voit pas. Sans le scellé (`tour`, lancé par la session de production, qui
+    ne le reçoit pas), le fichier d'empreintes est comparé à son sha256 gardé dans l'état : un écart y est vu, mais un
+    producteur qui récrirait l'état et le fichier ne serait vu qu'au prochain geste du pilote (`empreintes`, `juge`)."""
     if not etat.get("gel"):
         return "le sujet n'est pas gelé"
     chez_sujet = Path(sujet) / C.ETAT_DIR / C.EMPREINTES_FILE
-    chez_scelle = scelle / C.EMPREINTES_FILE
     if not chez_sujet.is_file():
         return f"le fichier d'empreintes {C.ETAT_DIR}/{C.EMPREINTES_FILE} a disparu"
-    if not chez_scelle.is_file():
-        return "la copie des empreintes gardée au scellé a disparu"
-    if chez_sujet.read_bytes() != chez_scelle.read_bytes():
-        return f"le fichier d'empreintes {C.ETAT_DIR}/{C.EMPREINTES_FILE} ne correspond plus à la copie du scellé"
-    attendu = lire_empreintes(chez_scelle)
+    if scelle is not None:
+        chez_scelle = scelle / C.EMPREINTES_FILE
+        if not chez_scelle.is_file():
+            return "la copie des empreintes gardée au scellé a disparu"
+        if chez_sujet.read_bytes() != chez_scelle.read_bytes():
+            return f"le fichier d'empreintes {C.ETAT_DIR}/{C.EMPREINTES_FILE} ne correspond plus à la copie du scellé"
+        reference = chez_scelle
+    else:
+        gardee = etat["gel"].get("empreintes_sha256")
+        if gardee and C.sha256_file(chez_sujet) != gardee:
+            return f"le fichier d'empreintes {C.ETAT_DIR}/{C.EMPREINTES_FILE} ne correspond plus à l'empreinte gardée dans l'état du harnais"
+        reference = chez_sujet
+    attendu = lire_empreintes(reference)
     figes = etat["gel"]["fichiers"]
     if sorted(attendu) != sorted(figes):
         return "la liste des fichiers figés a changé"
@@ -156,6 +169,47 @@ def verifier_empreintes(sujet, etat, scelle):
         if C.sha256_file(chemin) != attendu[fichier]:
             return f"{fichier} : l'empreinte a changé"
     return None
+
+
+def enregistrement_pilote(etat):
+    """Ce que seul le pilote écrit dans l'état (les suites consignées, les tours ajoutés, le gel) : la copie qui en est gardée
+    au scellé permet de voir qu'une main autre que la sienne l'a changé. Les compteurs de tours n'y sont pas : ils sont écrits
+    par `tour`, lancé par la session de production."""
+    gel = etat.get("gel")
+    return json.loads(json.dumps({
+        "suites": etat.get("suites", []), "extra": etat.get("extra"), "abandonne": bool(etat.get("abandonne")),
+        "livre_avec_reserve": bool(etat.get("livre_avec_reserve")),
+        "gel": ({k: gel.get(k) for k in ("fichiers", "livrable", "regels", "empreintes_sha256")} if gel else None)},
+        sort_keys=True))
+
+
+def sceller_pilote(scelle, etat):
+    C.write_atomic(scelle / C.PILOTE_FILE, json.dumps(enregistrement_pilote(etat), indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+                   mode=0o600)
+
+
+def verifier_pilote(etat, scelle):
+    """None si l'état concorde avec ce que le pilote a scellé, sinon la cause : une suite, des tours ajoutés ou un gel que le
+    pilote n'a pas consignés ne passent ni le jugement, ni l'ouverture, ni une nouvelle suite."""
+    chemin = scelle / C.PILOTE_FILE
+    if not chemin.is_file():
+        return "l'enregistrement du pilote a disparu du scellé"
+    try:
+        scelle_json = json.loads(chemin.read_text(encoding="utf-8"))
+    except ValueError:
+        return "l'enregistrement du pilote est illisible au scellé"
+    courant = enregistrement_pilote(etat)
+    for cle in ("suites", "extra", "abandonne", "livre_avec_reserve", "gel"):
+        if scelle_json.get(cle) != courant.get(cle):
+            return (f"« {cle} » de .harnais/etat.json ne correspond pas à ce que le pilote a scellé : "
+                    "l'état a été modifié autrement que par les commandes du pilote")
+    return None
+
+
+def exiger_etat_scelle(etat, scelle):
+    cause = verifier_pilote(etat, scelle)
+    if cause:
+        raise HarnaisError(f"écart d'état : {cause}")
 
 
 def trouver_goal(sujet):
@@ -234,7 +288,9 @@ def cmd_lancer(args):
         "suites": [], "plafonds_atteints": [], "elements": [], "points": [], "juge": {"appels": []},
         "gel": None, "livrable": None, "ouvert": None,
     }
+    etat["pilote_sha256"] = C.creer_jeton(C.scelle(sujet))
     C.sauver_etat(sujet, etat)
+    sceller_pilote(C.scelle(sujet), etat)
     trace_a3.ecrire(sujet)
     print(f"Sujet lancé : {sujet.name} (type {args.type}). Parcours de l'amont : parcours/{C.PARCOURS_SLUG}. Trace : {trace_a3.TRACE_FILE}.")
     return 0
@@ -253,8 +309,9 @@ def cmd_trace(args):
 
 def cmd_suite(args):
     sujet = C.dossier_sujet()
-    C.scelle(sujet)
     etat = C.charger_etat(sujet)
+    scelle = C.exiger_pilote(sujet, etat, "suite")
+    exiger_etat_scelle(etat, scelle)
     suites = etat["reglages"]["suites"]
     cle = args.cle[:-4] if args.cle.endswith("_max") else args.cle   # `tours_goal_max` (le plafond) ou `tours_goal` (ses suites)
     if cle not in suites:
@@ -306,6 +363,7 @@ def cmd_suite(args):
         etat["livre_avec_reserve"] = True
     etat["suites"].append(enregistrement)
     C.sauver_etat(sujet, etat)
+    sceller_pilote(scelle, etat)
     trace_a3.ecrire(sujet)
     print(f"Suite consignée à {cle}_max : {args.suite}" + (f" {nombre}" if nombre else ""))
     return 0
@@ -313,8 +371,7 @@ def cmd_suite(args):
 
 def cmd_contre_verif(args):
     sujet = C.dossier_sujet()
-    C.scelle(sujet)
-    C.charger_etat(sujet)
+    C.exiger_pilote(sujet, C.charger_etat(sujet), "contre-verif")
     etape = C.manifeste()["ETAPE_CONTRE_VERIF"]
     amont = C.etat_amont(sujet)
     pending = (amont or {}).get("pending")
@@ -402,8 +459,9 @@ def elements_caches(etat, cachees, cle_ligne):
 
 def cmd_geler(args):
     sujet = C.dossier_sujet()
-    scelle = C.scelle(sujet)
     etat = C.charger_etat(sujet)
+    scelle = C.exiger_pilote(sujet, etat, "geler")
+    exiger_etat_scelle(etat, scelle)
     if etat.get("gel"):
         raise HarnaisError("ce sujet est déjà gelé : après un « contourner », c'est `regeler`")
     if not args.fichiers:
@@ -420,13 +478,15 @@ def cmd_geler(args):
     declarer_hook(sujet)
     C.write_atomic(scelle / "gel.json", json.dumps({"fichiers": fichiers, "livrable": args.livrable, "t": t}, indent=2) + "\n", mode=0o600)
     pointer_sujet(livrable, sujet)
-    etat["gel"] = {"at": t[:19], "t": t, "livrable": args.livrable, "fichiers": fichiers, "regels": 0}
+    etat["gel"] = {"at": t[:19], "t": t, "livrable": args.livrable, "fichiers": fichiers, "regels": 0,
+                   "empreintes_sha256": C.sha256_file(Path(sujet) / C.ETAT_DIR / C.EMPREINTES_FILE)}
     etat["elements"] = elements_gel(sujet, fichiers, cle) + elements_caches(etat, cachees, cle)
     ligne_etat(etat, cle, {
         "étape": "3", "occurrence": "gel", "entrée": " ; ".join(fichiers), "sortie": f"{C.ETAT_DIR}/{C.EMPREINTES_FILE}",
         "note": "empreintes relevées ; hook de gel déclaré dans .claude/settings.json ; part cachée "
                 + ("scellée" if cachees else "absente : l'amont n'en a pas produit")}, t)
     C.sauver_etat(sujet, etat)
+    sceller_pilote(scelle, etat)
     trace_a3.ecrire(sujet)
     print(f"Gel : {len(fichiers)} fichier(s) figé(s), {len(cachees)} champ(s) caché(s) scellé(s), hook déclaré dans .claude/settings.json.")
     return 0
@@ -434,21 +494,23 @@ def cmd_geler(args):
 
 def cmd_empreintes(args):
     sujet = C.dossier_sujet()
-    scelle = C.scelle(sujet)
     etat = C.charger_etat(sujet)
+    scelle = C.exiger_pilote(sujet, etat, "empreintes")
     ecart = verifier_empreintes(sujet, etat, scelle)
     if ecart:
         raise HarnaisError(f"écart d'empreinte : {ecart}")
+    exiger_etat_scelle(etat, scelle)
     print(f"Empreintes intactes ({len(etat['gel']['fichiers'])} fichier(s)).")
     return 0
 
 
 def cmd_regeler(args):
     sujet = C.dossier_sujet()
-    scelle = C.scelle(sujet)
     etat = C.charger_etat(sujet)
+    scelle = C.exiger_pilote(sujet, etat, "regeler")
     if not etat.get("gel"):
         raise HarnaisError("le sujet n'est pas gelé : `geler` d'abord")
+    exiger_etat_scelle(etat, scelle)
     regels = etat["gel"]["regels"]
     derogation = next((s for s in etat["suites"] if s["suite"] == "contourner" and s["apres_gel"] == regels and not s["utilise"]), None)
     if not derogation:
@@ -464,6 +526,7 @@ def cmd_regeler(args):
     ecrire_empreintes(sujet, fichiers, scelle)
     derogation["utilise"] = True
     etat["gel"]["regels"] = regels + 1
+    etat["gel"]["empreintes_sha256"] = C.sha256_file(Path(sujet) / C.ETAT_DIR / C.EMPREINTES_FILE)
     etat.setdefault("tours_historique", []).append({"regel": regels + 1, **etat["tours"]})
     etat["tours"] = {"goal": 0, "correction": 0}
     etat["extra"] = {"tours_goal": 0, "tours_correction": 0}
@@ -479,6 +542,7 @@ def cmd_regeler(args):
         "étape": "3", "occurrence": f"regel {regels + 1}", "entrée": " ; ".join(fichiers), "sortie": f"{C.ETAT_DIR}/{C.EMPREINTES_FILE}",
         "note": "retour en 2B puis nouveau gel, après la dérogation tracée en T7 ; les compteurs de tours repartent de zéro"}, t)
     C.sauver_etat(sujet, etat)
+    sceller_pilote(scelle, etat)
     trace_a3.ecrire(sujet)
     print(f"Regel {regels + 1} : nouvelles empreintes relevées pour {len(fichiers)} fichier(s).")
     return 0
@@ -488,8 +552,10 @@ def cmd_regeler(args):
 # tour, tour-correction
 # ---------------------------------------------------------------------------
 def cmd_tour(args, nom="goal"):
+    """Lancé par la session de production, qui ne reçoit pas IX_SCELLE_DIR : sans la variable, les empreintes sont vérifiées
+    sans la copie du scellé (voir `verifier_empreintes`) ; avec elle (le pilote), avec la copie."""
     sujet = C.dossier_sujet()
-    scelle = C.scelle(sujet)
+    scelle = C.scelle_si_fourni(sujet)
     etat = C.charger_etat(sujet)
     cle = "tours_goal" if nom == "goal" else "tours_correction"
     if not etat.get("gel"):
@@ -591,7 +657,7 @@ def manifeste_livrable(livrable, exclus=()):
 
 def cmd_fin_production(args):
     sujet = C.dossier_sujet()
-    C.scelle(sujet)
+    C.scelle_si_fourni(sujet)   # la session de production peut la lancer : elle n'a pas besoin du scellé
     etat = C.charger_etat(sujet)
     if not etat.get("gel"):
         raise HarnaisError("fin de production refusée : le sujet n'est pas gelé")
@@ -741,10 +807,13 @@ def nettoyer_session(dossier):
 
 def cmd_juge(args):
     sujet = C.dossier_sujet()
-    scelle = C.scelle(sujet)
     etat = C.charger_etat(sujet)
+    scelle = C.exiger_pilote(sujet, etat, "juge")
     if not etat.get("gel"):
         raise HarnaisError("jugement refusé : le sujet n'est pas gelé")
+    cause = verifier_pilote(etat, scelle)
+    if cause:
+        raise HarnaisError(f"jugement refusé, écart d'état : {cause}")
     ecart = verifier_empreintes(sujet, etat, scelle)
     if ecart:
         raise HarnaisError(f"jugement refusé, écart d'empreinte : {ecart}")
@@ -835,8 +904,9 @@ def cmd_juge(args):
 # ---------------------------------------------------------------------------
 def cmd_ouvrir(args):
     sujet = C.dossier_sujet()
-    scelle = C.scelle(sujet)
     etat = C.charger_etat(sujet)
+    scelle = C.exiger_pilote(sujet, etat, "ouvrir")
+    exiger_etat_scelle(etat, scelle)
     appels = etat["juge"]["appels"]
     if not appels:
         raise HarnaisError("ouverture refusée : aucun jugement n'a eu lieu")
@@ -879,7 +949,8 @@ def cmd_ouvrir(args):
 
 def cmd_sceau(args):
     sujet = C.dossier_sujet()
-    print(C.scelle(sujet))
+    etat = C.charger_etat(sujet, requis=False)
+    print(C.exiger_pilote(sujet, etat, "sceau") if etat else C.scelle(sujet))
     return 0
 
 

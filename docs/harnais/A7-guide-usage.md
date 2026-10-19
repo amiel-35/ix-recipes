@@ -36,15 +36,17 @@ Un sujet passe par des étapes, dans le même ordre à chaque fois, avec les mê
 - Claude Code, Python 3 et git sur votre Mac.
 - Le dépôt ix-recipes sur la branche du harnais. Dans ce guide, `$R` est son dossier.
 - Un dossier **par sujet**, où vivra sa trace.
-- Trois variables, à exporter dans le terminal où vous travaillez **et** dans celui où vous lancez la session de production :
+- Trois variables. Les deux premières vont dans le terminal où vous travaillez **et** dans celui où vous lancez la session de production ; la troisième, **dans le premier seulement** :
 
 ```bash
-export R=~/Projets/ix-recipes                 # la racine d'ix-recipes
-export IX_SCELLE_DIR=~/.ix-scelles            # le scellé : hors de tout dépôt git, loin du dossier du sujet
-export IX_SKILLS_PATH=~/.ix-skills/dist/skills  # les skills de l'amont (voir ci-dessous)
+export R=~/Projets/ix-recipes                 # la racine d'ix-recipes (les deux terminaux)
+export IX_SKILLS_PATH=~/.ix-skills/dist/skills  # les skills de l'amont, voir ci-dessous (votre terminal)
+export IX_SCELLE_DIR=~/.ix-scelles            # le scellé : hors de tout dépôt git, loin du dossier du sujet (VOTRE terminal seulement)
 ```
 
 Le scellé est un dossier que **vous** choisissez. Le harnais refuse de travailler s'il manque, s'il est dans un dépôt git ou s'il est sous le dossier du sujet ou celui du livrable. Il n'est écrit nulle part.
+
+**Gardez-le hors de la session de production.** Elle ne doit pas savoir où est la part cachée. N'exportez donc jamais `IX_SCELLE_DIR` dans le terminal d'où vous lancez cette session : le harnais ne vérifie pas que vous l'avez fait, et s'il y est, la session peut le lire. Les trois commandes qu'elle lance (`tour`, `tour-correction`, `fin-production`) n'en ont pas besoin. Vous lancez la session par `env -u IX_SCELLE_DIR claude …` si vous n'êtes pas sûr du terminal, et vous vérifiez avant : `env | grep -c IX_SCELLE_DIR` doit afficher `0` dans ce terminal.
 
 Les skills de l'amont qui ne sont pas encore fusionnés dans ix-skills se lisent sur leur branche, sans rien écrire dans ix-skills :
 
@@ -69,7 +71,7 @@ Le plafond de chaque boucle, le modèle de chaque rôle et chaque suite sont dan
 | **Pause 2** | **vous** | Voir la section 4. Puis écrivez le script de recette et la grille à partir de la grille visible. |
 | **Gel** | vous | `python3 "$R/harnais/harnais.py" geler livrable grille.md acceptation.sh fixtures/exemples.txt` : le premier mot est le dossier du livrable, les suivants sont les fichiers à figer. Le harnais relève leurs empreintes, scelle la part cachée et déclare le hook de gel dans `.claude/settings.json` du sujet. |
 | **4. Production** | la session de production | Section 5. |
-| **Fin de production** | vous (ou la session) | `python3 "$R/harnais/harnais.py" fin-production` : le livrable est commité et étiqueté. Rien ne le modifie plus avant le jugement. |
+| **Fin de production** | vous (ou la session) | `python3 "$R/harnais/harnais.py" empreintes`, puis `python3 "$R/harnais/harnais.py" fin-production` : le livrable est commité et étiqueté. Rien ne le modifie plus avant le jugement. |
 | **5. Jugement** | le juge | `python3 "$R/harnais/harnais.py" juge`. Le juge relance le script, répartit la relecture, joue le test du nouveau venu, et rend un verdict. Il est refusé si le livrable a bougé depuis son étiquette. |
 | **6. Correction** | la session de production | Seuls les échecs reviennent, dans le fichier `constat-juge.md` : l'exigence de chaque ligne cachée en échec y est nommée, **sans son contenu**. |
 | **Fin du jugement** | vous | `python3 "$R/harnais/harnais.py" ouvrir` : la part cachée et la trace du juge sont versées dans `jugement/`. Refusé tant que les tours de correction ne sont pas terminés. |
@@ -99,11 +101,13 @@ Avant d'appeler le modèle de contre-vérification, **votre accord** est demand�
 
 ## 5. La session de production
 
-La production tourne dans une session `/goal`, **depuis le dossier du sujet**, avec la variable `R` exportée (sans elle, le hook de gel échoue et la session ne peut plus utiliser aucun outil).
+La production tourne dans une session `/goal`, **depuis le dossier du sujet**, avec la variable `R` exportée (sans elle, le hook de gel échoue et la session ne peut plus utiliser aucun outil) et **sans `IX_SCELLE_DIR`** (section 2).
 
 1. Remplissez les emplacements du goal avant de le lancer. Un goal qui contient encore un emplacement réservé non rempli est refusé au premier tour, avec le nom de l'emplacement.
 2. Ajoutez au goal que, **au début de chaque tour**, la session lance `python3 "$R/harnais/harnais.py" tour` (et `tour-correction` pendant la correction). Cette commande vérifie les empreintes des fichiers figés, compte le tour, et refuse au plafond. Un appel refusé ne compte pas.
-3. La session ne peut pas modifier le script, la grille, leurs fixtures, l'état du harnais ni les réglages de hooks : le hook refuse. Elle ne peut pas non plus choisir une suite, ni demander où est le scellé.
+3. **Ce que le harnais ne peut pas faire à votre place : forcer la session à lancer `tour`.** Le plafond de tours ne vaut que si elle le lance. Rien ne l'y oblige ; le goal le lui demande, c'est tout. Il vous revient donc de vérifier, **à chaque fois que la main vous revient**, que le nombre de tours comptés (dans la trace, table T3, lignes `tour 1`, `tour 2`…) est celui des tours que la session déclare dans son journal ou que vous voyez passer. Un écart veut dire qu'un tour n'a pas été compté : le plafond n'est pas tenu, et c'est à vous de décider quoi faire (section 6).
+4. La session ne peut pas modifier le script, la grille, leurs fixtures, l'état du harnais ni les réglages de hooks : le hook refuse les formes d'écriture qu'il reconnaît. Une écriture qu'il ne reconnaît pas est repérée plus tard : par `tour` au prochain tour, et dans tous les cas par `python3 "$R/harnais/harnais.py" empreintes` et par `juge`, que vous lancez avec `IX_SCELLE_DIR`. Lancez `empreintes` quand la main vous revient, avant `fin-production`.
+5. Elle ne peut pas non plus choisir une suite, ni demander où est le scellé : ces commandes (`suite`, `sceau`, `geler`, `regeler`, `juge`, `ouvrir`, `contre-verif`, `empreintes`) refusent tout appelant qui n'a pas `IX_SCELLE_DIR` ou dont le dossier n'est pas le scellé de ce sujet, quelle que soit la façon de les appeler.
 
 ## 6. Choisir une suite quand une limite est atteinte
 

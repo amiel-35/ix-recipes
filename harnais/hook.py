@@ -2,12 +2,16 @@
 
 Il refuse, sans condition : l'écriture d'un fichier de réglages qui déclare ou désactive des hooks (`.claude/settings.json`
 et `.claude/settings.local.json`, ceux du dossier du sujet et du livrable compris) et celle du fichier qui déclare le hook ;
-tout appel d'une commande du pilote (l'emplacement du scellé, le choix d'une suite, le regel, le juge…) ; tout accès au scellé
-et à la variable qui le désigne.
+tout appel qui a la **forme** d'une commande du pilote (l'emplacement du scellé, le choix d'une suite, le regel, le juge…) ;
+tout accès au scellé et à la variable qui le désigne, et les commandes qui vident l'environnement.
 Il refuse, une fois le sujet gelé : l'écriture des fichiers figés, de l'état du harnais (`.harnais/`) et du code du harnais.
 
-Ce qu'il ne voit pas est dit dans `docs/harnais/architecture-harnais.md` : une commande shell peut écrire de mille façons que
-nul motif ne reconnaît toutes ; les empreintes vérifiées avant chaque tour rattrapent l'écart au tour suivant.
+Ce que le hook reconnaît d'un appel est une **chaîne** : il ne tient donc pas seul les commandes du pilote ni le scellé.
+Les commandes du pilote se refusent d'elles-mêmes, quelle que soit la forme de l'appel (elles exigent le jeton du scellé,
+`commun.exiger_pilote`) ; le scellé n'est pas dans l'environnement de la session de production. Ce que le hook ne voit pas est
+dit dans `docs/harnais/architecture-harnais.md` §8 : une commande shell peut écrire de mille façons que nul motif ne
+reconnaît toutes ; les empreintes vérifiées par `tour` (si la production le lance) et par `empreintes` et `juge` (le pilote)
+rattrapent l'écart.
 
 Refus : code 2 et la cause sur la sortie d'erreur. Acceptation : code 0, rien sur la sortie. Une entrée illisible est refusée
 (code 2) : un hook qui laisse tout passer quand il ne comprend pas ne garde rien.
@@ -127,22 +131,46 @@ def refuser_acces_scelle(texte, chemin_scelle):
         raise Refus("accès refusé : ce chemin est un scellé (part cachée du jugement)")
 
 
-POUR_LE_PILOTE = ("sceau", "suite", "regeler", "ouvrir", "juge", "geler", "lancer", "contre-verif")
+POUR_LE_PILOTE = ("sceau", "suite", "regeler", "ouvrir", "juge", "geler", "lancer", "contre-verif", "contre_verif")
+CLES_PILOTE = ("CMD_SCEAU", "CMD_SUITE", "CMD_REGELER", "CMD_OUVRIR", "CMD_JUGE", "CMD_GELER", "CMD_LANCER", "CMD_CONTRE_VERIF")
+# ce qui désigne l'outil du harnais, quelle que soit la façon de l'appeler : le script, le module, une fonction de commande
+APPEL_HARNAIS = re.compile(r"harnais\.py|\bimport\s+harnais\b|\bfrom\s+harnais\b|-m\s+harnais\b|runpy|"
+                           r"\bcmd_(?:sceau|suite|regeler|ouvrir|juge|geler|lancer|contre_verif)\b")
+VERBE_PILOTE = re.compile(r"(?<![\w-])(?:" + "|".join(re.escape(v) for v in POUR_LE_PILOTE) + r")(?![\w-])")
+# ce qui vide l'environnement d'une session (au mieux : l'environnement de la production ne porte pas le scellé)
+VIDE_ENVIRONNEMENT = re.compile(r"\bprintenv\b|(?:^|[\s;|&(])env\s*(?:$|[|;&>)])|\bexport\s+-p\b|\bdeclare\s+-[a-zA-Z]*[xp]\b|"
+                                r"\bcompgen\s+-[ev]\b|\bos\.environ\b|/proc/[^\s]*/environ|\bset\s*(?:$|[|;&>)])")
+
+
+def sans_decor(texte):
+    """Le texte sans guillemets ni antislash, espaces réunis : `su''ite` et `"suite"` valent `suite`."""
+    return " ".join(re.sub(r"[\"'\\]", "", texte).split())
 
 
 def refuser_pilote(commande):
     """Ce que la session de production ne lance jamais : donner l'emplacement du scellé, choisir une suite à un plafond,
-    rouvrir le gel, lancer le juge, ouvrir le jugement, geler, lancer un sujet, rendre une contre-vérification."""
-    plat = " ".join(commande.split())
+    rouvrir le gel, lancer le juge, ouvrir le jugement, geler, lancer un sujet, rendre une contre-vérification.
+
+    Le hook ne reconnaît que la **forme** d'un appel : la chaîne de la commande du manifeste, ou le nom du script (ou du
+    module) suivi, dans la même commande simple, d'un mot du pilote, guillemets et antislash ôtés. Une autre forme (un
+    chemin construit, une variable, un script copié) lui échappe, et c'est l'outil qui refuse alors (`exiger_pilote`)."""
     valeurs = manifeste()
-    for cle in ("CMD_SCEAU", "CMD_SUITE", "CMD_REGELER", "CMD_OUVRIR", "CMD_JUGE", "CMD_GELER", "CMD_LANCER", "CMD_CONTRE_VERIF"):
-        brut = " ".join(valeurs.get(cle, "").split())
+    plat = sans_decor(commande)
+    for cle in CLES_PILOTE:
+        brut = sans_decor(valeurs.get(cle, ""))
         if brut and (brut in plat or brut.replace("$R", str(ROOT)) in plat):
             raise Refus(f"appel refusé : « {cle.removeprefix('CMD_').lower().replace('_', '-')} » est une commande du pilote, "
                         "la session de production ne la lance pas")
-    trouve = re.search(r"harnais\.py[\"']?\s+(" + "|".join(POUR_LE_PILOTE) + r")\b", plat)
-    if trouve:
-        raise Refus(f"appel refusé : « {trouve.group(1)} » est une commande du pilote, la session de production ne la lance pas")
+    for texte in re.split(r"\|\||&&|[;|&\n]", commande):
+        segment = sans_decor(texte)
+        appel = APPEL_HARNAIS.search(segment)
+        if not appel:
+            continue
+        if appel.group(0).startswith("cmd_"):
+            raise Refus(f"appel refusé : « {appel.group(0)} » est une commande du pilote, la session de production ne la lance pas")
+        verbe = VERBE_PILOTE.search(segment, appel.end())
+        if verbe:
+            raise Refus(f"appel refusé : « {verbe.group(0)} » est une commande du pilote, la session de production ne la lance pas")
 
 
 def candidats_figes(figes, projet):
@@ -217,6 +245,9 @@ def designe(mot, candidat):
 def refuser_shell(commande, projets):
     refuser_pilote(commande)
     refuser_acces_scelle(commande, scelle_env())
+    if VIDE_ENVIRONNEMENT.search(sans_decor(commande)):
+        raise Refus("commande refusée : la production ne vide pas son environnement (l'emplacement des scellés n'y est pas, "
+                    "et ne doit pas y être)")
     declare = hooks_declares()
     candidats = set()
     for projet, figes in projets:

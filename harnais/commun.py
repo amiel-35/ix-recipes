@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import re
+import secrets
 import subprocess
 import sys
 import tempfile
@@ -24,6 +25,8 @@ MANIFEST = ROOT / "harnais" / "points-d-entree.env"
 ETAT_DIR = ".harnais"            # dans le dossier du sujet : l'état du harnais et les empreintes des fichiers figés
 ETAT_FILE = "etat.json"
 EMPREINTES_FILE = "empreintes.sha256"
+JETON_FILE = "jeton"             # au scellé : la preuve que l'appelant tient le scellé du sujet (voir `exiger_pilote`)
+PILOTE_FILE = "pilote.json"      # au scellé : la copie de ce que seul le pilote écrit dans l'état (suites, gel)
 PARCOURS_SLUG = "amont"          # le parcours de l'amont, dans ./parcours/ du sujet
 TRACE_SCHEMA = 1
 
@@ -118,6 +121,43 @@ def scelle(sujet):
     dossier = racine / P.seal_key(sujet)
     dossier.mkdir(parents=True, exist_ok=True)
     os.chmod(dossier, 0o700)
+    return dossier
+
+
+def scelle_si_fourni(sujet):
+    """Le dossier scellé quand l'appelant fournit `IX_SCELLE_DIR` (le pilote), None sinon (la session de production, qui ne
+    la reçoit pas). Une variable fournie mais refusée (dépôt git, chemin que lit le producteur) est refusée comme ailleurs."""
+    if not os.environ.get(P.SEAL_ENV, "").strip():
+        return None
+    return scelle(sujet)
+
+
+def creer_jeton(dossier_scelle):
+    """Écrit au scellé un jeton neuf et rend son sha256, que l'état du harnais garde : l'état prouve qu'un jeton existe,
+    il ne le donne pas. Détenir le scellé du sujet, c'est pouvoir lire ce jeton."""
+    jeton = secrets.token_hex(32)
+    write_atomic(Path(dossier_scelle) / JETON_FILE, jeton + "\n", mode=0o600)
+    return sha256_text(jeton)
+
+
+def exiger_pilote(sujet, etat, commande):
+    """Rend le dossier scellé du sujet, ou refuse : c'est la garde de toute commande réservée au pilote. Elle ne regarde
+    ni la chaîne de la commande ni la façon dont l'outil a été appelé (chemin, variable, import, copie du script) : elle
+    exige de **tenir le scellé de ce sujet**, ce que la session de production ne peut pas faire puisqu'elle ne reçoit pas
+    `IX_SCELLE_DIR` et que le jeton n'est écrit dans aucun fichier qu'elle lit. Un dossier fabriqué ne porte pas le jeton."""
+    if not os.environ.get(P.SEAL_ENV, "").strip():
+        raise HarnaisError(f"« {commande} » est une commande du pilote : elle exige l'emplacement des scellés ({P.SEAL_ENV}), "
+                           "que la session de production ne reçoit pas")
+    dossier = scelle(sujet)
+    attendu = (etat or {}).get("pilote_sha256")
+    jeton = dossier / JETON_FILE
+    try:
+        valide = bool(attendu) and sha256_text(jeton.read_text(encoding="utf-8").strip()) == attendu
+    except OSError:
+        valide = False
+    if not valide:
+        raise HarnaisError(f"« {commande} » est une commande du pilote : le scellé donné par {P.SEAL_ENV} n'est pas celui de ce sujet "
+                           "(jeton absent ou différent)")
     return dossier
 
 

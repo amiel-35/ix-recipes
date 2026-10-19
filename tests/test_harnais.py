@@ -597,6 +597,25 @@ class HookTests(HarnaisTestCase):
             with self.subTest(command=command):
                 self.assertIsNone(self.decide(self.event("Bash", command=command)), command)
 
+    def test_the_hook_reads_the_form_of_a_call_not_only_the_manifest_string(self):
+        self.freeze()
+        for command in ("python3 \"$R/harnais/harnais.py\" 'su''ite' tours_goal_max relancer 3", "cd harnais && ./harnais.py regeler",
+                        "python3 -m harnais juge", "python3 /somewhere/harnais.py \"ouvrir\"", "sh -c 'python3 harnais/harnais.py geler x'",
+                        "python3 -c 'import harnais; harnais.cmd_juge(None)'", "python3 harnais/harnais.py contre-verif x.md"):
+            with self.subTest(command=command):
+                self.assertIn("commande du pilote", self.decide(self.event("Bash", command=command)) or "")
+        for command in ("grep -n juge docs/harnais/spec-harnais.md", "cat harnais/harnais.py", "python3 -m unittest tests.test_harnais",
+                        "sed -n '1,20p' harnais/hook.py", "python3 harnais/harnais.py tour", "python3 harnais/harnais.py fin-production"):
+            with self.subTest(command=command):
+                self.assertIsNone(self.decide(self.event("Bash", command=command)), command)
+
+    def test_the_hook_refuses_to_empty_the_environment_but_this_is_not_what_keeps_the_seal_out(self):
+        self.freeze()
+        for command in ("printenv", "env | grep SCELLE", "python3 -c 'import os; print(os.environ)'", "cat /proc/self/environ", "export -p"):
+            with self.subTest(command=command):
+                self.assertIsNotNone(self.decide(self.event("Bash", command=command)))
+        self.assertIsNone(self.decide(self.event("Bash", command="env FOO=1 python3 x.py")))
+
     def test_the_hook_command_has_the_exit_codes_of_the_interface(self):
         self.freeze()
         env = dict(os.environ)
@@ -615,6 +634,147 @@ class HookTests(HarnaisTestCase):
         declared = json.loads((REPO / "harnais" / "hooks.json").read_text(encoding="utf-8"))
         commands = [h["command"] for e in declared["hooks"]["PreToolUse"] for h in e["hooks"]]
         self.assertIn(commun.manifeste()["CMD_HOOK"], commands)
+
+
+class PilotProofTests(HarnaisTestCase):
+    """O11 and P3 under the level they really have: the pilot's commands refuse by themselves, whatever the form of the call,
+    unless the caller holds the sealed place of the subject; the production, which receives no IX_SCELLE_DIR, runs `tour`."""
+
+    PILOT = [("sceau",), ("suite", "tours_goal_max", "relancer", "3"), ("regeler",), ("ouvrir",), ("juge",),
+             ("geler", "livrable", "grille.md"), ("lancer", "code"), ("contre-verif", "x.md"), ("empreintes",), ("trace",)]
+
+    def goal(self):
+        (self.subject / "goal.md").write_text(GOAL, encoding="utf-8")
+
+    def without_the_variable(self):
+        patcher = mock.patch.dict(os.environ)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        os.environ.pop("IX_SCELLE_DIR", None)
+
+    def reach_the_ceiling(self):
+        self.freeze()
+        self.goal()
+        for _ in range(self.etat()["reglages"]["plafonds"]["tours_goal_max"]):
+            self.ok("tour")
+
+    def test_the_production_runs_tour_without_the_sealed_place_and_every_pilot_command_refuses(self):
+        self.freeze()
+        self.goal()
+        with mock.patch.dict(os.environ):
+            os.environ.pop("IX_SCELLE_DIR")
+            self.assertIn("Tour 1", self.ok("tour"))
+            self.assertIn("Tour 2", self.ok("tour"))
+            for argv in self.PILOT:
+                with self.subTest(command=argv[0]):
+                    self.assertIn("IX_SCELLE_DIR", self.refused(*argv))
+            self.ok("tour-correction")
+            self.deliverable()
+            self.ok("fin-production")
+
+    def test_tour_without_the_sealed_place_still_names_a_changed_frozen_file_and_a_rewritten_empreinte_file(self):
+        self.freeze()
+        self.goal()
+        self.without_the_variable()
+        (self.subject / "grille.md").write_text("# Grille\n\nR1 changé.\n", encoding="utf-8")
+        self.assertIn("grille.md : l'empreinte a changé", self.refused("tour"))
+        self.assertEqual(self.etat()["tours"]["goal"], 0)
+        # the empreinte file alone rewritten to match: the state keeps its sha256
+        empreintes = self.subject / ".harnais" / "empreintes.sha256"
+        empreintes.write_text("\n".join(f"{commun.sha256_file(self.subject / f)}  {f}" for f in self.etat()["gel"]["fichiers"]) + "\n",
+                              encoding="utf-8")
+        self.assertIn("empreinte gardée dans l'état", self.refused("tour"))
+
+    def test_a_rewritten_state_and_empreinte_file_pass_tour_and_are_caught_by_the_pilots_commands(self):
+        self.freeze()
+        self.goal()
+        (self.subject / "grille.md").write_text("# Grille\n\nR1 changé.\n", encoding="utf-8")
+        empreintes = self.subject / ".harnais" / "empreintes.sha256"
+        empreintes.write_text("\n".join(f"{commun.sha256_file(self.subject / f)}  {f}" for f in self.etat()["gel"]["fichiers"]) + "\n",
+                              encoding="utf-8")
+        etat = self.etat()
+        etat["gel"]["empreintes_sha256"] = commun.sha256_file(empreintes)
+        commun.sauver_etat(self.subject, etat)
+        with mock.patch.dict(os.environ):
+            os.environ.pop("IX_SCELLE_DIR")
+            self.ok("tour")   # the limit, written in the spec: without the sealed copy this cannot be seen
+        for argv in (("empreintes",), ("juge",)):
+            with self.subTest(command=argv[0]):
+                err = self.refused(*argv)
+                self.assertTrue("copie du scellé" in err or "écart d'état" in err, err)
+
+    def test_a_forged_sealed_place_does_not_make_a_caller_the_pilot(self):
+        self.reach_the_ceiling()
+        forged = self.tmp / "faux-scelle"
+        forged.mkdir()
+        with mock.patch.dict(os.environ, {"IX_SCELLE_DIR": str(forged)}):
+            for argv in self.PILOT[:2] + self.PILOT[2:8]:
+                if argv[0] == "lancer":
+                    continue
+                with self.subTest(command=argv[0]):
+                    self.assertIn("n'est pas celui de ce sujet", self.refused(*argv))
+        self.assertEqual(self.etat()["suites"], [])
+        self.assertIn("aucune suite", self.refused("tour"))
+
+    def test_the_refusal_holds_for_any_form_of_call(self):
+        """A string match cannot see these; the tool refuses them all, with the variable absent or forged."""
+        self.reach_the_ceiling()
+        forged = self.tmp / "faux-scelle"
+        forged.mkdir()
+        script = REPO / "harnais" / "harnais.py"
+        copie = self.tmp / "copie"   # a whole copy of the tool, under another name and another place
+        (copie / "harnais").mkdir(parents=True)
+        for source in (REPO / "harnais").glob("*.py"):
+            shutil.copy(source, copie / "harnais" / ("h.py" if source.name == "harnais.py" else source.name))
+        shutil.copy(REPO / "harnais" / "points-d-entree.env", copie / "harnais" / "points-d-entree.env")
+        for name in ("scripts", "docs"):
+            (copie / name).symlink_to(REPO / name)
+        suite = "['suite','tours_goal_max','relancer','9']"
+        forms = [
+            ["python3", str(script), "suite", "tours_goal_max", "relancer", "9"],
+            ["sh", "-c", f'V=su; python3 "{REPO}/harnais/./harnais.py" "$V"ite tours_goal_max relancer 9'],
+            ["python3", "-c", f"import sys; sys.path.insert(0, '{REPO}/harnais'); import harnais; sys.exit(harnais.main({suite}))"],
+            ["python3", "-c", f"import runpy, sys; sys.argv=['x', 'suite', 'tours_goal_max', 'relancer', '9']; runpy.run_path('{script}', run_name='__main__')"],
+            ["python3", "-c", f"import sys; sys.path.insert(0, '{copie}/harnais'); import h; sys.exit(h.main({suite}))"],
+        ]
+        for place in (None, str(forged)):
+            env = {k: v for k, v in os.environ.items() if k != "IX_SCELLE_DIR"}
+            if place:
+                env["IX_SCELLE_DIR"] = place
+            for form in forms:
+                with self.subTest(place=place, form=form[-1][:60]):
+                    done = subprocess.run(form, capture_output=True, text=True, cwd=self.subject, env=env)
+                    self.assertNotEqual(done.returncode, 0, done.stdout + done.stderr)
+                    self.assertIn("commande du pilote", done.stderr)
+        self.assertEqual(self.etat()["suites"], [])
+        self.assertEqual(self.etat()["extra"]["tours_goal"], 0)
+
+    def test_the_pilot_holding_the_seal_chooses_a_suite_by_the_same_forms(self):
+        self.reach_the_ceiling()
+        script = REPO / "harnais" / "harnais.py"
+        env = dict(os.environ)
+        done = subprocess.run(["python3", str(script), "suite", "tours_goal_max", "relancer", "2"], capture_output=True, text=True,
+                              cwd=self.subject, env=env)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(self.etat()["extra"]["tours_goal"], 2)
+
+    def test_a_suite_or_extra_turns_written_into_the_state_by_other_hands_are_refused_by_the_pilots_commands(self):
+        self.reach_the_ceiling()
+        etat = self.etat()
+        etat["suites"].append({"cle": "tours_goal", "suite": "relancer", "n": 50, "texte": None, "par": "Amiel", "at": "x", "t": "x",
+                               "atteint_id": "tours_goal:1", "apres_gel": 0, "utilise": False})
+        etat["extra"]["tours_goal"] = 50
+        commun.sauver_etat(self.subject, etat)
+        for argv in (("suite", "tours_goal_max", "relancer", "1"), ("empreintes",), ("juge",), ("regeler",), ("ouvrir",)):
+            with self.subTest(command=argv[0]):
+                err = self.refused(*argv)
+                self.assertIn("ne correspond pas à ce que le pilote a scellé", err)
+
+    def test_the_state_does_not_hold_the_token_only_its_hash(self):
+        self.launch()
+        token = (self.seal / commun.P.seal_key(self.subject) / commun.JETON_FILE).read_text(encoding="utf-8").strip()
+        self.assertEqual(self.grep(self.subject, token), [])
+        self.assertEqual(self.etat()["pilote_sha256"], commun.sha256_text(token))
 
 
 class ManifestTests(unittest.TestCase):

@@ -30,13 +30,13 @@ Les formats 1 à 3 ne changent pas, y compris pour ce que l'exécuteur accepte a
 
 ## 3. Les clés d'étape
 
-En plus de celles des formats 1 à 3. Toutes sont **réservées au format 4** : avant, elles demandent « format: 4 » en tête du bloc `workflow`.
+En plus de celles des formats 1 à 3. **Quatre sont réservées au format 4** : `verdict_field`, `loop`, `hidden` et `external` (la constante `FORMAT4_STEP_KEYS`, dans `scripts/parcours.py` et `build.py`) ; une recette de format 3 ou moins qui en porte une est refusée, avec « format: 4 » demandé en tête du bloc `workflow`. Les deux autres, `stage` et `role`, **ne sont pas réservées** : le code les lit sur toute recette, et une recette de format 3 qui les porte passe sans erreur. Elles ne sont contrôlées qu'en format 4 (`stage` : texte non vide ; `role` : voir le tableau).
 
 | Clé | Sens | Règle |
 |---|---|---|
 | `stage` | l'étape de la procédure (`1a`, `2B`, `3`…) que la ligne de trace porte | texte non vide |
-| `role` | la clé de `modeles` des réglages (A4) dont le modèle s'applique à l'appel | obligatoire sauf sur une étape externe ; `build.py` vérifie que `model` en est la valeur ; l'exécuteur applique la valeur des réglages lue à la **création** du parcours |
-| `verdict_field` | le champ de `transmits` où une étape qui vérifie rend son verdict | la première ligne du champ vaut `OK` ou `REPRENDRE` ; toute autre valeur fait échouer l'étape |
+| `role` | la clé de `modeles` des réglages (A4) dont le modèle s'applique à l'appel | en format 4, obligatoire sauf sur une étape externe, et doit nommer une clé de `modeles` ; `build.py` vérifie que `model` en est la valeur ; l'exécuteur applique la valeur des réglages lue à la **création** du parcours |
+| `verdict_field` | le champ de `transmits` où une étape qui vérifie rend son verdict | la première ligne non vide du champ commence par `OK` ou `REPRENDRE` : le premier mot est lu sans tenir compte de la casse ni des accents, une décoration Markdown devant lui (`#`, `*`, `>`, `-`, `` ` ``, `_`) est ignorée, et la suite de la ligne n'est pas lue. Si ce premier mot n'est ni l'un ni l'autre, l'étape échoue (« verdict illisible ») |
 | `loop` | `{to: <étape>, ceiling: <plafond>}` : sur `REPRENDRE`, renvoyer à l'étape `to` | `to` est une étape antérieure ; l'étape a un `verdict_field` ; `ceiling` est une clé de `plafonds` des réglages |
 | `hidden` | des champs de `transmits` que l'exécuteur ne laisse pas dans le dossier | voir §5 ; aucun n'est `output_field` ; aucune étape ne les reçoit, sauf une étape `external` |
 | `external` | l'exécuteur s'arrête avant l'étape | voir §6 ; ni `pause`, ni `model`, ni `optional`, ni `produces_context_sheet` |

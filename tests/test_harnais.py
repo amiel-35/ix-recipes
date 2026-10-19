@@ -508,7 +508,9 @@ class JudgeTests(HarnaisTestCase):
         self.finish_production()
         self.fake_judge("Tout va bien.\n")
         self.assertIn("pas au format du harnais", self.refused("juge"))
-        self.assertTrue((next(self.seal.iterdir()) / "juge" / "sortie-1.md").is_file())
+        sealed = sorted(p for p in self.seal.iterdir() if p.is_dir())   # `index.json` est un fichier : un seul dossier, celui du sujet
+        self.assertEqual(len(sealed), 1)
+        self.assertTrue((sealed[0] / "juge" / "sortie-1.md").is_file())
         self.assertFalse((self.subject / "constat-juge.md").exists())
 
     def test_the_hidden_part_and_the_judge_trace_open_only_at_the_end_of_the_corrections(self):

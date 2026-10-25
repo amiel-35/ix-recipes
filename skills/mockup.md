@@ -1,7 +1,7 @@
 ---
 id: mockup
 label: Mockup
-version: 2.0.0
+version: 2.0.1
 description_fr: Produit un mockup HTML autonome et présentable depuis un brief, une spec ou des références visuelles, à un niveau de fidélité choisi (basse, moyenne, haute) et dans la charte imposée s'il y en a une — un livrable de production visuelle, pas un prototype fonctionnel. Déclenche sur "fais-moi une maquette HTML de cet écran", "à quoi ça pourrait ressembler visuellement", "mockup pour présenter l'idée en réunion", "maquette dans notre charte". Ne produit ni logique fonctionnelle ni spec détaillée (utiliser `feature-spec`) — juste l'interface à regarder et discuter.
 description_en: Produces a standalone, presentable HTML mockup from a brief, spec, or visual references, at a chosen fidelity (low, medium, high) and inside the imposed brand guidelines if any, a visual production deliverable, not a functional prototype. Triggers on "make me an HTML mockup of this screen", "what could this look like visually", "mockup to show in the meeting", "mockup in our brand guidelines". Does not produce functional logic or a detailed spec (use `feature-spec`), just the interface to look at and discuss.
 icon: ▤
@@ -119,4 +119,6 @@ Default format; an explicit request from the user wins.
 - Amounts, dates and typography follow French usage when the page is in French.
 - Every inferred element or filler carries the visible mark and the legend explains it; nothing inferred is presented as decided.
 
-<!-- Showing every state of the interface adapted from anthropics/knowledge-work-plugins, design/skills/design-handoff/SKILL.md (Apache-2.0, commit 33eeda1): L60, reduced to the states a discussion mockup needs. Added in 2.0.0 from anthropics/skills, skills/frontend-design/SKILL.md (Apache-2.0, LICENSE.txt in the same folder, commit 41bbe19), reworded: the brief's own words win over the designer's defaults (L45), structure is information (L30), real content (L34), a quality floor of focus, reduced motion and accessibility (L59), action labels and the wording of failure and emptiness (L63-71). Fidelity levels, the French formats and the accessibility table (read on w3.org) are original. See THIRD_PARTY.md. -->
+# Sources
+
+Showing every state of the interface adapted from anthropics/knowledge-work-plugins, design/skills/design-handoff/SKILL.md (Apache-2.0, commit 33eeda1): L60, reduced to the states a discussion mockup needs. Added in 2.0.0 from anthropics/skills, skills/frontend-design/SKILL.md (Apache-2.0, LICENSE.txt in the same folder, commit 41bbe19), reworded: the brief's own words win over the designer's defaults (L45), structure is information (L30), real content (L34), a quality floor of focus, reduced motion and accessibility (L59), action labels and the wording of failure and emptiness (L63-71). Fidelity levels, the French formats and the accessibility table (read on w3.org) are original. See THIRD_PARTY.md.

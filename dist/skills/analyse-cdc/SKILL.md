@@ -107,4 +107,6 @@ Default format; an explicit request from the user overrides it. The section name
 
 The team can decide whether to proceed without rereading the source. Every requirement is labelled explicit or inferred, and knockout, scored or informative. Risk areas and blocking questions are visible and ready to ask the buyer.
 
-<!-- Knockout versus scored requirements and counting back from the deadline adapted from anthropics/knowledge-work-plugins, small-business/skills/grant-rfp-writer/reference/go_no_go.md (Apache-2.0, commit 33eeda1): rewritten for French tenders, without the US portal, bonding or bid-protest content. See THIRD_PARTY.md. -->
+# Sources
+
+Knockout versus scored requirements and counting back from the deadline adapted from anthropics/knowledge-work-plugins, small-business/skills/grant-rfp-writer/reference/go_no_go.md (Apache-2.0, commit 33eeda1): rewritten for French tenders, without the US portal, bonding or bid-protest content. See THIRD_PARTY.md.

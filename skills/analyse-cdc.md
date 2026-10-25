@@ -1,7 +1,7 @@
 ---
 id: analyse-cdc
 label: Analyse CDC
-version: 1.5.0
+version: 1.5.1
 description_fr: Analyse un cahier des charges ou un dossier de consultation reçu du point de vue du répondant — exigences explicites et implicites (éliminatoires, notées ou informatives), critères et formule de notation du prix, zones floues, contradictions, risques contractuels, questions bloquantes avant tout engagement. Déclenche sur "analyse ce cahier des charges", "analyse ce dossier de consultation", "qu'est-ce qui est flou dans ce CDC", "avant de répondre à cet appel d'offres, qu'est-ce qu'on doit clarifier", "quelles sont les zones à risque de ce cahier des charges". Ne produit ni plan de réponse ni contenu client — utiliser `offre-commerciale` pour rédiger la réponse elle-même.
 description_en: Analyzes a received specification document or tender file from the respondent's side — explicit and implicit requirements (knockout, scored or informative), award criteria and price-scoring formula, grey areas, contradictions, contractual risks, blocking questions before any commitment. Triggers on "analyze this spec document", "analyze this tender file", "what's unclear in this RFP", "before we respond to this tender, what do we need to clarify", "what are the risk areas in this spec". Does not produce a response plan or client-facing content — use `offre-commerciale` to draft the actual response.
 icon: ⊕
@@ -128,4 +128,6 @@ Default format; an explicit request from the user overrides it. The section name
 
 The team can decide whether to proceed without rereading the source. Every requirement is labelled explicit or inferred, and knockout, scored or informative. Risk areas and blocking questions are visible and ready to ask the buyer.
 
-<!-- Knockout versus scored requirements and counting back from the deadline adapted from anthropics/knowledge-work-plugins, small-business/skills/grant-rfp-writer/reference/go_no_go.md (Apache-2.0, commit 33eeda1): rewritten for French tenders, without the US portal, bonding or bid-protest content. See THIRD_PARTY.md. -->
+# Sources
+
+Knockout versus scored requirements and counting back from the deadline adapted from anthropics/knowledge-work-plugins, small-business/skills/grant-rfp-writer/reference/go_no_go.md (Apache-2.0, commit 33eeda1): rewritten for French tenders, without the US portal, bonding or bid-protest content. See THIRD_PARTY.md.

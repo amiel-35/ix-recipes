@@ -1,7 +1,7 @@
 ---
 id: prd
 label: PRD
-version: 1.3.0
+version: 1.3.1
 description_fr: Produit un Product Requirements Document complet — problème, vision, utilisateurs cibles, périmètre inclus/exclu, exigences, métriques de succès — le quoi et le pourquoi, jamais le comment. Déclenche sur "prépare le PRD pour ce produit", "j'ai besoin d'un document de vision produit avant que l'équipe eng s'y mette", "cadre le scope avant le développement". Ne produit pas de backlog de user stories ni de spec d'écrans ou de flows (utiliser `feature-spec`).
 description_en: Produces a complete Product Requirements Document, problem, vision, target users, scope in and out, requirements, success metrics, the what and the why, never the how. Triggers on "prepare the PRD for this product", "I need a product vision document before engineering starts", "define scope before development". Does not produce a backlog of user stories (use `feature-spec`) nor a spec of screens or flows (use `feature-spec`).
 icon: ▣
@@ -116,4 +116,6 @@ Facts (validated), hypotheses and points to check are labelled where they appear
 - Each metric has a threshold, a measurement method and a date, or the word "baseline to be measured".
 - Legal requirements that apply are stated or raised as questions.
 
-<!-- Success-metric target rules, P0 test, P2 as architecture insurance, non-goals with reasons, scope-drift prevention and open-question tagging adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 33eeda1): rewritten into the ix template and adapted to the PRD. See THIRD_PARTY.md. -->
+# Sources
+
+Success-metric target rules, P0 test, P2 as architecture insurance, non-goals with reasons, scope-drift prevention and open-question tagging adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 33eeda1): rewritten into the ix template and adapted to the PRD. See THIRD_PARTY.md.

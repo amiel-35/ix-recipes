@@ -86,4 +86,6 @@ This skill ships one competency reference per job family in `references/`: `meti
 - If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
 - If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-<!-- The optional self-assessment outline is adapted from anthropics/knowledge-work-plugins, human-resources/skills/performance-review/SKILL.md L29-60 (Apache-2.0, commit 33eeda1): "feedback for manager" removed, a workload and working-conditions block added. See THIRD_PARTY.md. -->
+# Sources
+
+The optional self-assessment outline is adapted from anthropics/knowledge-work-plugins, human-resources/skills/performance-review/SKILL.md L29-60 (Apache-2.0, commit 33eeda1): "feedback for manager" removed, a workload and working-conditions block added. See THIRD_PARTY.md.

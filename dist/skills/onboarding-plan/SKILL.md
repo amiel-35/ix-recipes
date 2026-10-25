@@ -79,4 +79,6 @@ This is the default format; an explicit request from the user wins. Output names
 - Nothing taken from the scorecard is quoted; weak points appear as role-based objectives.
 - Absences of the manager and the buddy are handled; what is unknown is listed as questions.
 
-<!-- Pre-start checklist, day-1 and week-1 programme, key-contacts table and the advice not to overload day 1 and to assign a buddy other than the manager adapted from anthropics/knowledge-work-plugins, human-resources/skills/onboarding/SKILL.md (L33-79, L100-104) (Apache-2.0, commit 33eeda1): rewritten and completed with the French legal formalities and the trial-period decision point. See THIRD_PARTY.md. -->
+# Sources
+
+Pre-start checklist, day-1 and week-1 programme, key-contacts table and the advice not to overload day 1 and to assign a buddy other than the manager adapted from anthropics/knowledge-work-plugins, human-resources/skills/onboarding/SKILL.md (L33-79, L100-104) (Apache-2.0, commit 33eeda1): rewritten and completed with the French legal formalities and the trial-period decision point. See THIRD_PARTY.md.

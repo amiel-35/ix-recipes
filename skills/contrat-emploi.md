@@ -1,7 +1,7 @@
 ---
 id: contrat-emploi
 label: Contrat emploi
-version: 1.3.0
+version: 1.3.1
 description_fr: Analyse, rédige ou révise un contrat de travail, une offre d'embauche ou un avenant RH, avec points de vigilance et limite légale rappelée. Trois modes — analyse (clause par clause, avec réécriture proposée), génération (nouveau document), révision (reprise d'un projet existant, corrigé clause par clause avec ce qui change et pourquoi). Déclenche quand l'utilisateur a un document contractuel RH à produire, vérifier ou corriger — CDI, CDD, freelance, avenant, clause litigieuse. Déclenche sur "relis ce contrat de travail", "rédige une offre d'embauche pour ce poste", "corrige ce projet de CDD", "prépare un avenant de mobilité", "cette clause de non-concurrence est-elle valable", "vérifie ce CDD". Ne remplace jamais la relecture d'un juriste avant signature — reste un projet à valider. Distinct de `fiche-poste`, qui décrit le rôle en amont du recrutement, pas les clauses contractuelles.
 description_en: Analyzes, drafts or revises an employment contract, job offer, or HR amendment, with watch points and the legal limit recalled. Three modes — analysis (clause by clause, with a proposed rewrite), generation (a new document), revision (takes an existing draft and corrects it clause by clause, saying what changes and why). Triggers when the user has an HR contractual document to produce, check or correct — permanent, fixed-term, freelance, amendment, disputed clause. Triggers on "review this employment contract", "draft a job offer for this role", "correct this fixed-term contract draft", "prepare a mobility amendment", "is this non-compete clause valid", "check this fixed-term contract". Never replaces lawyer review before signing — stays a draft to validate. Distinct from `fiche-poste`, which describes the role upstream of recruitment, not contractual clauses.
 icon: ⊟
@@ -107,4 +107,6 @@ This is the default format; an explicit request from the user wins. Output names
 - The legal caveat appears once, with the list of what a professional must check.
 - Assumptions about the law, the agreement and the status are visible; unknown facts are placeholders listed in `open_questions`.
 
-<!-- Compensation table for the job offer (annual fixed, target variable, benefits, total) adapted from anthropics/knowledge-work-plugins, human-resources/skills/draft-offer/SKILL.md (L35-42, L80) (Apache-2.0, commit 33eeda1): rewritten for French law (gross annual pay, acceptance deadline per Cass. soc. 21 September 2017). See THIRD_PARTY.md. -->
+# Sources
+
+Compensation table for the job offer (annual fixed, target variable, benefits, total) adapted from anthropics/knowledge-work-plugins, human-resources/skills/draft-offer/SKILL.md (L35-42, L80) (Apache-2.0, commit 33eeda1): rewritten for French law (gross annual pay, acceptance deadline per Cass. soc. 21 September 2017). See THIRD_PARTY.md.

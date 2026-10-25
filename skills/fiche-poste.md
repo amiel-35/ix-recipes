@@ -1,7 +1,7 @@
 ---
 id: fiche-poste
 label: Fiche de poste
-version: 1.5.0
+version: 1.5.1
 description_fr: Produit une fiche de poste structurée et publiable en France — mission, responsabilités, compétences requises/souhaitables, critères de succès, et le cadre légal d'une annonce (âge, sexe, résidence, langue, rémunération). Déclenche quand l'utilisateur doit définir ou publier un rôle avant recrutement. Déclenche sur "rédige la fiche de poste pour ce recrutement", "décris ce rôle pour l'annonce", "rédige l'annonce pour ce poste", "quelles compétences requises pour ce poste", "prépare la fiche de poste avant de lancer le recrutement". Ne produit jamais le contrat — voir `contrat-emploi` pour les clauses contractuelles — ni une liste de tâches exhaustive.
 description_en: Produces a structured job description that can be published in France — mission, responsibilities, required/desirable competencies, success criteria, and the legal frame of a job posting (age, sex, residence, language, pay). Triggers when the user must define or publish a role before recruiting. Triggers on "write the job description for this recruitment", "describe this role for the posting", "write the job ad for this position", "what competencies are required for this position", "prepare the job description before we open the role". Never produces the contract — see `contrat-emploi` for contractual clauses — nor an exhaustive task list.
 icon: file-text
@@ -102,4 +102,6 @@ This is the default format; an explicit request from the user wins. Output name 
 - Responsibilities are 5 to 8 outcomes, not a task list.
 - Stable expectations and expectations still to be confirmed are told apart, and the grey areas are listed.
 
-<!-- Rejection test for "required" lines, "checkable on a resume" rule, "pay is a number or a band, otherwise omit the section", length and wording hygiene adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/SKILL.md (L99-103) and reference/job-post-structure.md (L32-40, L53-59) (Apache-2.0, commit 33eeda1): rewritten and fitted to French law (L1133-1, L5331-3, L5331-4, epicene wording). See THIRD_PARTY.md. -->
+# Sources
+
+Rejection test for "required" lines, "checkable on a resume" rule, "pay is a number or a band, otherwise omit the section", length and wording hygiene adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/SKILL.md (L99-103) and reference/job-post-structure.md (L32-40, L53-59) (Apache-2.0, commit 33eeda1): rewritten and fitted to French law (L1133-1, L5331-3, L5331-4, epicene wording). See THIRD_PARTY.md.

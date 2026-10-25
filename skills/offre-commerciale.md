@@ -1,7 +1,7 @@
 ---
 id: offre-commerciale
 label: Offre commerciale
-version: 1.2.0
+version: 1.2.1
 description_fr: Rédige le contenu d'une offre ou d'une réponse client structurée et argumentée — périmètre, ce qui n'est pas compris, hypothèses avec leur conséquence, prix en lignes de décision, validité et conditions de règlement — prête à intégrer avant mise en forme finale. Déclenche sur "rédige notre réponse à cet appel d'offres", "prépare l'offre pour ce client", "écris le contenu de la proposition commerciale", "structure notre réponse avec le chiffrage". Produit la réponse elle-même, pas une stratégie de réponse ni un audit du CDC — utiliser `analyse-cdc` en amont pour ça. Ne fait pas la mise en forme finale du livrable.
 description_en: Writes the content of a structured, argued client offer or tender response — scope, what is not included, assumptions with their consequence, price in decision lines, validity and payment terms — ready to use before final formatting. Triggers on "write our response to this tender", "draft the offer for this client", "write the content of the commercial proposal", "structure our response with pricing". Produces the response itself, not a response strategy or a spec critique — use `analyse-cdc` upstream for that. Does not handle final formatting of the deliverable.
 icon: ▣
@@ -113,4 +113,6 @@ Recommended structure of the offer:
 - Every assumption behind the price is visible with its consequence; missing facts are visible marks.
 - Payment terms respect the rule above, and the internal note says what was not accepted and why.
 
-<!-- Scope, assumptions-with-consequence, price-lines, options and internal-note practices adapted from anthropics/knowledge-work-plugins, small-business/skills/proposal-builder/reference/{proposal_structure,pricing_method,gotchas}.md and small-business/skills/grant-rfp-writer/reference/drafting.md (Apache-2.0, commit 33eeda1): rewritten for French B2B and public tenders, with French payment-term law instead of net-15/net-30. See THIRD_PARTY.md. -->
+# Sources
+
+Scope, assumptions-with-consequence, price-lines, options and internal-note practices adapted from anthropics/knowledge-work-plugins, small-business/skills/proposal-builder/reference/{proposal_structure,pricing_method,gotchas}.md and small-business/skills/grant-rfp-writer/reference/drafting.md (Apache-2.0, commit 33eeda1): rewritten for French B2B and public tenders, with French payment-term law instead of net-15/net-30. See THIRD_PARTY.md.

@@ -83,4 +83,6 @@ This is the default format; an explicit request from the user wins. Output names
 - The legal caveat appears once, with the list of what a professional must check.
 - Assumptions about the law, the agreement and the status are visible; unknown facts are placeholders listed in `open_questions`.
 
-<!-- Compensation table for the job offer (annual fixed, target variable, benefits, total) adapted from anthropics/knowledge-work-plugins, human-resources/skills/draft-offer/SKILL.md (L35-42, L80) (Apache-2.0, commit 33eeda1): rewritten for French law (gross annual pay, acceptance deadline per Cass. soc. 21 September 2017). See THIRD_PARTY.md. -->
+# Sources
+
+Compensation table for the job offer (annual fixed, target variable, benefits, total) adapted from anthropics/knowledge-work-plugins, human-resources/skills/draft-offer/SKILL.md (L35-42, L80) (Apache-2.0, commit 33eeda1): rewritten for French law (gross annual pay, acceptance deadline per Cass. soc. 21 September 2017). See THIRD_PARTY.md.

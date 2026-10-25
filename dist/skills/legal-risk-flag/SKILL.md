@@ -79,4 +79,6 @@ Output names: `legal_risk_flags` = parts 1 to 3; `open_questions` = part 4.
 *Why this works: the level is justified by a named anchor, and the reader sees what to change.*
 </example>
 
-<!-- Level anchors and the escalation triggers adapted from anthropics/knowledge-work-plugins, legal/skills/legal-risk-assessment/SKILL.md (Apache-2.0, commit 33eeda1): reduced from five severity levels to three and fitted to French law. See THIRD_PARTY.md. -->
+# Sources
+
+Level anchors and the escalation triggers adapted from anthropics/knowledge-work-plugins, legal/skills/legal-risk-assessment/SKILL.md (Apache-2.0, commit 33eeda1): reduced from five severity levels to three and fitted to French law. See THIRD_PARTY.md.

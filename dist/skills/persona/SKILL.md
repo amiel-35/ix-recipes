@@ -79,4 +79,6 @@ In hypothesis mode, the banner comes before the summary.
 - Stated, observed and assumed are separated.
 - No quote carries a participant's name; no demographic detail is invented.
 
-<!-- Behaviour over demographics, distinguishing variables, evidence threshold, stated versus observed and attribution of quotes by participant type adapted from anthropics/knowledge-work-plugins, product-management/skills/synthesize-research/SKILL.md (Apache-2.0, commit 33eeda1): L231, L269-274, L307-309, rewritten for the persona skill and adapted to French and EU data protection. See THIRD_PARTY.md. -->
+# Sources
+
+Behaviour over demographics, distinguishing variables, evidence threshold, stated versus observed and attribution of quotes by participant type adapted from anthropics/knowledge-work-plugins, product-management/skills/synthesize-research/SKILL.md (Apache-2.0, commit 33eeda1): L231, L269-274, L307-309, rewritten for the persona skill and adapted to French and EU data protection. See THIRD_PARTY.md.

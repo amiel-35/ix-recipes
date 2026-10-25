@@ -77,4 +77,6 @@ Confirmed, estimated and unquantified stay visibly labelled everywhere a figure 
 - Revision, discounts, volumes and commitments are treated the same way for all options.
 - The most sensitive lines and the tipping values are identifiable without rereading the reasoning.
 
-<!-- The cost-category coverage (total cost, implementation, training, support, exit costs) draws on anthropics/knowledge-work-plugins, operations/skills/vendor-review/SKILL.md (Apache-2.0, commit 33eeda1), rewritten with the French tax basis, price revision and tipping-value rules. See THIRD_PARTY.md. -->
+# Sources
+
+The cost-category coverage (total cost, implementation, training, support, exit costs) draws on anthropics/knowledge-work-plugins, operations/skills/vendor-review/SKILL.md (Apache-2.0, commit 33eeda1), rewritten with the French tax basis, price revision and tipping-value rules. See THIRD_PARTY.md.

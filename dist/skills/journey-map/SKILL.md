@@ -71,4 +71,6 @@ Observed and hypothesis are labelled on each emotion and friction.
 - Internal company steps are outside the map.
 - The team can name the critical moments without further research, and knows what data is missing.
 
-<!-- Method after S. Gibbons, Nielsen Norman Group, "Journey Mapping 101" (2018, reviewed 2026-07-15): public method, no text reproduced. -->
+# Sources
+
+Method after S. Gibbons, Nielsen Norman Group, "Journey Mapping 101" (2018, reviewed 2026-07-15): public method, no text reproduced.

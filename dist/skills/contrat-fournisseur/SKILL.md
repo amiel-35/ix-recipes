@@ -75,4 +75,6 @@ Output names: `supplier_contract_analysis` and `gtc_analysis` = parts 1, 2 and 5
 *Why this works: it names the list and the number, not just "unbalanced", and the reader can see what is lost and what to write.*
 </example>
 
-<!-- Clause review points, the green / orange / red thresholds, the redline-with-fallback format and the three priority levels with their trade rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for French law, from the buyer's, supplier's or user's side. Clause categories, thresholds and the finding format for standard terms (formerly cgv-checker) from the same source. See THIRD_PARTY.md. -->
+# Sources
+
+Clause review points, the green / orange / red thresholds, the redline-with-fallback format and the three priority levels with their trade rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for French law, from the buyer's, supplier's or user's side. Clause categories, thresholds and the finding format for standard terms (formerly cgv-checker) from the same source. See THIRD_PARTY.md.

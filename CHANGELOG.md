@@ -2,6 +2,13 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-10-25, plugin 2.14.1: attributions moved out of HTML comments
+
+- 30 skills (patch bump each): the closing `<!-- adapted from … -->` attribution
+  becomes a visible `Sources` section with the same text. GitHub hid it while the
+  model read it, and skill scanners (SkillSpector) flag HTML comments in a
+  SKILL.md as hidden instructions. Content and `THIRD_PARTY.md` are unchanged.
+
 ## 2026-10-16 — plugin 2.14.0: the corpus, pieces apart from the request (command line)
 
 Amiel's decision of 2026-10-16 ([`docs/decision-corpus.md`](docs/decision-corpus.md)), after the checks of

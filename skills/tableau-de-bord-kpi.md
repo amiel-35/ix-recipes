@@ -1,7 +1,7 @@
 ---
 id: tableau-de-bord-kpi
 label: Tableau de bord KPI
-version: 1.3.0
+version: 1.3.1
 description_fr: Définit et structure un tableau de bord KPI complet — métrique, unité, cible, fréquence, source — à partir d'objectifs ou d'un contexte métier. Déclenche sur "définis le tableau de bord pour...", "quels KPI suivre pour cette équipe", "structure les indicateurs de pilotage", "quel dashboard mettre en place". Ne formule pas l'Objectif et les Key Results eux-mêmes — utiliser `okr` pour ça ; ne définit pas les signaux ponctuels de confirmation d'un plan précis — utiliser `indicateurs` pour ça. Exige pour chaque KPI une définition mesurable et une source ; la cible vient d'une mesure de départ, sinon elle est datée « à fixer ».
 description_en: Defines and structures a full KPI dashboard — metric, unit, target, frequency, data source — from business objectives or context. Triggers on "define the dashboard for...", "which KPIs should this team track", "structure the piloting indicators", "what dashboard should we set up". Does not formulate the Objective and Key Results themselves — use `okr` for that; does not define one-off confirmation or alert signals for a specific plan — use `indicateurs` for that. Requires a measurable definition and a source for every KPI; the target comes from a baseline, otherwise it is dated "to be set".
 icon: ▦
@@ -89,4 +89,6 @@ Default format; an explicit request from the user comes first. Output names: `da
 - Counterweights are paired with the KPIs that need them and leading indicators sit beside their results.
 - Excluded and problematic KPIs are listed with the reason.
 
-<!-- Target-setting elements, dashboard principles, anti-patterns and alerting hygiene adapted from anthropics/knowledge-work-plugins, product-management/skills/metrics-review/SKILL.md (Apache-2.0, commit 33eeda1): rewritten with French vocabulary (commit and stretch targets). See THIRD_PARTY.md. -->
+# Sources
+
+Target-setting elements, dashboard principles, anti-patterns and alerting hygiene adapted from anthropics/knowledge-work-plugins, product-management/skills/metrics-review/SKILL.md (Apache-2.0, commit 33eeda1): rewritten with French vocabulary (commit and stretch targets). See THIRD_PARTY.md.

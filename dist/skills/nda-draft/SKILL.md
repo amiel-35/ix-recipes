@@ -96,4 +96,6 @@ Default format; an explicit request from the user prevails.
 - The lawyer-review line is present.
 
 
-<!-- Default positions (term, survival, standard of care, marking, residuals, non-solicitation fallback) adapted from anthropics/knowledge-work-plugins, legal/skills/triage-nda/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for drafting rather than triage and fitted to French law (penalty clause, art. 1210, jurisdiction clause). See THIRD_PARTY.md. -->
+# Sources
+
+Default positions (term, survival, standard of care, marking, residuals, non-solicitation fallback) adapted from anthropics/knowledge-work-plugins, legal/skills/triage-nda/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for drafting rather than triage and fitted to French law (penalty clause, art. 1210, jurisdiction clause). See THIRD_PARTY.md.

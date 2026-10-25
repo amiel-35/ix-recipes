@@ -1,7 +1,7 @@
 ---
 id: negotiation-brief
 label: Brief de negociation
-version: 1.3.0
+version: 1.3.1
 description_fr: Prépare une position de négociation achat avant la réunion — objectif, faits utiles, leviers, concessions échangées, BATNA chiffrée, ligne rouge tirée de la BATNA, position d'ouverture et cible, avec les garde-fous du droit français côté acheteur (délais de paiement, rupture de relation établie). Déclenche sur "prépare ma négo avec ce fournisseur", "quels leviers j'ai face à ce prestataire", "jusqu'où je peux aller sur ce renouvellement", "quelle est notre BATNA sur ce contrat". N'analyse pas les clauses du contrat, voir `contrat-fournisseur` — et ne compare pas plusieurs devis entre eux, voir `offer-comparison`.
 description_en: Prepares a procurement negotiation position before the meeting — objective, useful facts, levers, traded concessions, priced BATNA, red line derived from the BATNA, opening position and target, with the buyer-side guardrails of French law (payment periods, termination of an established relationship). Triggers on "prep my negotiation with this supplier", "what leverage do we have with this vendor", "how far can we push on this renewal", "what's our BATNA on this contract". Does not analyze the contract's clauses, see `contrat-fournisseur` — and does not compare several quotes against each other, see `offer-comparison`.
 icon: ⟐
@@ -93,4 +93,6 @@ Why this is right: the fact can be shown across the table, the assumption stays 
 - BATNA, switching costs and main risks are visible without rereading the source.
 - Payment-period and legal guardrails are checked against what the brief proposes.
 
-<!-- Priority tiers and the trade-off rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for purchase negotiation with purchase examples instead of contract-clause examples. See THIRD_PARTY.md. -->
+# Sources
+
+Priority tiers and the trade-off rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for purchase negotiation with purchase examples instead of contract-clause examples. See THIRD_PARTY.md.

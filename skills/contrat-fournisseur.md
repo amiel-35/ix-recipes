@@ -1,7 +1,7 @@
 ---
 id: contrat-fournisseur
 label: Lecture de contrat et de CGV
-version: 2.0.0
+version: 2.0.1
 aliases:
 - cgv-checker
 description_fr: Lit un contrat ou des conditions générales en droit français selon une position de lecture (acheteur ou client, fournisseur qui publie ou vend, utilisateur) et un type de document (CGV / CGU d'adhésion, contrat fournisseur ou de prestation négocié, conditions de service SaaS / cloud) — SLA, pénalités, responsabilité, résiliation, renouvellement, prix, réversibilité, données personnelles, obligations légales du lecteur. Qualifie d'abord les parties (consommateur, non-professionnel, professionnel) puisque le test d'abus en dépend, cite la liste noire ou grise applicable, et classe les points en trois niveaux de priorité, chacun avec une rédaction proposée et un repli. Déclenche sur "ce contrat fournisseur est-il équilibré côté acheteur", "quelles clauses renégocier avec ce prestataire", "check ce contrat de service avant signature", "relis ce contrat SaaS avant de signer", "quels risques dans ce SLA", "ces CGU sont-elles équilibrées", "relis ces CGV côté vendeur avant publication", "y a-t-il des clauses abusives dans ces conditions générales", "quels points négocier sur ces CGV fournisseur". Ne rédige pas de contrat, ne fait pas un flash rapide tous documents — voir `legal-risk-flag` — et ne remplace pas une revue juridique.
@@ -101,4 +101,6 @@ Output names: `supplier_contract_analysis` and `gtc_analysis` = parts 1, 2 and 5
 *Why this works: it names the list and the number, not just "unbalanced", and the reader can see what is lost and what to write.*
 </example>
 
-<!-- Clause review points, the green / orange / red thresholds, the redline-with-fallback format and the three priority levels with their trade rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for French law, from the buyer's, supplier's or user's side. Clause categories, thresholds and the finding format for standard terms (formerly cgv-checker) from the same source. See THIRD_PARTY.md. -->
+# Sources
+
+Clause review points, the green / orange / red thresholds, the redline-with-fallback format and the three priority levels with their trade rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for French law, from the buyer's, supplier's or user's side. Clause categories, thresholds and the finding format for standard terms (formerly cgv-checker) from the same source. See THIRD_PARTY.md.

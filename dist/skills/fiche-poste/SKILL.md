@@ -82,4 +82,6 @@ This is the default format; an explicit request from the user wins. Output name 
 - Responsibilities are 5 to 8 outcomes, not a task list.
 - Stable expectations and expectations still to be confirmed are told apart, and the grey areas are listed.
 
-<!-- Rejection test for "required" lines, "checkable on a resume" rule, "pay is a number or a band, otherwise omit the section", length and wording hygiene adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/SKILL.md (L99-103) and reference/job-post-structure.md (L32-40, L53-59) (Apache-2.0, commit 33eeda1): rewritten and fitted to French law (L1133-1, L5331-3, L5331-4, epicene wording). See THIRD_PARTY.md. -->
+# Sources
+
+Rejection test for "required" lines, "checkable on a resume" rule, "pay is a number or a band, otherwise omit the section", length and wording hygiene adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/SKILL.md (L99-103) and reference/job-post-structure.md (L32-40, L53-59) (Apache-2.0, commit 33eeda1): rewritten and fitted to French law (L1133-1, L5331-3, L5331-4, epicene wording). See THIRD_PARTY.md.

@@ -67,4 +67,6 @@ Default format; an explicit request from the user comes first. Output names: `da
 - Counterweights are paired with the KPIs that need them and leading indicators sit beside their results.
 - Excluded and problematic KPIs are listed with the reason.
 
-<!-- Target-setting elements, dashboard principles, anti-patterns and alerting hygiene adapted from anthropics/knowledge-work-plugins, product-management/skills/metrics-review/SKILL.md (Apache-2.0, commit 33eeda1): rewritten with French vocabulary (commit and stretch targets). See THIRD_PARTY.md. -->
+# Sources
+
+Target-setting elements, dashboard principles, anti-patterns and alerting hygiene adapted from anthropics/knowledge-work-plugins, product-management/skills/metrics-review/SKILL.md (Apache-2.0, commit 33eeda1): rewritten with French vocabulary (commit and stretch targets). See THIRD_PARTY.md.

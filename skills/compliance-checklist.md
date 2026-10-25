@@ -1,7 +1,7 @@
 ---
 id: compliance-checklist
 label: Checklist conformite
-version: 1.3.0
+version: 1.3.1
 description_fr: Génère une checklist de conformité multi-domaines en droit français et européen à partir d'un projet ou d'un contexte — obligations légales, contractuelles, réglementaires et sectorielles — chacune avec son fait déclencheur, sa date d'application, son exemption de taille éventuelle, un statut défini et une priorité. Pose la date de référence et la taille de l'entreprise avant tout. Déclenche sur "de quoi doit-on se mettre en conformité avant ce lancement", "checklist conformité pour ce nouveau service", "quelles obligations réglementaires sur ce projet", "qu'est-ce qu'il faut valider avec le juridique avant de contractualiser". Ne traite pas le seul RGPD ni les DPIA, voir `conformite-rgpd` — ne relit pas un contrat — et ne remplace pas un conseil professionnel.
 description_en: Generates a multi-domain compliance checklist under French and EU law from a project or a context — legal, contractual, regulatory and sector obligations — each with its triggering fact, application date, size exemption if any, a defined status and a priority. Fixes the reference date and the company size first. Triggers on "what do we need to be compliant on before this launch", "compliance checklist for this new service", "which regulatory obligations apply to this project", "what must legal sign off before we contract". Does not cover GDPR and DPIAs alone, see `conformite-rgpd` — does not review a contract — and does not replace professional advice.
 icon: ☑
@@ -101,4 +101,6 @@ Output names: `compliance_checklist` = parts 1 to 5; `open_questions` = part 6.
 *Why this works: the triggering fact is quoted from the request and the date is given, so the reader can see why the row exists and when it bites.*
 </example>
 
-<!-- Output template (verdict, requirements table with status, risks, actions, approvals needed) adapted from anthropics/knowledge-work-plugins, legal/skills/compliance-check/SKILL.md (Apache-2.0, commit 33eeda1): rewritten as a French and EU domain table with dates and size exemptions. See THIRD_PARTY.md. -->
+# Sources
+
+Output template (verdict, requirements table with status, risks, actions, approvals needed) adapted from anthropics/knowledge-work-plugins, legal/skills/compliance-check/SKILL.md (Apache-2.0, commit 33eeda1): rewritten as a French and EU domain table with dates and size exemptions. See THIRD_PARTY.md.

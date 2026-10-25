@@ -104,4 +104,6 @@ This is the default format; an explicit request from the user wins. Output names
 - No question touches a ground of L1132-1; any constraint is asked of all candidates in the same words.
 - The candidate is told of the format in advance; the guide stays with the interviewers.
 
-<!-- Behavioural anchors by level, and the question-writing tips (no leading question, one question at a time, situational questions only without domain experience), adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/reference/interview-guide-structure.md (L69-75, L87-93) (Apache-2.0, commit 33eeda1): rewritten on a 1-4 scale and fitted to French law (L1221-6, L1221-8, L1132-1). See THIRD_PARTY.md. -->
+# Sources
+
+Behavioural anchors by level, and the question-writing tips (no leading question, one question at a time, situational questions only without domain experience), adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/reference/interview-guide-structure.md (L69-75, L87-93) (Apache-2.0, commit 33eeda1): rewritten on a 1-4 scale and fitted to French law (L1221-6, L1221-8, L1132-1). See THIRD_PARTY.md.

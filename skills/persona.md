@@ -1,7 +1,7 @@
 ---
 id: persona
 label: Persona
-version: 1.3.0
+version: 1.3.1
 description_fr: Produit des personas utilisateurs structurés depuis des données de recherche, interviews ou un brief produit, en distinguant ce qui est observé de ce qui est supposé. Déclenche sur "crée les personas pour ce produit", "à partir de ces interviews, fais-moi des profils utilisateurs", "qui sont nos utilisateurs types". Ne trace pas de parcours (utiliser `journey-map` en aval) et ne dépasse pas quatre profils par livrable.
 description_en: Produces structured user personas from research data, interviews, or a product brief, distinguishing what is observed from what is assumed. Triggers on "create the personas for this product", "turn these interviews into user profiles", "who are our typical users". Does not map a journey (use `journey-map` downstream) and never exceeds four profiles per deliverable.
 icon: ◉
@@ -99,4 +99,6 @@ In hypothesis mode, the banner comes before the summary.
 - Stated, observed and assumed are separated.
 - No quote carries a participant's name; no demographic detail is invented.
 
-<!-- Behaviour over demographics, distinguishing variables, evidence threshold, stated versus observed and attribution of quotes by participant type adapted from anthropics/knowledge-work-plugins, product-management/skills/synthesize-research/SKILL.md (Apache-2.0, commit 33eeda1): L231, L269-274, L307-309, rewritten for the persona skill and adapted to French and EU data protection. See THIRD_PARTY.md. -->
+# Sources
+
+Behaviour over demographics, distinguishing variables, evidence threshold, stated versus observed and attribution of quotes by participant type adapted from anthropics/knowledge-work-plugins, product-management/skills/synthesize-research/SKILL.md (Apache-2.0, commit 33eeda1): L231, L269-274, L307-309, rewritten for the persona skill and adapted to French and EU data protection. See THIRD_PARTY.md.

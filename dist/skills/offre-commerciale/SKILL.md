@@ -87,4 +87,6 @@ Recommended structure of the offer:
 - Every assumption behind the price is visible with its consequence; missing facts are visible marks.
 - Payment terms respect the rule above, and the internal note says what was not accepted and why.
 
-<!-- Scope, assumptions-with-consequence, price-lines, options and internal-note practices adapted from anthropics/knowledge-work-plugins, small-business/skills/proposal-builder/reference/{proposal_structure,pricing_method,gotchas}.md and small-business/skills/grant-rfp-writer/reference/drafting.md (Apache-2.0, commit 33eeda1): rewritten for French B2B and public tenders, with French payment-term law instead of net-15/net-30. See THIRD_PARTY.md. -->
+# Sources
+
+Scope, assumptions-with-consequence, price-lines, options and internal-note practices adapted from anthropics/knowledge-work-plugins, small-business/skills/proposal-builder/reference/{proposal_structure,pricing_method,gotchas}.md and small-business/skills/grant-rfp-writer/reference/drafting.md (Apache-2.0, commit 33eeda1): rewritten for French B2B and public tenders, with French payment-term law instead of net-15/net-30. See THIRD_PARTY.md.

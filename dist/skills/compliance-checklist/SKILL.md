@@ -80,4 +80,6 @@ Output names: `compliance_checklist` = parts 1 to 5; `open_questions` = part 6.
 *Why this works: the triggering fact is quoted from the request and the date is given, so the reader can see why the row exists and when it bites.*
 </example>
 
-<!-- Output template (verdict, requirements table with status, risks, actions, approvals needed) adapted from anthropics/knowledge-work-plugins, legal/skills/compliance-check/SKILL.md (Apache-2.0, commit 33eeda1): rewritten as a French and EU domain table with dates and size exemptions. See THIRD_PARTY.md. -->
+# Sources
+
+Output template (verdict, requirements table with status, risks, actions, approvals needed) adapted from anthropics/knowledge-work-plugins, legal/skills/compliance-check/SKILL.md (Apache-2.0, commit 33eeda1): rewritten as a French and EU domain table with dates and size exemptions. See THIRD_PARTY.md.

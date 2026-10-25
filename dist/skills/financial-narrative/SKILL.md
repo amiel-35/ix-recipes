@@ -73,4 +73,6 @@ Output names: `financial_narrative` (the text) and `key_messages` (the messages 
 - Comparisons are named, rates are in points, non-recurring items are shown both ways, a divergence between profit and cash is addressed.
 - Each reading beyond the source is marked, and the closing lists are filled.
 
-<!-- Narrative elements, anti-patterns and comparison guidance adapted from anthropics/knowledge-work-plugins, finance/skills/variance-analysis/SKILL.md (Apache-2.0, commit 33eeda1), and the basis-point convention from finance/skills/financial-statements/SKILL.md: rewritten and checked on numerical examples; the margin decomposition is derived and verified here. See THIRD_PARTY.md. -->
+# Sources
+
+Narrative elements, anti-patterns and comparison guidance adapted from anthropics/knowledge-work-plugins, finance/skills/variance-analysis/SKILL.md (Apache-2.0, commit 33eeda1), and the basis-point convention from finance/skills/financial-statements/SKILL.md: rewritten and checked on numerical examples; the margin decomposition is derived and verified here. See THIRD_PARTY.md.

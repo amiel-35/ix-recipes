@@ -1,7 +1,7 @@
 ---
 id: budget-variance-analysis
 label: Analyse des ecarts budgetaires
-version: 1.3.0
+version: 1.3.1
 description_fr: Analyse des écarts budget/réel ligne par ligne  — montant, sens (favorable ou défavorable), décomposition volume / mix / prix quand les données le permettent, causes probables, hypothèses marquées et actions correctrices. Déclenche sur "pourquoi on a dépassé le budget", "analyse les écarts de ce trimestre", "explique ce dépassement de charges", "budget vs réalisé", "écart prix / volume", "on a un écart, à quoi c'est dû". Produit un diagnostic factuel, pas une décision de gestion  — ce qui est observé, ce qui est une hypothèse et ce qui reste à vérifier restent séparés.
 description_en: Analyzes budget-versus-actual variances line by line — amount, direction (favorable or unfavorable), volume / mix / price decomposition when the data allows, probable causes, flagged hypotheses and corrective actions. Triggers on "why did we overspend", "analyze this quarter's variances", "explain this budget overrun", "actual vs budget", "price / volume variance", "we have a gap, what's driving it". Produces a factual diagnosis, not a management decision — what is observed, what is a hypothesis and what still needs verification stay separate.
 icon: △
@@ -134,4 +134,6 @@ Output names: `budget_variance_analysis` (everything above except the actions) a
 - Each analysed variance has a nature and a cause that is either sourced or marked hypothesis; the limits of the data are said.
 - Each recommendation points to a variance; the three closing lists are filled.
 
-<!-- Decomposition cases, materiality thresholds, investigation priority, commentary elements, anti-patterns and bridge format adapted from anthropics/knowledge-work-plugins, finance/skills/variance-analysis/SKILL.md (Apache-2.0, commit 33eeda1): price / volume formula and the threshold and priority tables are re-derived and checked on numerical examples; the "three-way" and rate / mix formulas of the source are not reused because they do not close on the total. See THIRD_PARTY.md. -->
+# Sources
+
+Decomposition cases, materiality thresholds, investigation priority, commentary elements, anti-patterns and bridge format adapted from anthropics/knowledge-work-plugins, finance/skills/variance-analysis/SKILL.md (Apache-2.0, commit 33eeda1): price / volume formula and the threshold and priority tables are re-derived and checked on numerical examples; the "three-way" and rate / mix formulas of the source are not reused because they do not close on the total. See THIRD_PARTY.md.

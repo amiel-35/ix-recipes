@@ -1,7 +1,7 @@
 ---
 id: performance-review-helper
 label: Aide a l'entretien annuel
-version: 1.5.0
+version: 1.5.1
 description_fr: Prépare l'entretien annuel individuel d'évaluation — bilan factuel (réussites, axes de tension), questions pour le dialogue et objectifs mesurables pour N+1, dans le cadre légal de l'évaluation (méthodes connues à l'avance, absences protégées, forfait jours). Déclenche quand l'utilisateur prépare l'évaluation de performance d'une personne. Déclenche sur "prépare l'entretien annuel de cette personne", "prépare l'entretien d'évaluation de…", "bilan de performance de l'année", "trame pour l'évaluation annuelle". N'analyse jamais une grille déjà remplie — voir `analyse-entretien` — et ne traite pas les perspectives de carrière — voir `entretien-professionnel` (obligation légale) — ni la synthèse collective, voir `people-review`.
 description_en: Prepares the individual annual performance review — factual assessment (achievements, tension areas), dialogue questions and measurable objectives for next year, within the legal frame of evaluation (methods known in advance, protected absences, day-rate contracts). Triggers when the user prepares someone's performance evaluation. Triggers on "prepare this person's annual review", "prepare the evaluation interview for…", "performance assessment for the year", "template for the annual evaluation". Never analyzes an already-completed grid — see `analyse-entretien` — and does not cover career prospects — see `entretien-professionnel` (the legal obligation) — nor the collective summary, see `people-review`.
 icon: ◉
@@ -109,4 +109,6 @@ This skill ships one competency reference per job family in `references/`: `meti
 - If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
 - If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-<!-- The optional self-assessment outline is adapted from anthropics/knowledge-work-plugins, human-resources/skills/performance-review/SKILL.md L29-60 (Apache-2.0, commit 33eeda1): "feedback for manager" removed, a workload and working-conditions block added. See THIRD_PARTY.md. -->
+# Sources
+
+The optional self-assessment outline is adapted from anthropics/knowledge-work-plugins, human-resources/skills/performance-review/SKILL.md L29-60 (Apache-2.0, commit 33eeda1): "feedback for manager" removed, a workload and working-conditions block added. See THIRD_PARTY.md.

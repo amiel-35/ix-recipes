@@ -71,4 +71,6 @@ Why this is right: the fact can be shown across the table, the assumption stays 
 - BATNA, switching costs and main risks are visible without rereading the source.
 - Payment-period and legal guardrails are checked against what the brief proposes.
 
-<!-- Priority tiers and the trade-off rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for purchase negotiation with purchase examples instead of contract-clause examples. See THIRD_PARTY.md. -->
+# Sources
+
+Priority tiers and the trade-off rule adapted from anthropics/knowledge-work-plugins, legal/skills/review-contract/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for purchase negotiation with purchase examples instead of contract-clause examples. See THIRD_PARTY.md.

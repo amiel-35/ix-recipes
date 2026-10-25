@@ -76,4 +76,6 @@ This is the default format; an explicit request from the user wins. Output names
 - Signals that switch to another procedure and psychosocial risks are explicit.
 - Open decisions and points to qualify are visible without rereading the source.
 
-<!-- Span-of-control and team-size landmarks adapted from anthropics/knowledge-work-plugins, human-resources/skills/org-planning/SKILL.md, lines 17-24 (Apache-2.0, commit 33eeda1): given as indicative landmarks of US technology companies, not French norms. See THIRD_PARTY.md. -->
+# Sources
+
+Span-of-control and team-size landmarks adapted from anthropics/knowledge-work-plugins, human-resources/skills/org-planning/SKILL.md, lines 17-24 (Apache-2.0, commit 33eeda1): given as indicative landmarks of US technology companies, not French norms. See THIRD_PARTY.md.

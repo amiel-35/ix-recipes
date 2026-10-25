@@ -1,7 +1,7 @@
 ---
 id: reformulation-us
 label: Reformulation US
-version: 1.3.0
+version: 1.3.1
 description_fr: Réécrit des user stories existantes mal formulées en US propres, testables, avec critères d'acceptation Given/When/Then, en respectant l'intention d'origine. Déclenche sur "reformule ces user stories", "ces US sont mal écrites, nettoie-les", "rends ce ticket testable avec des critères d'acceptation clairs". Ne rédige pas de nouvelles US depuis un brief (utiliser `feature-spec`) et signale les US trop vagues plutôt que de les réinventer.
 description_en: Rewrites existing poorly-written user stories into clean, testable US with Given/When/Then acceptance criteria, staying faithful to the original intent. Triggers on "rewrite these user stories", "these US are badly written, clean them up", "make this ticket testable with clear acceptance criteria". Does not draft new US from a brief (use `feature-spec`) and flags US too vague to rewrite rather than reinventing them.
 icon: ↺
@@ -96,4 +96,6 @@ What is observed in the original is kept distinct from what you inferred (a bene
 - Technical tasks are classed as tasks; vague stories are flagged with their unblocking question.
 - No criterion contains a vague word without a figure or a question.
 
-<!-- Diagnosis table and acceptance-criteria tips adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 33eeda1): L147-152 and L215-220, rewritten for rewriting existing stories. See THIRD_PARTY.md. -->
+# Sources
+
+Diagnosis table and acceptance-criteria tips adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 33eeda1): L147-152 and L215-220, rewritten for rewriting existing stories. See THIRD_PARTY.md.

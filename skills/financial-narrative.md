@@ -1,7 +1,7 @@
 ---
 id: financial-narrative
 label: Narrative financiere
-version: 1.3.0
+version: 1.3.1
 description_fr: Transforme des chiffres financiers bruts (résultats, budget, trésorerie) en récit clair et hiérarchisé pour une direction ou un board. Déclenche sur "raconte ces chiffres au board", "prépare le narratif financier du comité", "transforme ce tableau de résultats en note pour la direction", "qu'est-ce qu'on retient de ces chiffres trimestriels". Se limite aux chiffres financiers pour une audience exécutive ; pour définir les indicateurs à suivre, utiliser `tableau-de-bord-kpi`.
 description_en: Transforms raw financial figures — results, budget, cash — into a clear, prioritized narrative for an executive or board audience. Triggers on "tell the board what these numbers mean", "draft the financial narrative for the committee", "turn this P&L into a note for leadership", "what should we take away from this quarter's figures". Limited to financial figures for an executive audience; to define which metrics to track use `tableau-de-bord-kpi`.
 icon: ◈
@@ -94,4 +94,6 @@ Output names: `financial_narrative` (the text) and `key_messages` (the messages 
 - Comparisons are named, rates are in points, non-recurring items are shown both ways, a divergence between profit and cash is addressed.
 - Each reading beyond the source is marked, and the closing lists are filled.
 
-<!-- Narrative elements, anti-patterns and comparison guidance adapted from anthropics/knowledge-work-plugins, finance/skills/variance-analysis/SKILL.md (Apache-2.0, commit 33eeda1), and the basis-point convention from finance/skills/financial-statements/SKILL.md: rewritten and checked on numerical examples; the margin decomposition is derived and verified here. See THIRD_PARTY.md. -->
+# Sources
+
+Narrative elements, anti-patterns and comparison guidance adapted from anthropics/knowledge-work-plugins, finance/skills/variance-analysis/SKILL.md (Apache-2.0, commit 33eeda1), and the basis-point convention from finance/skills/financial-statements/SKILL.md: rewritten and checked on numerical examples; the margin decomposition is derived and verified here. See THIRD_PARTY.md.

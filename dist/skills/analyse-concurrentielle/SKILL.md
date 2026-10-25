@@ -79,4 +79,6 @@ Default format; an explicit request from the user comes first. Output names: `co
 - Prices share one unit and the competitors' strengths are stated.
 - The analysis ends on a differentiation logic with its hypotheses to verify, and the limits are written.
 
-<!-- Competitor levels, landscape axes, rating scale, price caveats and positioning pitfalls adapted from anthropics/knowledge-work-plugins, product-management/skills/competitive-brief/SKILL.md and marketing/skills/competitive-brief/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for this skill's output and rating evidence rules. See THIRD_PARTY.md. -->
+# Sources
+
+Competitor levels, landscape axes, rating scale, price caveats and positioning pitfalls adapted from anthropics/knowledge-work-plugins, product-management/skills/competitive-brief/SKILL.md and marketing/skills/competitive-brief/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for this skill's output and rating evidence rules. See THIRD_PARTY.md.

@@ -1,7 +1,7 @@
 ---
 id: feature-spec
 label: Feature Spec
-version: 2.0.0
+version: 2.0.1
 aliases:
 - product-spec
 description_fr: Produit la spec fonctionnelle d'une feature, d'un écran ou d'un parcours — user stories, exigences MoSCoW, critères d'acceptation Given/When/Then, états de chaque vue, cas limites de contenu, modèle de données et règles de calcul des statuts, métriques de succès. Déclenche sur "écris la spec fonctionnelle de cette feature", "il me faut les user stories et critères d'acceptation pour X", "priorise ces exigences en MoSCoW", "écris la spec de cet écran ou de ce parcours", "détaille le modèle de données et les cas limites", "spec exploitable à partir de ce brief cadré". Remplace `product-spec`. Ne définit pas la vision produit globale (utiliser `prd`), ne réécrit pas des US déjà existantes (utiliser `reformulation-us`) et ne dessine pas l'interface (utiliser `mockup`).
@@ -174,4 +174,6 @@ Facts, hypotheses and points to check are labelled where they appear. Sections 7
 - Every view states its states (empty in both flavours, error, no access) and every derived status has its computation rule.
 - Companions answer a need named above; a split into several specs is explained.
 
-<!-- Adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commits 7b2ea8e and 33eeda1; the passages used did not change between them): condensed, rewritten into the ix template and modified. Added in 1.2.0 from the same file: the P0 test and "architecture insurance" (L115-119, L165-166), common mistakes in user stories (L147-152), acceptance-criteria tips (L215-220), target-setting rules (L187-192), non-goals with reasons and scope-drift rules (L91-95, L232-238). See THIRD_PARTY.md. Added in 2.0.0 (merge of `product-spec`): states and content edge cases adapted from design/skills/design-handoff/SKILL.md (Apache-2.0, commit 33eeda1), L37-48 and L60. -->
+# Sources
+
+Adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commits 7b2ea8e and 33eeda1; the passages used did not change between them): condensed, rewritten into the ix template and modified. Added in 1.2.0 from the same file: the P0 test and "architecture insurance" (L115-119, L165-166), common mistakes in user stories (L147-152), acceptance-criteria tips (L215-220), target-setting rules (L187-192), non-goals with reasons and scope-drift rules (L91-95, L232-238). See THIRD_PARTY.md. Added in 2.0.0 (merge of `product-spec`): states and content edge cases adapted from design/skills/design-handoff/SKILL.md (Apache-2.0, commit 33eeda1), L37-48 and L60.

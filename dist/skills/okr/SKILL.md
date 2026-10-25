@@ -168,4 +168,6 @@ Observed (from the sources), derived (a trend extended) and to be measured are l
 - No number appears that does not come from the sources provided; a trend extended over the period is labelled derived.
 - The person still owns the Objective and the final wording of the Key Results.
 
-<!-- The trajectory test, the ~0.7 attainment norm and the 2-4 Key Results per Objective are adapted from anthropics/knowledge-work-plugins, product-management/skills/metrics-review/SKILL.md L261-273 (Apache-2.0, commit 33eeda1). See THIRD_PARTY.md. -->
+## Sources
+
+The trajectory test, the ~0.7 attainment norm and the 2-4 Key Results per Objective are adapted from anthropics/knowledge-work-plugins, product-management/skills/metrics-review/SKILL.md L261-273 (Apache-2.0, commit 33eeda1). See THIRD_PARTY.md.

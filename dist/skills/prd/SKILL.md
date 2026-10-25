@@ -94,4 +94,6 @@ Facts (validated), hypotheses and points to check are labelled where they appear
 - Each metric has a threshold, a measurement method and a date, or the word "baseline to be measured".
 - Legal requirements that apply are stated or raised as questions.
 
-<!-- Success-metric target rules, P0 test, P2 as architecture insurance, non-goals with reasons, scope-drift prevention and open-question tagging adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 33eeda1): rewritten into the ix template and adapted to the PRD. See THIRD_PARTY.md. -->
+# Sources
+
+Success-metric target rules, P0 test, P2 as architecture insurance, non-goals with reasons, scope-drift prevention and open-question tagging adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 33eeda1): rewritten into the ix template and adapted to the PRD. See THIRD_PARTY.md.

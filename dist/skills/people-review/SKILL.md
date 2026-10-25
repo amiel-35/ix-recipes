@@ -85,4 +85,6 @@ This skill ships one competency reference per job family in `references/`: `meti
 - If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
 - If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-<!-- The per-person table of the nominative section is adapted from anthropics/knowledge-work-plugins, human-resources/skills/performance-review/SKILL.md L98-132 (Apache-2.0, commit 33eeda1): compensation actions removed, the target rating distribution kept only as an indicative reference, never a quota. See THIRD_PARTY.md. -->
+# Sources
+
+The per-person table of the nominative section is adapted from anthropics/knowledge-work-plugins, human-resources/skills/performance-review/SKILL.md L98-132 (Apache-2.0, commit 33eeda1): compensation actions removed, the target rating distribution kept only as an indicative reference, never a quota. See THIRD_PARTY.md.

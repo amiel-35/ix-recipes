@@ -1,7 +1,7 @@
 ---
 id: interview-guide-recruteur
 label: Interview Guide Recruteur
-version: 1.5.0
+version: 1.5.1
 description_fr: Prépare le guide d'entretien recruteur pour UN round — questions STAR, annotations recruteur, mises en situation, grille de scoring 1-4 pondérée, red flags gradués, fiche de débrief Go/No-go, cadre légal des questions. Lit le `round_brief` produit par `interview-loop-planner` ou déduit les compétences de la fiche de poste. Déclenche quand l'utilisateur doit mener un entretien précis et outillé. Déclenche sur "prépare le guide d'entretien pour ce poste", "questions STAR pour l'entretien technique", "grille de scoring pour cet entretien", "quels red flags surveiller en entretien", "voici le brief du tour 3, prépare le guide". Ne conçoit pas la boucle complète de recrutement — voir `interview-loop-planner`, qui produit les briefs alimentant ce guide round par round.
 description_en: Prepares the recruiter-side interview guide for ONE round — STAR questions, recruiter annotations, scenarios, weighted 1-4 scoring grid, graduated red flags, Go/No-go debrief sheet, legal frame for questions. Reads the `round_brief` produced by `interview-loop-planner` or derives competencies from the job description. Triggers when the user must run a specific, well-equipped interview. Triggers on "prepare the interview guide for this role", "STAR questions for the technical round", "scoring grid for this interview", "what red flags to watch for in this interview", "here is the round 3 brief, prepare the guide". Does not design the full recruitment loop — see `interview-loop-planner`, which produces the briefs feeding this guide round by round.
 icon: clipboard-check
@@ -125,4 +125,6 @@ This is the default format; an explicit request from the user wins. Output names
 - No question touches a ground of L1132-1; any constraint is asked of all candidates in the same words.
 - The candidate is told of the format in advance; the guide stays with the interviewers.
 
-<!-- Behavioural anchors by level, and the question-writing tips (no leading question, one question at a time, situational questions only without domain experience), adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/reference/interview-guide-structure.md (L69-75, L87-93) (Apache-2.0, commit 33eeda1): rewritten on a 1-4 scale and fitted to French law (L1221-6, L1221-8, L1132-1). See THIRD_PARTY.md. -->
+# Sources
+
+Behavioural anchors by level, and the question-writing tips (no leading question, one question at a time, situational questions only without domain experience), adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/reference/interview-guide-structure.md (L69-75, L87-93) (Apache-2.0, commit 33eeda1): rewritten on a 1-4 scale and fitted to French law (L1221-6, L1221-8, L1132-1). See THIRD_PARTY.md.

@@ -1,7 +1,7 @@
 ---
 id: analyse-concurrentielle
 label: Analyse Concurrentielle
-version: 1.3.0
+version: 1.3.1
 description_fr: Construit un socle factuel sur le paysage concurrentiel — acteurs, forces, différenciation, positionnement. Déclenche sur "fais l'analyse concurrentielle de...", "qui sont nos concurrents et comment on se différencie", "cartographie le paysage concurrentiel avant le lancement". Ne chiffre pas la taille du marché (utiliser `tam-sam-som`) ni ne lit les métriques internes de rétention (utiliser `metriques-saas`). Produit une base pour une décision, pas la décision elle-même.
 description_en: Builds a factual foundation on the competitive landscape — players, forces, differentiation, positioning. Triggers on "run a competitive analysis of...", "who are our competitors and how do we differentiate", "map the competitive landscape before launch". Does not size the market (use `tam-sam-som`) nor read internal retention metrics (use `metriques-saas`). Produces a base for a decision, not the decision itself.
 icon: ◭
@@ -102,4 +102,6 @@ Default format; an explicit request from the user comes first. Output names: `co
 - Prices share one unit and the competitors' strengths are stated.
 - The analysis ends on a differentiation logic with its hypotheses to verify, and the limits are written.
 
-<!-- Competitor levels, landscape axes, rating scale, price caveats and positioning pitfalls adapted from anthropics/knowledge-work-plugins, product-management/skills/competitive-brief/SKILL.md and marketing/skills/competitive-brief/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for this skill's output and rating evidence rules. See THIRD_PARTY.md. -->
+# Sources
+
+Competitor levels, landscape axes, rating scale, price caveats and positioning pitfalls adapted from anthropics/knowledge-work-plugins, product-management/skills/competitive-brief/SKILL.md and marketing/skills/competitive-brief/SKILL.md (Apache-2.0, commit 33eeda1): rewritten for this skill's output and rating evidence rules. See THIRD_PARTY.md.

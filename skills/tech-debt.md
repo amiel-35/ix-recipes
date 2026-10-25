@@ -1,7 +1,7 @@
 ---
 id: tech-debt
 label: Tech Debt
-version: 1.4.0
+version: 1.4.1
 description_fr: Inventorie la dette technique, la score sur impact, risque et effort, et produit un plan de remédiation entrelaçable avec les features, chaque item justifié par un impact métier et non seulement technique. Déclenche sur "fais l'audit de dette technique de ce projet", "qu'est-ce qu'on refactore en priorité", "cette codebase, elle porte quoi comme dette", "qu'est-ce qu'on met dans le sprint côté dette". Conclut "RAS" si aucun item n'atteint le seuil, plutôt que de remonter du bruit de backlog. Ne relit pas un diff ou une PR.
 description_en: Inventories technical debt, scores it on impact, risk and effort, and produces a remediation plan interleavable with feature work, every item justified by a business impact rather than a purely technical one. Triggers on "run a tech debt audit on this project", "what should we refactor first", "what debt is this codebase carrying", "what debt goes into the next sprint". Concludes "RAS" when no item reaches the threshold, rather than promoting backlog noise. Does not review a diff or a PR.
 icon: ⚠
@@ -127,4 +127,6 @@ Default skeleton; an explicit request from the user wins.
 - Fragile scores and the audit's limits are visible.
 - With no item at 15 or above, the answer is the « RAS — » verdict alone.
 
-<!-- Adapted from anthropics/knowledge-work-plugins, engineering/skills/tech-debt/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. The category and typical-risk table and the impact / risk / effort questions behind the scales are adapted from the same file at commit 33eeda1 (unchanged since 7b2ea8e); the scale anchors, the threshold analysis, the corrected effort inversion and the plan rules are original. See THIRD_PARTY.md. -->
+# Sources
+
+Adapted from anthropics/knowledge-work-plugins, engineering/skills/tech-debt/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. The category and typical-risk table and the impact / risk / effort questions behind the scales are adapted from the same file at commit 33eeda1 (unchanged since 7b2ea8e); the scale anchors, the threshold analysis, the corrected effort inversion and the plan rules are original. See THIRD_PARTY.md.

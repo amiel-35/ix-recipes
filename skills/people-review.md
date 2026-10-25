@@ -1,7 +1,7 @@
 ---
 id: people-review
 label: People review
-version: 1.4.0
+version: 1.4.1
 description_fr: Structure une revue de talents collective — matrice de positionnement, risques, plans de succession, actions prioritaires par catégorie. Déclenche quand l'utilisateur prépare une revue RH à l'échelle d'une équipe ou d'une organisation. Déclenche sur "prépare la people review du comité", "matrice 9-box pour l'équipe", "plan de succession sur les postes clés", "qui sont nos hauts potentiels". Ne porte jamais de jugement sur une personne individuelle dans la synthèse collective — distinct de `performance-review-helper` (entretien annuel individuel) et `entretien-professionnel` (obligation légale L6315-1).
 description_en: Structures a collective talent review — positioning matrix, risks, succession plans, priority actions by category. Triggers when the user prepares an HR review at team or organization scale. Triggers on "prepare the committee's people review", "9-box matrix for the team", "succession plan for key positions", "who are our high potentials". Never passes judgment on an individual person in the collective summary — distinct from `performance-review-helper` (individual annual review) and `entretien-professionnel` (the legal L6315-1 obligation).
 icon: 👥
@@ -107,4 +107,6 @@ This skill ships one competency reference per job family in `references/`: `meti
 - If no family fits, say so in the deliverable and proceed without a reference rather than forcing one.
 - If the `references/` folder is not available (skill pasted without its folder), ask for the organisation's competency framework or proceed without it, and say so.
 
-<!-- The per-person table of the nominative section is adapted from anthropics/knowledge-work-plugins, human-resources/skills/performance-review/SKILL.md L98-132 (Apache-2.0, commit 33eeda1): compensation actions removed, the target rating distribution kept only as an indicative reference, never a quota. See THIRD_PARTY.md. -->
+# Sources
+
+The per-person table of the nominative section is adapted from anthropics/knowledge-work-plugins, human-resources/skills/performance-review/SKILL.md L98-132 (Apache-2.0, commit 33eeda1): compensation actions removed, the target rating distribution kept only as an indicative reference, never a quota. See THIRD_PARTY.md.

@@ -1,7 +1,7 @@
 ---
 id: total-cost-analysis
 label: Analyse cout total (TCO)
-version: 1.3.0
+version: 1.3.1
 description_fr: Structure un TCO — coûts directs, coûts cachés, hypothèses, risques — sur un horizon donné, en distinguant coûts confirmés, estimés et non chiffrés, avec la révision de prix au plafond, les coûts internes, le double run, la sortie et le seuil de bascule qui inverserait le classement. Déclenche sur "calcule le coût total de possession", "au-delà du prix affiché, quel est le vrai coût sur trois ans", "compare le TCO entre ces deux offres". Compare les coûts, ne recommande pas. Ne construit pas la grille de notation qualitative des fournisseurs (utiliser `vendor-scorecard`) ni le document d'appel d'offres (utiliser `rfp-draft`).
 description_en: Structures a TCO — direct costs, hidden costs, hypotheses, risks — over a given horizon, distinguishing confirmed, estimated and unquantified costs, with price revision at the cap, internal costs, double running, exit costs and the tipping value that would reverse the ranking. Triggers on "calculate the total cost of ownership", "beyond the sticker price, what's the real cost over three years", "compare TCO between these two offers". Compares costs, does not recommend. Does not build the qualitative vendor scoring grid (use `vendor-scorecard`) nor the tender document itself (use `rfp-draft`).
 icon: ∑
@@ -99,4 +99,6 @@ Confirmed, estimated and unquantified stay visibly labelled everywhere a figure 
 - Revision, discounts, volumes and commitments are treated the same way for all options.
 - The most sensitive lines and the tipping values are identifiable without rereading the reasoning.
 
-<!-- The cost-category coverage (total cost, implementation, training, support, exit costs) draws on anthropics/knowledge-work-plugins, operations/skills/vendor-review/SKILL.md (Apache-2.0, commit 33eeda1), rewritten with the French tax basis, price revision and tipping-value rules. See THIRD_PARTY.md. -->
+# Sources
+
+The cost-category coverage (total cost, implementation, training, support, exit costs) draws on anthropics/knowledge-work-plugins, operations/skills/vendor-review/SKILL.md (Apache-2.0, commit 33eeda1), rewritten with the French tax basis, price revision and tipping-value rules. See THIRD_PARTY.md.

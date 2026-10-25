@@ -66,4 +66,6 @@ Default skeleton; an explicit request from the user wins. `system_design` is the
 - The team knows what to build, and each structuring decision shows what it makes easier, harder, and when to revisit.
 - Hypotheses and open choices are labelled; the regulatory constraints that apply are in the requirements, with the qualification questions open where the facts are missing.
 
-<!-- Adapted from anthropics/knowledge-work-plugins, engineering/skills/system-design/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. The "easier / harder / revisit" lines for each decision are adapted from engineering/skills/architecture/SKILL.md, "Consequences" (Apache-2.0, commit 33eeda1); the load estimate step is made explicit from the source's "Load estimation" (system-design file unchanged since 7b2ea8e). The regulatory table, the cost-per-use check and the simplicity rule are original. See THIRD_PARTY.md. -->
+# Sources
+
+Adapted from anthropics/knowledge-work-plugins, engineering/skills/system-design/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. The "easier / harder / revisit" lines for each decision are adapted from engineering/skills/architecture/SKILL.md, "Consequences" (Apache-2.0, commit 33eeda1); the load estimate step is made explicit from the source's "Load estimation" (system-design file unchanged since 7b2ea8e). The regulatory table, the cost-per-use check and the simplicity rule are original. See THIRD_PARTY.md.

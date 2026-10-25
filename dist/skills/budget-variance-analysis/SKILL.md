@@ -113,4 +113,6 @@ Output names: `budget_variance_analysis` (everything above except the actions) a
 - Each analysed variance has a nature and a cause that is either sourced or marked hypothesis; the limits of the data are said.
 - Each recommendation points to a variance; the three closing lists are filled.
 
-<!-- Decomposition cases, materiality thresholds, investigation priority, commentary elements, anti-patterns and bridge format adapted from anthropics/knowledge-work-plugins, finance/skills/variance-analysis/SKILL.md (Apache-2.0, commit 33eeda1): price / volume formula and the threshold and priority tables are re-derived and checked on numerical examples; the "three-way" and rate / mix formulas of the source are not reused because they do not close on the total. See THIRD_PARTY.md. -->
+# Sources
+
+Decomposition cases, materiality thresholds, investigation priority, commentary elements, anti-patterns and bridge format adapted from anthropics/knowledge-work-plugins, finance/skills/variance-analysis/SKILL.md (Apache-2.0, commit 33eeda1): price / volume formula and the threshold and priority tables are re-derived and checked on numerical examples; the "three-way" and rate / mix formulas of the source are not reused because they do not close on the total. See THIRD_PARTY.md.

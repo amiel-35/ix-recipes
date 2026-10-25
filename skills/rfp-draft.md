@@ -1,7 +1,7 @@
 ---
 id: rfp-draft
 label: Redaction d'appel d'offres
-version: 1.3.0
+version: 1.3.1
 description_fr: Génère un appel d'offres structuré — contexte, périmètre, exigences éliminatoires et notées, cadre de réponse avec matrice de conformité, bordereau de prix, critères et méthode de notation annoncés, pièces à fournir, calendrier — depuis un brief achat ou métier, pour que les offres reçues soient comparables. Déclenche sur "rédige l'appel d'offres pour...", "prépare le cahier des charges à envoyer aux fournisseurs", "structure ce besoin en RFP". Ne construit pas la grille de notation des offres reçues (utiliser `vendor-scorecard`) ni le chiffrage du coût total (utiliser `total-cost-analysis`).
 description_en: Generates a structured request for proposal — context, scope, knockout and scored requirements, response frame with compliance matrix, price schedule, announced criteria and scoring method, documents to supply, timeline — from a procurement or business brief, so that the offers received can be compared. Triggers on "draft the RFP for...", "prepare the spec to send to suppliers", "structure this need into an RFP". Does not build the scoring grid for received offers (use `vendor-scorecard`) nor the full cost breakdown (use `total-cost-analysis`).
 icon: ▤
@@ -109,4 +109,6 @@ Placeholders `[to complete]` stay visible in the tables.
 - An external supplier can answer without rereading the source brief, and two answers can be added up the same way.
 - Hypotheses and unknowns are marked; fragile areas before distribution are explicit; no internal reasoning is in the document.
 
-<!-- Knockout test ("would we reject a strong candidate who lacks this?") adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/reference/job-post-structure.md (Apache-2.0, commit 33eeda1): applied to tender requirements instead of job-post qualifications. See THIRD_PARTY.md. -->
+# Sources
+
+Knockout test ("would we reject a strong candidate who lacks this?") adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/reference/job-post-structure.md (Apache-2.0, commit 33eeda1): applied to tender requirements instead of job-post qualifications. See THIRD_PARTY.md.

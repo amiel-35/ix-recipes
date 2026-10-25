@@ -1,7 +1,7 @@
 ---
 id: legal-risk-flag
 label: Signaux juridiques
-version: 1.4.0
+version: 1.4.1
 description_fr: Repère en un flash rapide les red flags juridiques d'un document — contrat, correspondance, tout texte — en droit français, avec un niveau de risque ancré (haut/moyen/bas), les délais calculés en dates, une fiabilité de lecture et une action recommandée (vérifier, corriger, soumettre à un avocat). Déclenche sur "y a-t-il un red flag dans ce document", "scan rapide de ce contrat avant la réunion", "quel est le niveau de risque de ce courrier", "flash juridique avant de creuser", "à vérifier en urgence avant de signer". Ne produit pas une analyse exhaustive clause par clause avec redlines — voir `contrat-fournisseur` — et ne remplace pas un juriste.
 description_en: Scans a legal or contractual document — contract, correspondence, any text — in one quick pass under French law, for priority red flags with an anchored risk level (high/medium/low), deadlines computed as dates, a reliability of reading and a recommended action (verify, correct, submit to counsel). Triggers on "any red flags in this document", "quick scan of this contract before the meeting", "what's the risk level of this letter", "legal flash before we dig deeper", "anything urgent to check before we sign". Not an exhaustive clause-by-clause redline review — see `contrat-fournisseur` — and does not replace a lawyer.
 icon: ⚑
@@ -100,4 +100,6 @@ Output names: `legal_risk_flags` = parts 1 to 3; `open_questions` = part 4.
 *Why this works: the level is justified by a named anchor, and the reader sees what to change.*
 </example>
 
-<!-- Level anchors and the escalation triggers adapted from anthropics/knowledge-work-plugins, legal/skills/legal-risk-assessment/SKILL.md (Apache-2.0, commit 33eeda1): reduced from five severity levels to three and fitted to French law. See THIRD_PARTY.md. -->
+# Sources
+
+Level anchors and the escalation triggers adapted from anthropics/knowledge-work-plugins, legal/skills/legal-risk-assessment/SKILL.md (Apache-2.0, commit 33eeda1): reduced from five severity levels to three and fitted to French law. See THIRD_PARTY.md.

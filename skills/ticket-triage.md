@@ -1,7 +1,7 @@
 ---
 id: ticket-triage
 label: Ticket Triage
-version: 1.3.0
+version: 1.3.1
 description_fr: Catégorise, priorise P1 à P4 et route un ticket support entrant, avec les informations nécessaires à une prise en charge immédiate. Déclenche sur "triage ce ticket", "quelle priorité pour ce bug remonté par le client", "catégorise et route ce ticket support". En cas de doute, escalade toujours vers le haut. Ne fait pas de rétrospective sur un incident déjà clos — traite un ticket entrant unique.
 description_en: Categorizes, prioritizes P1 through P4, and routes an incoming support ticket, with the information needed for immediate handling. Triggers on "triage this ticket", "what priority for this bug the client reported", "categorize and route this support ticket". When in doubt, always escalates upward. Does not run a retrospective on a closed incident, it handles one incoming ticket.
 icon: ⋱
@@ -130,4 +130,6 @@ Default skeleton; an explicit request from the user wins.
 - A possible personal data breach is flagged, with the reception time and the question left to the DPO.
 - Gaps that weaken the triage are visible.
 
-<!-- Adapted from anthropics/knowledge-work-plugins, customer-support/skills/ticket-triage/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. The default response delays, the escalation triggers, the category tie-break tips, the routing table and the Bug and Security first-reply templates are adapted from the same file at commit 33eeda1 (unchanged since 7b2ea8e), rewritten and adapted to French business usage. The personal data breach rules (GDPR) and the duplicate-check condition are original. See THIRD_PARTY.md. -->
+# Sources
+
+Adapted from anthropics/knowledge-work-plugins, customer-support/skills/ticket-triage/SKILL.md (Apache-2.0, commit 7b2ea8e): condensed, rewritten into the ix template and modified. The default response delays, the escalation triggers, the category tie-break tips, the routing table and the Bug and Security first-reply templates are adapted from the same file at commit 33eeda1 (unchanged since 7b2ea8e), rewritten and adapted to French business usage. The personal data breach rules (GDPR) and the duplicate-check condition are original. See THIRD_PARTY.md.

@@ -88,4 +88,6 @@ Placeholders `[to complete]` stay visible in the tables.
 - An external supplier can answer without rereading the source brief, and two answers can be added up the same way.
 - Hypotheses and unknowns are marked; fragile areas before distribution are explicit; no internal reasoning is in the document.
 
-<!-- Knockout test ("would we reject a strong candidate who lacks this?") adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/reference/job-post-structure.md (Apache-2.0, commit 33eeda1): applied to tender requirements instead of job-post qualifications. See THIRD_PARTY.md. -->
+# Sources
+
+Knockout test ("would we reject a strong candidate who lacks this?") adapted from anthropics/knowledge-work-plugins, small-business/skills/job-post-builder/reference/job-post-structure.md (Apache-2.0, commit 33eeda1): applied to tender requirements instead of job-post qualifications. See THIRD_PARTY.md.

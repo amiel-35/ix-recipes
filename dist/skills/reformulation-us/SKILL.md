@@ -74,4 +74,6 @@ What is observed in the original is kept distinct from what you inferred (a bene
 - Technical tasks are classed as tasks; vague stories are flagged with their unblocking question.
 - No criterion contains a vague word without a figure or a question.
 
-<!-- Diagnosis table and acceptance-criteria tips adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 33eeda1): L147-152 and L215-220, rewritten for rewriting existing stories. See THIRD_PARTY.md. -->
+# Sources
+
+Diagnosis table and acceptance-criteria tips adapted from anthropics/knowledge-work-plugins, product-management/skills/write-spec/SKILL.md (Apache-2.0, commit 33eeda1): L147-152 and L215-220, rewritten for rewriting existing stories. See THIRD_PARTY.md.

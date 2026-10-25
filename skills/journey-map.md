@@ -1,7 +1,7 @@
 ---
 id: journey-map
 label: Journey map
-version: 1.3.0
+version: 1.3.1
 description_fr: Produit une carte de parcours utilisateur — étapes, actions, émotions, points de friction et opportunités — depuis le point de vue de l'utilisateur, pas du système. Déclenche sur "cartographie le parcours utilisateur pour ce scénario", "où sont les points de friction dans ce parcours", "fais une journey map depuis l'inscription jusqu'à l'achat". Ne construit pas les profils utilisateurs eux-mêmes (utiliser `persona` en amont) et n'est pas un flow technique.
 description_en: Produces a user journey map, stages, actions, emotions, friction points, and opportunities, from the user's point of view, not the system's. Triggers on "map the user journey for this scenario", "where are the friction points in this flow", "walk through the journey from signup to purchase". Does not build the user profiles themselves (use `persona` first) and is not a technical flow diagram.
 icon: →
@@ -91,4 +91,6 @@ Observed and hypothesis are labelled on each emotion and friction.
 - Internal company steps are outside the map.
 - The team can name the critical moments without further research, and knows what data is missing.
 
-<!-- Method after S. Gibbons, Nielsen Norman Group, "Journey Mapping 101" (2018, reviewed 2026-07-15): public method, no text reproduced. -->
+# Sources
+
+Method after S. Gibbons, Nielsen Norman Group, "Journey Mapping 101" (2018, reviewed 2026-07-15): public method, no text reproduced.

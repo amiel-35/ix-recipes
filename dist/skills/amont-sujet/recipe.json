@@ -1,0 +1,262 @@
+{
+  "id": "amont-sujet",
+  "label": "Amont d'un sujet",
+  "version": "1.0.0",
+  "summary_fr": "L'amont d'un sujet de code : cadrage clos, goal et critères de réussite, jusqu'au gel, avec des boucles bornées et un arrêt avant Fable.",
+  "description_fr": "Joue l'amont de la procédure « traiter un sujet de bout en bout » (étapes 1 à 3) pour un sujet de code : cadrage, questions, fusion et découpage, évaluation contre la grille fixe, clôture, vérification de forme de la liste « livrable vers skill de format », goal, vérification du goal, critères de réussite avec leur part cachée, arrêt avant la contre-vérification par Fable, réconciliation. Chaque étape est isolée, les trois boucles de vérification sont bornées par le plafond des réglages, et la part cachée des critères ne sort jamais de son champ. Déclenche sur « lance l'amont de ce sujet », « fais l'étape 1 à 3 de la procédure », « prépare le goal et les critères de ce sujet ». Ne produit pas le livrable, ne gèle rien et n'appelle jamais Fable — voir les outils de l'aval du harnais.",
+  "icon": "⇉",
+  "workflow": {
+    "format": 4,
+    "context_sheet": [
+      "subject",
+      "objective",
+      "constraints",
+      "readers",
+      "deliverables",
+      "named_solutions",
+      "deadlines"
+    ],
+    "context_labels": {
+      "subject": "Sujet",
+      "objective": "But",
+      "constraints": "Contraintes",
+      "readers": "Lecteurs",
+      "deliverables": "Livrables",
+      "named_solutions": "Solutions déjà nommées",
+      "deadlines": "Échéances"
+    },
+    "steps": [
+      {
+        "id": "cadrage",
+        "label": "1a. Cadrage de la demande",
+        "stage": "1a",
+        "role": "cadrage_et_criteres",
+        "skill": "ix-skills:cadrage",
+        "mission": "Clarify the need from the raw request in its default mode, not the closing mode — the goal behind it (a goal, not an artefact), the facts, the constraints each with its reason, the named solutions treated as hypotheses, the options — and stop at clarification.",
+        "receives": [
+          "brief"
+        ],
+        "transmits": [
+          "need",
+          "constraints",
+          "hypotheses",
+          "open_points"
+        ],
+        "produces_context_sheet": true,
+        "pause": "validate",
+        "model": "opus"
+      },
+      {
+        "id": "questions",
+        "label": "1b. Questions qui débloquent",
+        "stage": "1b",
+        "role": "cadrage_et_criteres",
+        "skill": "ix-skills:questioning",
+        "mission": "Generate the questions that unblock the subject and expose its blind spots, most blocking first, from the scoped need and its open points. Questions only, no answers.",
+        "receives": [
+          "context_sheet",
+          "cadrage.need",
+          "cadrage.constraints",
+          "cadrage.hypotheses",
+          "cadrage.open_points"
+        ],
+        "transmits": [
+          "questions"
+        ],
+        "pause": "none",
+        "model": "opus"
+      },
+      {
+        "id": "fusion",
+        "label": "1c. Fusion et découpage",
+        "stage": "1c",
+        "role": "cadrage_et_criteres",
+        "skill": "ix-skills:decomposer",
+        "mission": "Merge the questions of the previous step with the open points of the scoping, without duplicates on the named solutions, each blocking question with a default answer. Then apply the four splitting tests one by one with a verdict and its reason (parts accepted separately with their own users; one grid no longer replayed in about an hour; a part depending on an undecided decision; stakeholders with conflicting interests to arbitrate apart), and say which part starts now if one is true. The complete output is the submitted scoping: intent, audience and situation of use, decisions to take, constraints with reasons, scope and out of scope, stakeholders, deliverables with their reader and the documentation, remaining assumptions with their risk, splitting tests. If a verdict of the evaluation is given as an input, correct only the defects it names and keep the rest.",
+        "receives": [
+          "context_sheet",
+          "cadrage.need",
+          "cadrage.constraints",
+          "cadrage.hypotheses",
+          "cadrage.open_points",
+          "questions.questions"
+        ],
+        "transmits": [
+          "cadrage"
+        ],
+        "output_field": "cadrage",
+        "pause": "none",
+        "model": "opus"
+      },
+      {
+        "id": "evaluation",
+        "label": "1d. Évaluation du cadrage",
+        "stage": "1d",
+        "role": "evaluation_cadrage",
+        "skill": "ix-skills:controle-qualite",
+        "mission": "Judge the submitted scoping against the fixed grid of the scoping (the piece named A5 in the dossier's corpus) in verdict mode: the grid is the reference, the scoping is the deliverable, one verdict per point, never one on the whole. Before the pause only G1, G2, G4 to G8 apply; G3 and G9 are noted as waiting for pause 1, without a verdict. In every verdict separate what waits for the pause from a defect that can be corrected now. The first line of the verdict field is OK when no point is a correctable breach, REPRENDRE otherwise; then one line per point. In the other field, list the blocking questions the pilot must answer at pause 1, each with its default answer.",
+        "receives": [
+          "fusion.cadrage",
+          "corpus"
+        ],
+        "transmits": [
+          "verdict",
+          "attente_pause_1"
+        ],
+        "verdict_field": "verdict",
+        "loop": {
+          "to": "fusion",
+          "ceiling": "passes_verification_max"
+        },
+        "pause": "answers",
+        "model": "opus"
+      },
+      {
+        "id": "cloture",
+        "label": "1e. Clôture du cadrage",
+        "stage": "1e",
+        "role": "cadrage_et_criteres",
+        "skill": "ix-skills:cadrage",
+        "mission": "Apply the closing mode of the skill, asked explicitly: close the submitted scoping with the pilot's answers as decisions that quote them, a default accepted without remark marked as such and recalled to the decider, a blocking question left unanswered turned into the residual question. Write to hold the fixed grid (the piece named A5 in the corpus): nothing marked to confirm in a closed scoping, a recall instead. In the second field write the list « deliverable to format skill » of the subject's type, computed from the settings (the piece named A4 in the corpus, key skills_de_format of the type), one line per deliverable: the form expected, not who produces it.",
+        "receives": [
+          "context_sheet",
+          "fusion.cadrage",
+          "evaluation.attente_pause_1",
+          "answers",
+          "corpus"
+        ],
+        "transmits": [
+          "cadrage_clos",
+          "liste_skills_de_format"
+        ],
+        "output_field": "cadrage_clos",
+        "pause": "none",
+        "model": "opus"
+      },
+      {
+        "id": "verif_livrables",
+        "label": "Vérification de forme de la liste des skills de format",
+        "stage": "1e",
+        "role": "verification_mecanique",
+        "skill": "ix-skills:controle-qualite",
+        "mission": "Compare, mechanically and read-only, the list « deliverable to format skill » of the closing step with the association of the settings (the piece named A4 in the corpus, key skills_de_format of the subject's type): every deliverable of the closed scoping that has a line there, no skill added, none dropped, none renamed. The first line of the verdict field is OK when the list matches, REPRENDRE otherwise; then the differences, one per line. Do not correct the list.",
+        "receives": [
+          "cloture.liste_skills_de_format",
+          "cloture.cadrage_clos",
+          "corpus"
+        ],
+        "transmits": [
+          "verdict"
+        ],
+        "verdict_field": "verdict",
+        "pause": "none",
+        "model": "haiku"
+      },
+      {
+        "id": "goal",
+        "label": "2A. Rédaction du goal",
+        "stage": "2A",
+        "role": "redaction_goal",
+        "skill": "ix-skills:goal-writing",
+        "mission": "Write the goal of the autonomous agent that will produce the deliverables, from the closed scoping, the settings (the piece named A4 in the corpus: turn ceiling, model of each role, limits of the sub-agents, suites offered at a ceiling, freezing) and the list « deliverable to format skill ». You receive no success criteria and no grid, and you write for none. The complete goal goes in the first field, the writer's notes in the second, never in the goal. If a verdict of the verification is given as an input, correct only the defects it names.",
+        "receives": [
+          "context_sheet",
+          "cloture.cadrage_clos",
+          "cloture.liste_skills_de_format",
+          "corpus"
+        ],
+        "transmits": [
+          "goal",
+          "notes_redacteur"
+        ],
+        "pause": "none",
+        "model": "sonnet"
+      },
+      {
+        "id": "verif_goal",
+        "label": "2A. Vérification du goal",
+        "stage": "2A",
+        "role": "verification_goal",
+        "skill": "ix-skills:critique",
+        "mission": "Critique the goal under exactly four imposed angles: ambiguities, testability, implicit assumptions, open questions left without an answer. The first line of the verdict field is OK when none of the four angles shows a defect that must be corrected before the production, REPRENDRE otherwise; then the defects, each with the passage and the angle. Never propose the correction.",
+        "receives": [
+          "goal.goal",
+          "goal.notes_redacteur",
+          "cloture.cadrage_clos"
+        ],
+        "transmits": [
+          "verdict"
+        ],
+        "verdict_field": "verdict",
+        "loop": {
+          "to": "goal",
+          "ceiling": "passes_verification_max"
+        },
+        "pause": "none",
+        "model": "opus"
+      },
+      {
+        "id": "criteres",
+        "label": "2B. Critères de réussite",
+        "stage": "2B",
+        "role": "cadrage_et_criteres",
+        "skill": "ix-skills:criteres-reussite",
+        "mission": "Write the success criteria from the closed scoping alone — you see neither the goal nor any producer's work — with the domain annexes the settings name for the subject's type (the piece named A4 in the corpus, key annexes_criteres). Put the visible grid (mechanical part, review part) in the first field, the open questions of the grid in the third. The HIDDEN part, known to the judge alone, goes into the second field and nowhere else: not in your document, not in a summary, not in any other field, not even its titles or the names of its parts. If a verdict of the counter-check is given as an input, correct only the defects it names, hidden part included.",
+        "receives": [
+          "context_sheet",
+          "cloture.cadrage_clos",
+          "corpus"
+        ],
+        "transmits": [
+          "grille_visible",
+          "part_cachee",
+          "questions_ouvertes"
+        ],
+        "hidden": [
+          "part_cachee"
+        ],
+        "pause": "none",
+        "model": "opus"
+      },
+      {
+        "id": "contre_verif",
+        "label": "2B. Contre-vérification (à part, après accord)",
+        "stage": "2B",
+        "skill": "ix-skills:critique",
+        "mission": "Counter-check the grid of criteria, hidden part included, with the angles of the verification of the goal and the question « what would pass and still be wrong? ». The first line of the verdict field is OK when nothing must be reworked, REPRENDRE otherwise; then the defects. This step is not played by the runner: the pilot calls the other model after giving their agreement, and hands the output back.",
+        "receives": [
+          "criteres.grille_visible",
+          "criteres.part_cachee",
+          "cloture.cadrage_clos"
+        ],
+        "transmits": [
+          "verdict"
+        ],
+        "verdict_field": "verdict",
+        "loop": {
+          "to": "criteres",
+          "ceiling": "passes_verification_max"
+        },
+        "external": true
+      },
+      {
+        "id": "reconciliation",
+        "label": "3. Réconciliation",
+        "stage": "3",
+        "role": "reconciliation",
+        "skill": "ix-skills:controle-qualite",
+        "mission": "Reconcile, in verdict mode, the goal, the visible grid and the closed scoping: the stopping condition of the goal points to the mechanical part of the grid by its slot and says nothing of what it checks; each criterion of the visible grid points to an element of the closed scoping; nothing in the goal contradicts the closed scoping. List the gaps, one per line, each with the passages. Do not correct.",
+        "receives": [
+          "goal.goal",
+          "criteres.grille_visible",
+          "cloture.cadrage_clos"
+        ],
+        "transmits": [
+          "ecarts"
+        ],
+        "pause": "validate",
+        "model": "sonnet"
+      }
+    ]
+  }
+}

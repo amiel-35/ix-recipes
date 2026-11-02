@@ -18,6 +18,8 @@ Usage:
     python3 scripts/parcours.py retry <slug>
     python3 scripts/parcours.py formats [--json]     (the recipe formats this runner plays)
     python3 scripts/parcours.py handoff <slug> <step> --file champs.md   (failed, done or paused step)
+    python3 scripts/parcours.py supply <slug> <step> --file sortie.md   (format 4: the output of an external step)
+    python3 scripts/parcours.py suite <slug> --suite relancer --n 2     (format 4: the pilot's choice at a ceiling)
 
 Common options: --engine claude|codex|agy|vibe|fake, --engine-step <step>=<engine>
 (repeatable), --yes, --timeout SECONDS (default 900), --max-budget-usd (default 5,
@@ -82,12 +84,22 @@ SKIPPED = "skipped"
 NOT_STATED = "not stated"
 NO_ANSWERS = "none — open points remain hypotheses"
 PAUSES = ("none", "validate", "answers", "choose")
-RECIPE_FORMATS = (1, 2, 3)  # the recipe formats this runner (and the page that bundles it) can play
+RECIPE_FORMATS = (1, 2, 3, 4)  # the recipe formats this runner can play
+PAGE_FORMATS = (1, 2, 3)       # the formats the tracking page announces and accepts: the page has no front for format 4
 RECIPE_FORMAT = 1        # the format written into a new recipe that uses nothing of format 2; a recipe without `format` is read as 1
 SOURCE_FORMAT = 2        # the first format where a checking step may read the source (`reads_source`)
 SOURCE_INPUT = "source"  # the name of the source in the message of a step that reads it
 CORPUS_FORMAT = 3        # the first format where a step may consult the dossier's pieces (`receives: [corpus]`)
 CORPUS_SOURCE = "corpus" # the `receives` source of a step that consults the pieces (docs/format-recette.md §1.11)
+LOOP_FORMAT = 4          # the first format with bounded loops, hidden fields and external steps (docs/format-recette.md §2quinquies)
+VERDICT_OK = "OK"                # first line of a verdict field: the step accepts what it checked
+VERDICT_REPRENDRE = "REPRENDRE"  # first line of a verdict field: the checked step is sent back
+HIDDEN_MARK = "[champ caché : scellé]"   # what a hidden field leaves in the dossier's files
+SEAL_ENV = "IX_SCELLE_DIR"       # where the sealed parts live, given by the caller, never read from a file of the dossier
+REGLAGES_ENV = "IX_REGLAGES"     # the settings file (A4) when it is not docs/harnais/A4-reglages.yaml next to the runner
+REGLAGES_PATH = Path("docs") / "harnais" / "A4-reglages.yaml"
+FORMAT4_STEP_KEYS = ("loop", "hidden", "external", "verdict_field")   # step keys that only a format 4 recipe may use
+FORMAT4_REFUSED = (("parallel", "une étape parallèle"), ("writes", "une étape qui écrit ou lance des commandes"))
 # The skills that check an upstream output against evidence: the only ones that may read the source
 # (`reads_source`, docs/format-recette.md §1.10). A closed list on purpose: a role declared by the recipe
 # would be its own guarantee, and `category: critique` in ix-skills also holds skills that produce
@@ -149,6 +161,11 @@ class MissingInput(ParcoursError):
 # ---------------------------------------------------------------------------
 def now():
     return datetime.now().isoformat(timespec="seconds")
+
+
+def now_us():
+    """Microsecond stamp, for the records a format 4 trace is ordered by (the second is too coarse for a fast chain)."""
+    return datetime.now().isoformat(timespec="microseconds")
 
 
 def write_atomic(path, text):
@@ -878,16 +895,16 @@ def recipe_ids(places=None):
     return sorted(plugin_recipe_ids() | personal_recipe_ids(places))
 
 
-def format_error(workflow):
-    """Why this runner cannot play a recipe of this format (docs/format-recette.md §2bis), or None.
-    A missing `format` is not an error: it reads as format 1 (see format_missing)."""
+def format_error(workflow, formats=RECIPE_FORMATS):
+    """Why this runner (or, with `formats=PAGE_FORMATS`, the page) cannot play a recipe of this format
+    (docs/format-recette.md §2bis), or None. A missing `format` is not an error: it reads as format 1."""
     if not isinstance(workflow, dict) or "format" not in workflow:
         return None
     value = workflow["format"]
-    accepted = ", ".join(str(f) for f in RECIPE_FORMATS)
-    if type(value) is int and value in RECIPE_FORMATS:
+    accepted = ", ".join(str(f) for f in formats)
+    if type(value) is int and value in formats:
         return None
-    if type(value) is int and value > max(RECIPE_FORMATS):
+    if type(value) is int and value > max(formats):
         return (f"cette recette est au format {value}, plus récent que ce que la page de suivi sait lire (format {accepted}) : "
                 "mettez la page à jour (installez la dernière version du plugin ix-recipes)")
     return (f"format de recette inconnu : {value!r} (la page de suivi lit le format {accepted}, un nombre entier) ; "
@@ -953,6 +970,150 @@ def source_errors(workflow):
     return errs
 
 
+def load_reglages(path=None):
+    """(settings, path, sha256): the settings file (A4) read with the standard library alone. Its place is the
+    argument, else $IX_REGLAGES, else docs/harnais/A4-reglages.yaml next to this runner. Every value the
+    runner applies (the ceilings of the loops) comes from there, none is written in this file."""
+    path = Path(path or os.environ.get(REGLAGES_ENV) or ROOT / REGLAGES_PATH)
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        raise ParcoursError(f"réglages introuvables : {path} (le fichier de réglages A4, ou la variable {REGLAGES_ENV})") from None
+    try:
+        data = load_yaml_subset(raw.decode("utf-8"))
+    except (YamlSubsetError, UnicodeDecodeError) as exc:
+        raise ParcoursError(f"réglages illisibles : {path} ({exc})") from None
+    if not isinstance(data, dict) or not isinstance(data.get("plafonds"), dict):
+        raise ParcoursError(f"réglages : {path} n'a pas de groupe « plafonds »")
+    return data, path, hashlib.sha256(raw).hexdigest()
+
+
+def suites_key(ceiling):
+    """The `suites_au_plafond` key of a ceiling: `passes_verification_max` -> `passes_verification`."""
+    return ceiling[:-4] if str(ceiling).endswith("_max") else str(ceiling)
+
+
+def reglages_errors(workflow, reglages, check_models=True):
+    """What a format 4 recipe must agree with in the settings (A4): the ceiling of each loop exists and has its
+    suites, and the model of each step is the one of its role (`role`, a key of `modeles`; `check_models=False`
+    when the runner binds the role's model itself, as it does when it creates a parcours). In French."""
+    errs = []
+    steps = workflow.get("steps") if isinstance(workflow, dict) else None
+    if not (isinstance(steps, list) and isinstance(reglages, dict)):
+        return errs
+    plafonds = reglages.get("plafonds") or {}
+    suites = reglages.get("suites_au_plafond") or {}
+    modeles = reglages.get("modeles") or {}
+    for st in steps:
+        if not isinstance(st, dict):
+            continue
+        sid, loop = st.get("id"), st.get("loop")
+        if isinstance(loop, dict) and isinstance(loop.get("ceiling"), str):
+            if type(plafonds.get(loop["ceiling"])) is not int:
+                errs.append(f"étape '{sid}' : loop.ceiling '{loop['ceiling']}' n'est pas un plafond des réglages (plafonds : "
+                            f"{', '.join(plafonds) or 'aucun'})")
+            if not suites.get(suites_key(loop["ceiling"])):
+                errs.append(f"étape '{sid}' : les réglages n'offrent aucune suite pour le plafond '{loop['ceiling']}' "
+                            f"(suites_au_plafond.{suites_key(loop['ceiling'])})")
+        if st.get("external"):
+            continue
+        role = st.get("role")
+        if not isinstance(role, str) or not isinstance(modeles.get(role), str):
+            errs.append(f"étape '{sid}' : role doit nommer une clé de modeles des réglages (modeles : "
+                        f"{', '.join(k for k, v in modeles.items() if isinstance(v, str))})")
+        elif check_models and st.get("model") != modeles[role]:
+            errs.append(f"étape '{sid}' : le modèle '{st.get('model')}' n'est pas celui du rôle '{role}' dans les réglages "
+                        f"('{modeles[role]}') : un appel d'agent prend le modèle de la clé de son rôle")
+    return errs
+
+
+def format4_errors(workflow):
+    """Why a recipe may not use what the format 4 adds (docs/format-recette.md §2quinquies), in French.
+
+    Before format 4: the keys `loop`, `hidden`, `external`, `verdict_field` ask for « format: 4 ». At format 4:
+    the minimal format refuses a parallel step (`parallel: true`), a step that writes or runs commands
+    (`writes: true`) and the model fable; a loop goes back to an earlier step, from a step with a verdict
+    field; a hidden field is never received by a later step, an external step apart.
+    """
+    steps = workflow.get("steps") if isinstance(workflow, dict) else None
+    if not isinstance(steps, list):
+        return []
+    errs = []
+    fmt = workflow.get("format", RECIPE_FORMAT)
+    if not (type(fmt) is int and fmt >= LOOP_FORMAT):
+        for st in steps:
+            for key in FORMAT4_STEP_KEYS:
+                if isinstance(st, dict) and key in st:
+                    errs.append(f"étape '{st.get('id')}' : {key} demande « format: {LOOP_FORMAT} » en tête du bloc workflow "
+                                "(un exécuteur ou une page plus ancien jouerait l'étape sans la boucle, le champ caché "
+                                "ou l'arrêt, sans le dire)")
+        return errs
+    ids = [st.get("id") for st in steps if isinstance(st, dict)]
+    hidden_by = {st.get("id"): list(st.get("hidden") or []) for st in steps if isinstance(st, dict)
+                 if isinstance(st.get("hidden") or [], list)}
+    spans = []
+    for i, st in enumerate(steps):
+        if not isinstance(st, dict):
+            continue
+        sid, transmits = st.get("id"), st.get("transmits") or []
+        for key, what in FORMAT4_REFUSED:
+            if st.get(key):
+                errs.append(f"étape '{sid}' : {what} est refusée en format {LOOP_FORMAT} ({key}: true) : le format 4 est minimal, "
+                            "ses étapes se suivent et ne font que lire")
+        if st.get("model") == "fable":
+            errs.append(f"étape '{sid}' : le modèle fable est refusé en format {LOOP_FORMAT} : Fable ne s'appelle qu'après accord, "
+                        "à part, sur une étape « external: true » que la recette ne joue pas elle-même")
+        if "stage" in st and not (isinstance(st["stage"], str) and st["stage"].strip()):
+            errs.append(f"étape '{sid}' : stage doit être un texte non vide (l'étape de la procédure, pour la trace)")
+        if "role" in st and not (isinstance(st["role"], str) and st["role"].strip()):
+            errs.append(f"étape '{sid}' : role doit être un texte non vide (une clé de modeles des réglages)")
+        field = st.get("verdict_field")
+        if field is not None and field not in transmits:
+            errs.append(f"étape '{sid}' : verdict_field '{field}' ne figure pas dans transmits")
+        if "external" in st and not isinstance(st["external"], bool):
+            errs.append(f"étape '{sid}' : external vaut true ou false")
+        if st.get("external"):
+            if i == 0:
+                errs.append(f"étape '{sid}' : la première étape ne peut pas être external")
+            for key in ("pause", "produces_context_sheet", "optional", "model"):
+                if st.get(key) not in (None, False, "none"):
+                    errs.append(f"étape '{sid}' : une étape external s'arrête d'elle-même, sans {key} (son modèle est celui "
+                                "de l'appel que fait le pilote)")
+        hidden = st.get("hidden")
+        if hidden is not None:
+            if not isinstance(hidden, list) or not all(isinstance(h, str) for h in hidden):
+                errs.append(f"étape '{sid}' : hidden est une liste de champs")
+            else:
+                for h in hidden:
+                    if h not in transmits:
+                        errs.append(f"étape '{sid}' : le champ caché '{h}' ne figure pas dans transmits")
+                    if h == st.get("output_field"):
+                        errs.append(f"étape '{sid}' : le champ caché '{h}' ne peut pas être output_field (un document entier)")
+        for src in st.get("receives") or []:
+            origin, _, name = str(src).partition(".")
+            if name and name in (hidden_by.get(origin) or []) and not st.get("external"):
+                errs.append(f"étape '{sid}' : reçoit '{src}', un champ caché : seule une étape external le reçoit "
+                            "(les autres ne voient jamais la part cachée)")
+        loop = st.get("loop")
+        if loop is None:
+            continue
+        if not (isinstance(loop, dict) and isinstance(loop.get("to"), str) and isinstance(loop.get("ceiling"), str)):
+            errs.append(f"étape '{sid}' : loop est « to: <étape antérieure>, ceiling: <plafond des réglages> »")
+            continue
+        if field is None:
+            errs.append(f"étape '{sid}' : loop demande verdict_field (c'est son verdict qui renvoie en arrière)")
+        if loop["to"] not in ids or ids.index(loop["to"]) >= i:
+            errs.append(f"étape '{sid}' : loop.to '{loop['to']}' doit être une étape antérieure")
+        else:
+            spans.append((ids.index(loop["to"]), i, sid))
+    for a in range(len(spans)):
+        for b in range(a + 1, len(spans)):
+            if spans[a][0] <= spans[b][1] and spans[b][0] <= spans[a][1]:
+                errs.append(f"étapes '{spans[a][2]}' et '{spans[b][2]}' : leurs boucles se recouvrent (le format 4 minimal "
+                            "n'a pas de boucles imbriquées)")
+    return errs
+
+
 FORMAT_MISSING = (f"pas de champ format dans le bloc workflow : la recette est lue comme format {RECIPE_FORMAT} "
                   f"(ajoutez « format: {RECIPE_FORMAT} » en tête du bloc workflow)")
 
@@ -967,7 +1128,7 @@ def load_recipe(recipe_id, places=None):
         raise ParcoursError(f"recette '{recipe_id}' : {problem}")
     if not isinstance(workflow["steps"], list) or not all(isinstance(s, dict) for s in workflow["steps"]):
         raise ParcoursError(f"'{recipe_id}' : les étapes doivent être une liste de « clé: valeur »")
-    problems = source_errors(workflow) + corpus_errors(workflow)
+    problems = source_errors(workflow) + corpus_errors(workflow) + format4_errors(workflow)
     if problems:
         raise ParcoursError(f"recette '{recipe_id}' : " + " ; ".join(problems))
     steps = [normalize_step(raw, i) for i, raw in enumerate(workflow["steps"])]
@@ -1000,7 +1161,7 @@ CANONICAL_FIELDS = ("id", "label", "version", "description_fr", "description_en"
                     "input_types", "output_types", "compatible")
 
 
-def workflow_errors(fm, body, skill_exists=None, require_format=False):
+def workflow_errors(fm, body, skill_exists=None, require_format=False, formats=RECIPE_FORMATS):
     """The mechanical checks of build.py's validate_workflow (docs/format-recette.md §2), in French.
 
     `skill_exists(ref)` answers True, False, or None when it cannot tell (then no error). Kept
@@ -1019,8 +1180,8 @@ def workflow_errors(fm, body, skill_exists=None, require_format=False):
     if format_missing(wf):
         if require_format:
             errs.append(FORMAT_MISSING)
-    elif format_error(wf):   # the rules below are those of format 1: they say nothing of another format
-        return [format_error(wf)]
+    elif format_error(wf, formats):   # the rules below are those of format 1: they say nothing of another format
+        return [format_error(wf, formats)]
     requires = fm.get("requires") or []
     if not isinstance(requires, list):
         errs.append("requires doit être une liste")
@@ -1100,7 +1261,13 @@ def workflow_errors(fm, body, skill_exists=None, require_format=False):
         errs.append("summary_fr doit être un texte non vide (une phrase affichée à l'utilisateur)")
     if not steps[0].get("produces_context_sheet"):
         errs.append("la première étape doit produire la fiche de contexte (produces_context_sheet: true)")
-    return errs + source_errors(wf) + corpus_errors(wf)
+    errs += source_errors(wf) + corpus_errors(wf) + format4_errors(wf)
+    if type(wf.get("format")) is int and wf["format"] >= LOOP_FORMAT:   # the ceilings and the models come from the settings
+        try:
+            errs += reglages_errors(wf, load_reglages()[0])
+        except ParcoursError as exc:
+            errs.append(str(exc))
+    return errs
 
 
 def runner_errors(fm):
@@ -1170,9 +1337,9 @@ def _check_recipe_text(text, places, exists):
     if not fm.get("workflow"):
         result["errors"].append("pas de bloc workflow : ce fichier n'est pas une recette-workflow")
         return result
-    result["errors"] += workflow_errors(fm, body, exists)
-    if format_error(fm["workflow"]):   # a format this runner does not know: nothing more to check
-        result["format_error"] = format_error(fm["workflow"])
+    result["errors"] += workflow_errors(fm, body, exists, formats=PAGE_FORMATS)
+    if format_error(fm["workflow"], PAGE_FORMATS):   # a format the page does not play: nothing more to check
+        result["format_error"] = format_error(fm["workflow"], PAGE_FORMATS)
         return result
     result["errors"] += runner_errors(fm)
     result["contribution"] = contribution_gaps(fm)
@@ -1242,6 +1409,14 @@ def normalize_step(raw, index):
         "output_field": raw.get("output_field") if raw.get("output_field") in (raw.get("transmits") or []) else None,
         "reads_source": index > 0 and raw.get("reads_source") is True and raw.get("skill") in VERIFICATION_SKILLS,
         "corpus": CORPUS_SOURCE in (raw.get("receives") or []),
+        "stage": str(raw["stage"]).strip() if isinstance(raw.get("stage"), str) and raw["stage"].strip() else None,
+        "role": raw.get("role") if isinstance(raw.get("role"), str) else None,
+        "verdict_field": raw.get("verdict_field") if raw.get("verdict_field") in (raw.get("transmits") or []) else None,
+        "loop": ({"to": raw["loop"]["to"], "ceiling": raw["loop"]["ceiling"]}
+                 if isinstance(raw.get("loop"), dict) and isinstance(raw["loop"].get("to"), str)
+                 and isinstance(raw["loop"].get("ceiling"), str) else None),
+        "hidden": [f for f in (raw.get("hidden") or []) if f in (raw.get("transmits") or [])] if isinstance(raw.get("hidden"), list) else [],
+        "external": raw.get("external") is True,
     }
 
 
@@ -1251,6 +1426,8 @@ def effective_pause(defn):
     Its pause may be `answers` (the questions go out with the sheet): the sheet is then
     validated by `answer`, and still correctable with `validate --context` before.
     """
+    if defn.get("external"):
+        return "external"   # format 4: the step is played outside the runner, which stops before it
     if defn["produces_context_sheet"] and defn["pause"] != "answers":
         return "validate"
     return defn["pause"]
@@ -1408,6 +1585,13 @@ def save_state(directory, state):
 
 
 def new_state(recipe, slug, engine, engine_steps, skills, title=None):
+    state = _new_state(recipe, slug, engine, engine_steps, skills, title)
+    if format4(recipe):   # what a format 4 parcours keeps besides the steps (docs/executeur.md §8)
+        state.update(loops={}, ceilings=[], pauses=[], suites=[])
+    return state
+
+
+def _new_state(recipe, slug, engine, engine_steps, skills, title=None):
     return {
         "recipe": recipe["id"],
         "recipe_version": recipe["version"],
@@ -1496,7 +1680,7 @@ def refresh_pending(state):
     if state["status"] != "active":
         state["pending"] = None
         return
-    if state["pending"] and state["pending"]["type"] in ("validate", "answers"):
+    if state["pending"] and state["pending"]["type"] in ("validate", "answers", "external", "ceiling", "verdict"):
         return
     state["pending"] = None
     steps = state["steps"]
@@ -1527,6 +1711,253 @@ def optional_group(state, start):
 
 def total_calls(state):
     return ", ".join(f"{e} ×{n}" for e, n in sorted(state["calls"].items())) or "aucun"
+
+
+# ---------------------------------------------------------------------------
+# Format 4: the sealed part, the verdicts and their loops, the external step (docs/executeur.md §8)
+# ---------------------------------------------------------------------------
+def subject_dir(parcours_dir):
+    """The folder of the subject a parcours folder belongs to: the parent of `./parcours`, else the folder itself."""
+    pdir = Path(parcours_dir).expanduser().resolve()
+    return pdir.parent if pdir.name == "parcours" else pdir
+
+
+def seal_dir(root, subject, create=True):
+    """The folder, inside the sealed place, of the part kept for a subject. Its name is drawn at random the first time and
+    kept in `<root>/index.json`, in the sealed place itself: it is computed from nothing the producer reads (not the
+    subject's path), and written in no file of the dossier. None when the subject has none and `create` is false."""
+    root = Path(root)
+    key = str(Path(subject).resolve())
+    index_path = root / "index.json"
+    try:
+        index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.is_file() else {}
+    except ValueError:
+        raise ParcoursError(f"{index_path.name} du scellé est illisible") from None
+    name = index.get(key)
+    if name is None:
+        if not create:
+            return None
+        name = secrets.token_hex(16)
+        index[key] = name
+        write_atomic(index_path, json.dumps(index, indent=2, sort_keys=True) + "\n")
+        os.chmod(index_path, 0o600)
+    folder = root / name
+    if create:
+        folder.mkdir(parents=True, exist_ok=True)
+        os.chmod(folder, 0o700)
+    return folder
+
+
+def seal_root(subject):
+    """The sealed place, given by $IX_SCELLE_DIR at run time and by nothing else: refused when the variable is missing,
+    when the folder is inside a git repository, or when it holds, or sits under, a path the producer reads (the
+    subject's folder, its deliverable's folder `$L`, this repository). Created private when absent."""
+    raw = os.environ.get(SEAL_ENV, "").strip()
+    if not raw:
+        raise ParcoursError(f"{SEAL_ENV} manque : l'emplacement des scellés est une entrée donnée à l'exécution, "
+                            "jamais une valeur par défaut ni déduite de ce que lit le producteur")
+    root = Path(raw).expanduser()
+    if not root.is_absolute():
+        raise ParcoursError(f"{SEAL_ENV} doit être un chemin absolu")
+    root.mkdir(parents=True, exist_ok=True)
+    root = root.resolve()
+    for place in (root, *root.parents):
+        if (place / ".git").exists():
+            raise ParcoursError(f"{SEAL_ENV} désigne un dossier dans un dépôt git : un scellé vit hors de tout dépôt")
+    readers = [subject, ROOT] + ([os.environ["L"]] if os.environ.get("L") else [])
+    for reader in readers:
+        reader = Path(reader).resolve()
+        if root == reader or reader in root.parents or root in reader.parents:
+            raise ParcoursError(f"{SEAL_ENV} désigne un dossier lié à un chemin que lit le producteur : un scellé vit ailleurs")
+    os.chmod(root, 0o700)
+    return root
+
+
+def sealed_path(root, subject, state, step_id, field):
+    return seal_dir(root, subject) / state["slug"] / f"{step_id}.{field}.md"
+
+
+def write_sealed(root, subject, state, step_id, field, value):
+    """Keep a hidden field in the sealed place (an older value is kept as .vN there)."""
+    path = sealed_path(root, subject, state, step_id, field)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        path.rename(versioned_name(path))
+    write_atomic(path, value.rstrip("\n") + "\n")
+    os.chmod(path, 0o600)
+    return path
+
+
+def read_sealed(state, step_id, field, subject):
+    path = sealed_path(seal_root(subject), subject, state, step_id, field)
+    if not path.is_file():
+        raise MissingInput(f"{step_id}.{field} : champ caché, absent du scellé")
+    return path.read_text(encoding="utf-8")
+
+
+def redact_fields(text, names):
+    """The text with the body of each HANDOFF sub-section named in `names` replaced by HIDDEN_MARK: what is kept in
+    the dossier's files (outputs, traces of messages) when a step has hidden fields."""
+    if not names:
+        return text
+    wanted = {normalize_name(n) for n in names}
+    inner = unwrap_fence(text)
+    if inner is not None:   # an output wrapped in a code fence is kept without the wrap, so that its sections are seen
+        text = inner
+    out, in_handoff, hiding = [], False, False
+    for line, in_fence, _ in walk_fences(text):
+        h2 = None if in_fence else H2_RE.match(line)
+        h3 = None if in_fence else H3_RE.match(line)
+        if h2 and normalize_name(h2.group(1)) in ("handoff", "summary", "context_sheet"):
+            in_handoff, hiding = normalize_name(h2.group(1)) == "handoff", False
+            out.append(line)
+            continue
+        if in_handoff and h3:
+            hiding = normalize_name(h3.group(1)) in wanted
+            out.append(line)
+            if hiding:
+                out.extend([HIDDEN_MARK, ""])
+            continue
+        if not hiding:
+            out.append(line)
+    return "\n".join(out) + ("\n" if text.endswith("\n") else "")
+
+
+def seal_hidden(directory, state, defn, step, handoff):
+    """Move the hidden fields of a step's HANDOFF into the sealed place; the dossier keeps a mark and a hash."""
+    if not defn.get("hidden"):
+        return
+    subject = subject_dir(directory.parent)
+    root = seal_root(subject)
+    step["hidden"] = {}
+    for field in defn["hidden"]:
+        value = handoff.get(field)
+        if value is None or value == HIDDEN_MARK:
+            continue
+        write_sealed(root, subject, state, defn["id"], field, value)
+        step["hidden"][field] = hashlib.sha256(value.encode("utf-8")).hexdigest()
+        handoff[field] = HIDDEN_MARK
+
+
+def scrub_output(text, defn, values=()):
+    """What a step with hidden fields leaves in the dossier: its output with the hidden sections replaced, and, as a
+    second net, any exact copy of a hidden value found elsewhere in the text."""
+    if not defn.get("hidden"):
+        return text
+    text = redact_fields(text, defn["hidden"])
+    for value in values:
+        if value and len(value.strip()) >= 8:
+            text = text.replace(value.strip(), HIDDEN_MARK)
+    return text
+
+
+def verdict_of(text):
+    """VERDICT_OK, VERDICT_REPRENDRE or None: the first line of a verdict field, markdown decoration ignored."""
+    first = next((l for l in (text or "").splitlines() if l.strip()), "")
+    word = re.match(r"[A-Za-zÀ-ÿ_]+", re.sub(r"^[\s>#*`_\-]+", "", first))
+    token = fold_text(word.group(0)).upper() if word else ""
+    return {VERDICT_OK: VERDICT_OK, VERDICT_REPRENDRE: VERDICT_REPRENDRE}.get(token)
+
+
+def bind_models(recipe, state):
+    """Give each step of a format 4 recipe the model its role had in the settings when the parcours was created."""
+    for defn in recipe["steps"]:
+        if defn["id"] in (state.get("models") or {}):
+            defn["model"] = state["models"][defn["id"]]
+    return recipe
+
+
+def format4(recipe):
+    return type(recipe.get("format")) is int and recipe["format"] >= LOOP_FORMAT
+
+
+def record_run(step, defn, start_cost, skill, passes=None):
+    """Format 4 keeps every run of a step (a loop plays a step several times): what the trace is built from."""
+    step.setdefault("runs", []).append({
+        "t": now_us(), "started": step.get("started"), "ended": step.get("ended"), "output": step.get("output"),
+        "engine": step.get("engine"), "model": step.get("model"), "skill": skill_record(skill) if skill else step.get("skill"),
+        "cost_usd": round(step.get("cost_usd", 0.0) - start_cost, 6), "hidden": sorted((step.get("hidden") or {})),
+        **({"external": True} if defn.get("external") else {}),
+    })
+
+
+def settle_verdict(directory, state, recipe, idx):
+    """After a step whose recipe gives it a verdict field (format 4): count the pass, read the verdict, and either go
+    on, send the parcours back to the step `loop.to` (with the verdict as an extra input), or stop at the ceiling."""
+    defn, step = recipe["steps"][idx], state["steps"][idx]
+    field = defn.get("verdict_field")
+    if not format4(recipe) or not field:
+        return
+    record = state["loops"].setdefault(defn["id"], {"passes": 0, "extra": 0, "history": []})
+    record["passes"] += 1
+    text = (step.get("handoff") or {}).get(field, "")
+    verdict = verdict_of(text)
+    record["history"].append({"pass": record["passes"], "verdict": verdict or "illisible", "at": now()})
+    step["verdict"] = verdict
+    if verdict is None:
+        step.update(status="failed", error=f"verdict illisible : la première ligne du champ '{field}' doit valoir "
+                                           f"{VERDICT_OK} ou {VERDICT_REPRENDRE}")
+        state["pending"] = None
+        save_state(directory, state)
+        raise ParcoursError(f"étape '{defn['id']}' : {step['error']}")
+    if verdict == VERDICT_OK:
+        return
+    loop = defn.get("loop")
+    if not loop:   # nothing to send back to: the human decides
+        step["status"] = "paused"
+        state["pending"] = {"type": "verdict", "step": defn["id"],
+                            "message": f"Verdict {VERDICT_REPRENDRE} de l'étape '{defn['id']}' ({output_name(idx, defn['id'])}) : "
+                                       "la suite ne se joue pas. `rerun` l'étape à corriger, ou `validate --stop` pour arrêter."}
+        return
+    reglages = state["reglages"]
+    limit = reglages["plafonds"][loop["ceiling"]] + record["extra"]
+    if record["passes"] < limit:
+        say(f"  {defn['id']} : {VERDICT_REPRENDRE}, retour à '{loop['to']}' (passe {record['passes']} sur {limit})")
+        extra = {f"{defn['id']}.{field}": text}
+        reset_from(directory, state, recipe, step_index(state, loop["to"]))
+        state["steps"][step_index(state, loop["to"])]["extra_inputs"] = extra
+        return
+    key = suites_key(loop["ceiling"])
+    offered = list(reglages["suites"][key])
+    constat = (f"dernier résultat : verdict {VERDICT_REPRENDRE} à la passe {record['passes']} sur {limit} de l'étape "
+               f"'{defn['id']}' ; reste en échec : {' '.join(text.split())[:300]} ; livré : "
+               + ", ".join(f"{state['steps'][j]['output']}" for j in range(idx + 1) if state['steps'][j].get("output")))
+    step["status"] = "paused"
+    state["pending"] = {"type": "ceiling", "step": defn["id"], "plafond": key, "ceiling": loop["ceiling"],
+                        "passes": record["passes"], "limit": limit, "suites": offered,
+                        "message": f"Plafond '{loop['ceiling']}' atteint après {record['passes']} passes de '{defn['id']}'. "
+                                   f"Suites offertes : {', '.join(offered)}. `suite {state['slug']} --suite <suite>` "
+                                   "(le pilote seul choisit)."}
+    state["ceilings"].append({"step": defn["id"], "plafond": key, "ceiling": loop["ceiling"], "constat": constat,
+                              "suites_proposees": offered, "at": now(), "t": now_us(), "choice": None})
+
+
+def hold_external(directory, state, recipe, idx, skill, message):
+    """Stop before an external step: write the message the pilot hands to the other model and wait for `supply`.
+
+    The message is kept in the sealed place when it carries a hidden field (the dossier must not hold it)."""
+    defn, step = recipe["steps"][idx], state["steps"][idx]
+    carries_hidden = any(f"{o}.{f}" in defn["receives"] for o, f in
+                         ((d["id"], h) for d in recipe["steps"] for h in d.get("hidden", ())))
+    name = trace_name(idx, defn["id"], "main")
+    if carries_hidden:
+        subject = subject_dir(directory.parent)
+        path = seal_dir(seal_root(subject), subject) / state["slug"] / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        write_atomic(path, message)
+        os.chmod(path, 0o600)
+        where = f"{name}, dans le scellé du sujet (la commande du pilote qui donne son emplacement)"
+    else:
+        write_trace(directory, idx, defn["id"], "main", message)
+        where = name
+    step.update(status="paused", engine="externe", model=None, skill=skill_record(skill), started=now())
+    step.pop("ended", None)
+    step.setdefault("cost_usd", 0.0)
+    state["pending"] = {"type": "external", "step": defn["id"],
+                        "message": f"Étape '{defn['id']}' jouée hors de l'exécuteur, par l'appel du pilote (après son accord) : "
+                                   f"le message est {where}. Rendre la sortie complète avec `supply {state['slug']} {defn['id']} --file`."}
+    save_state(directory, state)
+    say(f"  {defn['id']} : arrêt avant une étape jouée hors de l'exécuteur ({where})")
 
 
 # ---------------------------------------------------------------------------
@@ -1823,8 +2254,9 @@ def corpus_review(parsed, text, message, directory, reads):
 # ---------------------------------------------------------------------------
 # Building the message of a step
 # ---------------------------------------------------------------------------
-def input_value(directory, state, idx, source):
-    """Text of one `receives` source for step `idx`."""
+def input_value(directory, state, idx, source, external=False):
+    """Text of one `receives` source for step `idx`. A hidden field comes from the sealed place, and only for an
+    external step (the recipe checker refuses any other that receives one)."""
     if source == "brief":
         if idx != 0:
             raise ParcoursError("seule la première étape reçoit la demande brute")
@@ -1842,6 +2274,10 @@ def input_value(directory, state, idx, source):
     handoff = step.get("handoff") or {}
     if step["status"] not in ("done", "paused") or field not in handoff:
         raise MissingInput(f"{source} : pas encore produit")
+    if field in (step.get("hidden") or {}):
+        if not external:
+            raise ParcoursError(f"{source} : champ caché, qu'aucune étape jouée par l'exécuteur ne reçoit")
+        return read_sealed(state, step_id, field, subject_dir(directory.parent))
     return handoff[field]
 
 
@@ -1853,7 +2289,7 @@ def collect_inputs(directory, state, defn, idx, lenient=False):
         if source in ("context_sheet", CORPUS_SOURCE):   # the corpus is copied, never put in the message
             continue
         try:
-            inputs.append((source, input_value(directory, state, idx, source)))
+            inputs.append((source, input_value(directory, state, idx, source, defn.get("external", False))))
         except MissingInput:
             if not lenient:
                 raise
@@ -2760,6 +3196,9 @@ def simulation_engine(step_id, kind, message, expected):
         parts.append("## CONTEXT SHEET\n```json\n" + json.dumps(sheet, ensure_ascii=False, indent=2) + "\n```\n")
     parts.append("## HANDOFF\n")
     for field in expected.get("fields", []):
+        if field == expected.get("verdict_field"):   # a verdict field starts with the accepting value (docs/executeur.md §8)
+            parts.append(f"### {field}\n{VERDICT_OK}\n{SIMULATED} verdict de l'étape « {step_id} » : rien à reprendre.\n")
+            continue
         parts.append(f"### {field}\n{SIMULATED} « {field} » transmis par l'étape « {step_id} ».\n")
     parts.append(f"## SUMMARY\nSortie simulée de l'étape « {step_id} » (aucun appel à un modèle).\n")
     return "\n".join(parts), 0.0
@@ -2902,7 +3341,8 @@ def produce_output(directory, state, recipe, idx, skill, message, opts, retried=
     context_fields = recipe["context_sheet"] if defn["produces_context_sheet"] else None
     out_path = directory / output_name(idx, defn["id"])
     expected = {"fields": [f for f in defn["transmits"] if f != defn.get("output_field")],
-                "context": context_fields, "output_field": defn.get("output_field")}
+                "context": context_fields, "output_field": defn.get("output_field"),
+                "verdict_field": defn.get("verdict_field") if format4(recipe) else None}
 
     existing = reuse_existing_output(out_path, defn, retried, context_fields)
     if existing:
@@ -2915,7 +3355,7 @@ def produce_output(directory, state, recipe, idx, skill, message, opts, retried=
 
     write_trace(directory, idx, defn["id"], "main", message)
     text = invoke(directory, state, step, engine, message, opts, "main", skill, model, expected, idx, corpus, reads)
-    write_atomic(out_path, text)
+    write_atomic(out_path, scrub_output(text, defn))
     try:
         return reviewed(parse_step_output(text, defn["transmits"], context_fields, defn.get("output_field")))
     except ParseError as first:
@@ -2924,9 +3364,9 @@ def produce_output(directory, state, recipe, idx, skill, message, opts, retried=
         if not defn["reads_source"]:   # the retry goes back to the same step: one that reads the source may see it
             ensure_isolated(retry, directory, idx, admitted=admitted_text(state, recipe, idx))
         warn(f"étape '{defn['id']}' : {first} ; une relance sur la sortie produite")
-        write_trace(directory, idx, defn["id"], "retry", retry)
+        write_trace(directory, idx, defn["id"], "retry", scrub_output(retry, defn))
         retry_text = invoke(directory, state, step, engine, retry, opts, "retry", skill, model, expected, idx)
-        write_atomic(out_path, f"{text}\n\n{RETRY_MARKER}\n{retry_text}\n")
+        write_atomic(out_path, scrub_output(f"{text}\n\n{RETRY_MARKER}\n{retry_text}\n", defn))
         if defn.get("output_field"):
             retry_text = f"{output_body(text)}\n\n{retry_text}"  # the document comes from the first answer
         try:
@@ -2969,6 +3409,12 @@ def complete_step(directory, state, recipe, idx, parsed, keep_status=None, check
     blocking = parsed.get("blocking") or ""
     if blocking and pause == "none":
         pause = "validate"  # a blocking signal always waits for the human
+    if defn.get("hidden"):   # format 4: the hidden fields go to the sealed place, the dossier keeps a mark
+        hidden_values = [parsed["handoff"].get(f) for f in defn["hidden"]]
+        seal_hidden(directory, state, defn, step, parsed["handoff"])
+        out_file = directory / output_name(idx, defn["id"])
+        if out_file.is_file():
+            write_atomic(out_file, scrub_output(out_file.read_text(encoding="utf-8"), defn, hidden_values))
     status = keep_status or ("paused" if pause in ("validate", "answers") else "done")
     step.update(
         status=status,
@@ -3015,8 +3461,12 @@ def execute_step(directory, state, recipe, idx, opts):
     ensure_isolated(message, directory, idx,
                     inputs + [("context_sheet", render_context_sheet(state))] if idx else (),
                     exempt_inputs(recipe, defn), admitted_text(state, recipe, idx))
+    if defn.get("external"):
+        hold_external(directory, state, recipe, idx, skill, message)
+        return
 
     retried = bool(step.pop("retried", False))
+    start_cost = step.get("cost_usd", 0.0)
     step.update(
         status="running", engine=engine_for(state, defn["id"]), model=defn["model"],
         skill=skill_record(skill), started=now(),
@@ -3037,9 +3487,13 @@ def execute_step(directory, state, recipe, idx, opts):
         with contextlib.suppress(OSError):
             save_state(directory, state)
         raise ParcoursError(f"étape '{defn['id']}' : {reason}") from exc
+    if format4(recipe):
+        record_run(step, defn, start_cost, skill)
+        settle_verdict(directory, state, recipe, idx)
     refresh_pending(state)
     save_state(directory, state)
-    say(f"  {defn['id']} : terminé ({step['output']}, coût ${step['cost_usd']:.4f})")
+    if step.get("output"):   # a format 4 step sent back by a verdict has no output any more
+        say(f"  {defn['id']} : terminé ({step['output']}, coût ${step['cost_usd']:.4f})")
 
 
 # ---------------------------------------------------------------------------
@@ -3088,6 +3542,14 @@ def cmd_new(args):
                             "format 3) : collez-les dans la demande, ou prenez une recette qui les lit")
     pieces = corpus_plan(args.corpus or [])   # checked before anything is written
     skills = resolve_recipe_skills(recipe)  # fail early, naming every missing skill
+    settings = None
+    if format4(recipe):   # the ceilings and the roles' models come from the settings file (A4), checked before anything is written
+        settings = load_reglages()
+        problems = reglages_errors({"steps": recipe["steps"]}, settings[0], check_models=False)
+        if problems:
+            raise ParcoursError(f"recette '{recipe['id']}' : " + " ; ".join(problems))
+        if any(s_["hidden"] for s_ in recipe["steps"]):
+            seal_root(subject_dir(args.parcours_dir))
     base = Path(args.parcours_dir)
     base.mkdir(parents=True, exist_ok=True)
     # a slug stays within the page's whitelist (^[a-z0-9][a-z0-9-]{0,79}$): truncated, and the
@@ -3099,6 +3561,16 @@ def cmd_new(args):
     title = " ".join((args.title or "").split())[:120] or None
     write_atomic(directory / "input.md", text)
     state = new_state(recipe, slug, args.engine or "claude", engine_steps, skills, title)
+    if settings:
+        data = settings[0]
+        # an agent call takes the model of its role in the settings read now, whatever the recipe file says (CB8)
+        state["models"] = {d["id"]: data["modeles"][d["role"]] for d in recipe["steps"] if d["role"] and not d["external"]}
+        state["reglages"] = {
+            "version": str(data.get("version")), "sha256": settings[2], "source": settings[1].name,
+            "plafonds": {k: v for k, v in (data.get("plafonds") or {}).items() if type(v) is int},
+            "production": {k: v for k, v in (data.get("production") or {}).items() if type(v) is int},
+            "suites": {k: list(v) for k, v in (data.get("suites_au_plafond") or {}).items() if isinstance(v, list)},
+        }
     if pieces:
         try:
             state["corpus"] = build_corpus(directory, pieces)
@@ -3164,11 +3636,12 @@ def cmd_formats(args):
     """The recipe formats this runner plays (docs/format-recette.md §2bis)."""
     if args.json:
         emit_json({"formats": list(RECIPE_FORMATS), "current": RECIPE_FORMAT, "source_format": SOURCE_FORMAT,
-                   "corpus_format": CORPUS_FORMAT})
+                   "corpus_format": CORPUS_FORMAT, "loop_format": LOOP_FORMAT})
         return 0
     say(f"Formats de recette acceptés : {', '.join(str(f) for f in RECIPE_FORMATS)} "
         f"(une recette nouvelle est écrite au format {RECIPE_FORMAT}, au format {SOURCE_FORMAT} si une étape relit la source, "
-        f"au format {CORPUS_FORMAT} si une étape consulte les pièces ; "
+        f"au format {CORPUS_FORMAT} si une étape consulte les pièces ; le format {LOOP_FORMAT} (boucles bornées, champ caché, "
+        "arrêt avant une étape jouée à part) n'est écrit qu'à la main et ne se joue pas dans la page ; "
         f"sans champ format, elle est lue comme format {RECIPE_FORMAT})")
     return 0
 
@@ -3218,7 +3691,7 @@ def plan_steps(state, recipe):
         if step.get("optional") and not step.get("chosen"):
             break
         plan.append(idx)
-        if effective_pause(recipe["steps"][idx]) in ("validate", "answers"):
+        if effective_pause(recipe["steps"][idx]) in ("validate", "answers", "external"):
             break
     return plan
 
@@ -3309,7 +3782,7 @@ def cmd_next(args):
         if state["status"] != "active":
             say(f"Parcours {state['status']}.")
             return 0
-        recipe = load_recipe(state["recipe"])
+        recipe = bind_models(load_recipe(state["recipe"]), state)
         check_recipe_matches(state, recipe)
         apply_engine_overrides(state, args, recipe)
         guard_steps(state)
@@ -3367,7 +3840,7 @@ def status_report(directory, state, fingerprint):
     """Everything a page needs to show a parcours, in one object (`status --json`)."""
     recipe, problem = None, None
     try:
-        recipe = load_recipe(state["recipe"])
+        recipe = bind_models(load_recipe(state["recipe"]), state)
         problem = recipe_drift(state, recipe)
     except ParcoursError as exc:
         problem = str(exc)
@@ -3385,6 +3858,8 @@ def status_report(directory, state, fingerprint):
             "produces_context_sheet": bool(defn and defn["produces_context_sheet"]),
             "reads_source": bool(defn and defn["reads_source"]),
             "corpus": bool(defn and defn["corpus"]), "corpus_check": step.get("corpus_check"),
+            "external": bool(defn and defn["external"]), "verdict_field": defn["verdict_field"] if defn else None,
+            "verdict": step.get("verdict"), "hidden_fields": sorted(step.get("hidden") or {}),
             "transmits": list(step.get("transmits") or (defn["transmits"] if defn else [])),
             "output": step.get("output"), "summary": step.get("summary"), "handoff": step.get("handoff"),
             "blocking": step.get("blocking"), "error": step.get("error"),
@@ -3417,6 +3892,7 @@ def status_report(directory, state, fingerprint):
         "context_fields": list(recipe["context_sheet"]) if recipe else [],
         "context_labels": dict(recipe["context_labels"]) if recipe else {}, "not_stated": NOT_STATED,
         "answers": state.get("answers"), "pending": state["pending"], "steps": steps,
+        "loops": state.get("loops"), "ceilings": state.get("ceilings"), "pauses": state.get("pauses"),
         "corpus": [{k: r.get(k) for k in ("name", "kind", "files", "warnings", "pages")} for r in state.get("corpus") or []],
         "files": files, "final_output": final, "recipe_error": problem,
         "locked": is_locked(directory), "fingerprint": fingerprint, "max_budget_usd": DEFAULT_BUDGET,
@@ -3469,7 +3945,7 @@ def cmd_plan(args):
 
     if state["status"] != "active":
         return finish(state["status"], f"Parcours {state['status']}.")
-    recipe = load_recipe(state["recipe"])
+    recipe = bind_models(load_recipe(state["recipe"]), state)
     check_recipe_matches(state, recipe)
     apply_engine_overrides(state, args, recipe)
     report.update(engine=state["engine"], engine_steps=state["engine_steps"],
@@ -3519,6 +3995,8 @@ def require_pending(state, kind):
 
 def close_pause(directory, state, pending):
     step = state["steps"][step_index(state, pending["step"])]
+    if "pauses" in state:   # format 4: the trace shows who answered which pause, and when
+        state["pauses"].append({"step": pending["step"], "type": pending["type"], "at": now(), "t": now_us()})
     step["status"] = "done"
     state["pending"] = None
     refresh_pending(state)
@@ -3541,6 +4019,11 @@ def cmd_validate(args):
         check_recipe_matches(state, recipe)
         if args.stop and args.context:
             raise ParcoursError("--stop et --context ne se combinent pas")
+        if args.stop and state["pending"] and state["pending"]["type"] == "verdict":   # format 4: a refused verdict, nothing to go on with
+            state["status"], state["pending"] = "stopped", None
+            save_state(directory, state)
+            say("Parcours arrêté (No-go).")
+            return 0
         if args.context and sheet_answers_pause(state, recipe, state["pending"]):
             replace_context(directory, state, recipe, args.context)
             save_state(directory, state)
@@ -3670,7 +4153,7 @@ def collect_extras(state, idx, sources):
 
 
 RESET_KEYS = ("handoff", "summary", "output", "error", "ended", "started", "extra_inputs", "blocking", "retried",
-              "corpus_check")
+              "corpus_check", "hidden", "verdict")
 
 
 def reset_step(directory, state, recipe, j):
@@ -3678,7 +4161,11 @@ def reset_step(directory, state, recipe, j):
     step = state["steps"][j]
     old = directory / step["output"] if step.get("output") else None
     if old and old.is_file():
-        old.rename(versioned_name(old))
+        kept = versioned_name(old)
+        old.rename(kept)
+        for run in step.get("runs") or []:   # format 4: the run keeps the name its output now has
+            if run.get("output") == step["output"]:
+                run["output"] = kept.name
     for key in RESET_KEYS:
         step.pop(key, None)
     step["status"] = "pending"
@@ -3783,6 +4270,85 @@ def cmd_archives(args):
     return 0
 
 
+def cmd_supply(args):
+    """Give back the output of an external step (format 4): the call the pilot made outside the runner."""
+    directory = parcours_path(args)
+    with parcours_lock(directory):
+        state = load_state(directory)
+        recipe = load_recipe(state["recipe"])
+        check_recipe_matches(state, recipe)
+        pending = require_pending(state, "external")
+        if pending["step"] != args.step:
+            raise ParcoursError(f"l'arrêt en cours est celui de l'étape '{pending['step']}', pas de '{args.step}'")
+        idx = step_index(state, args.step)
+        step, defn = state["steps"][idx], recipe["steps"][idx]
+        text = read_text_arg(args.file)
+        parsed = parse_step_output(text, defn["transmits"], None, defn.get("output_field"))
+        check_parsed_leak(directory, defn["id"], parsed, defn.get("verbatim", ()), admitted_text(state, recipe, idx))
+        out_path = directory / output_name(idx, defn["id"])
+        if out_path.exists():
+            out_path.rename(versioned_name(out_path))
+        write_atomic(out_path, scrub_output(text, defn, [parsed["handoff"].get(f) for f in defn.get("hidden", ())]))
+        start_cost = step.get("cost_usd", 0.0)
+        step["model"] = args.model or None
+        step["cost_usd"] = round(start_cost + (args.cost_usd or 0.0), 6)
+        step["cost_known"] = args.cost_usd is not None
+        complete_step(directory, state, recipe, idx, parsed)
+        step["ended"] = now()
+        record_run(step, defn, start_cost, None)
+        settle_verdict(directory, state, recipe, idx)
+        refresh_pending(state)
+        save_state(directory, state)
+        say(f"Sortie de '{args.step}' enregistrée ({output_name(idx, args.step)}). Suite : "
+            + ("`suite`" if state["pending"] and state["pending"]["type"] == "ceiling" else "next"))
+        announce_end(state)
+        return 0
+
+
+def cmd_suite(args):
+    """The pilot's choice at a ceiling (format 4): the runner stops at the ceiling and never picks one itself."""
+    directory = parcours_path(args)
+    with parcours_lock(directory):
+        state = load_state(directory)
+        recipe = load_recipe(state["recipe"])
+        check_recipe_matches(state, recipe)
+        pending = require_pending(state, "ceiling")
+        if args.suite not in pending["suites"]:
+            raise ParcoursError(f"suite '{args.suite}' non offerte à ce plafond ; suites offertes : {', '.join(pending['suites'])}")
+        idx = step_index(state, pending["step"])
+        step, defn = state["steps"][idx], recipe["steps"][idx]
+        entry = state["ceilings"][-1]
+        entry["choice"] = {"suite": args.suite, "at": now(), "t": now_us(), "by": args.by or "le pilote"}
+        if args.suite == "relancer":
+            if not args.n or args.n < 1:
+                raise ParcoursError("relancer demande le nombre de passes de plus (--n N, un entier d'au moins 1) : le pilote le fixe")
+            state["loops"][defn["id"]]["extra"] += args.n
+            entry["choice"]["passes_ajoutees"] = args.n
+            loop = defn["loop"]
+            extra = {f"{defn['id']}.{defn['verdict_field']}": (step.get("handoff") or {}).get(defn["verdict_field"], "")}
+            reset_from(directory, state, recipe, step_index(state, loop["to"]))
+            state["steps"][step_index(state, loop["to"])]["extra_inputs"] = extra
+            say(f"{args.n} passe(s) de plus pour '{defn['id']}'. Suite : next")
+        elif args.suite == "livrer_avec_reserve":
+            if not (args.text or "").strip():
+                raise ParcoursError("livrer_avec_reserve demande le texte de la réserve (--text)")
+            entry["choice"]["reserve"] = args.text.strip()
+            step["status"] = "done"
+            state["pending"] = None
+            say("Livré avec réserve : la réserve est consignée. Suite : next")
+        elif args.suite == "abandonner":
+            state["status"] = "stopped"
+            state["pending"] = None
+            say("Sujet abandonné : l'échec et ce qui est livré restent dans la trace.")
+        else:
+            raise ParcoursError(f"suite '{args.suite}' : non gérée à ce plafond")
+        state["suites"].append({"plafond": entry["plafond"], "step": defn["id"], **entry["choice"]})
+        refresh_pending(state)
+        save_state(directory, state)
+        announce_end(state)
+        return 0
+
+
 def cmd_retry(args):
     directory = parcours_path(args)
     with parcours_lock(directory):
@@ -3824,7 +4390,7 @@ def cmd_handoff(args):
         out_path = directory / output_name(idx, defn["id"])
         if out_path.exists():
             out_path.rename(versioned_name(out_path))
-        write_atomic(out_path, "(sortie fournie à la main)\n\n" + text)
+        write_atomic(out_path, "(sortie fournie à la main)\n\n" + scrub_output(text, defn, [parsed["handoff"].get(f) for f in defn.get("hidden", ())]))
         stale = consumers(state, recipe, idx)
         reset = [state["steps"][j]["id"] for j in stale]
         for j in stale:
@@ -3905,6 +4471,15 @@ def build_parser():
     add("archives", cmd_archives, "les parcours archivés")
     p = add("handoff", cmd_handoff, "fournir ou corriger les champs à la main (étape en échec, terminée ou en pause)", "slug", "step")
     p.add_argument("--file", required=True)
+    p = add("supply", cmd_supply, "format 4 : rendre la sortie d'une étape jouée hors de l'exécuteur", "slug", "step")
+    p.add_argument("--file", required=True, help="la sortie complète, avec son bloc HANDOFF")
+    p.add_argument("--model", help="le modèle de l'appel du pilote, pour la trace")
+    p.add_argument("--cost-usd", type=float, help="le coût de cet appel, s'il est connu, pour la trace")
+    p = add("suite", cmd_suite, "format 4 : le choix du pilote à un plafond atteint", "slug")
+    p.add_argument("--suite", required=True, help="une suite offerte au plafond (relancer, livrer_avec_reserve, abandonner)")
+    p.add_argument("--n", type=int, help="relancer : le nombre de passes de plus")
+    p.add_argument("--text", help="livrer_avec_reserve : le texte de la réserve")
+    p.add_argument("--by", help="qui choisit (la trace le garde)")
     return parser
 
 

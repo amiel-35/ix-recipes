@@ -4,7 +4,7 @@ Conception v0 du 2026-10-14, révisée après une relecture adverse (Fable) avan
 
 ## 1. Ce qu'il lit et ce qu'il écrit
 
-- **Il lit** le bloc `workflow` du frontmatter de la recette (`skills/<id>.md`) : `format`, étapes, missions, `receives`, `transmits`, `pause`, `model`, `reads_source`. Il joue les formats de `RECIPE_FORMATS` (1, 2 et 3) et refuse les autres avec « mettez la page à jour » ; une recette sans `format` est lue comme format 1, avec un avertissement ([format](format-recette.md) §2bis). `parcours.py formats [--json]` annonce les formats acceptés (`{"formats": [1, 2, 3], "current": 1, "source_format": 2, "corpus_format": 3}` : `current` est le format écrit dans une recette créée par la page, `source_format` celui qu'elle écrit quand une étape relit la source, `corpus_format` quand une étape consulte les pièces).
+- **Il lit** le bloc `workflow` du frontmatter de la recette (`skills/<id>.md`) : `format`, étapes, missions, `receives`, `transmits`, `pause`, `model`, `reads_source`. Il joue les formats de `RECIPE_FORMATS` (1, 2, 3 et 4) et refuse les autres avec « mettez la page à jour » ; une recette sans `format` est lue comme format 1, avec un avertissement ([format](format-recette.md) §2bis). `parcours.py formats [--json]` annonce les formats acceptés (`{"formats": [1, 2, 3, 4], "current": 1, "source_format": 2, "corpus_format": 3, "loop_format": 4}` : `current` est le format écrit dans une recette créée par la page, `source_format` celui qu'elle écrit quand une étape relit la source, `corpus_format` quand une étape consulte les pièces).
 - **Il refuse** de jouer une recette dont une étape relit la source sans en avoir le droit (`reads_source` hors des skills qui vérifient, à l'étape 1, ou sous le format 1 : [format](format-recette.md) §1.10) : `new`, `next` et `plan` échouent avec le message, `status` reste lisible et le dit dans `recipe_error`, `recipes` écarte la recette.
 - **Il écrit** un dossier par parcours, `./parcours/<slug>/` :
   - `input.md` — la demande brute (lue par l'étape 1 seulement) ;
@@ -202,3 +202,15 @@ Une recette se cherche dans le dépôt ou le plugin, puis — jamais à leur pla
 ## 7. Hors v0
 
 Serveur MCP et page de suivi (lot 3) ; résumé borné des réponses longues ; reprise d'un parcours commencé en conversation ; exécution d'une même étape sur deux moteurs pour comparaison.
+
+## 8. Le format 4 (2026-10-18)
+
+L'exécuteur joue aussi le format 4 de [format-4.md](format-4.md) : des boucles bornées, un champ caché, un arrêt avant une étape externe. Ce qu'il fait de plus, à l'exécution :
+
+- **À la création** (`new`), il lit les réglages (`docs/harnais/A4-reglages.yaml`, ou `$IX_REGLAGES`), vérifie les plafonds et les rôles, copie dans `state.json` les plafonds, les suites offertes et le modèle de chaque rôle (`reglages`, `models`), et refuse si la recette a un champ caché et que `IX_SCELLE_DIR` manque ou est fautive (§ champ caché).
+- **Un passage = une entrée de `runs`** par étape : modèle, moteur, durée, coût de ce passage. Les pauses levées vont dans `pauses`, les passes et les verdicts dans `loops`, les plafonds atteints dans `ceilings`, les suites choisies dans `suites`.
+- **Le verdict** (`OK` ou `REPRENDRE`, première ligne du champ) est lu à la sortie d'une étape qui a un `verdict_field`. Sur `REPRENDRE`, l'étape `loop.to` et celles qui la suivent repassent en file avec le verdict en entrée supplémentaire ; au plafond, `pending.type` vaut `ceiling`. Sans `loop`, `pending.type` vaut `verdict`.
+- **Le champ caché** va dans le scellé dès l'extraction ; la sortie `NN-<étape>.md`, la trace d'une relance et l'état n'en gardent qu'une marque.
+- **Une étape externe** s'arrête (`pending.type` vaut `external`) après avoir écrit son message ; `supply` rend sa sortie.
+- **Deux commandes de plus** : `supply <slug> <étape> --file sortie.md [--model M] [--cost-usd X]` et `suite <slug> --suite S [--n N] [--text T] [--by QUI]`.
+- Le moteur `simulation` écrit `OK` en première ligne d'un champ de verdict.

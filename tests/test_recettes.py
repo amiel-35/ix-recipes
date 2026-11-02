@@ -152,8 +152,57 @@ def import_build():
     return build
 
 
+def mutations4(fm):
+    """Broken variants of a format 4 recipe, one rule each (the minimal format and its settings)."""
+    out = []
+    names = [s["id"] for s in fm["workflow"]["steps"]]
+
+    def variant(change):
+        clone = copy.deepcopy(fm)
+        change(clone)
+        out.append(clone)
+
+    steps = lambda f: f["workflow"]["steps"]
+    variant(lambda f: steps(f)[0].update(parallel=True))
+    variant(lambda f: steps(f)[0].update(writes=True))
+    variant(lambda f: steps(f)[1].update(model="fable"))
+    variant(lambda f: steps(f)[names.index("evaluation")].update(loop={"to": "evaluation", "ceiling": "passes_verification_max"}))
+    variant(lambda f: steps(f)[names.index("evaluation")].update(loop={"to": "cloture", "ceiling": "passes_verification_max"}))
+    variant(lambda f: steps(f)[names.index("evaluation")].update(loop={"to": "fusion", "ceiling": "tours_inconnus_max"}))
+    variant(lambda f: steps(f)[names.index("evaluation")].pop("verdict_field"))
+    variant(lambda f: steps(f)[names.index("evaluation")].update(verdict_field="absent"))
+    variant(lambda f: steps(f)[names.index("criteres")].update(hidden=["absent"]))
+    variant(lambda f: steps(f)[names.index("reconciliation")]["receives"].append("criteres.part_cachee"))
+    variant(lambda f: steps(f)[names.index("contre_verif")].update(model="opus"))
+    variant(lambda f: steps(f)[names.index("contre_verif")].update(pause="validate"))
+    variant(lambda f: steps(f)[names.index("goal")].update(role="inconnu"))
+    variant(lambda f: steps(f)[names.index("goal")].update(model="opus"))
+    variant(lambda f: steps(f)[names.index("verif_goal")].update(loop={"to": "fusion", "ceiling": "passes_verification_max"}))
+    variant(lambda f: f["workflow"].update(format=3))
+    variant(lambda f: f["workflow"].update(format=2))
+    variant(lambda f: f["workflow"].pop("format"))
+    variant(lambda f: steps(f)[1].update(label=""))
+    variant(lambda f: steps(f)[1].update(pause="later"))
+    return out
+
+
+def valid_variants4(fm):
+    """Variants of a valid format 4 recipe that stay valid."""
+    out = []
+    for change in [lambda f: f["workflow"]["steps"][1].pop("label"),
+                   lambda f: f["workflow"]["steps"][1].update(stage="1b bis"),
+                   lambda f: f["workflow"]["steps"][3]["loop"].update(ceiling="tours_goal_max"),
+                   lambda f: f["workflow"].update(context_labels={})]:
+        clone = copy.deepcopy(fm)
+        change(clone)
+        out.append(clone)
+    return out
+
+
 def mutations(fm):
     """Broken variants of a workflow recipe, one rule each."""
+    if fm["workflow"].get("format") == parcours.LOOP_FORMAT:
+        return mutations4(fm)
     steps = fm["workflow"]["steps"]
     second = steps[1]["id"]
     out = []
@@ -184,7 +233,7 @@ def mutations(fm):
     variant(lambda f: f["workflow"].update(steps=[]))
     variant(lambda f: f.update(requires=f["requires"] + ["ix-skills:does-not-exist"]))
     variant(lambda f: f["workflow"].pop("format"))
-    variant(lambda f: f["workflow"].update(format=4))
+    variant(lambda f: f["workflow"].update(format=5))
     # receives: [corpus] (format 3): under format 1 or 2, on any step
     variant(lambda f: f["workflow"]["steps"][1]["receives"].append("corpus"))
     variant(lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][0]["receives"].append("corpus")))
@@ -204,6 +253,8 @@ def checking_steps(fm):
 
 def valid_variants(fm):
     """Variants of a valid recipe that stay valid: format 2 alone, reads_source false, a checking step reading the source."""
+    if fm["workflow"].get("format") == parcours.LOOP_FORMAT:
+        return valid_variants4(fm)
     out = []
     for change in [lambda f: f["workflow"].update(format=2),
                    lambda f: (f["workflow"].update(format=2), f["workflow"]["steps"][1].update(reads_source=False))] + \
@@ -268,7 +319,7 @@ class WorkflowCheckParityTests(unittest.TestCase):
                                                        "format 1 (ajoutez « format: 1 » en tête du bloc workflow)"])
         with mock.patch.object(self.build, "_skill_exists", lambda ref: True):
             self.assertIn("ajoutez « format: 1 »", self.build.validate_workflow(missing, body)[0])
-            for value in (4, "deux"):
+            for value in (5, "deux"):
                 newer = copy.deepcopy(fm)
                 newer["workflow"]["format"] = value
                 newer["workflow"]["steps"][1]["pause"] = "later"   # format 1's rules say nothing of another format

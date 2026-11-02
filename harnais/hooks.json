@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {"type": "command", "command": "python3 \"$R/harnais/harnais.py\" hook"}
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {"type": "command", "command": "python3 \"$R/harnais/harnais.py\" hook-stop --garde \"{GARDE}\""}
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {"type": "command", "command": "python3 \"$R/harnais/harnais.py\" hook-prompt --garde \"{GARDE}\""}
+        ]
+      }
+    ]
+  }
+}

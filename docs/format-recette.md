@@ -1,6 +1,6 @@
 # Format d'une recette-workflow
 
-Spécification v1 du 2026-10-14 : c'est le **format 1** des recettes (§2bis, champ `format` ajouté le 2026-10-16). Le **format 2** (2026-10-16) y ajoute une seule chose : une étape qui vérifie peut relire la source (§1.10, §2ter). Le **format 3** (2026-10-16) ajoute le corpus : une étape que la recette nomme consulte les pièces du dossier (§1.11, §2quater). Une **recette-workflow** est un skill d'ix-recipes qui enchaîne plusieurs skills (atomes d'ix-skills ou autres recettes) pour un travail récurrent. Elle reprend ce qu'ix-memory avait éprouvé (chaîne courte, mission locale par étape, handoff borné, pauses humaines) et corrige ce qui n'avait jamais marché (le brief de départ qui pollue les étapes aval, `handoff.fields` jamais appliqué).
+Spécification v1 du 2026-10-14 : c'est le **format 1** des recettes (§2bis, champ `format` ajouté le 2026-10-16). Le **format 2** (2026-10-16) y ajoute une seule chose : une étape qui vérifie peut relire la source (§1.10, §2ter). Le **format 3** (2026-10-16) ajoute le corpus : une étape que la recette nomme consulte les pièces du dossier (§1.11, §2quater). Le **format 4** (2026-10-18) est le format minimal des boucles bornées, du champ caché et de l'arrêt avant une étape jouée à part (§2quinquies, [format-4.md](format-4.md)). Une **recette-workflow** est un skill d'ix-recipes qui enchaîne plusieurs skills (atomes d'ix-skills ou autres recettes) pour un travail récurrent. Elle reprend ce qu'ix-memory avait éprouvé (chaîne courte, mission locale par étape, handoff borné, pauses humaines) et corrige ce qui n'avait jamais marché (le brief de départ qui pollue les étapes aval, `handoff.fields` jamais appliqué).
 
 Une recette qui n'enchaîne rien reste un skill ordinaire : c'est le cas par défaut.
 
@@ -64,7 +64,7 @@ workflow:
 
 `build.py` vérifie mécaniquement :
 
-- `format` est présent et vaut un format connu (1, 2 ou 3) — sinon il s'arrête là : les règles qui suivent sont celles des formats 1 à 3 ;
+- `format` est présent et vaut un format connu (1, 2, 3 ou 4) — sinon il s'arrête là : les règles qui suivent sont celles des formats 1 à 3 ;
 - chaque `skill` figure dans `requires`, et chaque id de `requires` existe (dans ix-recipes, ou dans `../ix-skills/skills/` quand le dépôt voisin est présent) ;
 - les ids d'étape sont uniques ;
 - seule la première étape reçoit `brief`, et c'est elle qui porte `produces_context_sheet` ; sa pause vaut `validate` ou `answers` ;
@@ -77,7 +77,8 @@ workflow:
 - chaque `skill` est cité dans le corps du SKILL.md (le corps et le frontmatter ne divergent pas) ;
 - `model`, s'il est donné, vaut `sonnet`, `opus` ou `haiku` ;
 - `reads_source`, s'il est donné, vaut `true` ou `false` ; `true` seulement hors de l'étape 1, sur un skill de `VERIFICATION_SKILLS`, et dans une recette au format 2 au moins ;
-- `corpus` n'est reçu que dans une recette au format 3 au moins.
+- `corpus` n'est reçu que dans une recette au format 3 au moins ;
+- les clés `loop`, `hidden`, `external` et `verdict_field` ne figurent que dans une recette au format 4, qui refuse en plus `parallel`, `writes` et `fable` (§2quinquies).
 
 Le frontmatter est la version lisible par machine : c'est elle que l'exécuteur du lot 2 lira.
 
@@ -135,6 +136,14 @@ Cesser de lire le format 1 serait un changement majeur de la page, annoncé à l
 **Pourquoi c'est un format.** Le critère du §2bis : un exécuteur du format 2 refuse une source inconnue de `receives`, mais une page plus ancienne pourrait jouer l'étape sans les pièces et rendre un livrable qui a l'air complet (des personas sans verbatims, une vérification de chiffres sans le tableau). Le format 3 la fait refuser (« mettez la page à jour »).
 
 **Ce qui a suivi les étapes du §2bis.** Ce document décrit le format 3 ; l'exécuteur joue les trois (`RECIPE_FORMATS = (1, 2, 3)`) ; `build.py` accepte 3 (la copie d'ix-skills est à mettre à jour de la même façon) ; la page passe en 1.3.0, sans zone pour les pièces encore (décision 7.2 : la ligne de commande d'abord) ; `RECIPE_FORMAT` reste 1 ; aucune recette du dépôt ne passe au format 3 ; `concepteur-recette` sait l'écrire ; le CHANGELOG le dit.
+
+## 2quinquies. Le format 4 (2026-10-18) : boucles bornées, champ caché, arrêt avant une étape externe
+
+**Ce qu'il ajoute.** Six clés d'étape : `stage`, `role`, `verdict_field`, `loop`, `hidden`, `external`. Rien d'autre ne change : une recette au format 4 qui n'en use pas se joue comme au format 3. Le format 4 est **minimal** : il refuse `parallel: true`, `writes: true` et le modèle `fable`, avec un message qui nomme la cause.
+
+**Pourquoi c'est un format.** Le critère du §2bis : un exécuteur du format 3 jouerait la boucle une fois, donnerait le champ caché à toutes les étapes et jouerait l'étape qui devait s'arrêter, sans le dire. Le format 4 le fait refuser (« mettez la page à jour », « mettez à jour build.py »).
+
+**Qui le joue.** `build.py` l'accepte (la copie d'ix-skills est à mettre à jour de la même façon, plus tard : B ne touche pas ix-skills) ; l'exécuteur le joue (`RECIPE_FORMATS = (1, 2, 3, 4)`) ; la page de suivi ne le joue pas (`PAGE_FORMATS = (1, 2, 3)`) et refuse de créer un parcours sur une recette de ce format. La description complète est dans [format-4.md](format-4.md). La version du plugin, la version de la page et le CHANGELOG sont laissés au pilote.
 
 ## 3. Les pauses
 

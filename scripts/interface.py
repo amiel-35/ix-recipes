@@ -86,7 +86,7 @@ STOP_GRACE = 15             # seconds between SIGTERM and SIGKILL when stopping 
 
 def page_info():
     """What the page is and which recipe formats it plays (its runner's), for the API and the footer."""
-    return {"version": PAGE_VERSION, "recipe_formats": list(parcours.RECIPE_FORMATS)}
+    return {"version": PAGE_VERSION, "recipe_formats": list(parcours.PAGE_FORMATS)}
 
 
 class ApiError(Exception):
@@ -306,7 +306,18 @@ class Space:
         return self.run_json("unarchive", positionals=[slug])
 
     def recipes(self):
-        return dict(self.run_json("recipes"), page=page_info())
+        """The runner's recipes, less those of a format the page does not play (format 4 has no front here): they are
+        refused with the reason, as a recipe of a newer format is."""
+        listing = self.run_json("recipes")
+        problems = list(listing.get("personal_problems") or [])
+        playable = []
+        for recipe in listing.get("recipes") or []:
+            if recipe.get("format") in parcours.PAGE_FORMATS:
+                playable.append(recipe)
+            else:
+                problems.append({"id": recipe.get("id"), "message": parcours.format_error(
+                    {"format": recipe.get("format")}, parcours.PAGE_FORMATS)})
+        return dict(listing, recipes=playable, personal_problems=problems, formats=list(parcours.PAGE_FORMATS), page=page_info())
 
     def create(self, body):
         recipe, text = body.get("recipe"), body.get("text")
@@ -1023,7 +1034,7 @@ class Handler(BaseHTTPRequestHandler):
             theme = f'<style nonce="{nonce}">\n{css}\n</style>'
         html = (PAGE.read_text(encoding="utf-8").replace("{{THEME}}", theme)
                 .replace("{{NONCE}}", nonce).replace("{{PAGE_VERSION}}", PAGE_VERSION)
-                .replace("{{RECIPE_FORMATS}}", ", ".join(str(f) for f in parcours.RECIPE_FORMATS)).encode("utf-8"))
+                .replace("{{RECIPE_FORMATS}}", ", ".join(str(f) for f in parcours.PAGE_FORMATS)).encode("utf-8"))
         assets = "; font-src 'self'; img-src 'self'" if self.app.theme else ""
         csp = (f"default-src 'none'; script-src 'nonce-{nonce}'; style-src 'nonce-{nonce}'; "
                f"connect-src 'self'{assets}; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")

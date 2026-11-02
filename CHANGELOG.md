@@ -2,6 +2,24 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-11-02, plugin 2.15.0: defect fixes from the skills audit (no lightening)
+
+Corrections only, validated by Amiel after the audit of 2026-11-02; no skill is shortened.
+
+- **`suivi-parcours` 1.7.1**: `compatible` goes from the six platforms to `[claude-code]`. Its body requires Claude
+  Code on the user's own computer (local server, signed-in `claude` CLI, "not Cowork"), which none of the other
+  five can provide. `build.py` does not check the list's content, so a reduced list builds as is.
+- **Descriptions over 1,024 characters**: `contrat-fournisseur` 2.0.2 (FR 1,242 → 1,014, EN 1,172 → 962) and
+  `analyse-entretien` 1.2.1 (FR 1,113 → 929, EN 1,040 → 865). Scope, main triggers and the boundary with the
+  neighbouring skills (`legal-risk-flag`; `performance-review-helper`, `entretien-professionnel`, `people-review`)
+  are kept; only secondary triggers and explanatory clauses were cut.
+- **The two empty redirects are removed**: `cgv-checker` (merged into `contrat-fournisseur`) and `product-spec`
+  (merged into `feature-spec`), both kept one version as a pointer since 2.0.0. Nothing else called them: the
+  `aliases` of `contrat-fournisseur` and `feature-spec` still carry the old ids for mystaffy, the README sections
+  and the 50-skill count are updated, the `THIRD_PARTY.md` rows now say the id is retired, and the example command
+  of the test bench points to `contrat-fournisseur`. The case files `tests/cas-skills/cgv-checker.md` and
+  `product-spec.md` are kept as the record of the benchmark.
+
 ## 2026-10-25, plugin 2.14.1: attributions moved out of HTML comments
 
 - 30 skills (patch bump each): the closing `<!-- adapted from … -->` attribution

@@ -5,7 +5,7 @@ Un fichier par skill : une ou plusieurs demandes réalistes, ce que doit conteni
 Le banc s'exécute avec [`banc.py`](banc.py) (bibliothèque standard, CLI `claude` connectée) ; il n'écrit rien dans le dépôt :
 
 ```bash
-python3 tests/cas-skills/banc.py --skills cgv-checker,ticket-triage --cases 3 --versions sans,avant,apres --configs sonnet:medium,sonnet:high,opus --passages 3 --judges opus,sonnet --out /tmp/banc
+python3 tests/cas-skills/banc.py --skills contrat-fournisseur,ticket-triage --cases 3 --versions sans,avant,apres --configs sonnet:medium,sonnet:high,opus --passages 3 --judges opus,sonnet --out /tmp/banc
 ```
 
 - `--versions` : `sans` (même modèle, sans skill, invite neutre), `avant` (le skill au commit `--base`), `apres` (le skill du dépôt). Comparer à « sans » dit si le skill apporte quelque chose ; comparer à « avant » dit si la réécriture l'améliore.

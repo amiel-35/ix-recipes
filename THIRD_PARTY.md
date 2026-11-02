@@ -27,7 +27,7 @@ Règle pour la suite : avant de reprendre quoi que ce soit d'un autre dépôt, v
   | `feature-spec` (complété en 1.2.0) | `product-management/skills/write-spec/SKILL.md` | En plus de la reprise de mars : test du P0 et « assurance d'architecture », erreurs de user stories, conseils de critères d'acceptation, règles de cible, non-objectifs avec raison, dérive du périmètre |
   | `prd` (1.2.0) | `product-management/skills/write-spec/SKILL.md` | Test du P0, P2 en assurance d'architecture, non-objectifs avec raison, règles de cible, dérive du périmètre |
   | `reformulation-us` (1.2.0) | `product-management/skills/write-spec/SKILL.md` | Erreurs de user stories (grille de diagnostic), conseils de critères d'acceptation |
-  | `product-spec` (1.2.0), repris dans `feature-spec` 2.0.0 après la fusion | `design/skills/design-handoff/SKILL.md` | Liste des états et des cas limites d'une vue |
+  | `product-spec` (1.2.0), repris dans `feature-spec` 2.0.0 après la fusion (id retiré en 2.15.0) | `design/skills/design-handoff/SKILL.md` | Liste des états et des cas limites d'une vue |
   | `mockup` (1.2.0) | `design/skills/design-handoff/SKILL.md` | Les états à montrer |
   | `persona` (1.2.0) | `product-management/skills/synthesize-research/SKILL.md` | Comportement plutôt que démographie, variables qui distinguent les groupes, effectif par motif |
   | `okr` (2.2.0) | `product-management/skills/metrics-review/SKILL.md` | Test de trajectoire, norme d'atteinte d'environ 0,7, 2 à 4 KR par objectif |
@@ -42,7 +42,7 @@ Règle pour la suite : avant de reprendre quoi que ce soit d'un autre dépôt, v
   | `org-design-brief` (1.2.0) | `human-resources/skills/org-planning/SKILL.md` | Repères d'encadrement (5 à 8 subordonnés directs, alerte sous 3 ou au-delà de 12, équipes de 5 à 9) |
   | `performance-review-helper` (1.4.0) | `human-resources/skills/performance-review/SKILL.md` | Trame d'auto-évaluation, adaptée |
   | `people-review` (1.3.0) | `human-resources/skills/performance-review/SKILL.md` | Tableau de calibrage, sans actions de rémunération ; la distribution cible n'est qu'un repère indicatif, jamais un quota (illicite en France) |
-  | `cgv-checker` (1.3.0) | `legal/skills/review-contract/SKILL.md` | Catégories de clauses, seuils vert / orange / rouge, format de constat avec repli, adaptés au droit français |
+  | `cgv-checker` (1.3.0), repris dans `contrat-fournisseur` 2.0.0 après la fusion (id retiré en 2.15.0) | `legal/skills/review-contract/SKILL.md` | Catégories de clauses, seuils vert / orange / rouge, format de constat avec repli, adaptés au droit français |
   | `contrat-fournisseur` (1.3.0) | `legal/skills/review-contract/SKILL.md` | Points de revue par clause côté acheteur, seuils, redline avec repli, trois niveaux de priorité et règle d'échange |
   | `negotiation-brief` (1.2.0) | `legal/skills/review-contract/SKILL.md` | Trois niveaux de priorité et règle d'échange des concessions |
   | `legal-risk-flag` (1.3.0) | `legal/skills/legal-risk-assessment/SKILL.md` | Ancres de gravité (ramenées de 5 à 3 niveaux), déclencheurs d'escalade à l'avocat |

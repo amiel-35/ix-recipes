@@ -26,7 +26,7 @@ Antigravity, Gemini par défaut). Des juges de plusieurs fournisseurs limitent l
 pour les sorties de son propre modèle.
 
 Usage :
-    python3 tests/cas-skills/banc.py --skills cgv-checker,ticket-triage \
+    python3 tests/cas-skills/banc.py --skills contrat-fournisseur,ticket-triage \
         --versions sans,avant,apres --configs sonnet:medium,sonnet:high,opus \
         --cases 3 --passages 3 --judges opus,sonnet,codex,agy --out /tmp/banc
 

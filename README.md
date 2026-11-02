@@ -97,7 +97,7 @@ Delete nothing for good. End with what was removed and what remains.
 
 Domain recipes on top of [ix-skills](https://github.com/amiel-35/ix-skills) — portable across Claude, GPT, Gemini, and mystaffy.
 
-52 skills in 9 families, including 2 workflows, a workflow designer, the tracking page and its setup. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
+50 skills in 9 families, including 2 workflows, a workflow designer, the tracking page and its setup. ix-skills provides the ingredients: atomic cognitive moves (critique, decision, explorer, fact-check…) that apply to any content. ix-recipes provides the recipes:
 
 - **domain skills** — they rely on domain knowledge that can be wrong or go stale (labour law, GDPR, HR practice, financial formulas, product methods), or produce an artefact a profession defines (PRD, NDA, job description, TCO);
 - **workflows** — chains of ix-skills atoms for a recurring job, a designer for new ones, and a runner with a local tracking page (see [Workflows](#workflows)).
@@ -290,7 +290,7 @@ Tools for the full employee lifecycle — recruiting, onboarding, development, a
 </details>
 
 <details>
-<summary><b>⚖️ Legal & Contracts</b> — 6 skills</summary>
+<summary><b>⚖️ Legal & Contracts</b> — 5 skills</summary>
 
 Pre-legal tools — all require professional validation before use. They orient reviews, surface risks, and produce drafts. None replace a lawyer.
 
@@ -306,10 +306,6 @@ Pre-legal tools — all require professional validation before use. They orient 
 
 
 ---
-
-#### `cgv-checker` — Merged into `contrat-fournisseur`
-
-**Since 2.0.0:** hands over to `contrat-fournisseur`, position "client" or "supplier" and document type "GTC / ToS". The id stays for one version so existing installs keep working.
 
 #### `conformite-rgpd` — GDPR compliance checklist
 
@@ -464,7 +460,7 @@ Both sides of a tender: answering a specification and writing an offer, or runni
 </details>
 
 <details>
-<summary><b>🧭 Product & UX</b> — 8 skills</summary>
+<summary><b>🧭 Product & UX</b> — 7 skills</summary>
 
 From a scoped need to the document a product team expects — PRD, specs, user stories, personas, journeys, OKRs, market sizing. Upstream scoping (`cadrage`, `brief`, `analysis`) stays in ix-skills.
 
@@ -485,10 +481,6 @@ From a scoped need to the document a product team expects — PRD, specs, user s
 **Use when:** A feature is approved and needs to be specified for engineering. More granular than a PRD.
 
 > Hierarchy: `brief` → `prd` (the what and the why) → `feature-spec` (the how).
-
-#### `product-spec` — Merged into `feature-spec`
-
-**Since 2.0.0:** hands over to `feature-spec`, which also covers screens, flows, view states and the data model. The id stays for one version for existing installs.
 
 #### `reformulation-us` — Rewrite poorly-written user stories
 

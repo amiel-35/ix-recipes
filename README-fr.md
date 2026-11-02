@@ -97,7 +97,7 @@ Ne supprime rien définitivement. Termine par ce qui a été retiré et ce qui r
 
 Recettes métier construites sur [ix-skills](https://github.com/amiel-35/ix-skills) — portables sur Claude, GPT, Gemini, mystaffy.
 
-52 skills en 9 familles, dont 2 workflows, un concepteur de workflows, la page de suivi et sa configuration. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
+50 skills en 9 familles, dont 2 workflows, un concepteur de workflows, la page de suivi et sa configuration. ix-skills fournit les ingrédients : des gestes cognitifs atomiques (critique, decision, explorer, fact-check…) qui s'appliquent à n'importe quel contenu. ix-recipes fournit les recettes :
 
 - **des skills métier** — ils reposent sur une connaissance de domaine qui peut être fausse ou périmée (droit du travail, RGPD, pratiques RH, formules financières, méthodes produit), ou produisent un artefact qu'une profession définit (PRD, NDA, fiche de poste, TCO) ;
 - **des workflows** — des enchaînements d'atomes ix-skills pour un travail récurrent, un concepteur pour en créer, et un exécuteur avec une page de suivi locale (voir [Workflows](#workflows)).
@@ -290,7 +290,7 @@ Outils pour l'ensemble du cycle de vie des collaborateurs — recrutement, inté
 </details>
 
 <details>
-<summary><b>⚖️ Juridique & Contrats</b> — 6 skills</summary>
+<summary><b>⚖️ Juridique & Contrats</b> — 5 skills</summary>
 
 Outils pré-juridiques — tous nécessitent une validation professionnelle avant utilisation. Ils orientent les revues, font surface les risques et produisent des projets. Aucun ne remplace un juriste.
 
@@ -306,10 +306,6 @@ Outils pré-juridiques — tous nécessitent une validation professionnelle avan
 
 
 ---
-
-#### `cgv-checker` — Fusionné dans `contrat-fournisseur`
-
-**Depuis 2.0.0 :** renvoie vers `contrat-fournisseur`, position « client » ou « fournisseur » et type de document « CGV / CGU ». L'identifiant reste une version pour que les installations existantes continuent de fonctionner.
 
 #### `conformite-rgpd` — Checklist conformité RGPD
 
@@ -464,7 +460,7 @@ Les deux côtés d'une consultation : répondre à un cahier des charges et réd
 </details>
 
 <details>
-<summary><b>🧭 Produit & UX</b> — 8 skills</summary>
+<summary><b>🧭 Produit & UX</b> — 7 skills</summary>
 
 Du besoin cadré au document que l'équipe produit attend — PRD, specs, user stories, personas, parcours, OKR, taille de marché. Le cadrage en amont (`cadrage`, `brief`, `analysis`) reste dans ix-skills.
 
@@ -485,10 +481,6 @@ Du besoin cadré au document que l'équipe produit attend — PRD, specs, user s
 **Quand l'utiliser :** Une fonctionnalité est validée et doit être spécifiée pour l'ingénierie. Plus fin qu'un PRD.
 
 > Hiérarchie : `brief` → `prd` (le quoi et le pourquoi) → `feature-spec` (le comment).
-
-#### `product-spec` — Fusionné dans `feature-spec`
-
-**Depuis 2.0.0 :** renvoie vers `feature-spec`, qui couvre aussi les écrans, les parcours, les états de chaque vue et le modèle de données. L'identifiant reste une version pour les installations existantes.
 
 #### `reformulation-us` — Réécriture de user stories mal rédigées
 

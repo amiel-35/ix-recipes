@@ -669,7 +669,7 @@ Recommendation deliverables for a decision-maker. Once planned as workflows, the
 
 #### `note-strategique` — Strategic memo, conclusion first
 
-**What it does:** Produces a structured, shareable strategic memo — for a decision-maker, board, or executive. Starts with the conclusion, then the argument, then the options, then the recommendation with explicit trade-offs. Two pages maximum without justification.
+**What it does:** Produces a structured, shareable strategic memo — for a decision-maker, board, or executive. Starts with the conclusion, then the argument, then the options, then the recommendation with explicit trade-offs. Options are costed over the decision horizon; a value the memo supplies itself sits on its own labelled line, never inside a total of given figures. Two pages maximum without justification.
 
 **What it doesn't do:** Does not start with context and bury the recommendation at the end. If you don't have a clear position yet, run `decision` first.
 

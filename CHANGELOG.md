@@ -2,7 +2,23 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
-## 2026-11-02, plugin 2.16.0: `contrat-fournisseur` lists its sources for a fact-check
+## 2026-11-02, plugin 2.17.0: `note-strategique` costs over the decision horizon, supplied values apart
+
+- **`note-strategique` 1.3.0**, after the bench against the bare model of 2026-11-02 (Sonnet +8, Opus +11 on
+  substance, format 40 % → 100 %). The criteria it kept missing came from two gaps, not from the model:
+  - the options table asked for a « cost » with no horizon, so the models gave yearly costs on a three-year
+    decision (156 k€ a year where the committee signs 468 k€). Options are now costed over the horizon the
+    decision binds, with the yearly figure beside it;
+  - the « facts versus assumptions » rule let the model supply a cost, and it then added its own valuation
+    (hours saved × an assumed rate) to the only given gain, announcing « 85 to 125 k€ a year » on a given
+    84 k€. Amiel's rule (2026-11-02): a supplied order of magnitude is allowed on its own labelled line with
+    its basis, and never enters a total built from given figures. The output gains a « Gains » line that
+    keeps the two apart.
+  Rerun (same 2 cases, 3 runs, criterion 4 of the second case aligned on Amiel's rule for both arms):
+  substance 71 → 92 with Sonnet and 83 → 92 with Opus against the bare model, format 100 %. The horizon and
+  gains criteria, missed before, are now held in every run. The cases were seen while fixing: they confirm
+  the fix, they are no longer blind controls. On 2 fresh cases written blind afterwards (organic cosmetics
+  packaging, cleaning-company acquisition): 83 → 94 with Sonnet, 83 → 92 with Opus, format 100 %.
 
 - **`contrat-fournisseur` 2.1.0**, after a bench against the bare model (Sonnet and Opus, 2 blind-written cases,
   3 runs each). The skill wins on substance (65 → 90 with Sonnet, 69 → 88 with Opus, rerun) and on format

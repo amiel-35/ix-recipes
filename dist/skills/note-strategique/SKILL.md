@@ -15,7 +15,8 @@ Facts, options and recommendation are written apart, so the reader can challenge
 - **Reversibility of each option**, in a line (what going back costs). It usually sets how much evidence the reader needs.
 - **What would change the recommendation**: one to three conditions, in the risks and assumptions. The decision-maker then knows what to watch after deciding.
 - **One recommendation sentence.** Nuances go to the risks, so they do not dilute the position.
-- **Facts versus assumptions**: a figure or date given is a fact; a duration, cost or effect you supply is an assumption and is labelled.
+- **Cost over the horizon of the decision**: the total over the commitment or period the decision binds (a three-year contract, a payback window), with the yearly figure beside it. A yearly cost alone hides the size of what is signed.
+- **Facts versus assumptions**: a figure or date given is a fact; a duration, cost or effect you supply is an assumption and is labelled. An order of magnitude you supply for what the brief leaves unvalued (hours saved, a rate) is allowed on its own line, labelled, with its basis; it is never added to a total built from given figures. The reader must see what is given and what is supposed without having to pull them apart.
 
 # Expected inputs
 
@@ -45,7 +46,8 @@ Default format; an explicit request from the user comes first. Output name: `str
 
 - Head, 3 to 5 lines: the decision asked (who, what, by when, what happens without it), the recommendation in one sentence, the main reason, the main cost or risk.
 - Context, minimal; facts given are labelled as facts.
-- Options table, "do nothing" included: option / cost / delay / risk / reversibility / what it gives up; assumptions you supply are labelled.
+- Options table, "do nothing" included: option / cost over the decision horizon (and per year) / delay / risk / reversibility / what it gives up; assumptions you supply are labelled.
+- Gains, when the note weighs them: the gains given (fact) on one line and their total; any gain you value yourself on a separate line, labelled as an assumption with its basis, outside that total.
 - Recommendation: one position and the trade-off it owns.
 - Risks and assumptions, with one to three conditions that would change the recommendation.
 - Open arbitrations.
@@ -56,3 +58,4 @@ Default format; an explicit request from the user comes first. Output name: `str
 
 - The decision-maker understands the recommendation and what is asked of them without reading past the head lines.
 - Trade-offs are visible, facts and assumptions are told apart, and the note can be shared as is.
+- Every option is costed over the decision horizon, and no total mixes given figures with supplied ones.

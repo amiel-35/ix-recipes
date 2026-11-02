@@ -2,6 +2,28 @@
 
 Notable changes to ix-recipes. Skills are versioned individually (semver in each skill's frontmatter); the plugin version lives in `dist/.claude-plugin/plugin.json`. Format inspired by [Keep a Changelog](https://keepachangelog.com).
 
+## 2026-11-02, plugin 2.16.0: `contrat-fournisseur` lists its sources for a fact-check
+
+- **`contrat-fournisseur` 2.1.0**, after a bench against the bare model (Sonnet and Opus, 2 blind-written cases,
+  3 runs each). The skill wins on substance (65 → 90 with Sonnet, 69 → 88 with Opus, rerun) and on format
+  (15-25 % → 100 %). Three defects showed in its output and are fixed:
+  - internal names leaked into the review (`client`, `saas_cloud`, `cgv_cgu`, file names, `conformite-rgpd`):
+    the review now says the position and the type in plain words and names a related review by what it does;
+  - the default positions of the clause files (green, orange, red) were sometimes written as rules: they are
+    now labelled « market benchmark » on the line, with no article attached;
+  - the output gains a part 8, **Sources to verify**: every article, decision and text cited, with the finding
+    it supports and the date the clause files were checked (2026-10-16), as the input of a `fact-check` pass
+    before the review leaves. The closing line moves to part 9.
+  The judge of the first run flagged Cass. com. 13 May 2026, n° 24-17.137 as « probably invented »; it exists
+  (published in the Bulletin) and says what the clause file says. The citations the rerun judge could not check
+  were verified by hand against the case-law and statute database: Cass. com. 26 Feb. 2025, n° 23-20.225,
+  ordonnance n° 2026-2 (online withdrawal function, L221-21 from 19 June 2026), the L442-1 version in force
+  since 20 Aug. 2026, C. trav. L8222-1-1 (created by loi n° 2026-534 of 25 June 2026, in force on a date set by
+  decree and at the latest on 26 Dec. 2026, so « awaiting a decree » is right) and the L441-16 fine for payment
+  terms that omit the L441-10 II mentions (its point b) all exist and say what the review says. No citation of
+  the rerun turned out false. Two lessons for the check itself: an article not yet in force is missed by a
+  search over the versions in force, and a snippet is not the article (L441-16 a) alone hid point b).
+
 ## 2026-11-02, plugin 2.15.0: defect fixes from the skills audit (no lightening)
 
 Corrections only, validated by Amiel after the audit of 2026-11-02; no skill is shortened.

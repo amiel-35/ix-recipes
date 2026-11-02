@@ -339,7 +339,7 @@ Pre-legal tools — all require professional validation before use. They orient 
 
 #### `contrat-fournisseur` — Reading contracts and T&Cs
 
-**What it does:** Reads a supplier or service contract, general terms (sales or use) or SaaS terms of service from a given position (client or buyer, supplier publishing its terms, user), under French law. Qualifies the parties first, then flags unbalanced, unfair or missing clauses ranked by priority, each with a proposed rewording and a fallback position. Reads the clause set of the document type as an annex (`clauses_cgv`, `clauses_contrat_fournisseur`, `clauses_saas_donnees`) and checks what the subject calls for beyond it (data, portability, sector). Absorbs `cgv-checker` since 2.0.0.
+**What it does:** Reads a supplier or service contract, general terms (sales or use) or SaaS terms of service from a given position (client or buyer, supplier publishing its terms, user), under French law. Qualifies the parties first, then flags unbalanced, unfair or missing clauses ranked by priority, each with a proposed rewording and a fallback position. Reads the clause set of the document type as an annex (`clauses_cgv`, `clauses_contrat_fournisseur`, `clauses_saas_donnees`) and checks what the subject calls for beyond it (data, portability, sector). Ends with the list of sources to verify (every article, decision and text cited), the input of a `fact-check` pass before the review leaves; the clause sets carry the date they were checked. Absorbs `cgv-checker` since 2.0.0.
 
 **What it doesn't do:** Does not draft a contract. Does not replace legal advice.
 

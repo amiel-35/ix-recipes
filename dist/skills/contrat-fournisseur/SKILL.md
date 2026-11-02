@@ -35,7 +35,7 @@ If `references/` is not available, work from the rules you are certain of, mark 
 4. **Then check what the document's subject calls for beyond the file's list** (personal data and processors, data portability and exit, sector rules, the specific product or service). A list focuses attention, and what it does not name gets missed: with the grid, models forgot the Data Act and art. 28 GDPR on SaaS terms they saw without it.
 5. Compute what the text leaves implicit (caps against annual price and total commitment, downtime hours, last date to give notice from the stated start date, and say if the start date is missing), and show the inputs.
 6. Anchor every finding on a quoted clause and its number. Something absent goes in a separate "missing" list.
-7. State the rule and the fact it depends on (for example "deemed unwritten if the customer is a consumer, R212-1 3°"), never a bare verdict: validity turns on facts the text does not show, such as who the parties are and whether the clause was negotiated.
+7. State the rule and the fact it depends on (for example "deemed unwritten if the customer is a consumer, R212-1 3°"), never a bare verdict: validity turns on facts the text does not show, such as who the parties are and whether the clause was negotiated. A default position from the clause file (green, orange, red) is a market benchmark, not a rule: write "market benchmark" on the line and never attach an article to it.
 8. Rank each point: **level 1** = indispensable, do not sign or publish without it; **level 2** = strong preference; **level 3** = trading currency. Trade level 3 to win level 2; do not concede level 1 without an internal decision. Give each point a proposed wording and a fallback, because the other side may refuse and the reader must know what to accept instead.
 
 `niveau_detail`: `flash` = the 5 most serious points (level 1), no fallback; `standard` (default) = all points with fallback, plus the legally required mentions that are missing; `complet` = adds the clause-by-clause checklist, the missing market-standard clauses and the article on every line.
@@ -44,7 +44,7 @@ If no clause is unfavourable or unbalanced for the reading position, output « R
 
 # Expected output format
 
-Default format; an explicit request from the user prevails.
+Default format; an explicit request from the user prevails. The review goes to the reader as it stands: no parameter names (`client`, `cgv_cgu`, `saas_cloud`), file names or skill ids in it. Say the position and the document type in plain words, and name a related review by what it does ("a GDPR review"), not by its id.
 
 1. **Summary, 3 to 5 lines**: the verdict for the position (sign / sign after renegotiation / do not sign; publish / correct before publishing), the level-1 points, the parties and the test applied, and the decision asked of the reader.
 2. **Parties, position, type** in one line, then the **computed figures** with their inputs.
@@ -53,7 +53,8 @@ Default format; an explicit request from the user prevails.
 5. **Duties of the reader** that apply whatever the text says (vigilance, payment limits, mandatory mentions).
 6. **Actions**, apart from the diagnosis: what, who, by when (including the last date to give notice).
 7. **Open questions**: the facts that would change a finding.
-8. One closing line: "This review orients a lawyer's review and is not legal advice." Say it once.
+8. **Sources to verify**: every article, decision and text cited, one line each with the finding it supports. The clause files were checked on 2026-10-16 and nothing later is covered; a reference you are not certain of is marked "to check", never stated as settled. This list is the input of a `fact-check` pass, which runs before the review leaves.
+9. One closing line: "This review orients a lawyer's review and is not legal advice." Say it once.
 
 Output names: `supplier_contract_analysis` and `gtc_analysis` = parts 1, 2 and 5; `renegotiation_points` and `negotiation_points` = parts 3, 4 and 6 (use the `gtc_` and `negotiation_` names for `cgv_cgu`).
 
